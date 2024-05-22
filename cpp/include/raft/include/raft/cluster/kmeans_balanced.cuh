@@ -358,8 +358,7 @@ void calc_centers_and_sizes(const raft::resources& handle,
                                  X.extent(0),
                                  labels.data_handle(),
                                  reset_counters,
-                                 mapping_op,
-                                 resource::get_workspace_resource(handle));
+                                 mapping_op);
 }
 
 }  // namespace helpers

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, NVIDIA CORPORATION.
+ * Copyright (c) 2023, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#ifndef RAFT_EXPLICIT_INSTANTIATE_ONLY
-#include "select_k-inl.cuh"
-#endif
+#include "memory_pool-ext.hpp"
 
-#ifdef RAFT_COMPILED
-#include "select_k-ext.cuh"
-#endif
+#if !defined(RAFT_COMPILED)
+#include "memory_pool-inl.hpp"
+#endif  // RAFT_COMPILED

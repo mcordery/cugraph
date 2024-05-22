@@ -180,7 +180,8 @@ struct FusedDistanceNNPersistent {
     /// Default ctor
     CUTLASS_HOST_DEVICE
     Arguments()
-      : threadblock_count(0),
+      :  // problem_count(0),
+        threadblock_count(0),
         ptr_A(nullptr),
         ptr_B(nullptr),
         ptr_C(nullptr),
@@ -234,6 +235,7 @@ struct FusedDistanceNNPersistent {
 
   /// Parameters structure
   struct Params {
+    // typename ProblemVisitor::Params problem_visitor;
     temp_problem_visitor problem_visitor;
     int threadblock_count;
 

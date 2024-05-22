@@ -28,18 +28,11 @@ namespace raft {
 namespace linalg {
 namespace detail {
 
-template <int warpSize, int tpb, int rpw, bool noLoop = false>
+template <int warpSize, int rpb>
 struct ReductionThinPolicy {
-  static_assert(tpb % warpSize == 0);
-
-  static constexpr int LogicalWarpSize    = warpSize;
-  static constexpr int ThreadsPerBlock    = tpb;
-  static constexpr int RowsPerLogicalWarp = rpw;
-  static constexpr int NumLogicalWarps    = ThreadsPerBlock / LogicalWarpSize;
-  static constexpr int RowsPerBlock       = NumLogicalWarps * RowsPerLogicalWarp;
-
-  // Whether D (run-time arg) will be smaller than warpSize (compile-time parameter)
-  static constexpr bool NoSequentialReduce = noLoop;
+  static constexpr int LogicalWarpSize = warpSize;
+  static constexpr int RowsPerBlock    = rpb;
+  static constexpr int ThreadsPerBlock = LogicalWarpSize * RowsPerBlock;
 };
 
 template <typename Policy,
@@ -60,72 +53,19 @@ RAFT_KERNEL __launch_bounds__(Policy::ThreadsPerBlock)
                                FinalLambda final_op,
                                bool inplace = false)
 {
-  /* The strategy to achieve near-SOL memory bandwidth differs based on D:
-   *  - For small D, we need to process multiple rows per logical warp in order to have
-   *    multiple loads per thread and increase bytes in flight and amortize latencies.
-   *  - For large D, we start with a sequential reduction. The compiler partially unrolls
-   *    that loop (e.g. first a loop of stride 16, then 8, 4, and 1).
-   */
-  IdxType i0 = threadIdx.y + (Policy::RowsPerBlock * static_cast<IdxType>(blockIdx.x));
-  if (i0 >= N) return;
+  IdxType i = threadIdx.y + (Policy::RowsPerBlock * static_cast<IdxType>(blockIdx.x));
+  if (i >= N) return;
 
-  OutType acc[Policy::RowsPerLogicalWarp];
-#pragma unroll
-  for (int k = 0; k < Policy::RowsPerLogicalWarp; k++) {
-    acc[k] = init;
+  OutType acc = init;
+  for (IdxType j = threadIdx.x; j < D; j += Policy::LogicalWarpSize) {
+    acc = reduce_op(acc, main_op(data[j + (D * i)], j));
   }
-
-  if constexpr (Policy::NoSequentialReduce) {
-    IdxType j = threadIdx.x;
-    if (j < D) {
-#pragma unroll
-      for (IdxType k = 0; k < Policy::RowsPerLogicalWarp; k++) {
-        // Only the first row is known to be within bounds. Clamp to avoid out-of-mem read.
-        const IdxType i = raft::min(i0 + k * Policy::NumLogicalWarps, N - 1);
-        acc[k]          = reduce_op(acc[k], main_op(data[j + (D * i)], j));
-      }
-    }
-  } else {
-    for (IdxType j = threadIdx.x; j < D; j += Policy::LogicalWarpSize) {
-#pragma unroll
-      for (IdxType k = 0; k < Policy::RowsPerLogicalWarp; k++) {
-        const IdxType i = raft::min(i0 + k * Policy::NumLogicalWarps, N - 1);
-        acc[k]          = reduce_op(acc[k], main_op(data[j + (D * i)], j));
-      }
-    }
-  }
-
-  /* This vector reduction has two benefits compared to naive separate reductions:
-   * - It avoids the LSU bottleneck when the number of columns is around 32 (e.g. for 32, 5 shuffles
-   *   are required and there is no initial sequential reduction to amortize that cost).
-   * - It distributes the outputs to multiple threads, enabling a coalesced store when the number of
-   *   rows per logical warp and logical warp size are equal.
-   */
-  raft::logicalWarpReduceVector<Policy::LogicalWarpSize, Policy::RowsPerLogicalWarp>(
-    acc, threadIdx.x, reduce_op);
-
-  constexpr int reducOutVecWidth =
-    std::max(1, Policy::RowsPerLogicalWarp / Policy::LogicalWarpSize);
-  constexpr int reducOutGroupSize =
-    std::max(1, Policy::LogicalWarpSize / Policy::RowsPerLogicalWarp);
-  constexpr int reducNumGroups = Policy::LogicalWarpSize / reducOutGroupSize;
-
-  if (threadIdx.x % reducOutGroupSize == 0) {
-    const int groupId = threadIdx.x / reducOutGroupSize;
+  acc = raft::logicalWarpReduce<Policy::LogicalWarpSize>(acc, reduce_op);
+  if (threadIdx.x == 0) {
     if (inplace) {
-#pragma unroll
-      for (int k = 0; k < reducOutVecWidth; k++) {
-        const int reductionId = k * reducNumGroups + groupId;
-        const IdxType i       = i0 + reductionId * Policy::NumLogicalWarps;
-        if (i < N) { dots[i] = final_op(reduce_op(dots[i], acc[k])); }
-      }
+      dots[i] = final_op(reduce_op(dots[i], acc));
     } else {
-#pragma unroll
-      for (int k = 0; k < reducOutVecWidth; k++) {
-        const int reductionId = k * reducNumGroups + groupId;
-        const IdxType i       = i0 + reductionId * Policy::NumLogicalWarps;
-        if (i < N) { dots[i] = final_op(acc[k]); }
-      }
+      dots[i] = final_op(acc);
     }
   }
 }
@@ -149,12 +89,8 @@ void coalescedReductionThin(OutType* dots,
                             FinalLambda final_op   = raft::identity_op())
 {
   common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "coalescedReductionThin<%d,%d,%d,%d>",
-    Policy::LogicalWarpSize,
-    Policy::ThreadsPerBlock,
-    Policy::RowsPerLogicalWarp,
-    static_cast<int>(Policy::NoSequentialReduce));
-  dim3 threads(Policy::LogicalWarpSize, Policy::NumLogicalWarps, 1);
+    "coalescedReductionThin<%d,%d>", Policy::LogicalWarpSize, Policy::RowsPerBlock);
+  dim3 threads(Policy::LogicalWarpSize, Policy::RowsPerBlock, 1);
   dim3 blocks(ceildiv<IdxType>(N, Policy::RowsPerBlock), 1, 1);
   coalescedReductionThinKernel<Policy>
     <<<blocks, threads, 0, stream>>>(dots, data, D, N, init, main_op, reduce_op, final_op, inplace);
@@ -179,28 +115,19 @@ void coalescedReductionThinDispatcher(OutType* dots,
                                       FinalLambda final_op   = raft::identity_op())
 {
   if (D <= IdxType(2)) {
-    coalescedReductionThin<ReductionThinPolicy<2, 128, 8, true>>(
+    coalescedReductionThin<ReductionThinPolicy<2, 64>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   } else if (D <= IdxType(4)) {
-    coalescedReductionThin<ReductionThinPolicy<4, 128, 8, true>>(
+    coalescedReductionThin<ReductionThinPolicy<4, 32>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   } else if (D <= IdxType(8)) {
-    coalescedReductionThin<ReductionThinPolicy<8, 128, 8, true>>(
+    coalescedReductionThin<ReductionThinPolicy<8, 16>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   } else if (D <= IdxType(16)) {
-    coalescedReductionThin<ReductionThinPolicy<16, 128, 8, true>>(
-      dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
-  } else if (D <= IdxType(32)) {
-    coalescedReductionThin<ReductionThinPolicy<32, 128, 8, true>>(
-      dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
-  } else if (D < IdxType(128)) {
-    coalescedReductionThin<ReductionThinPolicy<32, 128, 4, false>>(
+    coalescedReductionThin<ReductionThinPolicy<16, 8>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   } else {
-    // For D=128 (included) and above, the 4x-unrolled loading loop is used
-    // and multiple rows per warp are counter-productive in terms of cache-friendliness
-    // and register use.
-    coalescedReductionThin<ReductionThinPolicy<32, 128, 1, false>>(
+    coalescedReductionThin<ReductionThinPolicy<32, 4>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   }
 }
@@ -392,10 +319,10 @@ void coalescedReductionThickDispatcher(OutType* dots,
   // Note: multiple elements per thread to take advantage of the sequential reduction and loop
   // unrolling
   if (D < IdxType(32768)) {
-    coalescedReductionThick<ReductionThickPolicy<256, 32>, ReductionThinPolicy<32, 128, 1>>(
+    coalescedReductionThick<ReductionThickPolicy<256, 32>, ReductionThinPolicy<32, 4>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   } else {
-    coalescedReductionThick<ReductionThickPolicy<256, 64>, ReductionThinPolicy<32, 128, 1>>(
+    coalescedReductionThick<ReductionThickPolicy<256, 64>, ReductionThinPolicy<32, 4>>(
       dots, data, D, N, init, stream, inplace, main_op, reduce_op, final_op);
   }
 }

@@ -25,7 +25,6 @@
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
-#include <rmm/resource_ref.hpp>
 
 #include <cuda_fp16.hpp>
 
@@ -417,7 +416,7 @@ struct batch_load_iterator {
           size_type row_width,
           size_type batch_size,
           rmm::cuda_stream_view stream,
-          rmm::device_async_resource_ref mr)
+          rmm::mr::device_memory_resource* mr)
       : stream_(stream),
         buf_(0, stream, mr),
         source_(source),
@@ -503,7 +502,7 @@ struct batch_load_iterator {
                       size_type row_width,
                       size_type batch_size,
                       rmm::cuda_stream_view stream,
-                      rmm::device_async_resource_ref mr = rmm::mr::get_current_device_resource())
+                      rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
     : cur_batch_(new batch(source, n_rows, row_width, batch_size, stream, mr)), cur_pos_(0)
   {
   }

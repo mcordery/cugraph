@@ -45,7 +45,8 @@
 #include <raft/util/pow2_utils.cuh>
 #include <raft/util/vectorized.cuh>
 
-#include <rmm/resource_ref.hpp>
+#include <rmm/cuda_stream_view.hpp>
+#include <rmm/mr/device/per_device_resource.hpp>
 
 #include <cub/cub.cuh>
 #include <cuda_fp16.h>
@@ -75,7 +76,7 @@ void select_clusters(raft::resources const& handle,
                      raft::distance::DistanceType metric,
                      const T* queries,              // [n_queries, dim]
                      const float* cluster_centers,  // [n_lists, dim_ext]
-                     rmm::device_async_resource_ref mr)
+                     rmm::mr::device_memory_resource* mr)
 {
   common::nvtx::range<common::nvtx::domain::raft> fun_scope(
     "ivf_pq::search::select_clusters(n_probes = %u, n_queries = %u, n_lists = %u, dim = %u)",
@@ -446,10 +447,7 @@ void ivfpq_search_worker(raft::resources const& handle,
                                              topK,
                                              topk_dists.data(),
                                              neighbors_uint32,
-                                             true,
-                                             false,
-                                             matrix::SelectAlgo::kAuto,
-                                             manage_local_topk ? nullptr : num_samples.data());
+                                             true);
 
   // Postprocessing
   ivf::detail::postprocess_distances(

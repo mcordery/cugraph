@@ -18,6 +18,7 @@
 
 #include <raft/core/error.hpp>
 #include <raft/util/cuda_rt_essentials.hpp>
+#include <raft/util/memory_pool.hpp>
 
 #include <rmm/cuda_stream_view.hpp>
 

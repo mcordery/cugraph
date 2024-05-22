@@ -20,7 +20,7 @@
 #include <raft/core/host_mdarray.hpp>
 #include <raft/util/integer_utils.hpp>
 
-#include <rmm/resource_ref.hpp>
+#include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <cuda.h>
 #include <cuda_fp16.h>
@@ -110,11 +110,6 @@ template <>
 _RAFT_HOST_DEVICE constexpr unsigned size_of<half>()
 {
   return 2;
-}
-template <>
-_RAFT_HOST_DEVICE constexpr unsigned size_of<half2>()
-{
-  return 4;
 }
 
 // max values for data types
@@ -261,8 +256,9 @@ template <typename T, typename data_accessor>
 void copy_with_padding(raft::resources const& res,
                        raft::device_matrix<T, int64_t, row_major>& dst,
                        mdspan<const T, matrix_extent<int64_t>, row_major, data_accessor> src,
-                       rmm::device_async_resource_ref mr = rmm::mr::get_current_device_resource())
+                       rmm::mr::device_memory_resource* mr = nullptr)
 {
+  if (!mr) { mr = rmm::mr::get_current_device_resource(); }
   size_t padded_dim = round_up_safe<size_t>(src.extent(1) * sizeof(T), 16) / sizeof(T);
 
   if ((dst.extent(0) != src.extent(0)) || (static_cast<size_t>(dst.extent(1)) != padded_dim)) {

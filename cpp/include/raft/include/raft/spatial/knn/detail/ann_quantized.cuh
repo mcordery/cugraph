@@ -108,15 +108,8 @@ void approx_knn_search(raft::resources const& handle,
   if (index->ivf_flat<T, int64_t>()) {
     ivf_flat::search_params params;
     params.n_probes = index->nprobe;
-    ivf_flat::search(handle,
-                     params,
-                     *(index->ivf_flat<T, int64_t>()),
-                     query_array,
-                     n,
-                     k,
-                     indices,
-                     distances,
-                     resource::get_workspace_resource(handle));
+    ivf_flat::search(
+      handle, params, *(index->ivf_flat<T, int64_t>()), query_array, n, k, indices, distances);
   } else if (index->ivf_pq) {
     neighbors::ivf_pq::search_params params;
     params.n_probes = index->nprobe;

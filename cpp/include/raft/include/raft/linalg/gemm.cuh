@@ -18,11 +18,9 @@
 
 #pragma once
 
-#ifndef RAFT_HIDE_DEPRECATION_WARNINGS
 #pragma message(__FILE__                                                    \
                   " is deprecated and will be removed in a future release." \
                   " Use raft/linalg/gemm.hpp instead.")
-#endif
 
 #include "detail/gemm.hpp"
 #include "gemm.hpp"  // Part of the API transferred to the non-deprecated file

@@ -24,8 +24,6 @@
 #include <raft/core/resources.hpp>
 #include <raft/random/random_types.hpp>
 
-#include <rmm/resource_ref.hpp>
-
 namespace raft::random {
 
 /**
@@ -35,7 +33,7 @@ namespace raft::random {
 
 template <typename ValueType>
 void multi_variable_gaussian(raft::resources const& handle,
-                             rmm::device_async_resource_ref mem_resource,
+                             rmm::mr::device_memory_resource& mem_resource,
                              std::optional<raft::device_vector_view<const ValueType, int>> x,
                              raft::device_matrix_view<ValueType, int, raft::col_major> P,
                              raft::device_matrix_view<ValueType, int, raft::col_major> X,
@@ -51,8 +49,12 @@ void multi_variable_gaussian(raft::resources const& handle,
                              raft::device_matrix_view<ValueType, int, raft::col_major> X,
                              const multi_variable_gaussian_decomposition_method method)
 {
-  detail::compute_multi_variable_gaussian_impl(
-    handle, rmm::mr::get_current_device_resource(), x, P, X, method);
+  rmm::mr::device_memory_resource* mem_resource_ptr = rmm::mr::get_current_device_resource();
+  RAFT_EXPECTS(mem_resource_ptr != nullptr,
+               "compute_multi_variable_gaussian: "
+               "rmm::mr::get_current_device_resource() returned null; "
+               "please report this bug to the RAPIDS RAFT developers.");
+  detail::compute_multi_variable_gaussian_impl(handle, *mem_resource_ptr, x, P, X, method);
 }
 
 /** @} */
