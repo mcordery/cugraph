@@ -135,7 +135,7 @@ list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
 
-# list(APPEND CUGRAPH_CXX_FLAGS -I/usr/local/cuda-12.2/include/cuda/std/detail/libcxx/include )
+list(APPEND CUGRAPH_CXX_FLAGS -I/usr/local/cuda-12.2/include/cuda/std/detail/libcxx/include )
 list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
 list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
 list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
