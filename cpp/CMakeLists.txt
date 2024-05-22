@@ -30,27 +30,28 @@ message(STATUS "csd ${CMAKE_CURRENT_SOURCE_DIR}")
 message(STATUS "cbd ${CMAKE_CURRENT_BINARY_DIR}")
 
 if( USE_CUDA )
-#set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "CUDA architectures" FORCE)
     find_package(CUDAToolkit REQUIRED)
+
+    find_package(CCCL REQUIRED PATHS /usr/local/cuda-12.2/targets/x86_64-linux/lib/cmake/cccl/)
+    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+    if(CCCL_FOUND)
+        message(STATUS "CCCL Found ")
+    endif()
+
     find_package(Thrust REQUIRED PATHS /usr/local/cuda-12.2/targets/x86_64-linux/lib/cmake/thrust/)
     #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
     if(thrust_FOUND)
         message(STATUS "Thrust Found ")
     endif()
-    find_package(CUB REQUIRED PATHS /usr/local/cuda-12.2/targets/x86_64-linux/lib/cmake/cub/)
-    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-    if(CUB_FOUND)
-        message(STATUS "CUB Found ")
-    endif()
+
     find_package(libcudacxx REQUIRED PATHS /usr/local/cuda-12.2/targets/x86_64-linux/lib/cmake/libcudacxx/)
-    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
     if(libcudacxx_FOUND)
-        message(STATUS "libcudacxx Found ")
+        message(STATUS "libcudacxx Found")
     endif()
 
     if (CUDAToolkit_FOUND)
         if( CUDAToolkit_VERSION VERSION_LESS 10)
-            message(FATAL_ERROR "CUDA compiler version must be at least 12.2")
+            message(FATAL_ERROR "CUDA compiler version must be at least 12.4")
         endif()   
         message(STATUS "CUDA Toolkit found: ${CUDAToolkit_VERSION}")
     else()
@@ -102,7 +103,7 @@ message(VERBOSE "CUGRAPH: CUGRAPH_EXCLUDE_CUGRAPH_OPS_FROM_ALL=${CUGRAPH_EXCLUDE
 set(CUGRAPH_C_FLAGS "")
 set(CUGRAPH_CXX_FLAGS "")
 #set(CUGRAPH_CUDA_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Dcugraph_EXPORTS)
-set(CUGRAPH_CUDA_FLAGS  -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE  -DSPDLOG_FMT_EXTERNAL  )
+set(CUGRAPH_CUDA_FLAGS  -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE  -DSPDLOG_FMT_EXTERNAL )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND CUGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
@@ -127,11 +128,9 @@ list(APPEND CUGRAPH_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
 list(APPEND CUGRAPH_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
 list(APPEND CUGRAPH_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
 list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
-list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include/cuda/std/detail/libcxx/include )
+# list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include/cuda/std/detail/libcxx/include/ )
 
-#list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include )
-#list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include/cuda )
-#list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include/cuda/std/)
+#list(APPEND CUGRAPH_CUDA_FLAGS -I/home/mcordery/spam/cugraph/cccl/libcudacxx/include/ )
 #list(APPEND CUGRAPH_CUDA_FLAGS -I/home/mcordery/spam/cugraph/cccl/libcudacxx/include/cuda )
 #list(APPEND CUGRAPH_CUDA_FLAGS -I/home/mcordery/spam/cugraph/cccl/libcudacxx/include/cuda/std )
 #list(APPEND CUGRAPH_CUDA_FLAGS -I/home/mcordery/spam/cugraph/cccl/libcudacxx/include/cuda/std/detail )
@@ -143,7 +142,7 @@ list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/inclu
 # list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/include/c++)
 # list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/include/c++/13)
 
-# list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/targets/x86_64-linux/include)
+# list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.4/targets/x86_64-linux/include)
 
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
 # #list(APPEND CUGRAPH_CUDA_FLAGS -I/home/mcordery/spam/cugraph/cccl/ )
@@ -226,16 +225,16 @@ set(CUGRAPH_SOURCES
       src/detail/collect_local_vertex_values.cu
       src/detail/groupby_and_count.cu
       src/detail/collect_comm_wrapper.cu
-      src/sampling/random_walks_mg.cu
-      src/community/detail/common_methods_mg.cu
+    #   src/sampling/random_walks_mg.cu
+    #   src/community/detail/common_methods_mg.cu
       src/community/detail/common_methods_sg.cu
       src/community/detail/refine_sg.cu
-      src/community/detail/refine_mg.cu
+    #   src/community/detail/refine_mg.cu
       src/community/edge_triangle_count_sg.cu
       src/community/detail/maximal_independent_moves_sg.cu
-      src/community/detail/maximal_independent_moves_mg.cu
+    #   src/community/detail/maximal_independent_moves_mg.cu
       src/detail/utility_wrappers.cu
-      src/structure/graph_view_mg.cu
+    #   src/structure/graph_view_mg.cu
       src/structure/remove_self_loops.cu
       src/structure/remove_multi_edges.cu
       src/utilities/path_retrieval.cu
@@ -244,41 +243,41 @@ set(CUGRAPH_SOURCES
       src/link_prediction/jaccard_sg.cu
       src/link_prediction/sorensen_sg.cu
       src/link_prediction/overlap_sg.cu
-      src/link_prediction/jaccard_mg.cu
-      src/link_prediction/sorensen_mg.cu
-      src/link_prediction/overlap_mg.cu
+    #   src/link_prediction/jaccard_mg.cu
+    #   src/link_prediction/sorensen_mg.cu
+    #   src/link_prediction/overlap_mg.cu
       src/layout/legacy/force_atlas2.cu
       src/converters/legacy/COOtoCSR.cu
-      src/community/legacy/spectral_clustering.cu
+# src/community/legacy/spectral_clustering.cu
       src/community/louvain_sg.cu
-      src/community/louvain_mg.cu
+    #   src/community/louvain_mg.cu
       src/community/leiden_sg.cu
-      src/community/leiden_mg.cu
+    #   src/community/leiden_mg.cu
       src/community/ecg_sg.cu
-      src/community/ecg_mg.cu
+    #   src/community/ecg_mg.cu
       src/community/legacy/louvain.cu
       src/community/legacy/ecg.cu
       src/community/egonet_sg.cu
-      src/community/egonet_mg.cu
+    #   src/community/egonet_mg.cu
       src/community/k_truss_sg.cu
       src/sampling/random_walks.cu
       src/sampling/random_walks_sg.cu
       src/sampling/detail/prepare_next_frontier_sg.cu
-      src/sampling/detail/prepare_next_frontier_mg.cu
+    #   src/sampling/detail/prepare_next_frontier_mg.cu
       src/sampling/detail/gather_one_hop_edgelist_sg.cu
-      src/sampling/detail/gather_one_hop_edgelist_mg.cu
+    #   src/sampling/detail/gather_one_hop_edgelist_mg.cu
       src/sampling/detail/remove_visited_vertices_from_frontier.cu
       src/sampling/detail/sample_edges_sg.cu
-      src/sampling/detail/sample_edges_mg.cu
-      src/sampling/detail/shuffle_and_organize_output_mg.cu
-      src/sampling/uniform_neighbor_sampling_mg.cpp
-      src/sampling/uniform_neighbor_sampling_sg.cpp
+    #   src/sampling/detail/sample_edges_mg.cu
+    #   src/sampling/detail/shuffle_and_organize_output_mg.cu
+    #   src/sampling/uniform_neighbor_sampling_mg.cpp
+# src/sampling/uniform_neighbor_sampling_sg.cpp
       src/sampling/renumber_sampled_edgelist_sg.cu
       src/sampling/sampling_post_processing_sg.cu
       src/cores/core_number_sg.cu
-      src/cores/core_number_mg.cu
+    #   src/cores/core_number_mg.cu
       src/cores/k_core_sg.cu
-      src/cores/k_core_mg.cu
+    #   src/cores/k_core_mg.cu
       src/components/legacy/connectivity.cu
       src/generators/generate_rmat_edgelist.cu
       src/generators/generate_bipartite_rmat_edgelist.cu
@@ -286,62 +285,62 @@ set(CUGRAPH_SOURCES
       src/generators/simple_generators.cu
       src/generators/erdos_renyi_generator.cu
       src/structure/graph_sg.cu
-      src/structure/graph_mg.cu
+    #   src/structure/graph_mg.cu
       src/structure/graph_view_sg.cu
       src/structure/decompress_to_edgelist_sg.cu
-      src/structure/decompress_to_edgelist_mg.cu
+    #   src/structure/decompress_to_edgelist_mg.cu
       src/structure/symmetrize_graph_sg.cu
-      src/structure/symmetrize_graph_mg.cu
+    #   src/structure/symmetrize_graph_mg.cu
       src/structure/transpose_graph_sg.cu
-      src/structure/transpose_graph_mg.cu
+    #   src/structure/transpose_graph_mg.cu
       src/structure/transpose_graph_storage_sg.cu
-      src/structure/transpose_graph_storage_mg.cu
+    #   src/structure/transpose_graph_storage_mg.cu
       src/structure/coarsen_graph_sg.cu
-      src/structure/coarsen_graph_mg.cu
-      src/structure/graph_weight_utils_mg.cu
+    #   src/structure/coarsen_graph_mg.cu
+    #   src/structure/graph_weight_utils_mg.cu
       src/structure/graph_weight_utils_sg.cu
       src/structure/renumber_edgelist_sg.cu
-      src/structure/renumber_edgelist_mg.cu
+    #   src/structure/renumber_edgelist_mg.cu
       src/structure/renumber_utils_sg.cu
-      src/structure/renumber_utils_mg.cu
+    #   src/structure/renumber_utils_mg.cu
       src/structure/relabel_sg.cu
-      src/structure/relabel_mg.cu
+    #   src/structure/relabel_mg.cu
       src/structure/induced_subgraph_sg.cu
-      src/structure/induced_subgraph_mg.cu
+    #   src/structure/induced_subgraph_mg.cu
       src/structure/select_random_vertices_sg.cu
-      src/structure/select_random_vertices_mg.cu
+    #   src/structure/select_random_vertices_mg.cu
       src/traversal/extract_bfs_paths_sg.cu
-      src/traversal/extract_bfs_paths_mg.cu
+    #   src/traversal/extract_bfs_paths_mg.cu
       src/traversal/bfs_sg.cu
-      src/traversal/bfs_mg.cu
+    #   src/traversal/bfs_mg.cu
       src/traversal/sssp_sg.cu
       src/traversal/od_shortest_distances_sg.cu
-      src/traversal/sssp_mg.cu
+    #   src/traversal/sssp_mg.cu
       src/link_analysis/hits_sg.cu
-      src/link_analysis/hits_mg.cu
+    #   src/link_analysis/hits_mg.cu
       src/link_analysis/pagerank_sg.cu
-      src/link_analysis/pagerank_mg.cu
+    #   src/link_analysis/pagerank_mg.cu
       src/centrality/katz_centrality_sg.cu
-      src/centrality/katz_centrality_mg.cu
+    #   src/centrality/katz_centrality_mg.cu
       src/centrality/eigenvector_centrality_sg.cu
-      src/centrality/eigenvector_centrality_mg.cu
+    #   src/centrality/eigenvector_centrality_mg.cu
       src/centrality/betweenness_centrality_sg.cu
-      src/centrality/betweenness_centrality_mg.cu
+    #   src/centrality/betweenness_centrality_mg.cu
       src/tree/legacy/mst.cu
       src/components/weakly_connected_components_sg.cu
-      src/components/weakly_connected_components_mg.cu
+    #   src/components/weakly_connected_components_mg.cu
       src/components/mis_sg.cu
-      src/components/mis_mg.cu
+    #   src/components/mis_mg.cu
       src/components/vertex_coloring_sg.cu
-      src/components/vertex_coloring_mg.cu
+    #   src/components/vertex_coloring_mg.cu
       src/structure/create_graph_from_edgelist_sg.cu
-      src/structure/create_graph_from_edgelist_mg.cu
+    #   src/structure/create_graph_from_edgelist_mg.cu
       src/structure/symmetrize_edgelist_sg.cu
-      src/structure/symmetrize_edgelist_mg.cu
+    #   src/structure/symmetrize_edgelist_mg.cu
       src/community/triangle_count_sg.cu
-      src/community/triangle_count_mg.cu
+    #   src/community/triangle_count_mg.cu
       src/traversal/k_hop_nbrs_sg.cu
-      src/traversal/k_hop_nbrs_mg.cu
+    #   src/traversal/k_hop_nbrs_mg.cu
       src/mtmg/vertex_result.cu
 )
 
@@ -459,7 +458,7 @@ add_library(cugraph_c
         src/c_api/degrees_result.cpp
         src/c_api/error.cpp
         src/c_api/graph_sg.cpp
-        src/c_api/graph_mg.cpp
+        # src/c_api/graph_mg.cpp
         src/c_api/graph_functions.cpp
         src/c_api/pagerank.cpp
         src/c_api/katz.cpp
@@ -478,7 +477,7 @@ add_library(cugraph_c
         src/c_api/legacy_spectral.cpp
         src/c_api/legacy_ecg.cpp
         src/c_api/graph_helper_sg.cu
-        src/c_api/graph_helper_mg.cu
+        # src/c_api/graph_helper_mg.cu
         src/c_api/graph_generators.cpp
         src/c_api/induced_subgraph_result.cpp
         src/c_api/hits.cpp
