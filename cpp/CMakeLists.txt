@@ -422,9 +422,10 @@ target_include_directories(cugraph
 if( USE_CUDA )
 target_link_libraries(cugraph
     PUBLIC
-        CUDA::toolkit
-        CCCL
-        libcudacxx
+        CUDA::cublas
+        CUDA::cusparse
+        CUDA::curand
+        CUDA::cusolver
         $<BUILD_LOCAL_INTERFACE:CUDA::toolkit>
 #        $<TARGET_NAME_IF_EXISTS:cugraph-ops::cugraph-ops++>
 #    PRIVATE
