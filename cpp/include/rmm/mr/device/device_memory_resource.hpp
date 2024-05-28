@@ -20,7 +20,6 @@
 #include <rmm/detail/nvtx/ranges.hpp>
 
 #include <cuda/memory_resource>
-
 #include <cstddef>
 #include <utility>
 
