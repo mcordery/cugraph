@@ -14,57 +14,27 @@
 # limitations under the License.
 #=============================================================================
 
-cmake_minimum_required(VERSION 3.26.4 FATAL_ERROR)
 
-if( USE_CUDA )
-if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-  set(CMAKE_CUDA_ARCHITECTURES 70)
-endif()
-project(CUGRAPH  LANGUAGES C CXX CUDA)
-endif()
-if( USE_ROCM )
-project(CUGRAPH  LANGUAGES C CXX ROCM)
-endif()
+message(STATUS "Configuring build for ${PROJECT_NAME}")
 
-message(STATUS "csd ${CMAKE_CURRENT_SOURCE_DIR}")
-message(STATUS "cbd ${CMAKE_CURRENT_BINARY_DIR}")
-
-if( USE_CUDA )
-#set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "CUDA architectures" FORCE)
-    find_package(CUDAToolkit REQUIRED)
-    #find_package(Thrust REQUIRED PATHS /home/mcordery/cugraph/cpp/include/cccl/thrust/)
-    set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-    #if(thrust_FOUND)
-    #    message(STATUS "Thrust Found ")
-    #endif()
-    #find_package(CUB REQUIRED PATHS /home/mcordery/cugraph/cpp/include/cccl/cub)
-    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-    #if(CUB_FOUND)
-    #    message(STATUS "CUB Found ")
-    #endif()
-    #find_package(libcudacxx REQUIRED PATHS /home/mcordery/cugraph/cpp/include/cccl/libcudacxx)
-    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
-    #if(libcudacxx_FOUND)
-    #    message(STATUS "libcudacxx Found ")
-    #endif()
-
-    if (CUDAToolkit_FOUND)
-        if( CUDAToolkit_VERSION VERSION_LESS 10)
-            message(FATAL_ERROR "CUDA compiler version must be at least 12.2")
-        endif()   
-        message(STATUS "CUDA Toolkit found: ${CUDAToolkit_VERSION}")
-    else()
-        message(FATAL_ERROR "CUDA Toolkit not found")
-    endif()
+find_package(hip REQUIRED)
+if (hip_FOUND)
+    if( hip_VERSION VERSION_LESS 10)
+        message(FATAL_ERROR "HIP compiler version must be at least 12.2")
+    endif()   
+    message(STATUS "HIP Toolkit found: ${HIPToolkit_VERSION}")
+else()
+    message(FATAL_ERROR "HIP Toolkit not found")
 endif()
 
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
-   CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.3)
-    message(FATAL_ERROR "GCC compiler must be at least 9.3")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+    # Not sure if this needs to be v17  but it's what's in rocm-6.1 so that's what I'm using
+   CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)
+    message(FATAL_ERROR "GCC compiler must be at least 17.0")
 endif()
 
-########## need test for amdclang ############
+set(CMAKE_CUDA_ARCHITECTURES "gfx900")
 
 ######### Set build configuration ############
 
@@ -77,104 +47,97 @@ else()
     set(CMAKE_BUILD_TYPE "Release")
 endif() 
 
+message(FATAL_ERROR "stop here")
+
+
 ################################################################################
 # - User Options  --------------------------------------------------------------
 
-option(BUILD_SHARED_LIBS "Build cuGraph shared libraries" ON)
-option(BUILD_CUGRAPH_MG_TESTS "Build cuGraph multigpu algorithm tests" OFF)
-option(CMAKE_CUDA_LINEINFO "Enable the -lineinfo option for nvcc (useful for cuda-memcheck / profiler" OFF)
+option(BUILD_SHARED_LIBS "Build rocGraph shared libraries" ON)
+option(BUILD_ROCGRAPH_MG_TESTS "Build rocGraph multigpu algorithm tests" OFF)
+option(CMAKE_HIP_LINEINFO "Enable the -lineinfo option for nvcc (useful for cuda-memcheck / profiler" OFF)
 option(BUILD_TESTS "Configure CMake to build tests" OFF)
-option(USE_CUGRAPH_OPS "Enable all functions that call cugraph-ops" OFF)
-option(USE_RAFT_STATIC "Build raft as a static library" OFF)
-option(CUGRAPH_COMPILE_RAFT_LIB "Compile the raft library instead of using it header-only" OFF)
-option(CUDA_STATIC_RUNTIME "Statically link the CUDA toolkit runtime and libraries" OFF)
-option(CUGRAPH_USE_CUGRAPH_OPS_STATIC "Build and statically link the cugraph-ops library" OFF)
-option(CUGRAPH_EXCLUDE_CUGRAPH_OPS_FROM_ALL "Exclude cugraph-ops targets from cuGraph's 'all' target" OFF)
-option(ALLOW_CLONE_CUGRAPH_OPS "Whether to attempt to clone cugraph-ops when a local version is not available" OFF)
+option(ROCGRAPH_COMPILE_RAFT_LIB "Compile the raft library instead of using it header-only" OFF)
+option(HIP_STATIC_RUNTIME "Statically link the HIP toolkit runtime and libraries" OFF)
 
-message(VERBOSE "CUGRAPH: CUDA_STATIC_RUNTIME=${CUDA_STATIC_RUNTIME}")
-message(VERBOSE "CUGRAPH: CUGRAPH_USE_CUGRAPH_OPS_STATIC=${CUGRAPH_USE_CUGRAPH_OPS_STATIC}")
-message(VERBOSE "CUGRAPH: CUGRAPH_EXCLUDE_CUGRAPH_OPS_FROM_ALL=${CUGRAPH_EXCLUDE_CUGRAPH_OPS_FROM_ALL}")
+message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 
 ################################################################################
 # - compiler options -----------------------------------------------------------
 
-set(CUGRAPH_C_FLAGS "")
-set(CUGRAPH_CXX_FLAGS "")
-set(CUGRAPH_CUDA_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Dcugraph_EXPORTS)
-#set(CUGRAPH_CUDA_FLAGS -gencode arch=compute_70,code=sm_70 -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE  -DSPDLOG_FMT_EXTERNAL  )
+set(ROCGRAPH_C_FLAGS "")
+set(ROCGRAPH_CXX_FLAGS "")
+
+#
+# NB check the flags here
+#
+set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_HIP_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-    list(APPEND CUGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
+    list(APPEND ROCGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 
-message("-- Building for GPU_ARCHS = ${CMAKE_CUDA_ARCHITECTURES}")
+message("-- Building for GPU_ARCHS = ${CMAKE_HIP_ARCHITECTURES}")
 
 
-if(NOT USE_CUGRAPH_OPS)
-    message(STATUS "Disabling functions that reference cugraph-ops")
-    list(APPEND CUGRAPH_C_FLAGS -DNO_CUGRAPH_OPS)
-    list(APPEND CUGRAPH_CXX_FLAGS -DNO_CUGRAPH_OPS)
-    list(APPEND CUGRAPH_CUDA_FLAGS -DNO_CUGRAPH_OPS)
-endif()
-
-list(APPEND CUGRAPH_C_FLAGS -DFMT_HEADER_ONLY )
-list(APPEND CUGRAPH_CXX_FLAGS  -DFMT_HEADER_ONLY )
-#list(APPEND CUGRAPH_CUDA_FLAGS -DFMT_HEADER_ONLY -DTHRUST_IGNORE_CUB_VERSION_CHECK )
-list(APPEND CUGRAPH_CUDA_FLAGS -DFMT_HEADER_ONLY  )
+list(APPEND ROCGRAPH_C_FLAGS -DFMT_HEADER_ONLY )
+list(APPEND ROCGRAPH_CXX_FLAGS  -DFMT_HEADER_ONLY )
+#list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY -DTHRUST_IGNORE_CUB_VERSION_CHECK )
+list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY  )
 
 
 
-list(APPEND CUGRAPH_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
-list(APPEND CUGRAPH_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
-list(APPEND CUGRAPH_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
-list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
-#list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/include/cuda/std/detail/libcxx/include )
-list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda/include )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
- list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
- list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
- list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
- list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+list(APPEND ROCGRAPH_HIP_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
+list(APPEND ROCGRAPH_HIP_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
+list(APPEND ROCGRAPH_HIP_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
+list(APPEND ROCGRAPH_HIP_FLAGS -Xfatbin=-compress-all)
+#list(APPEND ROCGRAPH_HIP_FLAGS -I/usr/local/cuda-12.2/include/cuda/std/detail/libcxx/include )
+list(APPEND ROCGRAPH_HIP_FLAGS -I/usr/local/cuda/include )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
+list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
+ list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
+ list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
+ list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+ list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
 
-list(APPEND CUGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Dcugraph_EXPORTS)
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
- list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
- list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
- list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
- list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
- list(APPEND CUGRAPH_CXX_FLAGS -I/usr/local/cuda/include )
+list(APPEND ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
+ list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
+ list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
+ list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+ list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+ list(APPEND ROCGRAPH_CXX_FLAGS -I/usr/local/cuda/include )
 
 
 
-# Option to enable line info in CUDA device compilation to allow introspection when profiling /
+# Option to enable line info in HIP device compilation to allow introspection when profiling /
 # memchecking
-if (CMAKE_CUDA_LINEINFO)
-    list(APPEND CUGRAPH_CUDA_FLAGS -lineinfo)
+if (CMAKE_HIP_LINEINFO)
+    list(APPEND ROCGRAPH_HIP_FLAGS -lineinfo)
 endif()
 
 # Debug options
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "Building with debugging flags")
-    list(APPEND CUGRAPH_CUDA_FLAGS -G -Xcompiler=-rdynamic)
+    list(APPEND ROCGRAPH_HIP_FLAGS -G -Xcompiler=-rdynamic)
 endif()
 
 
 ###################################################################################################
 # - find CPM based dependencies  ------------------------------------------------------------------
 
-if (BUILD_CUGRAPH_MTMG_TESTS)
+if (BUILD_ROCGRAPH_MTMG_TESTS)
  # include(cmake/thirdparty/get_ucp.cmake)
 endif()
 
@@ -184,166 +147,143 @@ if(BUILD_TESTS)
 endif()
 
 ################################################################################
-# - libcugraph library target --------------------------------------------------
+# - librocgraph library target --------------------------------------------------
 
 # NOTE: The most expensive compilations are listed first
 #       since ninja will run them in parallel in this order,
 #       which should give us a better parallel schedule.
 
-set(CUGRAPH_SOURCES
-      src/utilities/shuffle_vertices.cu
-      src/detail/permute_range.cu
-      src/utilities/shuffle_vertex_pairs.cu
-      src/detail/collect_local_vertex_values.cu
-      src/detail/groupby_and_count.cu
-      src/detail/collect_comm_wrapper.cu
-      src/sampling/random_walks_mg.cu
-      src/community/detail/common_methods_mg.cu
-      src/community/detail/common_methods_sg.cu
-      src/community/detail/refine_sg.cu
-      src/community/detail/refine_mg.cu
-      src/community/edge_triangle_count_sg.cu
-      src/community/detail/maximal_independent_moves_sg.cu
-      src/community/detail/maximal_independent_moves_mg.cu
-      src/detail/utility_wrappers.cu
-      src/structure/graph_view_mg.cu
-      src/structure/remove_self_loops.cu
-      src/structure/remove_multi_edges.cu
-      src/utilities/path_retrieval.cu
-      src/structure/legacy/graph.cu
-      src/linear_assignment/legacy/hungarian.cu
-      src/link_prediction/jaccard_sg.cu
-      src/link_prediction/sorensen_sg.cu
-      src/link_prediction/overlap_sg.cu
-      src/link_prediction/jaccard_mg.cu
-      src/link_prediction/sorensen_mg.cu
-      src/link_prediction/overlap_mg.cu
-      src/layout/legacy/force_atlas2.cu
-      src/converters/legacy/COOtoCSR.cu
-      src/community/legacy/spectral_clustering.cu
-      src/community/louvain_sg.cu
-      src/community/louvain_mg.cu
-      src/community/leiden_sg.cu
-      src/community/leiden_mg.cu
-      src/community/ecg_sg.cu
-      src/community/ecg_mg.cu
-      src/community/legacy/louvain.cu
-      src/community/legacy/ecg.cu
-      src/community/egonet_sg.cu
-      src/community/egonet_mg.cu
-      src/community/k_truss_sg.cu
-      src/sampling/random_walks.cu
-      src/sampling/random_walks_sg.cu
-      src/sampling/detail/prepare_next_frontier_sg.cu
-      src/sampling/detail/prepare_next_frontier_mg.cu
-      src/sampling/detail/gather_one_hop_edgelist_sg.cu
-      src/sampling/detail/gather_one_hop_edgelist_mg.cu
-      src/sampling/detail/remove_visited_vertices_from_frontier.cu
-      src/sampling/detail/sample_edges_sg.cu
-      src/sampling/detail/sample_edges_mg.cu
-      src/sampling/detail/shuffle_and_organize_output_mg.cu
+set(ROCGRAPH_SOURCES
+      src/utilities/shuffle_vertices.cpp
+      src/detail/permute_range.cpp
+      src/utilities/shuffle_vertex_pairs.cpp
+      src/detail/collect_local_vertex_values.cpp
+      src/detail/groupby_and_count.cpp
+      src/detail/collect_comm_wrapper.cpp
+      src/sampling/random_walks_mg.cpp
+      src/community/detail/common_methods_mg.cpp
+      src/community/detail/common_methods_sg.cpp
+      src/community/detail/refine_sg.cpp
+      src/community/detail/refine_mg.cpp
+      src/community/edge_triangle_count_sg.cpp
+      src/community/detail/maximal_independent_moves_sg.cpp
+      src/community/detail/maximal_independent_moves_mg.cpp
+      src/detail/utility_wrappers.cpp
+      src/structure/graph_view_mg.cpp
+      src/structure/remove_self_loops.cpp
+      src/structure/remove_multi_edges.cpp
+      src/utilities/path_retrieval.cpp
+      src/structure/legacy/graph.cpp
+      src/linear_assignment/legacy/hungarian.cpp
+      src/link_prediction/jaccard_sg.cpp
+      src/link_prediction/sorensen_sg.cpp
+      src/link_prediction/overlap_sg.cpp
+      src/link_prediction/jaccard_mg.cpp
+      src/link_prediction/sorensen_mg.cpp
+      src/link_prediction/overlap_mg.cpp
+      src/layout/legacy/force_atlas2.cpp
+      src/converters/legacy/COOtoCSR.cpp
+      src/community/legacy/spectral_clustering.cpp
+      src/community/louvain_sg.cpp
+      src/community/louvain_mg.cpp
+      src/community/leiden_sg.cpp
+      src/community/leiden_mg.cpp
+      src/community/ecg_sg.cpp
+      src/community/ecg_mg.cpp
+      src/community/legacy/louvain.cpp
+      src/community/legacy/ecg.cpp
+      src/community/egonet_sg.cpp
+      src/community/egonet_mg.cpp
+      src/community/k_truss_sg.cpp
+      src/sampling/random_walks.cpp
+      src/sampling/random_walks_sg.cpp
+      src/sampling/detail/prepare_next_frontier_sg.cpp
+      src/sampling/detail/prepare_next_frontier_mg.cpp
+      src/sampling/detail/gather_one_hop_edgelist_sg.cpp
+      src/sampling/detail/gather_one_hop_edgelist_mg.cpp
+      src/sampling/detail/remove_visited_vertices_from_frontier.cpp
+      src/sampling/detail/sample_edges_sg.cpp
+      src/sampling/detail/sample_edges_mg.cpp
+      src/sampling/detail/shuffle_and_organize_output_mg.cpp
       src/sampling/uniform_neighbor_sampling_mg.cpp
       src/sampling/uniform_neighbor_sampling_sg.cpp
-      src/sampling/renumber_sampled_edgelist_sg.cu
-      src/sampling/sampling_post_processing_sg.cu
-      src/cores/core_number_sg.cu
-      src/cores/core_number_mg.cu
-      src/cores/k_core_sg.cu
-      src/cores/k_core_mg.cu
-      src/components/legacy/connectivity.cu
-      src/generators/generate_rmat_edgelist.cu
-      src/generators/generate_bipartite_rmat_edgelist.cu
-      src/generators/generator_tools.cu
-      src/generators/simple_generators.cu
-      src/generators/erdos_renyi_generator.cu
-      src/structure/graph_sg.cu
-      src/structure/graph_mg.cu
-      src/structure/graph_view_sg.cu
-      src/structure/decompress_to_edgelist_sg.cu
-      src/structure/decompress_to_edgelist_mg.cu
-      src/structure/symmetrize_graph_sg.cu
-      src/structure/symmetrize_graph_mg.cu
-      src/structure/transpose_graph_sg.cu
-      src/structure/transpose_graph_mg.cu
-      src/structure/transpose_graph_storage_sg.cu
-      src/structure/transpose_graph_storage_mg.cu
-      src/structure/coarsen_graph_sg.cu
-      src/structure/coarsen_graph_mg.cu
-      src/structure/graph_weight_utils_mg.cu
-      src/structure/graph_weight_utils_sg.cu
-      src/structure/renumber_edgelist_sg.cu
-      src/structure/renumber_edgelist_mg.cu
-      src/structure/renumber_utils_sg.cu
-      src/structure/renumber_utils_mg.cu
-      src/structure/relabel_sg.cu
-      src/structure/relabel_mg.cu
-      src/structure/induced_subgraph_sg.cu
-      src/structure/induced_subgraph_mg.cu
-      src/structure/select_random_vertices_sg.cu
-      src/structure/select_random_vertices_mg.cu
-      src/traversal/extract_bfs_paths_sg.cu
-      src/traversal/extract_bfs_paths_mg.cu
-      src/traversal/bfs_sg.cu
-      src/traversal/bfs_mg.cu
-      src/traversal/sssp_sg.cu
-      src/traversal/od_shortest_distances_sg.cu
-      src/traversal/sssp_mg.cu
-      src/link_analysis/hits_sg.cu
-      src/link_analysis/hits_mg.cu
-      src/link_analysis/pagerank_sg.cu
-      src/link_analysis/pagerank_mg.cu
-      src/centrality/katz_centrality_sg.cu
-      src/centrality/katz_centrality_mg.cu
-      src/centrality/eigenvector_centrality_sg.cu
-      src/centrality/eigenvector_centrality_mg.cu
-      src/centrality/betweenness_centrality_sg.cu
-      src/centrality/betweenness_centrality_mg.cu
-      src/tree/legacy/mst.cu
-      src/components/weakly_connected_components_sg.cu
-      src/components/weakly_connected_components_mg.cu
-      src/components/mis_sg.cu
-      src/components/mis_mg.cu
-      src/components/vertex_coloring_sg.cu
-      src/components/vertex_coloring_mg.cu
-      src/structure/create_graph_from_edgelist_sg.cu
-      src/structure/create_graph_from_edgelist_mg.cu
-      src/structure/symmetrize_edgelist_sg.cu
-      src/structure/symmetrize_edgelist_mg.cu
-      src/community/triangle_count_sg.cu
-      src/community/triangle_count_mg.cu
-      src/traversal/k_hop_nbrs_sg.cu
-      src/traversal/k_hop_nbrs_mg.cu
-      src/mtmg/vertex_result.cu
+      src/sampling/renumber_sampled_edgelist_sg.cpp
+      src/sampling/sampling_post_processing_sg.cpp
+      src/cores/core_number_sg.cpp
+      src/cores/core_number_mg.cpp
+      src/cores/k_core_sg.cpp
+      src/cores/k_core_mg.cpp
+      src/components/legacy/connectivity.cpp
+      src/generators/generate_rmat_edgelist.cpp
+      src/generators/generate_bipartite_rmat_edgelist.cpp
+      src/generators/generator_tools.cpp
+      src/generators/simple_generators.cpp
+      src/generators/erdos_renyi_generator.cpp
+      src/structure/graph_sg.cpp
+      src/structure/graph_mg.cpp
+      src/structure/graph_view_sg.cpp
+      src/structure/decompress_to_edgelist_sg.cpp
+      src/structure/decompress_to_edgelist_mg.cpp
+      src/structure/symmetrize_graph_sg.cpp
+      src/structure/symmetrize_graph_mg.cpp
+      src/structure/transpose_graph_sg.cpp
+      src/structure/transpose_graph_mg.cpp
+      src/structure/transpose_graph_storage_sg.cpp
+      src/structure/transpose_graph_storage_mg.cpp
+      src/structure/coarsen_graph_sg.cpp
+      src/structure/coarsen_graph_mg.cpp
+      src/structure/graph_weight_utils_mg.cpp
+      src/structure/graph_weight_utils_sg.cpp
+      src/structure/renumber_edgelist_sg.cpp
+      src/structure/renumber_edgelist_mg.cpp
+      src/structure/renumber_utils_sg.cpp
+      src/structure/renumber_utils_mg.cpp
+      src/structure/relabel_sg.cpp
+      src/structure/relabel_mg.cpp
+      src/structure/induced_subgraph_sg.cpp
+      src/structure/induced_subgraph_mg.cpp
+      src/structure/select_random_vertices_sg.cpp
+      src/structure/select_random_vertices_mg.cpp
+      src/traversal/extract_bfs_paths_sg.cpp
+      src/traversal/extract_bfs_paths_mg.cpp
+      src/traversal/bfs_sg.cpp
+      src/traversal/bfs_mg.cpp
+      src/traversal/sssp_sg.cpp
+      src/traversal/od_shortest_distances_sg.cpp
+      src/traversal/sssp_mg.cpp
+      src/link_analysis/hits_sg.cpp
+      src/link_analysis/hits_mg.cpp
+      src/link_analysis/pagerank_sg.cpp
+      src/link_analysis/pagerank_mg.cpp
+      src/centrality/katz_centrality_sg.cpp
+      src/centrality/katz_centrality_mg.cpp
+      src/centrality/eigenvector_centrality_sg.cpp
+      src/centrality/eigenvector_centrality_mg.cpp
+      src/centrality/betweenness_centrality_sg.cpp
+      src/centrality/betweenness_centrality_mg.cpp
+      src/tree/legacy/mst.cpp
+      src/components/weakly_connected_components_sg.cpp
+      src/components/weakly_connected_components_mg.cpp
+      src/components/mis_sg.cpp
+      src/components/mis_mg.cpp
+      src/components/vertex_coloring_sg.cpp
+      src/components/vertex_coloring_mg.cpp
+      src/structure/create_graph_from_edgelist_sg.cpp
+      src/structure/create_graph_from_edgelist_mg.cpp
+      src/structure/symmetrize_edgelist_sg.cpp
+      src/structure/symmetrize_edgelist_mg.cpp
+      src/community/triangle_count_sg.cpp
+      src/community/triangle_count_mg.cpp
+      src/traversal/k_hop_nbrs_sg.cpp
+      src/traversal/k_hop_nbrs_mg.cpp
+      src/mtmg/vertex_result.cpp
 )
 
-# commented out because not using cugraphops right now
-#if(USE_CUGRAPH_OPS)
-#    list(APPEND CUGRAPH_SOURCES
-#        src/sampling/neighborhood.cu
-#    )
-#endif()
 
-add_library(cugraph ${CUGRAPH_SOURCES})
+add_library(rocgraph ${ROCGRAPH_SOURCES})
 
-if( USE_CUDA )
-    set_target_properties(cugraph
-        PROPERTIES BUILD_RPATH                         "\$ORIGIN"
-                INSTALL_RPATH                       "\$ORIGIN"
-                # set target compile options
-                CXX_STANDARD                        17
-                CXX_STANDARD_REQUIRED               ON
-                CUDA_STANDARD                       17
-                CUDA_STANDARD_REQUIRED              ON
-                POSITION_INDEPENDENT_CODE           ON
-                INTERFACE_POSITION_INDEPENDENT_CODE ON
-    )
-    target_compile_options(cugraph
-                PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                        "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
-    )
-endif()
-if( USE_ROCM )
-    set_target_properties(cugraph
+
+    set_target_properties(rocgraph
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
                 # set target compile options
@@ -354,17 +294,16 @@ if( USE_ROCM )
                 POSITION_INDEPENDENT_CODE           ON
                 INTERFACE_POSITION_INDEPENDENT_CODE ON
     )
-    target_compile_options(cugraph
-                PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                        "$<$<COMPILE_LANGUAGE:ROCM>:${CUGRAPH_ROCM_FLAGS}>"
+    target_compile_options(rocgraph
+                PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
+                        "$<$<COMPILE_LANGUAGE:ROCM>:${ROCGRAPH_ROCM_FLAGS}>"
     )
-endif()
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
-target_compile_definitions(cugraph PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
+target_compile_definitions(rocgraph PUBLIC HIP_API_PER_THREAD_DEFAULT_STREAM)
 
-file(WRITE "${CUGRAPH_BINARY_DIR}/fatbin.ld"
+file(WRITE "${ROCGRAPH_BINARY_DIR}/fatbin.ld"
 [=[
 SECTIONS
 {
@@ -372,62 +311,43 @@ SECTIONS
   .nv_fatbin : { *(.nv_fatbin) }
 }
 ]=])
-target_link_options(cugraph PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
+target_link_options(rocgraph PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
 
-add_library(cugraph::cugraph ALIAS cugraph)
+add_library(rocgraph::rocgraph ALIAS rocgraph)
 
 ################################################################################
 # - include paths --------------------------------------------------------------
-message(STATUS "tid ${CUDAToolkit_INCLUDE_DIRS}")
-target_include_directories(cugraph
+message(STATUS "tid ${HIPToolkit_INCLUDE_DIRS}")
+target_include_directories(rocgraph
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty"
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PUBLIC
-        "${CUDAToolkit_INCLUDE_DIRS}"
+        "${HIPToolkit_INCLUDE_DIRS}"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>"
 )
 
 ################################################################################
-# - link libraries -------------------------------------------------------------
-if( USE_CUDA )
-target_link_libraries(cugraph
-    PUBLIC
-    CUDA::cublas
-    CUDA::cusparse
-    CUDA::curand
-    CUDA::cusolver
-    $<BUILD_LOCAL_INTERFACE:CUDA::toolkit>
-#        $<TARGET_NAME_IF_EXISTS:cugraph-ops::cugraph-ops++>
-#    PRIVATE
-#        ${COMPILED_RAFT_LIB}
-#        cuco::cuco
-    )
-endif()
 
-if( USE_ROCM )
-target_link_libraries(cugraph
+target_link_libraries(rocgraph
     PUBLIC
-        ROCM::rocblas
-        ROCM::rocsparse
-        ROCM::rocrand
-        ROCM::rocsolver
+        hip::toolkit
+        rocm::rocblas
+        rocm::rocsparse
+        rocm::rocrand
+        rocm::rocsolver
         $<BUILD_LOCAL_INTERFACE:ROCM::toolkit>
-#        $<TARGET_NAME_IF_EXISTS:cugraph-ops::cugraph-ops++>
-#    PRIVATE
-#        ${COMPILED_RAFT_LIB}
-#        cuco::cuco
+
     )
-endif()
 
 ################################################################################
 # - C-API library --------------------------------------------------------------
 
-add_library(cugraph_c
+add_library(rocgraph_c
         src/c_api/resource_handle.cpp
         src/c_api/array.cpp
-        src/c_api/degrees.cu
+        src/c_api/degrees.cpp
         src/c_api/degrees_result.cpp
         src/c_api/error.cpp
         src/c_api/graph_sg.cpp
@@ -446,11 +366,11 @@ add_library(cugraph_c
         src/c_api/k_core.cpp
         src/c_api/hierarchical_clustering_result.cpp
         src/c_api/induced_subgraph.cpp
-        src/c_api/capi_helper.cu
+        src/c_api/capi_helper.cpp
         src/c_api/legacy_spectral.cpp
         src/c_api/legacy_ecg.cpp
-        src/c_api/graph_helper_sg.cu
-        src/c_api/graph_helper_mg.cu
+        src/c_api/graph_helper_sg.cpp
+        src/c_api/graph_helper_mg.cpp
         src/c_api/graph_generators.cpp
         src/c_api/induced_subgraph_result.cpp
         src/c_api/hits.cpp
@@ -469,37 +389,37 @@ add_library(cugraph_c
         src/c_api/strongly_connected_components.cpp
         src/c_api/allgather.cpp
         )
-add_library(cugraph::cugraph_c ALIAS cugraph_c)
+add_library(rocgraph::rocgraph_c ALIAS rocgraph_c)
 
-# Currently presuming we aren't calling any CUDA kernels in cugraph_c
+# Currently presuming we aren't calling any HIP kernels in rocgraph_c
 
-set_target_properties(cugraph_c
+set_target_properties(rocgraph_c
     PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                INSTALL_RPATH                       "\$ORIGIN"
                # set target compile options
                CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
-               CUDA_STANDARD                       17
-               CUDA_STANDARD_REQUIRED              ON
+               HIP_STANDARD                       17
+               HIP_STANDARD_REQUIRED              ON
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON
 )
 
-target_compile_options(cugraph_c
-             PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                     "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+target_compile_options(rocgraph_c
+             PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
+                     "$<$<COMPILE_LANGUAGE:HIP>:${ROCGRAPH_HIP_FLAGS}>"
 )
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
-target_compile_definitions(cugraph_c PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
+target_compile_definitions(rocgraph_c PUBLIC HIP_API_PER_THREAD_DEFAULT_STREAM)
 
-target_link_options(cugraph_c PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
+target_link_options(rocgraph_c PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
 
 ################################################################################
 # - C-API include paths --------------------------------------------------------
 
-target_include_directories(cugraph_c
+target_include_directories(rocgraph_c
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PUBLIC
@@ -510,7 +430,7 @@ target_include_directories(cugraph_c
 
 ################################################################################
 # - C-API link libraries -------------------------------------------------------
-target_link_libraries(cugraph_c PRIVATE cugraph::cugraph)
+target_link_libraries(rocgraph_c PRIVATE rocgraph::rocgraph)
 
 ################################################################################
 # - generate tests -------------------------------------------------------------
@@ -525,66 +445,66 @@ target_link_libraries(cugraph_c PRIVATE cugraph::cugraph)
 set(libdir $${CMAKE_CURRENT_BINARY_DIR})
 include(CPack)
 
-install(TARGETS cugraph
+install(TARGETS rocgraph
         DESTINATION ${lib_dir}
         )
 
-install(DIRECTORY include/cugraph/
-        DESTINATION include/cugraph)
+install(DIRECTORY include/rocgraph/
+        DESTINATION include/rocgraph)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cugraph/version_config.hpp
-        DESTINATION include/cugraph)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/rocgraph/version_config.hpp
+        DESTINATION include/rocgraph)
 
-install(TARGETS cugraph_c
+install(TARGETS rocgraph_c
         DESTINATION ${lib_dir}
         )
 
-install(DIRECTORY include/cugraph_c/
-        DESTINATION include/cugraph_c)
+install(DIRECTORY include/rocgraph_c/
+        DESTINATION include/rocgraph_c)
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cugraph_c/version_config.hpp
-        DESTINATION include/cugraph_c)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/rocgraph_c/version_config.hpp
+        DESTINATION include/rocgraph_c)
 
 ################################################################################
 # - install export -------------------------------------------------------------
 
 set(doc_string
 [=[
-Provide targets for cuGraph.
+Provide targets for rocGraph.
 
-cuGraph library is a collection of GPU accelerated graph algorithms that process data found in
+rocGraph library is a collection of GPU accelerated graph algorithms that process data found in
 [GPU DataFrames](https://github.com/rapidsai/cudf).
 
 ]=])
 
-#rapids_export(INSTALL cugraph
-#    EXPORT_SET cugraph-exports
-#    GLOBAL_TARGETS cugraph cugraph_c
-#    NAMESPACE cugraph::
+#rapids_export(INSTALL rocgraph
+#    EXPORT_SET rocgraph-exports
+#    GLOBAL_TARGETS rocgraph rocgraph_c
+#    NAMESPACE rocgraph::
 #    DOCUMENTATION doc_string
 #    )
 
 ################################################################################
 # - build export ---------------------------------------------------------------
-#rapids_export(BUILD cugraph
-#    EXPORT_SET cugraph-exports
-#    GLOBAL_TARGETS cugraph cugraph_c
-#    NAMESPACE cugraph::
+#rapids_export(BUILD rocgraph
+#    EXPORT_SET rocgraph-exports
+#    GLOBAL_TARGETS rocgraph rocgraph_c
+#    NAMESPACE rocgraph::
 #    DOCUMENTATION doc_string
 #    )
 
 ################################################################################
 # - make documentation ---------------------------------------------------------
 # requires doxygen and graphviz to be installed
-# from build directory, run make docs_cugraph
+# from build directory, run make docs_rocgraph
 
-# doc targets for cugraph
+# doc targets for rocgraph
 find_package(Doxygen 1.8.11)
 if(Doxygen_FOUND)
-    add_custom_command(OUTPUT CUGRAPH_DOXYGEN
+    add_custom_command(OUTPUT ROCGRAPH_DOXYGEN
                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doxygen
                        COMMAND ${CMAKE_COMMAND} -E env "RAPIDS_VERSION_MAJOR_MINOR=${RAPIDS_VERSION_MAJOR_MINOR}" doxygen Doxyfile
                        VERBATIM)
 
-    add_custom_target(docs_cugraph DEPENDS CUGRAPH_DOXYGEN)
+    add_custom_target(docs_rocgraph DEPENDS ROCGRAPH_DOXYGEN)
 endif()

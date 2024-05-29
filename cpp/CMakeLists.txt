@@ -24,8 +24,7 @@ endif()
 
 if( USE_CUDA )
     project(CUGRAPH  LANGUAGES C CXX CUDA)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/build_CUD
-    A.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/build_CUDA.cmake)
 endif()
 
 if( USE_HIP )
