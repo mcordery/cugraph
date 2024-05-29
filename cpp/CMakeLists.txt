@@ -33,7 +33,7 @@ if( USE_CUDA )
 #set(CMAKE_CUDA_ARCHITECTURES "70" CACHE STRING "CUDA architectures" FORCE)
     find_package(CUDAToolkit REQUIRED)
     #find_package(Thrust REQUIRED PATHS /home/mcordery/cugraph/cpp/include/cccl/thrust/)
-    #set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+    set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
     #if(thrust_FOUND)
     #    message(STATUS "Thrust Found ")
     #endif()
@@ -102,7 +102,7 @@ message(VERBOSE "CUGRAPH: CUGRAPH_EXCLUDE_CUGRAPH_OPS_FROM_ALL=${CUGRAPH_EXCLUDE
 set(CUGRAPH_C_FLAGS "")
 set(CUGRAPH_CXX_FLAGS "")
 set(CUGRAPH_CUDA_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Dcugraph_EXPORTS)
-set(CUGRAPH_CUDA_FLAGS -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE  -DSPDLOG_FMT_EXTERNAL  )
+#set(CUGRAPH_CUDA_FLAGS -gencode arch=compute_70,code=sm_70 -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE  -DSPDLOG_FMT_EXTERNAL  )
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND CUGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
@@ -121,14 +121,18 @@ endif()
 
 list(APPEND CUGRAPH_C_FLAGS -DFMT_HEADER_ONLY )
 list(APPEND CUGRAPH_CXX_FLAGS  -DFMT_HEADER_ONLY )
-list(APPEND CUGRAPH_CUDA_FLAGS -DFMT_HEADER_ONLY -DTHRUST_IGNORE_CUB_VERSION_CHECK )
+#list(APPEND CUGRAPH_CUDA_FLAGS -DFMT_HEADER_ONLY -DTHRUST_IGNORE_CUB_VERSION_CHECK )
+list(APPEND CUGRAPH_CUDA_FLAGS -DFMT_HEADER_ONLY  )
+
+
 
 list(APPEND CUGRAPH_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
 list(APPEND CUGRAPH_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
 list(APPEND CUGRAPH_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
 list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
 #list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/include/cuda/std/detail/libcxx/include )
-list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda-12.2/include )
+list(APPEND CUGRAPH_CUDA_FLAGS -I/usr/local/cuda/include )
+list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
 list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
@@ -137,6 +141,21 @@ list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
  list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
  list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
  list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+ list(APPEND CUGRAPH_CUDA_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+
+list(APPEND CUGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Dcugraph_EXPORTS)
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/nvtx )
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
+ list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
+ list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
+ list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+ list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+ list(APPEND CUGRAPH_CXX_FLAGS -I/usr/local/cuda/include )
+
 
 
 # Option to enable line info in CUDA device compilation to allow introspection when profiling /
@@ -180,7 +199,7 @@ set(CUGRAPH_SOURCES
       src/detail/collect_comm_wrapper.cu
       #src/sampling/random_walks_mg.cu
       #src/community/detail/common_methods_mg.cu
-      src/community/detail/common_methods_sg.cu
+      ###src/community/detail/common_methods_sg.cu
       src/community/detail/refine_sg.cu
       #src/community/detail/refine_mg.cu
       src/community/edge_triangle_count_sg.cu
@@ -375,10 +394,11 @@ target_include_directories(cugraph
 if( USE_CUDA )
 target_link_libraries(cugraph
     PUBLIC
-        CUDA::toolkit
-        CCCL
-        libcudacxx
-        $<BUILD_LOCAL_INTERFACE:CUDA::toolkit>
+    CUDA::cublas
+    CUDA::cusparse
+    CUDA::curand
+    CUDA::cusolver
+    $<BUILD_LOCAL_INTERFACE:CUDA::toolkit>
 #        $<TARGET_NAME_IF_EXISTS:cugraph-ops::cugraph-ops++>
 #    PRIVATE
 #        ${COMPILED_RAFT_LIB}
