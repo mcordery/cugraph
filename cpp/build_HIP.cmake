@@ -19,17 +19,18 @@ message(STATUS "Configuring build for ${PROJECT_NAME}")
 
 find_package(hip REQUIRED)
 if (hip_FOUND)
-    if( hip_VERSION VERSION_LESS 10)
-        message(FATAL_ERROR "HIP compiler version must be at least 12.2")
+    message(STATUS "hip_VERSION ${hip_VERSION}")
+
+    if( hip_VERSION VERSION_LESS 6.0)  
+        message(FATAL_ERROR "HIP compiler version must be at least 6.0")
     endif()   
-    message(STATUS "HIP Toolkit found: ${HIPToolkit_VERSION}")
+    message(STATUS "HIP Toolkit found: ${hip_VERSION}")
 else()
     message(FATAL_ERROR "HIP Toolkit not found")
 endif()
 
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
-    # Not sure if this needs to be v17  but it's what's in rocm-6.1 so that's what I'm using
    CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)
     message(FATAL_ERROR "GCC compiler must be at least 17.0")
 endif()
@@ -46,8 +47,6 @@ else()
     message(STATUS "No build configuration set, assuming release configuration")
     set(CMAKE_BUILD_TYPE "Release")
 endif() 
-
-message(FATAL_ERROR "stop here")
 
 
 ################################################################################
