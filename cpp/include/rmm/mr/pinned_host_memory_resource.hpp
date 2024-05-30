@@ -18,7 +18,7 @@
 #include <rmm/aligned.hpp>
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
-#include <rmm/detail/nvtx/ranges.hpp>
+//#include <rmm/detail/nvtx/ranges.hpp>
 
 #include <cuda/memory_resource>
 #include <cuda/stream_ref>

@@ -17,7 +17,7 @@
 
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/aligned.hpp>
-#include <rmm/detail/nvtx/ranges.hpp>
+//#include <rmm/detail/nvtx/ranges.hpp>
 
 #include <cuda/memory_resource>
 #include <cstddef>
@@ -117,7 +117,7 @@ class device_memory_resource {
    */
   void* allocate(std::size_t bytes, cuda_stream_view stream = cuda_stream_view{})
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     return do_allocate(bytes, stream);
   }
 
@@ -139,7 +139,7 @@ class device_memory_resource {
    */
   void deallocate(void* ptr, std::size_t bytes, cuda_stream_view stream = cuda_stream_view{})
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     do_deallocate(ptr, bytes, stream);
   }
 
@@ -175,7 +175,7 @@ class device_memory_resource {
    */
   void* allocate(std::size_t bytes, std::size_t alignment)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     return do_allocate(rmm::align_up(bytes, alignment), cuda_stream_view{});
   }
 
@@ -194,7 +194,7 @@ class device_memory_resource {
    */
   void deallocate(void* ptr, std::size_t bytes, std::size_t alignment)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     do_deallocate(ptr, rmm::align_up(bytes, alignment), cuda_stream_view{});
   }
 
@@ -213,7 +213,7 @@ class device_memory_resource {
    */
   void* allocate_async(std::size_t bytes, std::size_t alignment, cuda_stream_view stream)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     return do_allocate(rmm::align_up(bytes, alignment), stream);
   }
 
@@ -231,7 +231,7 @@ class device_memory_resource {
    */
   void* allocate_async(std::size_t bytes, cuda_stream_view stream)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     return do_allocate(bytes, stream);
   }
 
@@ -254,7 +254,7 @@ class device_memory_resource {
                         std::size_t alignment,
                         cuda_stream_view stream)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     do_deallocate(ptr, rmm::align_up(bytes, alignment), stream);
   }
 
@@ -273,7 +273,7 @@ class device_memory_resource {
    */
   void deallocate_async(void* ptr, std::size_t bytes, cuda_stream_view stream)
   {
-    RMM_FUNC_RANGE();
+    // RMM_FUNC_RANGE();
     do_deallocate(ptr, bytes, stream);
   }
 

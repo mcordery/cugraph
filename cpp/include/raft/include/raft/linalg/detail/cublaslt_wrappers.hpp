@@ -16,7 +16,7 @@
 #pragma once
 
 #include <raft/core/cublas_macros.hpp>
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/resource/cublaslt_handle.hpp>
 #include <raft/core/resource/cuda_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
@@ -248,8 +248,8 @@ template <bool DevicePointerMode = false, typename S, typename A, typename B, ty
                                   uint64_t ldc,
                                   cudaStream_t stream)
 {
-  common::nvtx::range<common::nvtx::domain::raft> batch_scope(
-    "linalg::matmul(m = %d, n = %d, k = %d)", m, n, k);
+//  common::nvtx::range<common::nvtx::domain::raft> batch_scope(
+//    "linalg::matmul(m = %d, n = %d, k = %d)", m, n, k);
   std::shared_ptr<matmul_desc> mm_desc{nullptr};
   matmul_key_t mm_key{m, n, k, lda, ldb, ldc, trans_a, trans_b};
   auto& cache =

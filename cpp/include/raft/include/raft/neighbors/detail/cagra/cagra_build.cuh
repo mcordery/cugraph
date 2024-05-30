@@ -56,10 +56,10 @@ void build_knn_graph(raft::resources const& res,
                "Currently only L2Expanded or InnerProduct metric are supported");
 
   uint32_t node_degree = knn_graph.extent(1);
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::build_graph(%zu, %zu, %u)",
-                                                            size_t(dataset.extent(0)),
-                                                            size_t(dataset.extent(1)),
-                                                            node_degree);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::build_graph(%zu, %zu, %u)",
+//                                                            size_t(dataset.extent(0)),
+//                                                            size_t(dataset.extent(1)),
+//                                                            node_degree);
 
   if (!build_params) { build_params = ivf_pq::index_params::from_dataset(dataset); }
 

@@ -279,8 +279,8 @@ inline void search(raft::resources const& handle,
                    rmm::device_async_resource_ref mr = rmm::mr::get_current_device_resource(),
                    IvfSampleFilterT sample_filter    = IvfSampleFilterT())
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "ivf_flat::search(k = %u, n_queries = %u, dim = %zu)", k, n_queries, index.dim());
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "ivf_flat::search(k = %u, n_queries = %u, dim = %zu)", k, n_queries, index.dim());
 
   RAFT_EXPECTS(params.n_probes > 0,
                "n_probes (number of clusters to probe in the search) must be positive.");

@@ -17,6 +17,10 @@
 
 message(STATUS "Configuring build for ${PROJECT_NAME}")
 
+#
+# Find HIP
+#
+
 find_package(hip REQUIRED)
 if (hip_FOUND)
     message(STATUS "hip_VERSION ${hip_VERSION}")
@@ -29,13 +33,77 @@ else()
     message(FATAL_ERROR "HIP Toolkit not found")
 endif()
 
+#
+# Find ROCM rocblas
+#
+
+find_package(rocblas REQUIRED)
+if (rocblas_FOUND)
+    message(STATUS "rocblas_VERSION ${rocblas_VERSION}")
+
+    if( rocblas_VERSION VERSION_LESS 4.1)
+        message(FATAL_ERROR "rocblas version must be at least 4.1")
+    endif()
+    message(STATUS "rocblas found: ${rocblas_VERSION}")
+else()
+    message(FATAL_ERROR "rocblas not found")
+endif()
+
+#
+# Find ROCM rocsparse
+#
+
+find_package(rocsparse REQUIRED)
+if (rocsparse_FOUND)
+    message(STATUS "rocsparse_VERSION ${rocsparse_VERSION}")
+
+    if( rocsparse_VERSION VERSION_LESS 3.1)
+        message(FATAL_ERROR "rocsparse version must be at least 3.1")
+    endif()
+    message(STATUS "rocsparse found: ${rocsparse_VERSION}")
+else()
+    message(FATAL_ERROR "rocsparse not found")
+endif()
+
+#
+# Find ROCM rocrand
+#
+
+find_package(rocrand REQUIRED)
+if (rocrand_FOUND)
+    message(STATUS "rocrand_VERSION ${rocrand_VERSION}")
+
+    if( rocrand_VERSION VERSION_LESS 3.0)
+        message(FATAL_ERROR "rocrand version must be at least 3.0")
+    endif()
+    message(STATUS "rocrand found: ${rocrand_VERSION}")
+else()
+    message(FATAL_ERROR "rocrand not found")
+endif()
+
+#
+# Find ROCM rocsolver
+#
+
+find_package(rocsolver REQUIRED)
+if (rocsolver_FOUND)
+    message(STATUS "rocsolver_VERSION ${rocsolver_VERSION}")
+
+    if( rocsolver_VERSION VERSION_LESS 3.25)
+        message(FATAL_ERROR "rocsolver version must be at least 3.25")
+    endif()
+    message(STATUS "rocsolver found: ${rocsolver_VERSION}")
+else()
+    message(FATAL_ERROR "rocsolver not found")
+endif()
+
+
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
    CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)
     message(FATAL_ERROR "GCC compiler must be at least 17.0")
 endif()
-
-set(CMAKE_CUDA_ARCHITECTURES "gfx900")
+set(CMAKE_HIP_ARCHITECTURES "gfx900")
 
 ######### Set build configuration ############
 
@@ -73,7 +141,7 @@ set(ROCGRAPH_CXX_FLAGS "")
 set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 set(ROCGRAPH_HIP_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND ROCGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
@@ -302,21 +370,21 @@ add_library(rocgraph ${ROCGRAPH_SOURCES})
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(rocgraph PUBLIC HIP_API_PER_THREAD_DEFAULT_STREAM)
 
-file(WRITE "${ROCGRAPH_BINARY_DIR}/fatbin.ld"
-[=[
-SECTIONS
-{
-  .nvFatBinSegment : { *(.nvFatBinSegment) }
-  .nv_fatbin : { *(.nv_fatbin) }
-}
-]=])
-target_link_options(rocgraph PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
+#file(WRITE "${ROCGRAPH_BINARY_DIR}/fatbin.ld"
+#[=[
+#SECTIONS
+#{
+#  .nvFatBinSegment : { *(.nvFatBinSegment) }
+#  .nv_fatbin : { *(.nv_fatbin) }
+#}
+#]=])
+#target_link_options(rocgraph PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
 
 add_library(rocgraph::rocgraph ALIAS rocgraph)
 
 ################################################################################
 # - include paths --------------------------------------------------------------
-message(STATUS "tid ${HIPToolkit_INCLUDE_DIRS}")
+
 target_include_directories(rocgraph
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty"
@@ -332,10 +400,10 @@ target_include_directories(rocgraph
 target_link_libraries(rocgraph
     PUBLIC
         hip::toolkit
-        rocm::rocblas
-        rocm::rocsparse
-        rocm::rocrand
-        rocm::rocsolver
+        roc::rocblas
+        roc::rocsparse
+        roc::rocrand
+        roc::rocsolver
         $<BUILD_LOCAL_INTERFACE:ROCM::toolkit>
 
     )
@@ -413,7 +481,7 @@ target_compile_options(rocgraph_c
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(rocgraph_c PUBLIC HIP_API_PER_THREAD_DEFAULT_STREAM)
 
-target_link_options(rocgraph_c PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
+#target_link_options(rocgraph_c PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
 
 ################################################################################
 # - C-API include paths --------------------------------------------------------

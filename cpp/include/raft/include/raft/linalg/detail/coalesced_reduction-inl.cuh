@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/util/cuda_utils.cuh>
 
@@ -148,12 +148,12 @@ void coalescedReductionThin(OutType* dots,
                             ReduceLambda reduce_op = raft::add_op(),
                             FinalLambda final_op   = raft::identity_op())
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "coalescedReductionThin<%d,%d,%d,%d>",
-    Policy::LogicalWarpSize,
-    Policy::ThreadsPerBlock,
-    Policy::RowsPerLogicalWarp,
-    static_cast<int>(Policy::NoSequentialReduce));
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "coalescedReductionThin<%d,%d,%d,%d>",
+//    Policy::LogicalWarpSize,
+//    Policy::ThreadsPerBlock,
+//    Policy::RowsPerLogicalWarp,
+//    static_cast<int>(Policy::NoSequentialReduce));
   dim3 threads(Policy::LogicalWarpSize, Policy::NumLogicalWarps, 1);
   dim3 blocks(ceildiv<IdxType>(N, Policy::RowsPerBlock), 1, 1);
   coalescedReductionThinKernel<Policy>
@@ -258,7 +258,7 @@ void coalescedReductionMedium(OutType* dots,
                               ReduceLambda reduce_op = raft::add_op(),
                               FinalLambda final_op   = raft::identity_op())
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope("coalescedReductionMedium<%d>", TPB);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("coalescedReductionMedium<%d>", TPB);
   coalescedReductionMediumKernel<TPB>
     <<<N, TPB, 0, stream>>>(dots, data, D, N, init, main_op, reduce_op, final_op, inplace);
   RAFT_CUDA_TRY(cudaPeekAtLastError());
@@ -341,8 +341,8 @@ void coalescedReductionThick(OutType* dots,
                              ReduceLambda reduce_op = raft::add_op(),
                              FinalLambda final_op   = raft::identity_op())
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "coalescedReductionThick<%d,%d>", ThickPolicy::ThreadsPerBlock, ThickPolicy::BlocksPerRow);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "coalescedReductionThick<%d,%d>", ThickPolicy::ThreadsPerBlock, ThickPolicy::BlocksPerRow);
 
   dim3 threads(ThickPolicy::ThreadsPerBlock, 1, 1);
   dim3 blocks(N, ThickPolicy::BlocksPerRow, 1);

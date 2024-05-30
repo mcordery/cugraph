@@ -20,7 +20,7 @@
 
 #ifdef NVTX_ENABLED
 
-#include <nvtx3/nvToolsExt.h>
+//#include <nvtx3/nvToolsExt.h>
 
 #include <cstdint>
 #include <cstdlib>
@@ -29,35 +29,35 @@
 #include <type_traits>
 #include <vector>
 
-namespace raft::common::nvtx::detail {
-
-/**
- * @brief An internal struct to to initialize the color generator
- */
-struct color_gen {
-  /** This determines how many bits of the hash to use for the generator */
-  using hash_type = uint16_t;
-  /** saturation */
-  static inline constexpr float kS = 0.9f;
-  /** value */
-  static inline constexpr float kV = 0.85f;
-  /** golden ratio */
-  static inline constexpr float kPhi = 1.61803f;
-  /** inverse golden ratio */
-  static inline constexpr float kInvPhi = 1.f / kPhi;
-};
-
-// all h, s, v are in range [0, 1]
-// Ref: http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
-inline auto hsv2rgb(float h, float s, float v) -> uint32_t
-{
-  uint32_t out = 0xff000000u;
-  if (s <= 0.0f) { return out; }
-  // convert hue from [0, 1] range to [0, 360]
-  float h_deg = h * 360.f;
-  if (0.f > h_deg || h_deg >= 360.f) h_deg = 0.f;
-  h_deg /= 60.f;
-  int h_range = static_cast<int>(h_deg);
+//namespace raft::common::nvtx::detail {
+//
+///**
+// * @brief An internal struct to to initialize the color generator
+// */
+//struct color_gen {
+//  /** This determines how many bits of the hash to use for the generator */
+//  using hash_type = uint16_t;
+//  /** saturation */
+//  static inline constexpr float kS = 0.9f;
+//  /** value */
+//  static inline constexpr float kV = 0.85f;
+//  /** golden ratio */
+//  static inline constexpr float kPhi = 1.61803f;
+//  /** inverse golden ratio */
+//  static inline constexpr float kInvPhi = 1.f / kPhi;
+//};
+//
+//// all h, s, v are in range [0, 1]
+//// Ref: http://en.wikipedia.org/wiki/HSL_and_HSV#Converting_to_RGB
+//inline auto hsv2rgb(float h, float s, float v) -> uint32_t
+//{
+//  uint32_t out = 0xff000000u;
+//  if (s <= 0.0f) { return out; }
+//  // convert hue from [0, 1] range to [0, 360]
+//  float h_deg = h * 360.f;
+//  if (0.f > h_deg || h_deg >= 360.f) h_deg = 0.f;
+//  h_deg /= 60.f;
+//  int h_range = static_cast<int>(h_deg);
   float h_mod = h_deg - h_range;
   float x     = v * (1.f - s);
   float y     = v * (1.f - (s * h_mod));
@@ -128,7 +128,7 @@ struct domain_store {
   /* If `Domain::name` does not exist, this default instance is used and throws the error. */
   static_assert(sizeof(Domain) != sizeof(Domain),
                 "Type used to identify a domain must contain a static member 'char const* name'");
-  static inline auto value() -> const nvtxDomainHandle_t { return nullptr; }
+//  static inline auto value() -> const nvtxDomainHandle_t { return nullptr; }
 };
 
 template <typename Domain>
@@ -138,10 +138,10 @@ struct domain_store<
   std::enable_if_t<
     std::is_same<char const*, typename std::decay<decltype(Domain::name)>::type>::value,
     Domain>> {
-  static inline auto value() -> const nvtxDomainHandle_t
+//  static inline auto value() -> const nvtxDomainHandle_t
   {
     // NB: static modifier ensures the domain is created only once
-    static const nvtxDomainHandle_t kValue = nvtxDomainCreateA(Domain::name);
+//    static const nvtxDomainHandle_t kValue = nvtxDomainCreateA(Domain::name);
     return kValue;
   }
 };
@@ -149,14 +149,14 @@ struct domain_store<
 template <typename Domain>
 inline void push_range_name(const char* name)
 {
-  nvtxEventAttributes_t event_attrib = {0};
+//  nvtxEventAttributes_t event_attrib = {0};
   event_attrib.version               = NVTX_VERSION;
   event_attrib.size                  = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
   event_attrib.colorType             = NVTX_COLOR_ARGB;
   event_attrib.color                 = generate_next_color(name);
   event_attrib.messageType           = NVTX_MESSAGE_TYPE_ASCII;
   event_attrib.message.ascii         = name;
-  nvtxDomainRangePushEx(domain_store<Domain>::value(), &event_attrib);
+//  nvtxDomainRangePushEx(domain_store<Domain>::value(), &event_attrib);
 }
 
 template <typename Domain, typename... Args>
@@ -176,25 +176,25 @@ inline void push_range(const char* format, Args... args)
 template <typename Domain>
 inline void pop_range()
 {
-  nvtxDomainRangePop(domain_store<Domain>::value());
+//  nvtxDomainRangePop(domain_store<Domain>::value());
 }
 
-}  // namespace raft::common::nvtx::detail
-
-#else  // NVTX_ENABLED
-
-namespace raft::common::nvtx::detail {
-
-template <typename Domain, typename... Args>
-inline void push_range(const char* format, Args... args)
-{
-}
-
-template <typename Domain>
-inline void pop_range()
-{
-}
-
-}  // namespace raft::common::nvtx::detail
-
-#endif  // NVTX_ENABLED
+//}  // namespace raft::common::nvtx::detail
+//
+//#else  // NVTX_ENABLED
+//
+//namespace raft::common::nvtx::detail {
+//
+//template <typename Domain, typename... Args>
+//inline void push_range(const char* format, Args... args)
+//{
+//}
+//
+//template <typename Domain>
+//inline void pop_range()
+//{
+//}
+//
+//}  // namespace raft::common::nvtx::detail
+//
+//#endif  // NVTX_ENABLED

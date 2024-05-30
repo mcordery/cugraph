@@ -19,7 +19,7 @@
 #include <raft/core/device_csr_matrix.hpp>
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/linalg/map.cuh>
@@ -88,8 +88,8 @@ void select_k(raft::resources const& handle,
   auto len        = csr_view.get_n_cols();
   auto k          = IdxT(out_val.extent(1));
 
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "sparse::matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "sparse::matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
 
   RAFT_EXPECTS(out_val.extent(1) <= int64_t(std::numeric_limits<int>::max()),
                "output k must fit the int type.");

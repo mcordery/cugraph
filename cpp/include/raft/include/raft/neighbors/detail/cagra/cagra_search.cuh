@@ -23,7 +23,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/resource/cuda_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -105,11 +105,11 @@ void search_main_core(
     params.max_queries = std::min<size_t>(queries.extent(0), deviceProp.maxGridSize[1]);
   }
 
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "cagra::search(max_queries = %u, k = %u, dim = %zu)",
-    params.max_queries,
-    topk,
-    dataset_desc.dim);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "cagra::search(max_queries = %u, k = %u, dim = %zu)",
+//    params.max_queries,
+//    topk,
+//    dataset_desc.dim);
 
   using CagraSampleFilterT_s = typename CagraSampleFilterT_Selector<CagraSampleFilterT>::type;
   std::unique_ptr<search_plan_impl<DatasetDescriptorT, CagraSampleFilterT_s>> plan =
