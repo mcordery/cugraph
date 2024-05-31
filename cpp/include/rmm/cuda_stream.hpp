@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +17,13 @@
 
 #pragma once
 
+#include <functional>
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/detail/logging_assert.hpp>
 
-#include <cuda_runtime_api.h>
+#include <rmm/cuda_runtime_api.h>
 
-#include <functional>
 #include <memory>
 
 namespace rmm {

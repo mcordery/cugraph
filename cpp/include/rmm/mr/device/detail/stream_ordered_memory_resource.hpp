@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2023, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +16,13 @@
  */
 #pragma once
 
-#include <rmm/aligned.hpp>
 #include <rmm/cuda_device.hpp>
+#include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <cuda_runtime_api.h>
+#include <rmm/cuda_runtime_api.h>
 
 #include <fmt/core.h>
 
@@ -207,7 +208,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
 
     auto stream_event = get_event(stream);
 
-    size = rmm::align_up(size, rmm::CUDA_ALLOCATION_ALIGNMENT);
+    size = rmm::detail::align_up(size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
     RMM_EXPECTS(size <= this->underlying().get_maximum_allocation_size(),
                 "Maximum allocation size exceeded",
                 rmm::out_of_memory);
@@ -226,6 +227,8 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
   /**
    * @brief Deallocate memory pointed to by `p`.
    *
+   * @throws nothing
+   *
    * @param p Pointer to be deallocated
    * @param size The size in bytes of the allocation to deallocate
    * @param stream The stream in which to order this deallocation
@@ -239,7 +242,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     lock_guard lock(mtx_);
     auto stream_event = get_event(stream);
 
-    size             = rmm::align_up(size, rmm::CUDA_ALLOCATION_ALIGNMENT);
+    size             = rmm::detail::align_up(size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
     auto const block = this->underlying().free_block(ptr, size);
 
     // TODO: cudaEventRecord has significant overhead on deallocations. For the non-PTDS case

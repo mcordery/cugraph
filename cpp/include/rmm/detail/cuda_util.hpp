@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, NVIDIA CORPORATION.
+ * Copyright (c) 2021, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
-#include <rmm/mr/device/thrust_allocator_adaptor.hpp>
+#include <rmm/detail/error.hpp>
 
-#include <rmm/detail/thrust_namespace.h>
-#include <thrust/device_vector.h>
+namespace rmm::detail {
 
-namespace rmm {
-/**
- * @addtogroup thrust_integrations
- * @{
- * @file
- */
-/**
- * @brief Alias for a thrust::device_vector that uses RMM for memory allocation.
- *
- */
-template <typename T>
-using device_vector = thrust::device_vector<T, rmm::mr::thrust_allocator<T>>;
+/// Gets the available and total device memory in bytes for the current device
+inline std::pair<std::size_t, std::size_t> available_device_memory()
+{
+  std::size_t free{};
+  std::size_t total{};
+  RMM_CUDA_TRY(cudaMemGetInfo(&free, &total));
+  return {free, total};
+}
 
-/** @} */  // end of group
-}  // namespace rmm
+}  // namespace rmm::detail

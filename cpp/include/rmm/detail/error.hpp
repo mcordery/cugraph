@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +17,104 @@
 
 #pragma once
 
-#include <rmm/error.hpp>
-
-#include <cuda_runtime_api.h>
+#include <rmm/cuda_runtime_api.h>
 
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+
+namespace rmm {
+
+/**
+ * @brief Exception thrown when logical precondition is violated.
+ *
+ * @ingroup errors
+ *
+ * This exception should not be thrown directly and is instead thrown by the
+ * RMM_EXPECTS macro.
+ *
+ */
+struct logic_error : public std::logic_error {
+  using std::logic_error::logic_error;
+};
+
+/**
+ * @brief Exception thrown when a CUDA error is encountered.
+ *
+ * @ingroup errors
+ *
+ */
+struct cuda_error : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
+/**
+ * @brief Exception thrown when an RMM allocation fails
+ *
+ * @ingroup errors
+ *
+ */
+class bad_alloc : public std::bad_alloc {
+ public:
+  /**
+   * @brief Constructs a bad_alloc with the error message.
+   *
+   * @param msg Message to be associated with the exception
+   */
+  bad_alloc(const char* msg) : _what{std::string{std::bad_alloc::what()} + ": " + msg} {}
+
+  /**
+   * @brief Constructs a bad_alloc with the error message.
+   *
+   * @param msg Message to be associated with the exception
+   */
+  bad_alloc(std::string const& msg) : bad_alloc{msg.c_str()} {}
+
+  /**
+   * @briefreturn{The explanatory string}
+   */
+  [[nodiscard]] const char* what() const noexcept override { return _what.c_str(); }
+
+ private:
+  std::string _what;
+};
+
+/**
+ * @brief Exception thrown when RMM runs out of memory
+ *
+ * @ingroup errors
+ *
+ * This error should only be thrown when we know for sure a resource is out of memory.
+ */
+class out_of_memory : public bad_alloc {
+ public:
+  /**
+   * @brief Constructs an out_of_memory with the error message.
+   *
+   * @param msg Message to be associated with the exception
+   */
+  out_of_memory(const char* msg) : bad_alloc{std::string{"out_of_memory: "} + msg} {}
+
+  /**
+   * @brief Constructs an out_of_memory with the error message.
+   *
+   * @param msg Message to be associated with the exception
+   */
+  out_of_memory(std::string const& msg) : out_of_memory{msg.c_str()} {}
+};
+
+/**
+ * @brief Exception thrown when attempting to access outside of a defined range
+ *
+ * @ingroup errors
+ *
+ */
+class out_of_range : public std::out_of_range {
+  using std::out_of_range::out_of_range;
+};
+
+}  // namespace rmm
 
 #define STRINGIFY_DETAIL(x) #x
 #define RMM_STRINGIFY(x)    STRINGIFY_DETAIL(x)
@@ -113,9 +205,9 @@
   do {                                                                                       \
     cudaError_t const error = (_call);                                                       \
     if (cudaSuccess != error) {                                                              \
-      cudaGetLastError();                                                                    \
+      static_cast<void>(cudaGetLastError());                                                 \
       /*NOLINTNEXTLINE(bugprone-macro-parentheses)*/                                         \
-      throw _exception_type{std::string{"CUDA error at: "} + __FILE__ + ":" +                \
+      throw _exception_type{std::string{"Device error at: "} + __FILE__ + ":" +                \
                             RMM_STRINGIFY(__LINE__) + ": " + cudaGetErrorName(error) + " " + \
                             cudaGetErrorString(error)};                                      \
     }                                                                                        \
@@ -136,11 +228,14 @@
   do {                                                                                             \
     cudaError_t const error = (_call);                                                             \
     if (cudaSuccess != error) {                                                                    \
-      cudaGetLastError();                                                                          \
-      auto const msg = std::string{"CUDA error at: "} + __FILE__ + ":" + RMM_STRINGIFY(__LINE__) + \
+      static_cast<void>(cudaGetLastError());                                                       \
+      auto const msg = std::string{"Device error at: "} + __FILE__ + ":" + RMM_STRINGIFY(__LINE__) + \
                        ": " + cudaGetErrorName(error) + " " + cudaGetErrorString(error);           \
-      if (cudaErrorMemoryAllocation == error) { throw rmm::out_of_memory{msg}; }                   \
-      throw rmm::bad_alloc{msg};                                                                   \
+      if (cudaErrorMemoryAllocation == error) {                                                    \
+        throw rmm::out_of_memory{msg};                                                             \
+      } else {                                                                                     \
+        throw rmm::bad_alloc{msg};                                                                 \
+      }                                                                                            \
     }                                                                                              \
   } while (0)
 
@@ -168,18 +263,19 @@
  * RMM_ASSERT_CUDA_SUCCESS(cudaRuntimeApi(...));
  * ```
  *
+ * 
  */
 #ifdef NDEBUG
 #define RMM_ASSERT_CUDA_SUCCESS(_call) \
   do {                                 \
-    (_call);                           \
+    static_cast<void>(_call);          \
   } while (0);
 #else
 #define RMM_ASSERT_CUDA_SUCCESS(_call)                                          \
   do {                                                                          \
     cudaError_t const status__ = (_call);                                       \
     if (status__ != cudaSuccess) {                                              \
-      std::cerr << "CUDA Error detected. " << cudaGetErrorName(status__) << " " \
+      std::cerr << "Device Error detected. " << cudaGetErrorName(status__) << " " \
                 << cudaGetErrorString(status__) << std::endl;                   \
     }                                                                           \
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay) */   \

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2021-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2022, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +18,19 @@
 
 #include <rmm/cuda_device.hpp>
 #include <rmm/cuda_stream_view.hpp>
+#include <rmm/detail/cuda_util.hpp>
 #include <rmm/detail/dynamic_load_runtime.hpp>
 #include <rmm/detail/error.hpp>
-#include <rmm/detail/thrust_namespace.h>
 #include <rmm/mr/device/cuda_async_view_memory_resource.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <cuda/std/type_traits>
-#include <cuda_runtime_api.h>
+#include <rmm/detail/thrust_namespace.h>
+#include <thrust/optional.h>
+
+#include <rmm/cuda_runtime_api.h>
 
 #include <cstddef>
 #include <limits>
-#include <optional>
 
 #if CUDART_VERSION >= 11020  // 11.2 introduced cudaMallocAsync
 #ifndef RMM_DISABLE_CUDA_MALLOC_ASYNC
@@ -85,9 +87,9 @@ class cuda_async_memory_resource final : public device_memory_resource {
    * `cudaMemHandleTypeNone` for no IPC support.
    */
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  cuda_async_memory_resource(std::optional<std::size_t> initial_pool_size             = {},
-                             std::optional<std::size_t> release_threshold             = {},
-                             std::optional<allocation_handle_type> export_handle_type = {})
+  cuda_async_memory_resource(thrust::optional<std::size_t> initial_pool_size             = {},
+                             thrust::optional<std::size_t> release_threshold             = {},
+                             thrust::optional<allocation_handle_type> export_handle_type = {})
   {
 #ifdef RMM_CUDA_MALLOC_ASYNC_SUPPORT
     // Check if cudaMallocAsync Memory pool supported
@@ -119,7 +121,7 @@ class cuda_async_memory_resource final : public device_memory_resource {
         pool_handle(), cudaMemPoolReuseAllowOpportunistic, &disabled));
     }
 
-    auto const [free, total] = rmm::available_device_memory();
+    auto const [free, total] = rmm::detail::available_device_memory();
 
     // Need an l-value to take address to pass to cudaMemPoolSetAttribute
     uint64_t threshold = release_threshold.value_or(total);
@@ -155,6 +157,21 @@ class cuda_async_memory_resource final : public device_memory_resource {
   cuda_async_memory_resource(cuda_async_memory_resource&&)                 = delete;
   cuda_async_memory_resource& operator=(cuda_async_memory_resource const&) = delete;
   cuda_async_memory_resource& operator=(cuda_async_memory_resource&&)      = delete;
+
+  /**
+   * @brief Query whether the resource supports use of non-null CUDA streams for
+   * allocation/deallocation. `cuda_memory_resource` does not support streams.
+   *
+   * @returns bool true
+   */
+  [[nodiscard]] bool supports_streams() const noexcept override { return true; }
+
+  /**
+   * @brief Query whether the resource supports the get_mem_info API.
+   *
+   * @return false
+   */
+  [[nodiscard]] bool supports_get_mem_info() const noexcept override { return false; }
 
  private:
 #ifdef RMM_CUDA_MALLOC_ASYNC_SUPPORT
@@ -216,6 +233,19 @@ class cuda_async_memory_resource final : public device_memory_resource {
 #else
     return async_mr != nullptr;
 #endif
+  }
+
+  /**
+   * @brief Get free and available memory for memory resource
+   *
+   * @throws rmm::cuda_error if unable to retrieve memory info.
+   *
+   * @return std::pair contaiing free_size and total_size of memory
+   */
+  [[nodiscard]] std::pair<std::size_t, std::size_t> do_get_mem_info(
+    rmm::cuda_stream_view) const override
+  {
+    return std::make_pair(0, 0);
   }
 };
 

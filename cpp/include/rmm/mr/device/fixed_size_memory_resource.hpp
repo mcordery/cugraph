@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +16,18 @@
  */
 #pragma once
 
-#include <rmm/aligned.hpp>
 #include <rmm/cuda_stream_view.hpp>
+#include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/detail/logging_assert.hpp>
-#include <rmm/detail/thrust_namespace.h>
 #include <rmm/mr/device/detail/fixed_size_free_list.hpp>
 #include <rmm/mr/device/detail/stream_ordered_memory_resource.hpp>
-#include <rmm/resource_ref.hpp>
 
-#include <cuda_runtime_api.h>
+#include <rmm/detail/thrust_namespace.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
+
+#include <rmm/cuda_runtime_api.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -77,7 +78,7 @@ class fixed_size_memory_resource
     std::size_t block_size            = default_block_size,
     std::size_t blocks_to_preallocate = default_blocks_to_preallocate)
     : upstream_mr_{upstream_mr},
-      block_size_{rmm::align_up(block_size, rmm::CUDA_ALLOCATION_ALIGNMENT)},
+      block_size_{rmm::detail::align_up(block_size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT)},
       upstream_chunk_size_{block_size * blocks_to_preallocate}
   {
     // allocate initial blocks and insert into free list
@@ -97,17 +98,26 @@ class fixed_size_memory_resource
   fixed_size_memory_resource& operator=(fixed_size_memory_resource&&)      = delete;
 
   /**
-   * @briefreturn{rmm::device_async_resource_ref to the upstream resource}
+   * @brief Query whether the resource supports use of non-null streams for
+   * allocation/deallocation.
+   *
+   * @returns true
    */
-  [[nodiscard]] rmm::device_async_resource_ref get_upstream_resource() const noexcept
-  {
-    return upstream_mr_;
-  }
+  [[nodiscard]] bool supports_streams() const noexcept override { return true; }
 
   /**
-   * @briefreturn{Upstream* to the upstream memory resource}
+   * @brief Query whether the resource supports the get_mem_info API.
+   *
+   * @return false
    */
-  [[nodiscard]] Upstream* get_upstream() const noexcept { return upstream_mr_; }
+  [[nodiscard]] bool supports_get_mem_info() const noexcept override { return false; }
+
+  /**
+   * @brief Get the upstream memory_resource object.
+   *
+   * @return UpstreamResource* the upstream memory resource.
+   */
+  Upstream* get_upstream() const noexcept { return upstream_mr_; }
 
   /**
    * @brief Get the size of blocks allocated by this memory resource.
@@ -156,7 +166,7 @@ class fixed_size_memory_resource
    */
   free_list blocks_from_upstream(cuda_stream_view stream)
   {
-    void* ptr = get_upstream_resource().allocate_async(upstream_chunk_size_, stream);
+    void* ptr = get_upstream()->allocate(upstream_chunk_size_, stream);
     block_type block{ptr};
     upstream_blocks_.push_back(block);
 
@@ -198,8 +208,23 @@ class fixed_size_memory_resource
   {
     // Deallocating a fixed-size block just inserts it in the free list, which is
     // handled by the parent class
-    RMM_LOGGING_ASSERT(rmm::align_up(size, rmm::CUDA_ALLOCATION_ALIGNMENT) <= block_size_);
+    RMM_LOGGING_ASSERT(rmm::detail::align_up(size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT) <=
+                       block_size_);
     return block_type{ptr};
+  }
+
+  /**
+   * @brief Get free and available memory for memory resource
+   *
+   * @throws std::runtime_error if we could not get free / total memory
+   *
+   * @param stream the stream being executed on
+   * @return std::pair with available and free memory for resource
+   */
+  [[nodiscard]] std::pair<std::size_t, std::size_t> do_get_mem_info(
+    [[maybe_unused]] cuda_stream_view stream) const override
+  {
+    return std::make_pair(0, 0);
   }
 
   /**
@@ -211,7 +236,7 @@ class fixed_size_memory_resource
     lock_guard lock(this->get_mutex());
 
     for (auto block : upstream_blocks_) {
-      get_upstream_resource().deallocate(block.pointer(), upstream_chunk_size_);
+      get_upstream()->deallocate(block.pointer(), upstream_chunk_size_);
     }
     upstream_blocks_.clear();
   }
@@ -221,7 +246,7 @@ class fixed_size_memory_resource
   {
     lock_guard lock(this->get_mutex());
 
-    auto const [free, total] = rmm::available_device_memory();
+    auto const [free, total] = get_upstream()->get_mem_info(rmm::cuda_stream_default);
     std::cout << "GPU free memory: " << free << " total: " << total << "\n";
 
     std::cout << "upstream_blocks: " << upstream_blocks_.size() << "\n";

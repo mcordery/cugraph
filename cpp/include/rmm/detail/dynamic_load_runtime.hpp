@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, NVIDIA CORPORATION.
+ * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +18,22 @@
 
 #include <rmm/cuda_device.hpp>
 
-#include <cuda_runtime_api.h>
+#include <rmm/cuda_runtime_api.h>
 
 #include <dlfcn.h>
 
 #include <memory>
 #include <optional>
+
+#if HIP_VERSION >= 50100000  // CUDA 11.2 introduced cudaMallocAsync, ROCm 5.1.0 introduced hipMallocAsync
+#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
+#    define RMM_CUDA_MALLOC_ASYNC_SUPPORT
+#  else
+#    if CUDART_VERSION >= 11020
+#      define RMM_CUDA_MALLOC_ASYNC_SUPPORT
+#    endif
+#  endif
+#endif
 
 namespace rmm::detail {
 
@@ -37,6 +48,18 @@ struct dynamic_load_runtime {
   {
     auto close_cudart = [](void* handle) { ::dlclose(handle); };
     auto open_cudart  = []() {
+      #if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
+      {
+        ::dlerror();
+        void* ptr = dlopen("libamdhip64.so", RTLD_LAZY);
+
+        if (ptr != nullptr) { return ptr; }
+
+        RMM_FAIL("Unable to dlopen libamdhip64");
+      }
+      return static_cast<void*>(nullptr);
+      //: below is dead code, we aim to not do line changes, only additions
+      #endif
       ::dlerror();
       const int major = CUDART_VERSION / 1000;
 
@@ -98,9 +121,21 @@ struct dynamic_load_runtime {
     if (func) { return (*func)(args...); }                                     \
     RMM_FAIL("Failed to find #name function in libcudart.so");                 \
   }
+#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
+#    undef RMM_CUDART_API_WRAPPER
+#    define STR(x)   #x
+#    define RMM_CUDART_API_WRAPPER(name, signature)                                \
+  template <typename... Args>                                                      \
+  static cudaError_t name(Args... args)                                            \
+  {                                                                                \
+    static const auto func = dynamic_load_runtime::function<signature>(STR(name)); \
+    if (func) { return (*func)(args...); }                                         \
+    RMM_FAIL("Failed to find " STR(name) " function in libamdhip64.so");           \
+  }
+#  endif
 #endif
 
-#if CUDART_VERSION >= 11020  // 11.2 introduced cudaMallocAsync
+#ifdef RMM_CUDA_MALLOC_ASYNC_SUPPORT
 /**
  * @brief Bind to the stream-ordered memory allocator functions
  * at runtime.
@@ -111,6 +146,16 @@ struct dynamic_load_runtime {
 struct async_alloc {
   static bool is_supported()
   {
+#if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
+#  if defined(RMM_STATIC_CUDART)
+    static bool runtime_supports_pool = (HIP_VERSION >= 50100000);
+#  else
+    static bool runtime_supports_pool =
+      dynamic_load_runtime::function<dynamic_load_runtime::function_sig<void*, cudaStream_t>>(
+        "hipFreeAsync")
+        .has_value();
+#  endif
+#else
 #if defined(RMM_STATIC_CUDART)
     static bool runtime_supports_pool = (CUDART_VERSION >= 11020);
 #else
@@ -119,7 +164,7 @@ struct async_alloc {
         "cudaFreeAsync")
         .has_value();
 #endif
-
+#endif
     static auto driver_supports_pool{[] {
       int cuda_pool_supported{};
       auto result = cudaDeviceGetAttribute(&cuda_pool_supported,

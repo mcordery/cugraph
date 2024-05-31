@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2021, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 #pragma once
 
 #include <rmm/mr/device/device_memory_resource.hpp>
-#include <rmm/resource_ref.hpp>
 
 #include <cstddef>
 #include <mutex>
@@ -108,17 +107,27 @@ class statistics_resource_adaptor final : public device_memory_resource {
     default;  ///< @default_move_assignment{statistics_resource_adaptor}
 
   /**
-   * @briefreturn{rmm::device_async_resource_ref to the upstream resource}
+   * @briefreturn{Pointer to the upstream resource}
    */
-  [[nodiscard]] rmm::device_async_resource_ref get_upstream_resource() const noexcept
-  {
-    return upstream_;
-  }
+  Upstream* get_upstream() const noexcept { return upstream_; }
 
   /**
-   * @briefreturn{Upstream* to the upstream memory resource}
+   * @brief Checks whether the upstream resource supports streams.
+   *
+   * @return true The upstream resource supports streams
+   * @return false The upstream resource does not support streams.
    */
-  [[nodiscard]] Upstream* get_upstream() const noexcept { return upstream_; }
+  bool supports_streams() const noexcept override { return upstream_->supports_streams(); }
+
+  /**
+   * @brief Query whether the resource supports the get_mem_info API.
+   *
+   * @return bool true if the upstream resource supports get_mem_info, false otherwise.
+   */
+  bool supports_get_mem_info() const noexcept override
+  {
+    return upstream_->supports_get_mem_info();
+  }
 
   /**
    * @brief Returns a `counter` struct for this adaptor containing the current,
@@ -209,8 +218,21 @@ class statistics_resource_adaptor final : public device_memory_resource {
   {
     if (this == &other) { return true; }
     auto cast = dynamic_cast<statistics_resource_adaptor<Upstream> const*>(&other);
-    if (cast == nullptr) { return upstream_->is_equal(other); }
-    return get_upstream_resource() == cast->get_upstream_resource();
+    return cast != nullptr ? upstream_->is_equal(*cast->get_upstream())
+                           : upstream_->is_equal(other);
+  }
+
+  /**
+   * @brief Get free and available memory from upstream resource.
+   *
+   * @throws rmm::cuda_error if unable to retrieve memory info.
+   *
+   * @param stream Stream on which to get the mem info.
+   * @return std::pair contaiing free_size and total_size of memory
+   */
+  std::pair<std::size_t, std::size_t> do_get_mem_info(cuda_stream_view stream) const override
+  {
+    return upstream_->get_mem_info(stream);
   }
 
   counter bytes_;                        // peak, current and total allocated bytes
