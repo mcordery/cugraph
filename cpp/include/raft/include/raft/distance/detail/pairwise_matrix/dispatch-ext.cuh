@@ -42,7 +42,7 @@ void pairwise_matrix_dispatch(OpT distance_op,
                               const DataT* y_norm,
                               OutT* out,
                               FinOpT fin_op,
-                              cudaStream_t stream,
+                              hipStream_t stream,
                               bool is_row_major) RAFT_EXPLICIT;
 
 };  // namespace raft::distance::detail
@@ -63,7 +63,7 @@ void pairwise_matrix_dispatch(OpT distance_op,
       const DataT* y_norm,                                                             \
       OutT* out,                                                                       \
       FinOpT fin_op,                                                                   \
-      cudaStream_t stream,                                                             \
+      hipStream_t stream,                                                             \
       bool is_row_major)
 
 /*

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2023, NVIDIA CORPORATION.
  *
@@ -73,7 +74,7 @@ inline void coalesced_normalize_thin(Type* out,
                                      IdxType D,
                                      IdxType N,
                                      Type init,
-                                     cudaStream_t stream,
+                                     hipStream_t stream,
                                      MainLambda main_op,
                                      ReduceLambda reduce_op,
                                      FinalLambda fin_op,
@@ -83,7 +84,7 @@ inline void coalesced_normalize_thin(Type* out,
   dim3 block(Policy::LogicalWarpSize, Policy::RowsPerBlock, 1);
   coalesced_normalize_thin_kernel<Policy>
     <<<grid, block, 0, stream>>>(out, in, D, N, init, main_op, reduce_op, fin_op, eps);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <int TPB,
@@ -102,7 +103,7 @@ RAFT_KERNEL __launch_bounds__(TPB) coalesced_normalize_medium_kernel(Type* out,
                                                                      FinalLambda fin_op,
                                                                      Type eps)
 {
-  typedef cub::BlockReduce<Type, TPB, cub::BLOCK_REDUCE_RAKING> BlockReduce;
+  typedef hipcub::BlockReduce<Type, TPB, hipcub::BLOCK_REDUCE_RAKING> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   __shared__ Type bcast_acc;
   Type thread_data = init;
@@ -132,7 +133,7 @@ inline void coalesced_normalize_medium(Type* out,
                                        IdxType D,
                                        IdxType N,
                                        Type init,
-                                       cudaStream_t stream,
+                                       hipStream_t stream,
                                        MainLambda main_op,
                                        ReduceLambda reduce_op,
                                        FinalLambda fin_op,
@@ -140,7 +141,7 @@ inline void coalesced_normalize_medium(Type* out,
 {
   coalesced_normalize_medium_kernel<TPB>
     <<<N, TPB, 0, stream>>>(out, in, D, N, init, main_op, reduce_op, fin_op, eps);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename Type,
@@ -153,7 +154,7 @@ void coalesced_normalize(Type* out,
                          IdxType D,
                          IdxType N,
                          Type init,
-                         cudaStream_t stream,
+                         hipStream_t stream,
                          MainLambda main_op,
                          ReduceLambda reduce_op,
                          FinalLambda fin_op,

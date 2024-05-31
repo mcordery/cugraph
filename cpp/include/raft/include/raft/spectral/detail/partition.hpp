@@ -16,14 +16,14 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
 #include <raft/spectral/cluster_solvers.cuh>
 #include <raft/spectral/detail/spectral_util.cuh>
 #include <raft/spectral/eigen_solvers.cuh>
 #include <raft/spectral/matrix_wrappers.hpp>
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
 #include <thrust/transform.h>
@@ -78,7 +78,7 @@ std::tuple<vertex_t, weight_t, vertex_t> partition(
   RAFT_EXPECTS(eigVecs != nullptr, "Null eigVecs buffer.");
 
   auto stream   = resource::get_cuda_stream(handle);
-  auto cublas_h = resource::get_cublas_handle(handle);
+  auto hipblas.h = resource::get_cublas_handle(handle);
 
   std::tuple<vertex_t, weight_t, vertex_t>
     stats;  //{iters_eig_solver,residual_cluster,iters_cluster_solver} // # iters eigen solver,
@@ -146,7 +146,7 @@ void analyzePartition(raft::resources const& handle,
   vertex_t n = csr_m.nrows_;
 
   auto stream   = resource::get_cuda_stream(handle);
-  auto cublas_h = resource::get_cublas_handle(handle);
+  auto hipblas.h = resource::get_cublas_handle(handle);
 
   weight_t partEdgesCut, clustersize;
 
@@ -156,7 +156,7 @@ void analyzePartition(raft::resources const& handle,
 
   // Initialize cuBLAS
   RAFT_CUBLAS_TRY(
-    raft::linalg::detail::cublassetpointermode(cublas_h, CUBLAS_POINTER_MODE_HOST, stream));
+    raft::linalg::detail::cublassetpointermode(cublas_h, HIPBLAS_POINTER_MODE_HOST, stream));
 
   // Initialize Laplacian
   /// sparse_matrix_t<vertex_t, weight_t> A{handle, graph};

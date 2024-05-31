@@ -23,7 +23,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/input_validation.hpp>
 
 namespace raft {
@@ -44,7 +44,7 @@ namespace linalg {
  * @param stream cuda stream where to launch work
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void subtractScalar(OutT* out, const InT* in, InT scalar, IdxType len, cudaStream_t stream)
+void subtractScalar(OutT* out, const InT* in, InT scalar, IdxType len, hipStream_t stream)
 {
   detail::subtractScalar(out, in, scalar, len, stream);
 }
@@ -63,7 +63,7 @@ void subtractScalar(OutT* out, const InT* in, InT scalar, IdxType len, cudaStrea
  * @param stream cuda stream where to launch work
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void subtract(OutT* out, const InT* in1, const InT* in2, IdxType len, cudaStream_t stream)
+void subtract(OutT* out, const InT* in1, const InT* in2, IdxType len, hipStream_t stream)
 {
   detail::subtract(out, in1, in2, len, stream);
 }
@@ -84,7 +84,7 @@ void subtractDevScalar(math_t* outDev,
                        const math_t* inDev,
                        const math_t* singleScalarDev,
                        IdxType len,
-                       cudaStream_t stream)
+                       hipStream_t stream)
 {
   detail::subtractDevScalar(outDev, inDev, singleScalarDev, len, stream);
 }

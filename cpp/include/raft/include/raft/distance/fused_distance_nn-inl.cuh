@@ -25,7 +25,7 @@
 #include <raft/linalg/contractions.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <stdint.h>
 
@@ -96,7 +96,7 @@ void fusedDistanceNN(OutT* min,
                      bool isRowMajor,
                      raft::distance::DistanceType metric,
                      float metric_arg,
-                     cudaStream_t stream)
+                     hipStream_t stream)
 {
   ASSERT(isRowMajor, "fusedDistanceNN only supports row major inputs");
   // When k is smaller than 32, the Policy4x4 results in redundant calculations
@@ -296,7 +296,7 @@ void fusedDistanceNNMinReduce(OutT* min,
                               bool isRowMajor,
                               raft::distance::DistanceType metric,
                               float metric_arg,
-                              cudaStream_t stream)
+                              hipStream_t stream)
 {
   MinAndDistanceReduceOp<IdxT, DataT> redOp;
   KVPMinReduce<IdxT, DataT> pairRedOp;

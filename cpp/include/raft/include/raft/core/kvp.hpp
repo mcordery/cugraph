@@ -21,7 +21,7 @@
 #ifdef _RAFT_HAS_CUDA
 #include <raft/util/cuda_utils.cuh>  // raft::shfl_xor
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #endif
 namespace raft {
 /**
@@ -41,14 +41,14 @@ struct KeyValuePair {
 
 #ifdef _RAFT_HAS_CUDA
   /// Conversion Constructor to allow integration w/ cub
-  RAFT_INLINE_FUNCTION KeyValuePair(cub::KeyValuePair<_Key, _Value> kvp)
+  RAFT_INLINE_FUNCTION KeyValuePair(hipcub::KeyValuePair<_Key, _Value> kvp)
     : key(kvp.key), value(kvp.value)
   {
   }
 
-  RAFT_INLINE_FUNCTION operator cub::KeyValuePair<_Key, _Value>()
+  RAFT_INLINE_FUNCTION operator hipcub::KeyValuePair<_Key, _Value>()
   {
-    return cub::KeyValuePair(key, value);
+    return hipcub::KeyValuePair(key, value);
   }
 #endif
 

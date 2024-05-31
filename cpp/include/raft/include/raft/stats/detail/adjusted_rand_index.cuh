@@ -33,7 +33,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/extrema.h>
@@ -83,7 +83,7 @@ struct Binner {
  * @return the number of unique elements in the array
  */
 template <typename T>
-int countUnique(const T* arr, int size, T& minLabel, T& maxLabel, cudaStream_t stream)
+int countUnique(const T* arr, int size, T& minLabel, T& maxLabel, hipStream_t stream)
 {
   auto ptr         = thrust::device_pointer_cast(arr);
   auto minmax      = thrust::minmax_element(thrust::cuda::par.on(stream), ptr, ptr + size);
@@ -125,7 +125,7 @@ template <typename T, typename MathT = int>
 double compute_adjusted_rand_index(const T* firstClusterArray,
                                    const T* secondClusterArray,
                                    int size,
-                                   cudaStream_t stream)
+                                   hipStream_t stream)
 {
   ASSERT(size >= 2, "Rand Index for size less than 2 not defined!");
   T minFirst, maxFirst, minSecond, maxSecond;
@@ -140,7 +140,7 @@ double compute_adjusted_rand_index(const T* firstClusterArray,
   }
   auto nUniqClasses = MathT(nClasses);
   rmm::device_uvector<MathT> dContingencyMatrix(nUniqClasses * nUniqClasses, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     dContingencyMatrix.data(), 0, nUniqClasses * nUniqClasses * sizeof(MathT), stream));
   auto workspaceSz = getContingencyMatrixWorkspaceSize<T, MathT>(
     size, firstClusterArray, stream, lowerLabelRange, upperLabelRange);
@@ -160,11 +160,11 @@ double compute_adjusted_rand_index(const T* firstClusterArray,
   rmm::device_scalar<MathT> d_bCTwoSum(stream);
   rmm::device_scalar<MathT> d_nChooseTwoSum(stream);
   MathT h_aCTwoSum, h_bCTwoSum, h_nChooseTwoSum;
-  RAFT_CUDA_TRY(cudaMemsetAsync(a.data(), 0, nUniqClasses * sizeof(MathT), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(b.data(), 0, nUniqClasses * sizeof(MathT), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_aCTwoSum.data(), 0, sizeof(MathT), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_bCTwoSum.data(), 0, sizeof(MathT), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_nChooseTwoSum.data(), 0, sizeof(MathT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(a.data(), 0, nUniqClasses * sizeof(MathT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(b.data(), 0, nUniqClasses * sizeof(MathT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_aCTwoSum.data(), 0, sizeof(MathT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_bCTwoSum.data(), 0, sizeof(MathT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_nChooseTwoSum.data(), 0, sizeof(MathT), stream));
   // calculating the sum of NijC2
   raft::linalg::mapThenSumReduce<MathT, nCTwo<MathT>>(d_nChooseTwoSum.data(),
                                                       nUniqClasses * nUniqClasses,

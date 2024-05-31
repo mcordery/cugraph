@@ -18,7 +18,7 @@
 #include <raft/core/logger.hpp>
 #include <raft/util/cuda_rt_essentials.hpp>
 
-#include <cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 namespace raft {
 
 /**
@@ -41,7 +41,7 @@ struct device_setter {
   static auto get_current_device()
   {
     auto result = int{};
-    RAFT_CUDA_TRY(cudaGetDevice(&result));
+    RAFT_CUDA_TRY(hipGetDevice(&result));
     return result;
   }
   /**
@@ -50,15 +50,15 @@ struct device_setter {
   static auto get_device_count()
   {
     auto result = int{};
-    RAFT_CUDA_TRY(cudaGetDeviceCount(&result));
+    RAFT_CUDA_TRY(hipGetDeviceCount(&result));
     return result;
   }
 
   explicit device_setter(int new_device) : prev_device_{get_current_device()}
   {
-    RAFT_CUDA_TRY(cudaSetDevice(new_device));
+    RAFT_CUDA_TRY(hipSetDevice(new_device));
   }
-  ~device_setter() { RAFT_CUDA_TRY_NO_THROW(cudaSetDevice(prev_device_)); }
+  ~device_setter() { RAFT_CUDA_TRY_NO_THROW(hipSetDevice(prev_device_)); }
 
  private:
   int prev_device_;

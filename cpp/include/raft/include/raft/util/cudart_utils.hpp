@@ -21,8 +21,8 @@
 
 #include <rmm/cuda_stream_view.hpp>
 
-#include <cuda_fp16.h>
-#include <cuda_runtime_api.h>
+#include <hip/hip_fp16.h>
+#include <hip/hip_runtime_api.h>
 
 #include <execinfo.h>
 
@@ -145,7 +145,7 @@ class grid_1d_block_t {
 template <typename Type>
 void copy(Type* dst, const Type* src, size_t len, rmm::cuda_stream_view stream)
 {
-  RAFT_CUDA_TRY(cudaMemcpyAsync(dst, src, len * sizeof(Type), cudaMemcpyDefault, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(dst, src, len * sizeof(Type), hipMemcpyDefault, stream));
 }
 
 /**
@@ -172,7 +172,7 @@ template <typename Type>
 void copy_async(Type* d_ptr1, const Type* d_ptr2, size_t len, rmm::cuda_stream_view stream)
 {
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(d_ptr1, d_ptr2, len * sizeof(Type), cudaMemcpyDeviceToDevice, stream));
+    hipMemcpyAsync(d_ptr1, d_ptr2, len * sizeof(Type), hipMemcpyDeviceToDevice, stream));
 }
 /** @} */
 
@@ -202,7 +202,7 @@ void print_device_vector(const char* variable_name,
 {
   auto host_mem = std::make_unique<T[]>(componentsCount);
   RAFT_CUDA_TRY(
-    cudaMemcpy(host_mem.get(), devMem, componentsCount * sizeof(T), cudaMemcpyDeviceToHost));
+    hipMemcpy(host_mem.get(), devMem, componentsCount * sizeof(T), hipMemcpyDeviceToHost));
   print_host_vector(variable_name, host_mem.get(), componentsCount, out);
 }
 
@@ -217,8 +217,8 @@ void print_device_vector(const char* variable_name,
 template <class T, class OutStream>
 void print_vector(const char* variable_name, const T* ptr, size_t componentsCount, OutStream& out)
 {
-  cudaPointerAttributes attr;
-  RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, ptr));
+  hipPointerAttribute_t attr;
+  RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, ptr));
   if (attr.hostPointer != nullptr) {
     print_host_vector(variable_name, reinterpret_cast<T*>(attr.hostPointer), componentsCount, out);
   } else if (attr.type == cudaMemoryTypeUnregistered) {
@@ -239,16 +239,16 @@ int get_device_for_address(const T* p)
 {
   if (!p) { return -1; }
 
-  cudaPointerAttributes att;
-  cudaError_t err = cudaPointerGetAttributes(&att, p);
-  if (err == cudaErrorInvalidValue) {
+  hipPointerAttribute_t att;
+  hipError_t err = hipPointerGetAttributes(&att, p);
+  if (err == hipErrorInvalidValue) {
     // Make sure the current thread error status has been reset
-    err = cudaGetLastError();
+    err = hipGetLastError();
     return -1;
   }
 
   // memoryType is deprecated for CUDA 10.0+
-  if (att.type == cudaMemoryTypeDevice) {
+  if (att.type == hipMemoryTypeDevice) {
     return att.device;
   } else {
     return -1;
@@ -259,9 +259,9 @@ int get_device_for_address(const T* p)
 inline int getSharedMemPerBlock()
 {
   int devId;
-  RAFT_CUDA_TRY(cudaGetDevice(&devId));
+  RAFT_CUDA_TRY(hipGetDevice(&devId));
   int smemPerBlk;
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&smemPerBlk, cudaDevAttrMaxSharedMemoryPerBlock, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&smemPerBlk, hipDeviceAttributeMaxSharedMemoryPerBlock, devId));
   return smemPerBlk;
 }
 
@@ -269,9 +269,9 @@ inline int getSharedMemPerBlock()
 inline int getMultiProcessorCount()
 {
   int devId;
-  RAFT_CUDA_TRY(cudaGetDevice(&devId));
+  RAFT_CUDA_TRY(hipGetDevice(&devId));
   int mpCount;
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&mpCount, cudaDevAttrMultiProcessorCount, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&mpCount, hipDeviceAttributeMultiprocessorCount, devId));
   return mpCount;
 }
 
@@ -279,23 +279,23 @@ inline int getMultiProcessorCount()
 inline std::pair<int, int> getComputeCapability()
 {
   int devId;
-  RAFT_CUDA_TRY(cudaGetDevice(&devId));
+  RAFT_CUDA_TRY(hipGetDevice(&devId));
   int majorVer, minorVer;
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&majorVer, cudaDevAttrComputeCapabilityMajor, devId));
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&minorVer, cudaDevAttrComputeCapabilityMinor, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&majorVer, hipDeviceAttributeComputeCapabilityMajor, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&minorVer, hipDeviceAttributeComputeCapabilityMinor, devId));
 
   return std::make_pair(majorVer, minorVer);
 }
 
 /** helper method to convert an array on device to a string on host */
 template <typename T>
-std::string arr2Str(const T* arr, int size, std::string name, cudaStream_t stream, int width = 4)
+std::string arr2Str(const T* arr, int size, std::string name, hipStream_t stream, int width = 4)
 {
   std::stringstream ss;
 
   T* arr_h = (T*)malloc(size * sizeof(T));
   update_host(arr_h, arr, size, stream);
-  RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+  RAFT_CUDA_TRY(hipStreamSynchronize(stream));
 
   ss << name << " = [ ";
   for (int i = 0; i < size; i++) {
@@ -319,8 +319,8 @@ std::string arr2Str(const T* arr, int size, std::string name, cudaStream_t strea
 template <typename T>
 void ASSERT_DEVICE_MEM(T* ptr, std::string name)
 {
-  cudaPointerAttributes s_att;
-  cudaError_t s_err = cudaPointerGetAttributes(&s_att, ptr);
+  hipPointerAttribute_t s_att;
+  hipError_t s_err = hipPointerGetAttributes(&s_att, ptr);
 
   if (s_err != 0 || s_att.device == -1)
     std::cout << "Invalid device pointer encountered in " << name << ". device=" << s_att.device

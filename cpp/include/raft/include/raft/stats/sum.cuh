@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/sum.cuh>
 #include <raft/util/cudart_utils.hpp>
 
@@ -42,7 +42,7 @@ namespace stats {
  * @param stream cuda stream where to launch work
  */
 template <typename Type, typename IdxType = int>
-void sum(Type* output, const Type* input, IdxType D, IdxType N, bool rowMajor, cudaStream_t stream)
+void sum(Type* output, const Type* input, IdxType D, IdxType N, bool rowMajor, hipStream_t stream)
 {
   detail::sum(output, input, D, N, rowMajor, stream);
 }

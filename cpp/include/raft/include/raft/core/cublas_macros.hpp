@@ -21,7 +21,7 @@
 
 #include <raft/core/error.hpp>
 
-#include <cublas_v2.h>
+#include <hipblas.h>
 
 ///@todo: enable this once we have logger enabled
 // #include <cuml/common/logger.hpp>
@@ -53,19 +53,19 @@ struct cublas_error : public raft::exception {
 namespace linalg {
 namespace detail {
 
-inline const char* cublas_error_to_string(cublasStatus_t err)
+inline const char* cublas_error_to_string(hipblasStatus_t err)
 {
   switch (err) {
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_SUCCESS);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_NOT_INITIALIZED);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_ALLOC_FAILED);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_INVALID_VALUE);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_ARCH_MISMATCH);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_MAPPING_ERROR);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_EXECUTION_FAILED);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_INTERNAL_ERROR);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_NOT_SUPPORTED);
-    _CUBLAS_ERR_TO_STR(CUBLAS_STATUS_LICENSE_ERROR);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_SUCCESS);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_NOT_INITIALIZED);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_ALLOC_FAILED);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_INVALID_VALUE);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_ARCH_MISMATCH);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_MAPPING_ERROR);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_EXECUTION_FAILED);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_INTERNAL_ERROR);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_NOT_SUPPORTED);
+    _CUBLAS_ERR_TO_STR(HIPBLAS_STATUS_UNKNOWN);
     default: return "CUBLAS_STATUS_UNKNOWN";
   };
 }
@@ -85,12 +85,12 @@ inline const char* cublas_error_to_string(cublasStatus_t err)
  * @brief Error checking macro for cuBLAS runtime API functions.
  *
  * Invokes a cuBLAS runtime API function call, if the call does not return
- * CUBLAS_STATUS_SUCCESS, throws an exception detailing the cuBLAS error that occurred
+ * HIPBLAS_STATUS_SUCCESS, throws an exception detailing the cuBLAS error that occurred
  */
 #define RAFT_CUBLAS_TRY(call)                                              \
   do {                                                                     \
-    cublasStatus_t const status = (call);                                  \
-    if (CUBLAS_STATUS_SUCCESS != status) {                                 \
+    hipblasStatus_t const status = (call);                                  \
+    if (HIPBLAS_STATUS_SUCCESS != status) {                                 \
       std::string msg{};                                                   \
       SET_ERROR_MSG(msg,                                                   \
                     "cuBLAS error encountered at: ",                       \
@@ -113,8 +113,8 @@ inline const char* cublas_error_to_string(cublasStatus_t err)
 //  */
 #define RAFT_CUBLAS_TRY_NO_THROW(call)                               \
   do {                                                               \
-    cublasStatus_t const status = call;                              \
-    if (CUBLAS_STATUS_SUCCESS != status) {                           \
+    hipblasStatus_t const status = call;                              \
+    if (HIPBLAS_STATUS_SUCCESS != status) {                           \
       printf("CUBLAS call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                  \
              __FILE__,                                               \

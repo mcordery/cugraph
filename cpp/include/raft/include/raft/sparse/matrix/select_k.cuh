@@ -19,7 +19,7 @@
 #include <raft/core/device_csr_matrix.hpp>
 #include <raft/core/device_mdspan.hpp>
 //#include <raft/core/nvtx.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/matrix/select_k_types.hpp>
 #include <raft/sparse/matrix/detail/select_k.cuh>

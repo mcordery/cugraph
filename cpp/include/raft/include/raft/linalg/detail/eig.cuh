@@ -26,7 +26,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 namespace raft {
 namespace linalg {
@@ -39,14 +39,14 @@ void eigDC_legacy(raft::resources const& handle,
                   std::size_t n_cols,
                   math_t* eig_vectors,
                   math_t* eig_vals,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   int lwork;
   RAFT_CUSOLVER_TRY(cusolverDnsyevd_bufferSize(cusolverH,
-                                               CUSOLVER_EIG_MODE_VECTOR,
-                                               CUBLAS_FILL_MODE_UPPER,
+                                               HIPSOLVER_EIG_MODE_VECTOR,
+                                               HIPBLAS_FILL_MODE_UPPER,
                                                n_rows,
                                                in,
                                                n_cols,
@@ -61,8 +61,8 @@ void eigDC_legacy(raft::resources const& handle,
                      make_device_matrix_view<math_t>(eig_vectors, n_rows, n_cols));
 
   RAFT_CUSOLVER_TRY(cusolverDnsyevd(cusolverH,
-                                    CUSOLVER_EIG_MODE_VECTOR,
-                                    CUBLAS_FILL_MODE_UPPER,
+                                    HIPSOLVER_EIG_MODE_VECTOR,
+                                    HIPBLAS_FILL_MODE_UPPER,
                                     n_rows,
                                     eig_vectors,
                                     n_cols,
@@ -71,7 +71,7 @@ void eigDC_legacy(raft::resources const& handle,
                                     lwork,
                                     d_dev_info.data(),
                                     stream));
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 
   auto dev_info = d_dev_info.value(stream);
   ASSERT(dev_info == 0,
@@ -86,12 +86,12 @@ void eigDC(raft::resources const& handle,
            std::size_t n_cols,
            math_t* eig_vectors,
            math_t* eig_vals,
-           cudaStream_t stream)
+           hipStream_t stream)
 {
 #if CUDART_VERSION < 11010
   eigDC_legacy(handle, in, n_rows, n_cols, eig_vectors, eig_vals, stream);
 #else
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   cusolverDnParams_t dn_params = nullptr;
   RAFT_CUSOLVER_TRY(cusolverDnCreateParams(&dn_params));
@@ -100,8 +100,8 @@ void eigDC(raft::resources const& handle,
   size_t workspaceHost   = 0;
   RAFT_CUSOLVER_TRY(cusolverDnxsyevd_bufferSize(cusolverH,
                                                 dn_params,
-                                                CUSOLVER_EIG_MODE_VECTOR,
-                                                CUBLAS_FILL_MODE_UPPER,
+                                                HIPSOLVER_EIG_MODE_VECTOR,
+                                                HIPBLAS_FILL_MODE_UPPER,
                                                 static_cast<int64_t>(n_rows),
                                                 eig_vectors,
                                                 static_cast<int64_t>(n_cols),
@@ -120,8 +120,8 @@ void eigDC(raft::resources const& handle,
 
   RAFT_CUSOLVER_TRY(cusolverDnxsyevd(cusolverH,
                                      dn_params,
-                                     CUSOLVER_EIG_MODE_VECTOR,
-                                     CUBLAS_FILL_MODE_UPPER,
+                                     HIPSOLVER_EIG_MODE_VECTOR,
+                                     HIPBLAS_FILL_MODE_UPPER,
                                      static_cast<int64_t>(n_rows),
                                      eig_vectors,
                                      static_cast<int64_t>(n_cols),
@@ -133,7 +133,7 @@ void eigDC(raft::resources const& handle,
                                      d_dev_info.data(),
                                      stream));
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   RAFT_CUSOLVER_TRY(cusolverDnDestroyParams(dn_params));
   int dev_info = d_dev_info.value(stream);
   ASSERT(dev_info == 0,
@@ -153,17 +153,17 @@ void eigSelDC(raft::resources const& handle,
               math_t* eig_vectors,
               math_t* eig_vals,
               EigVecMemUsage memUsage,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   int lwork;
   int h_meig;
 
   RAFT_CUSOLVER_TRY(cusolverDnsyevdx_bufferSize(cusolverH,
-                                                CUSOLVER_EIG_MODE_VECTOR,
-                                                CUSOLVER_EIG_RANGE_I,
-                                                CUBLAS_FILL_MODE_UPPER,
+                                                HIPSOLVER_EIG_MODE_VECTOR,
+                                                HIPSOLVER_EIG_RANGE_I,
+                                                HIPBLAS_FILL_MODE_UPPER,
                                                 static_cast<int64_t>(n_rows),
                                                 in,
                                                 static_cast<int64_t>(n_cols),
@@ -181,9 +181,9 @@ void eigSelDC(raft::resources const& handle,
 
   if (memUsage == OVERWRITE_INPUT) {
     RAFT_CUSOLVER_TRY(cusolverDnsyevdx(cusolverH,
-                                       CUSOLVER_EIG_MODE_VECTOR,
-                                       CUSOLVER_EIG_RANGE_I,
-                                       CUBLAS_FILL_MODE_UPPER,
+                                       HIPSOLVER_EIG_MODE_VECTOR,
+                                       HIPSOLVER_EIG_RANGE_I,
+                                       HIPBLAS_FILL_MODE_UPPER,
                                        static_cast<int64_t>(n_rows),
                                        in,
                                        static_cast<int64_t>(n_cols),
@@ -204,9 +204,9 @@ void eigSelDC(raft::resources const& handle,
                        make_device_matrix_view(eig_vectors, n_rows, n_cols));
 
     RAFT_CUSOLVER_TRY(cusolverDnsyevdx(cusolverH,
-                                       CUSOLVER_EIG_MODE_VECTOR,
-                                       CUSOLVER_EIG_RANGE_I,
-                                       CUBLAS_FILL_MODE_UPPER,
+                                       HIPSOLVER_EIG_MODE_VECTOR,
+                                       HIPSOLVER_EIG_RANGE_I,
+                                       HIPBLAS_FILL_MODE_UPPER,
                                        static_cast<int64_t>(n_rows),
                                        eig_vectors,
                                        static_cast<int64_t>(n_cols),
@@ -222,7 +222,7 @@ void eigSelDC(raft::resources const& handle,
                                        stream));
   }
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 
   int dev_info = d_dev_info.value(stream);
   ASSERT(dev_info == 0,
@@ -250,21 +250,21 @@ void eigJacobi(raft::resources const& handle,
                std::size_t n_cols,
                math_t* eig_vectors,
                math_t* eig_vals,
-               cudaStream_t stream,
+               hipStream_t stream,
                math_t tol = 1.e-7,
                int sweeps = 15)
 {
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
-  syevjInfo_t syevj_params = nullptr;
-  RAFT_CUSOLVER_TRY(cusolverDnCreateSyevjInfo(&syevj_params));
-  RAFT_CUSOLVER_TRY(cusolverDnXsyevjSetTolerance(syevj_params, tol));
-  RAFT_CUSOLVER_TRY(cusolverDnXsyevjSetMaxSweeps(syevj_params, sweeps));
+  hipsolverSyevjInfo_t syevj_params = nullptr;
+  RAFT_CUSOLVER_TRY(hipsolverDnCreateSyevjInfo(&syevj_params));
+  RAFT_CUSOLVER_TRY(hipsolverDnXsyevjSetTolerance(syevj_params, tol));
+  RAFT_CUSOLVER_TRY(hipsolverDnXsyevjSetMaxSweeps(syevj_params, sweeps));
 
   int lwork;
   RAFT_CUSOLVER_TRY(cusolverDnsyevj_bufferSize(cusolverH,
-                                               CUSOLVER_EIG_MODE_VECTOR,
-                                               CUBLAS_FILL_MODE_UPPER,
+                                               HIPSOLVER_EIG_MODE_VECTOR,
+                                               HIPBLAS_FILL_MODE_UPPER,
                                                static_cast<int64_t>(n_rows),
                                                eig_vectors,
                                                static_cast<int64_t>(n_cols),
@@ -280,8 +280,8 @@ void eigJacobi(raft::resources const& handle,
                      make_device_matrix_view(eig_vectors, n_rows, n_cols));
 
   RAFT_CUSOLVER_TRY(cusolverDnsyevj(cusolverH,
-                                    CUSOLVER_EIG_MODE_VECTOR,
-                                    CUBLAS_FILL_MODE_UPPER,
+                                    HIPSOLVER_EIG_MODE_VECTOR,
+                                    HIPBLAS_FILL_MODE_UPPER,
                                     static_cast<int64_t>(n_rows),
                                     eig_vectors,
                                     static_cast<int64_t>(n_cols),
@@ -293,10 +293,10 @@ void eigJacobi(raft::resources const& handle,
                                     stream));
 
   int executed_sweeps;
-  RAFT_CUSOLVER_TRY(cusolverDnXsyevjGetSweeps(cusolverH, syevj_params, &executed_sweeps));
+  RAFT_CUSOLVER_TRY(hipsolverDnXsyevjGetSweeps(cusolverH, syevj_params, &executed_sweeps));
 
-  RAFT_CUDA_TRY(cudaGetLastError());
-  RAFT_CUSOLVER_TRY(cusolverDnDestroySyevjInfo(syevj_params));
+  RAFT_CUDA_TRY(hipGetLastError());
+  RAFT_CUSOLVER_TRY(hipsolverDnDestroySyevjInfo(syevj_params));
 }
 
 }  // namespace detail

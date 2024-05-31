@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#include "cuda_stream.hpp"
+#include "hip_stream.hpp"
 
 #include <raft/core/cusolver_macros.hpp>
 #include <raft/core/resource/resource_types.hpp>
@@ -23,7 +23,7 @@
 
 #include <rmm/cuda_stream_view.hpp>
 
-#include <cusolverDn.h>
+#include <hipsolver.h>
 
 namespace raft::resource {
 
@@ -34,16 +34,16 @@ class cusolver_dn_resource : public resource {
  public:
   cusolver_dn_resource(rmm::cuda_stream_view stream)
   {
-    RAFT_CUSOLVER_TRY_NO_THROW(cusolverDnCreate(&cusolver_res));
-    RAFT_CUSOLVER_TRY_NO_THROW(cusolverDnSetStream(cusolver_res, stream));
+    RAFT_CUSOLVER_TRY_NO_THROW(hipsolverDnCreate(&cusolver_res));
+    RAFT_CUSOLVER_TRY_NO_THROW(hipsolverSetStream(cusolver_res, stream));
   }
 
   void* get_resource() override { return &cusolver_res; }
 
-  ~cusolver_dn_resource() override { RAFT_CUSOLVER_TRY_NO_THROW(cusolverDnDestroy(cusolver_res)); }
+  ~cusolver_dn_resource() override { RAFT_CUSOLVER_TRY_NO_THROW(hipsolverDnDestroy(cusolver_res)); }
 
  private:
-  cusolverDnHandle_t cusolver_res;
+  hipsolverHandle_t cusolver_res;
 };
 
 /**
@@ -72,13 +72,13 @@ class cusolver_dn_resource_factory : public resource_factory {
  * @param[in] res the raft resources object
  * @return cusolver dn handle
  */
-inline cusolverDnHandle_t get_cusolver_dn_handle(resources const& res)
+inline hipsolverHandle_t get_cusolver_dn_handle(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUSOLVER_DN_HANDLE)) {
-    cudaStream_t stream = get_cuda_stream(res);
+    hipStream_t stream = get_cuda_stream(res);
     res.add_resource_factory(std::make_shared<cusolver_dn_resource_factory>(stream));
   }
-  return *res.get_resource<cusolverDnHandle_t>(resource_type::CUSOLVER_DN_HANDLE);
+  return *res.get_resource<hipsolverHandle_t>(resource_type::CUSOLVER_DN_HANDLE);
 };
 
 /**

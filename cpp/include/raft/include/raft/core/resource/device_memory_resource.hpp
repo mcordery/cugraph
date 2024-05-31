@@ -173,7 +173,7 @@ class workspace_resource_factory : public resource_factory {
   {
     std::size_t free_size{};
     std::size_t total_size{};
-    RAFT_CUDA_TRY(cudaMemGetInfo(&free_size, &total_size));
+    RAFT_CUDA_TRY(hipMemGetInfo(&free_size, &total_size));
     // Note, the workspace does not claim all this memory from the start, so it's still usable by
     // the main resource as well.
     // This limit is merely an order for algorithm internals to plan the batching accordingly.

@@ -16,7 +16,7 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
@@ -202,24 +202,24 @@ struct sparse_matrix_t {
     RAFT_EXPECTS(x != nullptr, "Null x buffer.");
     RAFT_EXPECTS(y != nullptr, "Null y buffer.");
 
-    auto cusparse_h = resource::get_cusparse_handle(handle_);
+    auto hipsparse.h = resource::get_cusparse_handle(handle_);
     auto stream     = resource::get_cuda_stream(handle_);
 
-    cusparseOperation_t trans = transpose ? CUSPARSE_OPERATION_TRANSPOSE :  // transpose
-                                  CUSPARSE_OPERATION_NON_TRANSPOSE;         // non-transpose
+    hipsparseOperation_t trans = transpose ? HIPSPARSE_OPERATION_TRANSPOSE :  // transpose
+                                  HIPSPARSE_OPERATION_NON_TRANSPOSE;         // non-transpose
 
 #if not defined CUDA_ENFORCE_LOWER and CUDA_VER_10_1_UP
     auto size_x = transpose ? nrows_ : ncols_;
     auto size_y = transpose ? ncols_ : nrows_;
 
-    cusparseSpMVAlg_t spmv_alg = translate_algorithm(alg);
+    hipsparseSpMVAlg_t spmv_alg = translate_algorithm(alg);
 
     // create descriptors:
     //(below casts are necessary, because
-    // cusparseCreateCsr(...) takes non-const
+    // hipsparseCreateCsr(...) takes non-const
     // void*; the casts should be harmless)
     //
-    cusparseSpMatDescr_t matA;
+    hipsparseSpMatDescr_t matA;
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecreatecsr(&matA,
                                                               nrows_,
                                                               ncols_,
@@ -228,20 +228,20 @@ struct sparse_matrix_t {
                                                               const_cast<index_type*>(col_indices_),
                                                               const_cast<value_type*>(values_)));
 
-    cusparseDnVecDescr_t vecX;
+    hipsparseDnVecDescr_t vecX;
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecreatednvec(&vecX, size_x, x));
 
     rmm::device_uvector<value_type> y_tmp(size_y, stream);
     raft::copy(y_tmp.data(), y, size_y, stream);
 
-    cusparseDnVecDescr_t vecY;
+    hipsparseDnVecDescr_t vecY;
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecreatednvec(&vecY, size_y, y_tmp.data()));
 
     // get (scratch) external device buffer size:
     //
     size_t bufferSize;
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsespmv_buffersize(
-      cusparse_h, trans, &alpha, matA, vecX, &beta, vecY, spmv_alg, &bufferSize, stream));
+      hipsparse.h, trans, &alpha, matA, vecX, &beta, vecY, spmv_alg, &bufferSize, stream));
 
     // allocate external buffer:
     //
@@ -250,27 +250,27 @@ struct sparse_matrix_t {
     // finally perform SpMV:
     //
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsespmv(
-      cusparse_h, trans, &alpha, matA, vecX, &beta, vecY, spmv_alg, external_buffer.raw(), stream));
+      hipsparse.h, trans, &alpha, matA, vecX, &beta, vecY, spmv_alg, external_buffer.raw(), stream));
 
     // FIXME: This is a workaround for a cusparse issue being encountered in CUDA 12
     raft::copy(y, y_tmp.data(), size_y, stream);
     // free descriptors:
     //(TODO: maybe wrap them in a RAII struct?)
     //
-    RAFT_CUSPARSE_TRY(cusparseDestroyDnVec(vecY));
-    RAFT_CUSPARSE_TRY(cusparseDestroyDnVec(vecX));
-    RAFT_CUSPARSE_TRY(cusparseDestroySpMat(matA));
+    RAFT_CUSPARSE_TRY(hipsparseDestroyDnVec(vecY));
+    RAFT_CUSPARSE_TRY(hipsparseDestroyDnVec(vecX));
+    RAFT_CUSPARSE_TRY(hipsparseDestroySpMat(matA));
 #else
     RAFT_CUSPARSE_TRY(
-      raft::sparse::detail::cusparsesetpointermode(cusparse_h, CUSPARSE_POINTER_MODE_HOST, stream));
-    cusparseMatDescr_t descr = 0;
-    RAFT_CUSPARSE_TRY(cusparseCreateMatDescr(&descr));
+      raft::sparse::detail::cusparsesetpointermode(cusparse_h, HIPSPARSE_POINTER_MODE_HOST, stream));
+    hipsparseMatDescr_t descr = 0;
+    RAFT_CUSPARSE_TRY(hipsparseCreateMatDescr(&descr));
     if (symmetric) {
-      RAFT_CUSPARSE_TRY(cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_SYMMETRIC));
+      RAFT_CUSPARSE_TRY(hipsparseSetMatType(descr, HIPSPARSE_MATRIX_TYPE_SYMMETRIC));
     } else {
-      RAFT_CUSPARSE_TRY(cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_GENERAL));
+      RAFT_CUSPARSE_TRY(hipsparseSetMatType(descr, HIPSPARSE_MATRIX_TYPE_GENERAL));
     }
-    RAFT_CUSPARSE_TRY(cusparseSetMatIndexBase(descr, CUSPARSE_INDEX_BASE_ZERO));
+    RAFT_CUSPARSE_TRY(hipsparseSetMatIndexBase(descr, HIPSPARSE_INDEX_BASE_ZERO));
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecsrmv(cusparse_h,
                                                           trans,
                                                           nrows_,
@@ -285,19 +285,19 @@ struct sparse_matrix_t {
                                                           &beta,
                                                           y,
                                                           stream));
-    RAFT_CUSPARSE_TRY(cusparseDestroyMatDescr(descr));
+    RAFT_CUSPARSE_TRY(hipsparseDestroyMatDescr(descr));
 #endif
   }
 
   resources const& get_handle(void) const { return handle_; }
 
 #if not defined CUDA_ENFORCE_LOWER and CUDA_VER_10_1_UP
-  cusparseSpMVAlg_t translate_algorithm(sparse_mv_alg_t alg) const
+  hipsparseSpMVAlg_t translate_algorithm(sparse_mv_alg_t alg) const
   {
     switch (alg) {
-      case sparse_mv_alg_t::SPARSE_MV_ALG1: return CUSPARSE_SPMV_CSR_ALG1;
-      case sparse_mv_alg_t::SPARSE_MV_ALG2: return CUSPARSE_SPMV_CSR_ALG2;
-      default: return CUSPARSE_SPMV_ALG_DEFAULT;
+      case sparse_mv_alg_t::SPARSE_MV_ALG1: return HIPSPARSE_SPMV_CSR_ALG1;
+      case sparse_mv_alg_t::SPARSE_MV_ALG2: return HIPSPARSE_SPMV_CSR_ALG2;
+      default: return HIPSPARSE_SPMV_ALG_DEFAULT;
     }
   }
 #endif
@@ -360,13 +360,13 @@ struct laplacian_matrix_t : sparse_matrix_t<index_type, value_type> {
     auto n                   = sparse_matrix_t<index_type, value_type>::nrows_;
 
     auto handle   = sparse_matrix_t<index_type, value_type>::get_handle();
-    auto cublas_h = resource::get_cublas_handle(handle);
+    auto hipblas.h = resource::get_cublas_handle(handle);
     auto stream   = resource::get_cuda_stream(handle);
 
     // scales y by beta:
     //
     if (beta == 0) {
-      RAFT_CUDA_TRY(cudaMemsetAsync(y, 0, n * sizeof(value_type), stream));
+      RAFT_CUDA_TRY(hipMemsetAsync(y, 0, n * sizeof(value_type), stream));
     } else if (beta != 1) {
       // TODO: Call from public API when ready
       RAFT_CUBLAS_TRY(raft::linalg::detail::cublasscal(cublas_h, n, &beta, y, 1, stream));
@@ -422,7 +422,7 @@ struct modularity_matrix_t : laplacian_matrix_t<index_type, value_type> {
     auto n = sparse_matrix_t<index_type, value_type>::nrows_;
 
     auto handle   = sparse_matrix_t<index_type, value_type>::get_handle();
-    auto cublas_h = resource::get_cublas_handle(handle);
+    auto hipblas.h = resource::get_cublas_handle(handle);
     auto stream   = resource::get_cuda_stream(handle);
 
     // y = A*x

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/sparse/coo.hpp>
 #include <raft/sparse/linalg/symmetrize.cuh>
@@ -69,7 +69,7 @@ RAFT_KERNEL conv_indices_kernel(in_t* inds, out_t* out, size_t nnz)
 }
 
 template <typename in_t, typename out_t, int tpb = 256>
-void conv_indices(in_t* inds, out_t* out, size_t size, cudaStream_t stream)
+void conv_indices(in_t* inds, out_t* out, size_t size, hipStream_t stream)
 {
   size_t blocks = ceildiv(size, (size_t)tpb);
   conv_indices_kernel<<<blocks, tpb, 0, stream>>>(inds, out, size);

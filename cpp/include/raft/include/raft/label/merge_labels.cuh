@@ -60,7 +60,7 @@ void merge_labels(value_idx* labels_a,
                   value_idx* R,
                   bool* m,
                   value_idx N,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   detail::merge_labels<value_idx, TPB_X>(labels_a, labels_b, mask, R, m, N, stream);
 }

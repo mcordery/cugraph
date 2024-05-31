@@ -23,11 +23,11 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -56,12 +56,12 @@ void csr_row_slice_indptr(value_idx start_row,
                           value_idx* indptr_out,
                           value_idx* start_offset,
                           value_idx* stop_offset,
-                          cudaStream_t stream)
+                          hipStream_t stream)
 {
   raft::update_host(start_offset, indptr + start_row, 1, stream);
   raft::update_host(stop_offset, indptr + stop_row + 1, 1, stream);
 
-  RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+  RAFT_CUDA_TRY(hipStreamSynchronize(stream));
 
   value_idx s_offset = *start_offset;
 
@@ -95,7 +95,7 @@ void csr_row_slice_populate(value_idx start_offset,
                             const value_t* data,
                             value_idx* indices_out,
                             value_t* data_out,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
   raft::copy(indices_out, indices + start_offset, stop_offset - start_offset, stream);
   raft::copy(data_out, data + start_offset, stop_offset - start_offset, stream);

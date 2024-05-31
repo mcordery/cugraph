@@ -47,7 +47,7 @@ namespace op {
  */
 template <typename value_idx>
 void compute_duplicates_mask(
-  value_idx* mask, const value_idx* rows, const value_idx* cols, size_t nnz, cudaStream_t stream)
+  value_idx* mask, const value_idx* rows, const value_idx* cols, size_t nnz, hipStream_t stream)
 {
   detail::compute_duplicates_mask(mask, rows, cols, nnz, stream);
 }

@@ -35,13 +35,13 @@ namespace linalg {
  * @{
  */
 template <typename InType, typename IdxType, typename OutType = InType>
-void scalarAdd(OutType* out, const InType* in, InType scalar, IdxType len, cudaStream_t stream)
+void scalarAdd(OutType* out, const InType* in, InType scalar, IdxType len, hipStream_t stream)
 {
   detail::scalarAdd(out, in, scalar, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
-void scalarMultiply(OutType* out, const InType* in, InType scalar, IdxType len, cudaStream_t stream)
+void scalarMultiply(OutType* out, const InType* in, InType scalar, IdxType len, hipStream_t stream)
 {
   detail::scalarMultiply(out, in, scalar, len, stream);
 }
@@ -60,35 +60,35 @@ void scalarMultiply(OutType* out, const InType* in, InType scalar, IdxType len, 
  */
 template <typename InType, typename IdxType, typename OutType = InType>
 void eltwiseAdd(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseAdd(out, in1, in2, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
 void eltwiseSub(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseSub(out, in1, in2, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
 void eltwiseMultiply(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseMultiply(out, in1, in2, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
 void eltwiseDivide(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseDivide(out, in1, in2, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
 void eltwiseDivideCheckZero(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseDivideCheckZero(out, in1, in2, len, stream);
 }

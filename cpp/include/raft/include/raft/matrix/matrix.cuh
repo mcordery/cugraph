@@ -35,7 +35,7 @@
 
 //#include <raft/common/nvtx.hpp>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft {
 namespace matrix {
@@ -64,7 +64,7 @@ void copyRows(const m_t* in,
               m_t* out,
               const idx_array_t* indices,
               idx_t n_rows_indices,
-              cudaStream_t stream,
+              hipStream_t stream,
               bool rowMajor = false)
 {
   detail::copyRows(in, n_rows, n_cols, out, indices, n_rows_indices, stream, rowMajor);
@@ -79,7 +79,7 @@ void copyRows(const m_t* in,
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void copy(const m_t* in, m_t* out, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void copy(const m_t* in, m_t* out, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   raft::copy_async(out, in, n_rows * n_cols, stream);
 }
@@ -116,7 +116,7 @@ void copy(raft::resources const& handle,
  */
 template <typename m_t, typename idx_t = int>
 void truncZeroOrigin(
-  m_t* in, idx_t in_n_rows, m_t* out, idx_t out_n_rows, idx_t out_n_cols, cudaStream_t stream)
+  m_t* in, idx_t in_n_rows, m_t* out, idx_t out_n_rows, idx_t out_n_cols, hipStream_t stream)
 {
   detail::truncZeroOrigin(in, in_n_rows, out, out_n_rows, out_n_cols, stream);
 }
@@ -130,7 +130,7 @@ void truncZeroOrigin(
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   detail::colReverse(inout, n_rows, n_cols, stream);
 }
@@ -144,7 +144,7 @@ void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void rowReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void rowReverse(m_t* inout, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   detail::rowReverse(inout, n_rows, n_cols, stream);
 }
@@ -164,7 +164,7 @@ void print(const m_t* in,
            idx_t n_cols,
            char h_separator    = ' ',
            char v_separator    = '\n',
-           cudaStream_t stream = rmm::cuda_stream_default)
+           hipStream_t stream = rmm::cuda_stream_default)
 {
   detail::print(in, n_rows, n_cols, h_separator, v_separator, stream);
 }
@@ -203,7 +203,7 @@ void sliceMatrix(m_t* in,
                  idx_t y1,
                  idx_t x2,
                  idx_t y2,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   detail::sliceMatrix(in, n_rows, n_cols, out, x1, y1, x2, y2, false, stream);
 }
@@ -217,7 +217,7 @@ void sliceMatrix(m_t* in,
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void copyUpperTriangular(m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void copyUpperTriangular(m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   detail::copyUpperTriangular(src, dst, n_rows, n_cols, stream);
 }
@@ -232,7 +232,7 @@ void copyUpperTriangular(m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, cudaStr
  */
 template <typename m_t, typename idx_t = int>
 void initializeDiagonalMatrix(
-  m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+  m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   detail::initializeDiagonalMatrix(vec, matrix, n_rows, n_cols, false, stream);
 }
@@ -244,7 +244,7 @@ void initializeDiagonalMatrix(
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void getDiagonalInverseMatrix(m_t* in, idx_t len, cudaStream_t stream)
+void getDiagonalInverseMatrix(m_t* in, idx_t len, hipStream_t stream)
 {
   detail::getDiagonalInverseMatrix(in, len, stream);
 }
@@ -257,7 +257,7 @@ void getDiagonalInverseMatrix(m_t* in, idx_t len, cudaStream_t stream)
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-m_t getL2Norm(raft::resources const& handle, m_t* in, idx_t size, cudaStream_t stream)
+m_t getL2Norm(raft::resources const& handle, m_t* in, idx_t size, hipStream_t stream)
 {
   return detail::getL2Norm(handle, in, size, stream);
 }
@@ -293,7 +293,7 @@ void linewiseOp(m_t* out,
                 const idx_t nLines,
                 const bool alongLines,
                 Lambda op,
-                cudaStream_t stream,
+                hipStream_t stream,
                 const Vecs*... vecs)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("linewiseOp-%c-%zu (%zu, %zu)",

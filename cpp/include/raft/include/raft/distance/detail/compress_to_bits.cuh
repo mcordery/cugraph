@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023, NVIDIA CORPORATION.
  *
@@ -16,7 +17,7 @@
 #pragma once
 
 #include <raft/core/handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/device_atomics.cuh>
 
@@ -111,13 +112,13 @@ void compress_to_bits(raft::resources const& handle,
   int blocks_per_sm           = 0;
   constexpr int num_threads   = 128;
   constexpr int dyn_smem_size = 0;
-  RAFT_CUDA_TRY(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  RAFT_CUDA_TRY(hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &blocks_per_sm, compress_to_bits_kernel<T>, num_threads, dyn_smem_size));
 
   dim3 grid(num_SMs * blocks_per_sm);
   dim3 block(128);
   compress_to_bits_kernel<<<grid, block, 0, stream>>>(in, out);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 };  // namespace raft::distance::detail

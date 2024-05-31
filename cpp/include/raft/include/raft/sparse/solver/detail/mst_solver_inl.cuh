@@ -40,24 +40,24 @@
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
 
-#include <curand.h>
+#include <hiprand.h>
 
 #include <iostream>
 
 namespace raft::sparse::solver {
 
-// curand generator uniform
-inline curandStatus_t curand_generate_uniformX(curandGenerator_t generator,
+// hiprand generator uniform
+inline hiprandStatus_t curand_generate_uniformX(hiprandGenerator_t generator,
                                                float* outputPtr,
                                                size_t n)
 {
-  return curandGenerateUniform(generator, outputPtr, n);
+  return hiprandGenerateUniform(generator, outputPtr, n);
 }
-inline curandStatus_t curand_generate_uniformX(curandGenerator_t generator,
+inline hiprandStatus_t curand_generate_uniformX(hiprandGenerator_t generator,
                                                double* outputPtr,
                                                size_t n)
 {
-  return curandGenerateUniformDouble(generator, outputPtr, n);
+  return hiprandGenerateUniformDouble(generator, outputPtr, n);
 }
 
 template <typename vertex_t, typename edge_t, typename weight_t, typename alteration_t>
@@ -68,7 +68,7 @@ MST_solver<vertex_t, edge_t, weight_t, alteration_t>::MST_solver(raft::resources
                                                                  const vertex_t v_,
                                                                  const edge_t e_,
                                                                  vertex_t* color_,
-                                                                 cudaStream_t stream_,
+                                                                 hipStream_t stream_,
                                                                  bool symmetrize_output_,
                                                                  bool initialize_colors_,
                                                                  int iterations_)
@@ -101,7 +101,7 @@ MST_solver<vertex_t, edge_t, weight_t, alteration_t>::MST_solver(raft::resources
 
   mst_edge_count.set_value_to_zero_async(stream);
   prev_mst_edge_count.set_value_to_zero_async(stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(mst_edge.data(), 0, mst_edge.size() * sizeof(bool), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(mst_edge.data(), 0, mst_edge.size() * sizeof(bool), stream));
 
   // Initially, color holds the vertex id as color
   auto policy = resource::get_thrust_policy(handle);
@@ -228,15 +228,15 @@ void MST_solver<vertex_t, edge_t, weight_t, alteration_t>::alteration()
   rmm::device_uvector<alteration_t> rand_values(v, stream);
 
   // Random number generator
-  curandGenerator_t randGen;
-  curandCreateGenerator(&randGen, CURAND_RNG_PSEUDO_DEFAULT);
-  curandSetPseudoRandomGeneratorSeed(randGen, 1234567);
+  hiprandGenerator_t randGen;
+  hiprandCreateGenerator(&randGen, HIPRAND_RNG_PSEUDO_DEFAULT);
+  hiprandSetPseudoRandomGeneratorSeed(randGen, 1234567);
 
   // Initialize rand values
   auto curand_status = curand_generate_uniformX(randGen, rand_values.data(), v);
-  RAFT_EXPECTS(curand_status == CURAND_STATUS_SUCCESS, "MST: CURAND failed");
-  curand_status = curandDestroyGenerator(randGen);
-  RAFT_EXPECTS(curand_status == CURAND_STATUS_SUCCESS, "MST: CURAND cleanup failed");
+  RAFT_EXPECTS(curand_status == HIPRAND_STATUS_SUCCESS, "MST: CURAND failed");
+  curand_status = hiprandDestroyGenerator(randGen);
+  RAFT_EXPECTS(curand_status == HIPRAND_STATUS_SUCCESS, "MST: CURAND cleanup failed");
 
   // Alterate the weights, make all undirected edge weight unique while keeping Wuv == Wvu
   detail::alteration_kernel<<<nblocks, nthreads, 0, stream>>>(

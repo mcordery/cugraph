@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/norm_types.hpp>
 #include <raft/sparse/linalg/detail/norm.cuh>
 
@@ -42,7 +42,7 @@ void csr_row_normalize_l1(const int* ia,  // csr row ex_scan (sorted by row)
                           int nnz,  // array of values and number of non-zeros
                           int m,    // num rows in csr
                           T* result,
-                          cudaStream_t stream)
+                          hipStream_t stream)
 {  // output array
   detail::csr_row_normalize_l1(ia, vals, nnz, m, result, stream);
 }
@@ -63,7 +63,7 @@ void csr_row_normalize_max(const int* ia,  // csr row ind array (sorted by row)
                            int nnz,  // array of values and number of non-zeros
                            int m,    // num total rows in csr
                            T* result,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   detail::csr_row_normalize_max(ia, vals, nnz, m, result, stream);
 }

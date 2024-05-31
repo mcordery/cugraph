@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -23,7 +24,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <memory>
 
@@ -71,7 +72,7 @@ RAFT_KERNEL dispersionKernel(DataT* result,
     DataT diff = clusters[tid] - mu[col];
     sum += diff * diff * DataT(clusterSizes[row]);
   }
-  typedef cub::BlockReduce<DataT, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<DataT, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   __syncthreads();
   auto acc = BlockReduce(temp_storage).Sum(sum);
@@ -104,7 +105,7 @@ DataT dispersion(const DataT* centroids,
                  IdxT nClusters,
                  IdxT nPoints,
                  IdxT dim,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   static const int RowsPerThread = 4;
   static const int ColsPerBlk    = 32;
@@ -117,11 +118,11 @@ DataT dispersion(const DataT* centroids,
     mean.resize(dim, stream);
     mu = mean.data();
   }
-  RAFT_CUDA_TRY(cudaMemsetAsync(mu, 0, sizeof(DataT) * dim, stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(result.data(), 0, sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(mu, 0, sizeof(DataT) * dim, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(result.data(), 0, sizeof(DataT), stream));
   weightedMeanKernel<DataT, IdxT, TPB, ColsPerBlk>
     <<<grid, TPB, 0, stream>>>(mu, centroids, clusterSizes, dim, nClusters);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   DataT ratio = DataT(1) / DataT(nPoints);
   raft::linalg::scalarMultiply(mu, mu, ratio, dim, stream);
   // finally, compute the dispersion
@@ -129,7 +130,7 @@ DataT dispersion(const DataT* centroids,
   int nblks                    = raft::ceildiv<int>(dim * nClusters, TPB * ItemsPerThread);
   dispersionKernel<DataT, IdxT, TPB>
     <<<nblks, TPB, 0, stream>>>(result.data(), centroids, clusterSizes, mu, dim, nClusters);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   DataT h_result;
   raft::update_host(&h_result, result.data(), 1, stream);
   raft::interruptible::synchronize(stream);

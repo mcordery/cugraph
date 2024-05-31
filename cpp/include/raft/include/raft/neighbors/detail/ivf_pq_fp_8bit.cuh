@@ -39,8 +39,8 @@
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
 
-#include <cub/cub.cuh>
-#include <cuda_fp16.h>
+#include <hipcub/hipcub.hpp>
+#include <hip/hip_fp16.h>
 
 #include <optional>
 

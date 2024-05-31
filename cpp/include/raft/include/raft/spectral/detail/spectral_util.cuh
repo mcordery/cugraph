@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
@@ -46,7 +46,7 @@ void transform_eigen_matrix(raft::resources const& handle,
                             weight_t* eigVecs)
 {
   auto stream             = resource::get_cuda_stream(handle);
-  auto cublas_h           = resource::get_cublas_handle(handle);
+  auto hipblas.h           = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   const weight_t zero{0.0};
@@ -90,12 +90,12 @@ void transform_eigen_matrix(raft::resources const& handle,
     raft::spectral::matrix::vector_t<weight_t> work(handle, nEigVecs * n);
     // TODO: Call from public API when ready
     RAFT_CUBLAS_TRY(
-      raft::linalg::detail::cublassetpointermode(cublas_h, CUBLAS_POINTER_MODE_HOST, stream));
+      raft::linalg::detail::cublassetpointermode(cublas_h, HIPBLAS_POINTER_MODE_HOST, stream));
 
     // TODO: Call from public API when ready
     RAFT_CUBLAS_TRY(raft::linalg::detail::cublasgeam(cublas_h,
-                                                     CUBLAS_OP_T,
-                                                     CUBLAS_OP_N,
+                                                     HIPBLAS_OP_T,
+                                                     HIPBLAS_OP_N,
                                                      nEigVecs,
                                                      n,
                                                      &one,
@@ -108,8 +108,8 @@ void transform_eigen_matrix(raft::resources const& handle,
                                                      nEigVecs,
                                                      stream));
 
-    RAFT_CUDA_TRY(cudaMemcpyAsync(
-      eigVecs, work.raw(), nEigVecs * n * sizeof(weight_t), cudaMemcpyDeviceToDevice, stream));
+    RAFT_CUDA_TRY(hipMemcpyAsync(
+      eigVecs, work.raw(), nEigVecs * n * sizeof(weight_t), hipMemcpyDeviceToDevice, stream));
   }
 }
 
@@ -145,7 +145,7 @@ bool construct_indicator(raft::resources const& handle,
                          raft::spectral::matrix::laplacian_matrix_t<vertex_t, weight_t> const& B)
 {
   auto stream             = resource::get_cuda_stream(handle);
-  auto cublas_h           = resource::get_cublas_handle(handle);
+  auto hipblas.h           = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   thrust::for_each(
@@ -160,7 +160,7 @@ bool construct_indicator(raft::resources const& handle,
   // Compute size of ith partition
   // TODO: Call from public API when ready
   RAFT_CUBLAS_TRY(raft::linalg::detail::cublasdot(
-    cublas_h, n, part_i.raw(), 1, part_i.raw(), 1, &clustersize, stream));
+    hipblas.h, n, part_i.raw(), 1, part_i.raw(), 1, &clustersize, stream));
 
   clustersize = round(clustersize);
   if (clustersize < 0.5) { return false; }

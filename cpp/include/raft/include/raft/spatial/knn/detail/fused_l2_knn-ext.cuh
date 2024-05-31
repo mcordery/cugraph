@@ -36,7 +36,7 @@ void fusedL2Knn(size_t D,
                 int k,
                 bool rowMajorIndex,
                 bool rowMajorQuery,
-                cudaStream_t stream,
+                hipStream_t stream,
                 raft::distance::DistanceType metric,
                 const value_t* index_norms = NULL,
                 const value_t* query_norms = NULL) RAFT_EXPLICIT;
@@ -58,7 +58,7 @@ void fusedL2Knn(size_t D,
     int k,                                                                                  \
     bool rowMajorIndex,                                                                     \
     bool rowMajorQuery,                                                                     \
-    cudaStream_t stream,                                                                    \
+    hipStream_t stream,                                                                    \
     raft::distance::DistanceType metric,                                                    \
     const Mvalue_t* index_norms,                                                            \
     const Mvalue_t* query_norms);

@@ -26,7 +26,7 @@
 #include "detail/make_regression.cuh"
 
 #include <raft/core/mdarray.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 #include <algorithm>
@@ -76,7 +76,7 @@ void make_regression(raft::resources const& handle,
                      IdxT n_rows,
                      IdxT n_cols,
                      IdxT n_informative,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      DataT* coef         = nullptr,
                      IdxT n_targets      = (IdxT)1,
                      DataT bias          = (DataT)0.0,

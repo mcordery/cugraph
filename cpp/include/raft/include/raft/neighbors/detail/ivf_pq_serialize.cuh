@@ -18,7 +18,7 @@
 
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/core/serialize.hpp>
 #include <raft/neighbors/detail/ivf_pq_build.cuh>

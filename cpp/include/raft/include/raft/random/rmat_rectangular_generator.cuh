@@ -259,7 +259,7 @@ void rmat_rectangular_gen(IdxT* out,
                           IdxT r_scale,
                           IdxT c_scale,
                           IdxT n_edges,
-                          cudaStream_t stream,
+                          hipStream_t stream,
                           raft::random::RngState& r)
 {
   detail::rmat_rectangular_gen_caller(
@@ -282,7 +282,7 @@ void rmat_rectangular_gen(IdxT* out,
                           IdxT r_scale,
                           IdxT c_scale,
                           IdxT n_edges,
-                          cudaStream_t stream,
+                          hipStream_t stream,
                           raft::random::RngState& r)
 {
   detail::rmat_rectangular_gen_caller(

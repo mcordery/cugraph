@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/core/math.hpp>
 #include <raft/distance/distance_types.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <cuda_pipeline.h>
 
 namespace raft {
@@ -109,12 +110,12 @@ void faster_dot_on_csr(raft::resources const& handle,
   int dev_id, sm_count, blocks_per_sm;
 
   const int smem_size = dim * sizeof(value_t);
-  cudaGetDevice(&dev_id);
-  cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, dev_id);
+  hipGetDevice(&dev_id);
+  hipDeviceGetAttribute(&sm_count, hipDeviceAttributeMultiprocessorCount, dev_id);
 
   if (dim < 128) {
     constexpr int tpb = 64;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &blocks_per_sm, faster_dot_on_csr_kernel<value_idx, value_t>, tpb, smem_size);
     auto block_x = std::min(n_rows, MAX_ROW_PER_ITER);
     auto block_y =
@@ -126,7 +127,7 @@ void faster_dot_on_csr(raft::resources const& handle,
 
   } else if (dim < 256) {
     constexpr int tpb = 128;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &blocks_per_sm, faster_dot_on_csr_kernel<value_idx, value_t>, tpb, smem_size);
     auto block_x = std::min(n_rows, MAX_ROW_PER_ITER);
     auto block_y =
@@ -137,7 +138,7 @@ void faster_dot_on_csr(raft::resources const& handle,
       <<<blocks, tpb, smem_size, stream>>>(dot, indptr, cols, A, B, nnz, n_rows, dim);
   } else if (dim < 512) {
     constexpr int tpb = 256;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &blocks_per_sm, faster_dot_on_csr_kernel<value_idx, value_t>, tpb, smem_size);
     auto block_x = std::min(n_rows, MAX_ROW_PER_ITER);
     auto block_y =
@@ -148,7 +149,7 @@ void faster_dot_on_csr(raft::resources const& handle,
       <<<blocks, tpb, smem_size, stream>>>(dot, indptr, cols, A, B, nnz, n_rows, dim);
   } else {
     constexpr int tpb = 512;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &blocks_per_sm, faster_dot_on_csr_kernel<value_idx, value_t>, tpb, smem_size);
     auto block_x = std::min(n_rows, MAX_ROW_PER_ITER);
     auto block_y =
@@ -159,7 +160,7 @@ void faster_dot_on_csr(raft::resources const& handle,
       <<<blocks, tpb, smem_size, stream>>>(dot, indptr, cols, A, B, nnz, n_rows, dim);
   }
 
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace detail

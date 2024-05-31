@@ -22,7 +22,7 @@
 #include "linalg_types.hpp"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/input_validation.hpp>
 
@@ -61,7 +61,7 @@ void matrixVectorOp(MatT* out,
                     bool rowMajor,
                     bool bcastAlongRows,
                     Lambda op,
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   detail::matrixVectorOp(out, matrix, vec, D, N, rowMajor, bcastAlongRows, op, stream);
 }
@@ -101,7 +101,7 @@ void matrixVectorOp(MatT* out,
                     bool rowMajor,
                     bool bcastAlongRows,
                     Lambda op,
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   detail::matrixVectorOp(out, matrix, vec1, vec2, D, N, rowMajor, bcastAlongRows, op, stream);
 }

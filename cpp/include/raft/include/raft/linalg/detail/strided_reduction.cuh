@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -20,7 +21,7 @@
 #include <raft/linalg/unary_op.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <type_traits>
 
@@ -117,7 +118,7 @@ void stridedReduction(OutType* dots,
                       IdxType D,
                       IdxType N,
                       OutType init,
-                      cudaStream_t stream,
+                      hipStream_t stream,
                       bool inplace           = false,
                       MainLambda main_op     = raft::identity_op(),
                       ReduceLambda reduce_op = raft::add_op(),

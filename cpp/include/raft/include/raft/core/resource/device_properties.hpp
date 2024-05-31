@@ -20,7 +20,7 @@
 #include <raft/core/resources.hpp>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 namespace raft::resource {
 
@@ -28,14 +28,14 @@ class device_properties_resource : public resource {
  public:
   device_properties_resource(int dev_id)
   {
-    RAFT_CUDA_TRY_NO_THROW(cudaGetDeviceProperties(&prop_, dev_id));
+    RAFT_CUDA_TRY_NO_THROW(hipGetDeviceProperties(&prop_, dev_id));
   }
   void* get_resource() override { return &prop_; }
 
   ~device_properties_resource() override {}
 
  private:
-  cudaDeviceProp prop_;
+  hipDeviceProp_t prop_;
 };
 
 /**
@@ -59,17 +59,17 @@ class device_properties_resource_factory : public resource_factory {
 };
 
 /**
- * Load a cudaDeviceProp from a res (and populate it on the res if needed).
+ * Load a hipDeviceProp_t from a res (and populate it on the res if needed).
  * @param res raft res object for managing resources
  * @return populated cuda device properties instance
  */
-inline cudaDeviceProp& get_device_properties(resources const& res)
+inline hipDeviceProp_t& get_device_properties(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::DEVICE_PROPERTIES)) {
     int dev_id = get_device_id(res);
     res.add_resource_factory(std::make_shared<device_properties_resource_factory>(dev_id));
   }
-  return *res.get_resource<cudaDeviceProp>(resource_type::DEVICE_PROPERTIES);
+  return *res.get_resource<hipDeviceProp_t>(resource_type::DEVICE_PROPERTIES);
 };
 
 /**

@@ -26,13 +26,13 @@ namespace linalg {
 namespace detail {
 
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void addScalar(OutT* out, const InT* in, InT scalar, IdxType len, cudaStream_t stream)
+void addScalar(OutT* out, const InT* in, InT scalar, IdxType len, hipStream_t stream)
 {
   raft::linalg::unaryOp(out, in, len, raft::add_const_op<InT>(scalar), stream);
 }
 
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void add(OutT* out, const InT* in1, const InT* in2, IdxType len, cudaStream_t stream)
+void add(OutT* out, const InT* in1, const InT* in2, IdxType len, hipStream_t stream)
 {
   raft::linalg::binaryOp(out, in1, in2, len, raft::add_op(), stream);
 }
@@ -49,13 +49,13 @@ RAFT_KERNEL add_dev_scalar_kernel(OutT* outDev,
 
 template <typename InT, typename OutT = InT, typename IdxType = int>
 void addDevScalar(
-  OutT* outDev, const InT* inDev, const InT* singleScalarDev, IdxType len, cudaStream_t stream)
+  OutT* outDev, const InT* inDev, const InT* singleScalarDev, IdxType len, hipStream_t stream)
 {
   // TODO: block dimension has not been tuned
   dim3 block(256);
   dim3 grid(raft::ceildiv(len, (IdxType)block.x));
   add_dev_scalar_kernel<<<grid, block, 0, stream>>>(outDev, inDev, singleScalarDev, len);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace detail

@@ -136,7 +136,7 @@ void gatherImpl(const InputIteratorT in,
                 OutputIteratorT out,
                 UnaryPredicateOp pred_op,
                 MapTransformOp transform_op,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   // skip in case of 0 length input
   if (map_length <= 0 || N <= 0 || D <= 0) return;
@@ -168,7 +168,7 @@ void gatherImpl(const InputIteratorT in,
     gather_kernel<Policy><<<n_blocks, Policy::n_threads, 0, stream>>>(
       in, D, len, map, stencil, out, pred_op, transform_op);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -198,7 +198,7 @@ void gather(const InputIteratorT in,
             const MapIteratorT map,
             IndexT map_length,
             OutputIteratorT out,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   typedef typename std::iterator_traits<MapIteratorT>::value_type MapValueT;
   gatherImpl(
@@ -241,7 +241,7 @@ void gather(const InputIteratorT in,
             IndexT map_length,
             OutputIteratorT out,
             MapTransformOp transform_op,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   typedef typename std::iterator_traits<MapIteratorT>::value_type MapValueT;
   gatherImpl(in, D, N, map, map, map_length, out, raft::const_op(true), transform_op, stream);
@@ -288,7 +288,7 @@ void gather_if(const InputIteratorT in,
                IndexT map_length,
                OutputIteratorT out,
                UnaryPredicateOp pred_op,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   typedef typename std::iterator_traits<MapIteratorT>::value_type MapValueT;
   gatherImpl(in, D, N, map, stencil, map_length, out, pred_op, raft::identity_op(), stream);
@@ -340,7 +340,7 @@ void gather_if(const InputIteratorT in,
                OutputIteratorT out,
                UnaryPredicateOp pred_op,
                MapTransformOp transform_op,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   typedef typename std::iterator_traits<MapIteratorT>::value_type MapValueT;
   gatherImpl(in, D, N, map, stencil, map_length, out, pred_op, transform_op, stream);

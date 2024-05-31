@@ -29,7 +29,7 @@
                                                                 IdxType D,              \
                                                                 IdxType N,              \
                                                                 OutType init,           \
-                                                                cudaStream_t stream,    \
+                                                                hipStream_t stream,    \
                                                                 bool inplace,           \
                                                                 MainLambda main_op,     \
                                                                 ReduceLambda reduce_op, \

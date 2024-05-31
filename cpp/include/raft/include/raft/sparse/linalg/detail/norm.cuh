@@ -25,11 +25,11 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <iostream>
@@ -96,14 +96,14 @@ void csr_row_normalize_l1(const int* ia,  // csr row ex_scan (sorted by row)
                           int nnz,  // array of values and number of non-zeros
                           int m,    // num rows in csr
                           T* result,
-                          cudaStream_t stream)
+                          hipStream_t stream)
 {  // output array
 
   dim3 grid(raft::ceildiv(m, TPB_X), 1, 1);
   dim3 blk(TPB_X, 1, 1);
 
   csr_row_normalize_l1_kernel<TPB_X, T><<<grid, blk, 0, stream>>>(ia, vals, nnz, m, result);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <int TPB_X = 64, typename T>
@@ -164,13 +164,13 @@ void csr_row_normalize_max(const int* ia,  // csr row ind array (sorted by row)
                            int nnz,  // array of values and number of non-zeros
                            int m,    // num total rows in csr
                            T* result,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   dim3 grid(raft::ceildiv(m, TPB_X), 1, 1);
   dim3 blk(TPB_X, 1, 1);
 
   csr_row_normalize_max_kernel<TPB_X, T><<<grid, blk, 0, stream>>>(ia, vals, nnz, m, result);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename Type,
@@ -184,7 +184,7 @@ void csr_row_op_wrapper(const IdxType* ia,
                         IdxType N,
                         Type init,
                         Type* norm,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         MainLambda main_op     = raft::identity_op(),
                         ReduceLambda reduce_op = raft::add_op(),
                         FinalLambda final_op   = raft::identity_op())
@@ -210,7 +210,7 @@ void rowNormCsrCaller(const IdxType* ia,
                       Type* norm,
                       raft::linalg::NormType type,
                       Lambda fin_op,
-                      cudaStream_t stream)
+                      hipStream_t stream)
 {
   switch (type) {
     case raft::linalg::NormType::L1Norm:

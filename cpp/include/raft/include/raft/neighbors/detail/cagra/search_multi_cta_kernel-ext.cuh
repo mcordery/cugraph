@@ -19,7 +19,7 @@
 #include <raft/neighbors/sample_filter_types.hpp>  // none_cagra_sample_filter
 #include <raft/util/raft_explicit.hpp>             // RAFT_EXPLICIT
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 namespace raft::neighbors::cagra::detail {
 namespace multi_cta_search {
@@ -55,7 +55,7 @@ void select_and_run(
   size_t max_iterations,
   SAMPLE_FILTER_T sample_filter,
   raft::distance::DistanceType metric,
-  cudaStream_t stream) RAFT_EXPLICIT;
+  hipStream_t stream) RAFT_EXPLICIT;
 #endif  // RAFT_EXPLICIT_INSTANTIATE_ONLY
 
 #define instantiate_kernel_selection(                                                           \
@@ -90,7 +90,7 @@ void select_and_run(
     size_t max_iterations,                                                                      \
     SAMPLE_FILTER_T sample_filter,                                                              \
     raft::distance::DistanceType metric,                                                        \
-    cudaStream_t stream);
+    hipStream_t stream);
 
 instantiate_kernel_selection(
   32, 1024, float, uint32_t, float, raft::neighbors::filtering::none_cagra_sample_filter);
@@ -175,7 +175,7 @@ instantiate_kernel_selection(
     size_t max_iterations,                                                                      \
     SAMPLE_FILTER_T sample_filter,                                                              \
     raft::distance::DistanceType metric,                                                        \
-    cudaStream_t stream);
+    hipStream_t stream);
 
 instantiate_q_kernel_selection(
   8, 128, half, 8, 2, half, uint32_t, float, raft::neighbors::filtering::none_cagra_sample_filter);

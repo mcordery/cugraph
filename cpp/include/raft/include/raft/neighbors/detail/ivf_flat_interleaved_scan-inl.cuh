@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -836,11 +837,11 @@ template <typename T>
 uint32_t configure_launch_x(uint32_t numQueries, uint32_t n_probes, int32_t sMemSize, T func)
 {
   int dev_id;
-  RAFT_CUDA_TRY(cudaGetDevice(&dev_id));
+  RAFT_CUDA_TRY(hipGetDevice(&dev_id));
   int num_sms;
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, dev_id));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&num_sms, hipDeviceAttributeMultiprocessorCount, dev_id));
   int num_blocks_per_sm = 0;
-  RAFT_CUDA_TRY(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  RAFT_CUDA_TRY(hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &num_blocks_per_sm, func, kThreadsPerBlock, sMemSize));
 
   size_t min_grid_size = num_sms * num_blocks_per_sm;

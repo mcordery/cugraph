@@ -53,7 +53,7 @@ void fusedCosineNN(OutT* min,
                    ReduceOpT redOp,
                    KVPReduceOpT pairRedOp,
                    bool sqrt,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   // The kernel policy is determined by fusedL2NN.
   typedef Policy P;
@@ -127,7 +127,7 @@ void fusedCosineNN(OutT* min,
 
     kernel<<<grid, blk, shmemSize, stream>>>(
       min, x, y, xn, yn, m, n, k, maxVal, workspace, redOp, pairRedOp, distance_op, fin_op);
-    RAFT_CUDA_TRY(cudaGetLastError());
+    RAFT_CUDA_TRY(hipGetLastError());
   }
 }
 

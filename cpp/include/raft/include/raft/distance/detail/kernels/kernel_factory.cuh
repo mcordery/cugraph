@@ -43,7 +43,7 @@ class KernelFactory {
     return res;
   }
 
-  [[deprecated]] static GramMatrixBase<math_t>* create(KernelParams params, cublasHandle_t handle)
+  [[deprecated]] static GramMatrixBase<math_t>* create(KernelParams params, hipblasHandle_t handle)
   {
     GramMatrixBase<math_t>* res;
     // KernelParams is not templated, we convert the parameters to math_t here:

@@ -25,7 +25,7 @@
 #include <raft/linalg/contractions.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <stdint.h>
 
@@ -89,7 +89,7 @@ void fusedL2NN(OutT* min,
                KVPReduceOpT pairRedOp,
                bool sqrt,
                bool initOutBuffer,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   // When k is smaller than 32, the Policy4x4 results in redundant calculations
   // as it uses tiles that have k=32. Therefore, use a "skinny" policy instead
@@ -192,7 +192,7 @@ void fusedL2NNMinReduce(OutT* min,
                         void* workspace,
                         bool sqrt,
                         bool initOutBuffer,
-                        cudaStream_t stream)
+                        hipStream_t stream)
 {
   MinAndDistanceReduceOp<IdxT, DataT> redOp;
   KVPMinReduce<IdxT, DataT> pairRedOp;

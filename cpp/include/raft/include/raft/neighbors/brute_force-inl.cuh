@@ -18,7 +18,7 @@
 
 #include <raft/core/copy.cuh>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/neighbors/brute_force_types.hpp>
 #include <raft/neighbors/detail/knn_brute_force.cuh>

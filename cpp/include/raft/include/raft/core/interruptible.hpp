@@ -84,7 +84,7 @@ class interruptible {
    */
   static inline void synchronize(rmm::cuda_stream_view stream)
   {
-    get_token()->synchronize_impl(cudaStreamQuery, stream);
+    get_token()->synchronize_impl(hipStreamQuery, stream);
   }
 
   /**
@@ -97,9 +97,9 @@ class interruptible {
    * thread before the currently captured work has been finished.
    * @throw raft::cuda_error if another CUDA error happens.
    */
-  static inline void synchronize(cudaEvent_t event)
+  static inline void synchronize(hipEvent_t event)
   {
-    get_token()->synchronize_impl(cudaEventQuery, event);
+    get_token()->synchronize_impl(hipEventQuery, event);
   }
 
   /**
@@ -293,11 +293,11 @@ class interruptible {
   template <typename Query, typename Object>
   inline void synchronize_impl(Query query, Object object)
   {
-    cudaError_t query_result;
+    hipError_t query_result;
     while (true) {
       yield_impl();
       query_result = query(object);
-      if (query_result != cudaErrorNotReady) { break; }
+      if (query_result != hipErrorNotReady) { break; }
       std::this_thread::yield();
     }
     RAFT_CUDA_TRY(query_result);

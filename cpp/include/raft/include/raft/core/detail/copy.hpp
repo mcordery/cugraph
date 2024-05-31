@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -31,7 +32,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
-#ifdef __CUDACC__
+#ifdef __HIPCC__
 #include <raft/util/cuda_dev_essentials.cuh>
 #endif
 #endif
@@ -230,7 +231,7 @@ template <typename DstType, typename SrcType, typename T = void>
 using mdspan_copyable_not_with_kernel_t =
   std::enable_if_t<mdspan_copyable_not_with_kernel_v<DstType, SrcType>, T>;
 
-#ifdef __CUDACC__
+#ifdef __HIPCC__
 auto static constexpr const mdspan_copy_tile_dim   = 32;
 auto static constexpr const mdspan_copy_tile_elems = mdspan_copy_tile_dim * mdspan_copy_tile_dim;
 
@@ -453,8 +454,8 @@ mdspan_copyable_t<DstType, SrcType> copy(resources const& res, DstType&& dst, Sr
     auto constexpr const beta  = typename std::remove_reference_t<DstType>::value_type{0};
     if constexpr (std::is_same_v<typename config::dst_layout_type, layout_c_contiguous>) {
       CUBLAS_TRY(linalg::detail::cublasgeam(resource::get_cublas_handle(res),
-                                            CUBLAS_OP_T,
-                                            CUBLAS_OP_N,
+                                            HIPBLAS_OP_T,
+                                            HIPBLAS_OP_N,
                                             dst.extent(1),
                                             dst.extent(0),
                                             &alpha,
@@ -468,8 +469,8 @@ mdspan_copyable_t<DstType, SrcType> copy(resources const& res, DstType&& dst, Sr
                                             resource::get_cuda_stream(res)));
     } else {
       CUBLAS_TRY(linalg::detail::cublasgeam(resource::get_cublas_handle(res),
-                                            CUBLAS_OP_T,
-                                            CUBLAS_OP_N,
+                                            HIPBLAS_OP_T,
+                                            HIPBLAS_OP_N,
                                             dst.extent(0),
                                             dst.extent(1),
                                             &alpha,
@@ -487,7 +488,7 @@ mdspan_copyable_t<DstType, SrcType> copy(resources const& res, DstType&& dst, Sr
     throw(raft::non_cuda_build_error("Copying to from or on device in non-CUDA build"));
 #endif
   } else if constexpr (config::custom_kernel_allowed) {
-#ifdef __CUDACC__
+#ifdef __HIPCC__
     config::check_for_unique_dst(dst);
     auto const blocks = std::min(
       // This maximum is somewhat arbitrary. Could query the device to see

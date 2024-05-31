@@ -38,13 +38,13 @@ namespace detail {
  * @returns dense matrix descriptor to be used by cuSparse API
  */
 template <typename ValueType, typename IndexType, typename LayoutPolicy>
-cusparseDnMatDescr_t create_descriptor(
+hipsparseDnMatDescr_t create_descriptor(
   raft::device_matrix_view<ValueType, IndexType, LayoutPolicy> dense_view)
 {
   bool is_row_major = raft::is_row_major(dense_view);
-  auto order        = is_row_major ? CUSPARSE_ORDER_ROW : CUSPARSE_ORDER_COL;
+  auto order        = is_row_major ? HIPSPARSE_ORDER_ROW : HIPSPARSE_ORDER_COL;
   IndexType ld      = is_row_major ? dense_view.stride(0) : dense_view.stride(1);
-  cusparseDnMatDescr_t descr;
+  hipsparseDnMatDescr_t descr;
   RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecreatednmat(
     &descr,
     dense_view.extent(0),
@@ -65,10 +65,10 @@ cusparseDnMatDescr_t create_descriptor(
  * @returns sparse matrix descriptor to be used by cuSparse API
  */
 template <typename ValueType, typename IndptrType, typename IndicesType, typename NZType>
-cusparseSpMatDescr_t create_descriptor(
+hipsparseSpMatDescr_t create_descriptor(
   raft::device_csr_matrix_view<ValueType, IndptrType, IndicesType, NZType> sparse_view)
 {
-  cusparseSpMatDescr_t descr;
+  hipsparseSpMatDescr_t descr;
   auto csr_structure = sparse_view.structure_view();
   RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecreatecsr(
     &descr,
@@ -82,19 +82,19 @@ cusparseSpMatDescr_t create_descriptor(
 }
 
 /**
- * @brief convert the operation to cusparseOperation_t type
+ * @brief convert the operation to hipsparseOperation_t type
  * @param param[in] op type of operation
  */
-inline cusparseOperation_t convert_operation(const raft::linalg::Operation op)
+inline hipsparseOperation_t convert_operation(const raft::linalg::Operation op)
 {
   if (op == raft::linalg::Operation::TRANSPOSE) {
-    return CUSPARSE_OPERATION_TRANSPOSE;
+    return HIPSPARSE_OPERATION_TRANSPOSE;
   } else if (op == raft::linalg::Operation::NON_TRANSPOSE) {
-    return CUSPARSE_OPERATION_NON_TRANSPOSE;
+    return HIPSPARSE_OPERATION_NON_TRANSPOSE;
   } else {
     RAFT_EXPECTS(false, "The operation type is not allowed.");
   }
-  return CUSPARSE_OPERATION_NON_TRANSPOSE;
+  return HIPSPARSE_OPERATION_NON_TRANSPOSE;
 }
 
 }  // end namespace detail

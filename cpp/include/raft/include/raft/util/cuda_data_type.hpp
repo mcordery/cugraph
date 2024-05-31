@@ -17,68 +17,68 @@
 
 #include <cuda_fp16.hpp>
 
-#include <library_types.h>
+#include <hip/library_types.h>
 
 #include <cstdint>
 
 namespace raft {
 
 template <typename T>
-constexpr auto get_cuda_data_type() -> cudaDataType_t;
+constexpr auto get_cuda_data_type() -> hipDataType;
 
 template <>
-inline constexpr auto get_cuda_data_type<int8_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<int8_t>() -> hipDataType
 {
-  return CUDA_R_8I;
+  return HIP_R_8I;
 }
 template <>
-inline constexpr auto get_cuda_data_type<uint8_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<uint8_t>() -> hipDataType
 {
-  return CUDA_R_8U;
+  return HIP_R_8U;
 }
 template <>
-inline constexpr auto get_cuda_data_type<int16_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<int16_t>() -> hipDataType
 {
   return CUDA_R_16I;
 }
 template <>
-inline constexpr auto get_cuda_data_type<uint16_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<uint16_t>() -> hipDataType
 {
   return CUDA_R_16U;
 }
 template <>
-inline constexpr auto get_cuda_data_type<int32_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<int32_t>() -> hipDataType
 {
-  return CUDA_R_32I;
+  return HIP_R_32I;
 }
 template <>
-inline constexpr auto get_cuda_data_type<uint32_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<uint32_t>() -> hipDataType
 {
-  return CUDA_R_32U;
+  return HIP_R_32U;
 }
 template <>
-inline constexpr auto get_cuda_data_type<int64_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<int64_t>() -> hipDataType
 {
   return CUDA_R_64I;
 }
 template <>
-inline constexpr auto get_cuda_data_type<uint64_t>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<uint64_t>() -> hipDataType
 {
   return CUDA_R_64U;
 }
 template <>
-inline constexpr auto get_cuda_data_type<half>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<half>() -> hipDataType
 {
-  return CUDA_R_16F;
+  return HIP_R_16F;
 }
 template <>
-inline constexpr auto get_cuda_data_type<float>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<float>() -> hipDataType
 {
-  return CUDA_R_32F;
+  return HIP_R_32F;
 }
 template <>
-inline constexpr auto get_cuda_data_type<double>() -> cudaDataType_t
+inline constexpr auto get_cuda_data_type<double>() -> hipDataType
 {
-  return CUDA_R_64F;
+  return HIP_R_64F;
 }
 }  // namespace raft

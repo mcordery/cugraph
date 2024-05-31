@@ -18,7 +18,7 @@
 
 #include "gram_matrix.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/detail/kernels/rbf_fin_op.cuh>
 #include <raft/distance/distance.cuh>
 #include <raft/linalg/gemm.cuh>
@@ -156,7 +156,7 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
   math_t offset;
 
   void applyKernel(
-    math_t* inout, int ld, int rows, int cols, bool is_row_major, cudaStream_t stream)
+    math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
   {
     const int n_minor = is_row_major ? cols : rows;
     if (ld == n_minor) {
@@ -169,7 +169,7 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
       polynomial_kernel<<<grid_shape, block_shape, 0, stream>>>(
         inout, ld, n1, n2, exponent, gain, offset);
     }
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 
  public:
@@ -189,7 +189,7 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
   {
   }
 
-  [[deprecated]] PolynomialKernel(exp_t exponent, math_t gain, math_t offset, cublasHandle_t handle)
+  [[deprecated]] PolynomialKernel(exp_t exponent, math_t gain, math_t offset, hipblasHandle_t handle)
     : GramMatrixBase<math_t>(handle), exponent(exponent), gain(gain), offset(offset)
   {
   }
@@ -309,7 +309,7 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
                                int n2,
                                math_t* out,
                                bool is_row_major,
-                               cudaStream_t stream,
+                               hipStream_t stream,
                                int ld1,
                                int ld2,
                                int ld_out)
@@ -330,7 +330,7 @@ class TanhKernel : public GramMatrixBase<math_t> {
   math_t gain, offset;
 
   void applyKernel(
-    math_t* inout, int ld, int rows, int cols, bool is_row_major, cudaStream_t stream)
+    math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
   {
     const int n_minor = is_row_major ? cols : rows;
     if (ld == n_minor) {
@@ -342,7 +342,7 @@ class TanhKernel : public GramMatrixBase<math_t> {
       auto [grid_shape, block_shape] = generateLaunchConfig2dElementwiseOp(n1, n2);
       tanh_kernel<<<grid_shape, block_shape, 0, stream>>>(inout, ld, n1, n2, gain, offset);
     }
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 
  public:
@@ -357,7 +357,7 @@ class TanhKernel : public GramMatrixBase<math_t> {
    */
   TanhKernel(math_t gain, math_t offset) : GramMatrixBase<math_t>(), gain(gain), offset(offset) {}
 
-  [[deprecated]] TanhKernel(math_t gain, math_t offset, cublasHandle_t handle)
+  [[deprecated]] TanhKernel(math_t gain, math_t offset, hipblasHandle_t handle)
     : GramMatrixBase<math_t>(handle), gain(gain), offset(offset)
   {
   }
@@ -477,7 +477,7 @@ class TanhKernel : public GramMatrixBase<math_t> {
                                int n2,
                                math_t* out,
                                bool is_row_major,
-                               cudaStream_t stream,
+                               hipStream_t stream,
                                int ld1,
                                int ld2,
                                int ld_out)
@@ -504,7 +504,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
                    math_t* norm_x1,
                    math_t* norm_x2,
                    bool is_row_major,
-                   cudaStream_t stream)
+                   hipStream_t stream)
   {
     int n1                         = is_row_major ? cols : rows;
     int n2                         = is_row_major ? rows : cols;
@@ -526,7 +526,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
    */
   RBFKernel(math_t gain) : GramMatrixBase<math_t>(), gain(gain) {}
 
-  [[deprecated]] RBFKernel(math_t gain, cublasHandle_t handle)
+  [[deprecated]] RBFKernel(math_t gain, hipblasHandle_t handle)
     : GramMatrixBase<math_t>(handle), gain(gain)
   {
   }
@@ -582,7 +582,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
                 math_t* norm_x1,
                 math_t* norm_x2)
   {
-    cudaStream_t stream = resource::get_cuda_stream(handle);
+    hipStream_t stream = resource::get_cuda_stream(handle);
     // lazy compute norms if not given
     rmm::device_uvector<math_t> tmp_norm_x1(0, stream);
     rmm::device_uvector<math_t> tmp_norm_x2(0, stream);
@@ -631,7 +631,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
                 math_t* norm_x1,
                 math_t* norm_x2)
   {
-    cudaStream_t stream = resource::get_cuda_stream(handle);
+    hipStream_t stream = resource::get_cuda_stream(handle);
 
     // lazy compute norms if not given
     rmm::device_uvector<math_t> tmp_norm_x1(0, stream);
@@ -681,7 +681,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
                 math_t* norm_x1,
                 math_t* norm_x2)
   {
-    cudaStream_t stream = resource::get_cuda_stream(handle);
+    hipStream_t stream = resource::get_cuda_stream(handle);
 
     // lazy compute norms if not given
     rmm::device_uvector<math_t> tmp_norm_x1(0, stream);
@@ -733,7 +733,7 @@ class RBFKernel : public GramMatrixBase<math_t> {
                                int n2,
                                math_t* out,
                                bool is_row_major,
-                               cudaStream_t stream,
+                               hipStream_t stream,
                                int ld1,
                                int ld2,
                                int ld_out)

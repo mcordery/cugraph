@@ -16,11 +16,11 @@
 #pragma once
 
 #include <raft/core/cublas_macros.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/resource_types.hpp>
 #include <raft/core/resources.hpp>
 
-#include <cublas_v2.h>
+#include <hipblas.h>
 
 namespace raft::resource {
 
@@ -28,16 +28,16 @@ class cublas_resource : public resource {
  public:
   cublas_resource(rmm::cuda_stream_view stream)
   {
-    RAFT_CUBLAS_TRY_NO_THROW(cublasCreate(&cublas_res));
-    RAFT_CUBLAS_TRY_NO_THROW(cublasSetStream(cublas_res, stream));
+    RAFT_CUBLAS_TRY_NO_THROW(hipblasCreate(&cublas_res));
+    RAFT_CUBLAS_TRY_NO_THROW(hipblasSetStream(cublas_res, stream));
   }
 
-  ~cublas_resource() override { RAFT_CUBLAS_TRY_NO_THROW(cublasDestroy(cublas_res)); }
+  ~cublas_resource() override { RAFT_CUBLAS_TRY_NO_THROW(hipblasDestroy(cublas_res)); }
 
   void* get_resource() override { return &cublas_res; }
 
  private:
-  cublasHandle_t cublas_res;
+  hipblasHandle_t cublas_res;
 };
 
 /**
@@ -61,19 +61,19 @@ class cublas_resource_factory : public resource_factory {
  */
 
 /**
- * Load a `cublasHandle_t` from raft res if it exists, otherwise add it and return it.
+ * Load a `hipblasHandle_t` from raft res if it exists, otherwise add it and return it.
  *
  * @param[in] res the raft resources object
  * @return cublas handle
  */
-inline cublasHandle_t get_cublas_handle(resources const& res)
+inline hipblasHandle_t get_cublas_handle(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUBLAS_HANDLE)) {
-    cudaStream_t stream = get_cuda_stream(res);
+    hipStream_t stream = get_cuda_stream(res);
     res.add_resource_factory(std::make_shared<cublas_resource_factory>(stream));
   }
-  auto ret = *res.get_resource<cublasHandle_t>(resource_type::CUBLAS_HANDLE);
-  RAFT_CUBLAS_TRY(cublasSetStream(ret, get_cuda_stream(res)));
+  auto ret = *res.get_resource<hipblasHandle_t>(resource_type::CUBLAS_HANDLE);
+  RAFT_CUBLAS_TRY(hipblasSetStream(ret, get_cuda_stream(res)));
   return ret;
 };
 

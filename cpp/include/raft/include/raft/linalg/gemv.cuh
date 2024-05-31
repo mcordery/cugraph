@@ -24,7 +24,7 @@
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/input_validation.hpp>
 
 namespace raft {
@@ -63,7 +63,7 @@ void gemv(raft::resources const& handle,
           const math_t* beta,
           math_t* y,
           const int incy,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv<math_t, DevicePointerMode>(
     handle, trans_a, m, n, alpha, A, lda, x, incx, beta, y, incy, stream);
@@ -81,7 +81,7 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv(handle, A, n_rows, n_cols, x, incx, y, incy, trans_a, alpha, beta, stream);
 }
@@ -113,7 +113,7 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv(handle, A, n_rows_a, n_cols_a, x, y, trans_a, alpha, beta, stream);
 }
@@ -141,7 +141,7 @@ void gemv(raft::resources const& handle,
           const math_t* x,
           math_t* y,
           const bool trans_a,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv(handle, A, n_rows_a, n_cols_a, x, y, trans_a, stream);
 }
@@ -176,7 +176,7 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv(handle, A, n_rows_a, n_cols_a, lda, x, y, trans_a, alpha, beta, stream);
 }
@@ -208,7 +208,7 @@ void gemv(raft::resources const& handle,
           const math_t* x,
           math_t* y,
           const bool trans_a,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::gemv(handle, A, n_rows_a, n_cols_a, lda, x, y, trans_a, stream);
 }

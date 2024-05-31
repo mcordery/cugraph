@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/linalg/eltwise.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace stats {
@@ -49,7 +50,7 @@ RAFT_KERNEL meanKernelRowMajor(Type* mu, const Type* data, IdxType D, IdxType N)
 template <typename Type, typename IdxType, int TPB>
 RAFT_KERNEL meanKernelColMajor(Type* mu, const Type* data, IdxType D, IdxType N)
 {
-  typedef cub::BlockReduce<Type, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<Type, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   Type thread_data = Type(0);
   IdxType colStart = N * blockIdx.x;
@@ -63,7 +64,7 @@ RAFT_KERNEL meanKernelColMajor(Type* mu, const Type* data, IdxType D, IdxType N)
 
 template <typename Type, typename IdxType = int>
 void mean(
-  Type* mu, const Type* data, IdxType D, IdxType N, bool sample, bool rowMajor, cudaStream_t stream)
+  Type* mu, const Type* data, IdxType D, IdxType N, bool sample, bool rowMajor, hipStream_t stream)
 {
   static const int TPB = 256;
   if (rowMajor) {
@@ -71,15 +72,15 @@ void mean(
     static const int ColsPerBlk    = 32;
     static const int RowsPerBlk    = (TPB / ColsPerBlk) * RowsPerThread;
     dim3 grid(raft::ceildiv(N, (IdxType)RowsPerBlk), raft::ceildiv(D, (IdxType)ColsPerBlk));
-    RAFT_CUDA_TRY(cudaMemsetAsync(mu, 0, sizeof(Type) * D, stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(mu, 0, sizeof(Type) * D, stream));
     meanKernelRowMajor<Type, IdxType, TPB, ColsPerBlk><<<grid, TPB, 0, stream>>>(mu, data, D, N);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
     Type ratio = Type(1) / (sample ? Type(N - 1) : Type(N));
     raft::linalg::scalarMultiply(mu, mu, ratio, D, stream);
   } else {
     meanKernelColMajor<Type, IdxType, TPB><<<D, TPB, 0, stream>>>(mu, data, D, N);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace detail

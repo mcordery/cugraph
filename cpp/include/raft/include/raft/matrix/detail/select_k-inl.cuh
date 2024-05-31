@@ -28,7 +28,7 @@
 #include <raft/linalg/map.cuh>
 #include <raft/matrix/select_k_types.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft::matrix::detail {
 
@@ -104,7 +104,7 @@ void segmented_sort_by_key(raft::resources const& handle,
   // Determine temporary device storage requirements
   size_t temp_storage_bytes = 0;
   if (asc) {
-    cub::DeviceSegmentedRadixSort::SortPairs(nullptr,
+    hipcub::DeviceSegmentedRadixSort::SortPairs(nullptr,
                                              temp_storage_bytes,
                                              keys,
                                              out_dists.data_handle(),
@@ -118,7 +118,7 @@ void segmented_sort_by_key(raft::resources const& handle,
                                              sizeof(ValT) * 8,
                                              stream);
   } else {
-    cub::DeviceSegmentedRadixSort::SortPairsDescending(nullptr,
+    hipcub::DeviceSegmentedRadixSort::SortPairsDescending(nullptr,
                                                        temp_storage_bytes,
                                                        keys,
                                                        out_dists.data_handle(),
@@ -138,7 +138,7 @@ void segmented_sort_by_key(raft::resources const& handle,
 
   if (asc) {
     // Run sorting operation
-    cub::DeviceSegmentedRadixSort::SortPairs((void*)d_temp_storage.data_handle(),
+    hipcub::DeviceSegmentedRadixSort::SortPairs((void*)d_temp_storage.data_handle(),
                                              temp_storage_bytes,
                                              keys,
                                              out_dists.data_handle(),
@@ -154,7 +154,7 @@ void segmented_sort_by_key(raft::resources const& handle,
 
   } else {
     // Run sorting operation
-    cub::DeviceSegmentedRadixSort::SortPairsDescending((void*)d_temp_storage.data_handle(),
+    hipcub::DeviceSegmentedRadixSort::SortPairsDescending((void*)d_temp_storage.data_handle(),
                                                        temp_storage_bytes,
                                                        keys,
                                                        out_dists.data_handle(),

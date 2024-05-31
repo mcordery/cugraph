@@ -27,7 +27,7 @@
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -152,7 +152,7 @@ struct search : public search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
 
       // Increase block size to improve GPU occupancy when total number of
       // CTAs (= num_cta_per_query * max_queries) is small.
-      cudaDeviceProp deviceProp = resource::get_device_properties(res);
+      hipDeviceProp_t deviceProp = resource::get_device_properties(res);
       RAFT_LOG_DEBUG("# multiProcessorCount: %d", deviceProp.multiProcessorCount);
       while ((block_size < max_block_size) &&
              (graph_degree * search_width * team_size >= block_size * 2) &&
@@ -214,7 +214,7 @@ struct search : public search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
     uint32_t topk,
     SAMPLE_FILTER_T sample_filter)
   {
-    cudaStream_t stream = resource::get_cuda_stream(res);
+    hipStream_t stream = resource::get_cuda_stream(res);
 
     select_and_run<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T>(
       dataset_desc,
@@ -242,7 +242,7 @@ struct search : public search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
       sample_filter,
       this->metric,
       stream);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
 
     // Select the top-k results from the intermediate results
     const uint32_t num_intermediate_results = num_cta_per_query * itopk_size;

@@ -22,12 +22,12 @@
 #include "coo_spmv_strategies/dense_smem_strategy.cuh"
 #include "coo_spmv_strategies/hash_strategy.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/sparse/detail/cusparse_wrappers.h>
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <limits.h>
 
 #include <nvfunctional>
@@ -55,7 +55,7 @@ inline void balanced_coo_pairwise_generalized_spmv(
   int chunk_size = 500000)
 {
   uint64_t n = (uint64_t)sizeof(value_t) * (uint64_t)config_.a_nrows * (uint64_t)config_.b_nrows;
-  RAFT_CUDA_TRY(cudaMemsetAsync(out_dists, 0, n, resource::get_cuda_stream(config_.handle)));
+  RAFT_CUDA_TRY(hipMemsetAsync(out_dists, 0, n, resource::get_cuda_stream(config_.handle)));
 
   strategy.dispatch(out_dists, coo_rows_b, product_func, accum_func, write_func, chunk_size);
 };
@@ -109,7 +109,7 @@ inline void balanced_coo_pairwise_generalized_spmv(
   int chunk_size = 500000)
 {
   uint64_t n = (uint64_t)sizeof(value_t) * (uint64_t)config_.a_nrows * (uint64_t)config_.b_nrows;
-  RAFT_CUDA_TRY(cudaMemsetAsync(out_dists, 0, n, resource::get_cuda_stream(config_.handle)));
+  RAFT_CUDA_TRY(hipMemsetAsync(out_dists, 0, n, resource::get_cuda_stream(config_.handle)));
 
   int max_cols = max_cols_per_block<value_idx, value_t>();
 

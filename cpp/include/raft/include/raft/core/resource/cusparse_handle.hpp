@@ -16,26 +16,26 @@
 #pragma once
 
 #include <raft/core/cusparse_macros.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/resource_types.hpp>
 #include <raft/core/resources.hpp>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 
 namespace raft::resource {
 class cusparse_resource : public resource {
  public:
   cusparse_resource(rmm::cuda_stream_view stream)
   {
-    RAFT_CUSPARSE_TRY_NO_THROW(cusparseCreate(&cusparse_res));
-    RAFT_CUSPARSE_TRY_NO_THROW(cusparseSetStream(cusparse_res, stream));
+    RAFT_CUSPARSE_TRY_NO_THROW(hipsparseCreate(&cusparse_res));
+    RAFT_CUSPARSE_TRY_NO_THROW(hipsparseSetStream(cusparse_res, stream));
   }
 
-  ~cusparse_resource() { RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroy(cusparse_res)); }
+  ~cusparse_resource() { RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroy(cusparse_res)); }
   void* get_resource() override { return &cusparse_res; }
 
  private:
-  cusparseHandle_t cusparse_res;
+  hipsparseHandle_t cusparse_res;
 };
 
 /**
@@ -64,13 +64,13 @@ class cusparse_resource_factory : public resource_factory {
  * @param[in] res the raft resources object
  * @return cusparse handle
  */
-inline cusparseHandle_t get_cusparse_handle(resources const& res)
+inline hipsparseHandle_t get_cusparse_handle(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUSPARSE_HANDLE)) {
     rmm::cuda_stream_view stream = get_cuda_stream(res);
     res.add_resource_factory(std::make_shared<cusparse_resource_factory>(stream));
   }
-  return *res.get_resource<cusparseHandle_t>(resource_type::CUSPARSE_HANDLE);
+  return *res.get_resource<hipsparseHandle_t>(resource_type::CUSPARSE_HANDLE);
 };
 
 /**

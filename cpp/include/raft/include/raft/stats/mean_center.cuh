@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/mean_center.cuh>
 
 namespace raft {
@@ -48,7 +48,7 @@ void meanCenter(Type* out,
                 IdxType N,
                 bool rowMajor,
                 bool bcastAlongRows,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   detail::meanCenter<Type, IdxType, TPB>(out, data, mu, D, N, rowMajor, bcastAlongRows, stream);
 }
@@ -75,7 +75,7 @@ void meanAdd(Type* out,
              IdxType N,
              bool rowMajor,
              bool bcastAlongRows,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   detail::meanAdd<Type, IdxType, TPB>(out, data, mu, D, N, rowMajor, bcastAlongRows, stream);
 }

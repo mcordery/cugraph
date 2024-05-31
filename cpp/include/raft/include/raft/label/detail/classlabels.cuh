@@ -24,7 +24,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 
@@ -47,7 +47,7 @@ namespace detail {
  * \param [in] stream cuda stream
  */
 template <typename value_t>
-int getUniquelabels(rmm::device_uvector<value_t>& unique, value_t* y, size_t n, cudaStream_t stream)
+int getUniquelabels(rmm::device_uvector<value_t>& unique, value_t* y, size_t n, hipStream_t stream)
 {
   rmm::device_scalar<int> d_num_selected(stream);
   rmm::device_uvector<value_t> workspace(n, stream);
@@ -56,17 +56,17 @@ int getUniquelabels(rmm::device_uvector<value_t>& unique, value_t* y, size_t n, 
 
   // Query how much temporary storage we will need for cub operations
   // and allocate it
-  cub::DeviceRadixSort::SortKeys(
+  hipcub::DeviceRadixSort::SortKeys(
     NULL, bytes, y, workspace.data(), n, 0, sizeof(value_t) * 8, stream);
-  cub::DeviceSelect::Unique(
+  hipcub::DeviceSelect::Unique(
     NULL, bytes2, workspace.data(), workspace.data(), d_num_selected.data(), n, stream);
   bytes = std::max(bytes, bytes2);
   rmm::device_uvector<char> cub_storage(bytes, stream);
 
   // Select Unique classes
-  cub::DeviceRadixSort::SortKeys(
+  hipcub::DeviceRadixSort::SortKeys(
     cub_storage.data(), bytes, y, workspace.data(), n, 0, sizeof(value_t) * 8, stream);
-  cub::DeviceSelect::Unique(cub_storage.data(),
+  hipcub::DeviceSelect::Unique(cub_storage.data(),
                             bytes,
                             workspace.data(),
                             workspace.data(),
@@ -102,7 +102,7 @@ int getUniquelabels(rmm::device_uvector<value_t>& unique, value_t* y, size_t n, 
  */
 template <typename value_t>
 void getOvrlabels(
-  value_t* y, int n, value_t* y_unique, int n_classes, value_t* y_out, int idx, cudaStream_t stream)
+  value_t* y, int n, value_t* y_unique, int n_classes, value_t* y_out, int idx, hipStream_t stream)
 {
   ASSERT(idx < n_classes,
          "Parameter idx should not be larger than the number "
@@ -113,7 +113,7 @@ void getOvrlabels(
     n,
     [idx, y_unique] __device__(value_t y) { return y == y_unique[idx] ? +1 : -1; },
     stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 // TODO: add one-versus-one selection: select two classes, relabel them to
@@ -162,7 +162,7 @@ RAFT_KERNEL map_label_kernel(Type* map_ids,
  */
 template <typename Type, typename Lambda>
 void make_monotonic(
-  Type* out, Type* in, size_t N, cudaStream_t stream, Lambda filter_op, bool zero_based = false)
+  Type* out, Type* in, size_t N, hipStream_t stream, Lambda filter_op, bool zero_based = false)
 {
   static const size_t TPB_X = 256;
 
@@ -194,7 +194,7 @@ void make_monotonic(
  * @param stream cuda stream to use
  */
 template <typename Type>
-void make_monotonic(Type* out, Type* in, size_t N, cudaStream_t stream, bool zero_based = false)
+void make_monotonic(Type* out, Type* in, size_t N, hipStream_t stream, bool zero_based = false)
 {
   make_monotonic<Type>(out, in, N, stream, raft::const_op(false), zero_based);
 }

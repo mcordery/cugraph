@@ -31,7 +31,7 @@ template <typename OpT,
 void pairwise_matrix_sm80_dispatch(OpT distance_op,
                                    pairwise_matrix_params<IdxT, DataT, OutT, FinOpT> params,
                                    SM_compat_t sm_compat_range,
-                                   cudaStream_t stream)
+                                   hipStream_t stream)
 {
   int vec_len = determine_vec_len(params);
 

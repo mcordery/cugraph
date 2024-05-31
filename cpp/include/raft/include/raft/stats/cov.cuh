@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/cov.cuh>
 namespace raft {
 namespace stats {
@@ -55,7 +55,7 @@ void cov(raft::resources const& handle,
          bool sample,
          bool rowMajor,
          bool stable,
-         cudaStream_t stream)
+         hipStream_t stream)
 {
   detail::cov(handle, covar, data, mu, D, N, sample, rowMajor, stable, stream);
 }

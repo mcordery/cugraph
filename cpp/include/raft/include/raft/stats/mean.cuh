@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/mean.cuh>
 
@@ -46,7 +46,7 @@ namespace stats {
  */
 template <typename Type, typename IdxType = int>
 void mean(
-  Type* mu, const Type* data, IdxType D, IdxType N, bool sample, bool rowMajor, cudaStream_t stream)
+  Type* mu, const Type* data, IdxType D, IdxType N, bool sample, bool rowMajor, hipStream_t stream)
 {
   detail::mean(mu, data, D, N, sample, rowMajor, stream);
 }

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -27,14 +28,14 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace matrix {
 namespace detail {
 
 template <typename math_t>
-void power(math_t* in, math_t* out, math_t scalar, int len, cudaStream_t stream)
+void power(math_t* in, math_t* out, math_t scalar, int len, hipStream_t stream)
 {
   auto d_src  = in;
   auto d_dest = out;
@@ -49,20 +50,20 @@ void power(math_t* in, math_t* out, math_t scalar, int len, cudaStream_t stream)
 }
 
 template <typename math_t>
-void power(math_t* inout, math_t scalar, int len, cudaStream_t stream)
+void power(math_t* inout, math_t scalar, int len, hipStream_t stream)
 {
   power(inout, inout, scalar, len, stream);
 }
 
 template <typename math_t>
-void power(math_t* inout, int len, cudaStream_t stream)
+void power(math_t* inout, int len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   power(inout, scalar, len, stream);
 }
 
 template <typename math_t>
-void power(math_t* in, math_t* out, int len, cudaStream_t stream)
+void power(math_t* in, math_t* out, int len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   power(in, out, scalar, len, stream);
@@ -73,7 +74,7 @@ void seqRoot(math_t* in,
              math_t* out,
              math_t scalar,
              IdxType len,
-             cudaStream_t stream,
+             hipStream_t stream,
              bool set_neg_zero = false)
 {
   auto d_src  = in;
@@ -99,20 +100,20 @@ void seqRoot(math_t* in,
 
 template <typename math_t, typename IdxType = int>
 void seqRoot(
-  math_t* inout, math_t scalar, IdxType len, cudaStream_t stream, bool set_neg_zero = false)
+  math_t* inout, math_t scalar, IdxType len, hipStream_t stream, bool set_neg_zero = false)
 {
   seqRoot(inout, inout, scalar, len, stream, set_neg_zero);
 }
 
 template <typename math_t, typename IdxType = int>
-void seqRoot(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
+void seqRoot(math_t* in, math_t* out, IdxType len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   seqRoot(in, out, scalar, len, stream);
 }
 
 template <typename math_t, typename IdxType = int>
-void seqRoot(math_t* inout, IdxType len, cudaStream_t stream)
+void seqRoot(math_t* inout, IdxType len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   seqRoot(inout, inout, scalar, len, stream);
@@ -120,7 +121,7 @@ void seqRoot(math_t* inout, IdxType len, cudaStream_t stream)
 
 template <typename math_t, typename IdxType = int>
 void setSmallValuesZero(
-  math_t* out, const math_t* in, IdxType len, cudaStream_t stream, math_t thres = 1e-15)
+  math_t* out, const math_t* in, IdxType len, hipStream_t stream, math_t thres = 1e-15)
 {
   raft::linalg::unaryOp(
     out,
@@ -137,7 +138,7 @@ void setSmallValuesZero(
 }
 
 template <typename math_t, typename IdxType = int>
-void setSmallValuesZero(math_t* inout, IdxType len, cudaStream_t stream, math_t thres = 1e-15)
+void setSmallValuesZero(math_t* inout, IdxType len, hipStream_t stream, math_t thres = 1e-15)
 {
   setSmallValuesZero(inout, inout, len, stream, thres);
 }
@@ -147,7 +148,7 @@ void reciprocal(const math_t* in,
                 math_t* out,
                 math_t scalar,
                 int len,
-                cudaStream_t stream,
+                hipStream_t stream,
                 bool setzero = false,
                 math_t thres = 1e-15)
 {
@@ -166,7 +167,7 @@ template <typename math_t, typename IdxType = int>
 void reciprocal(math_t* inout,
                 math_t scalar,
                 IdxType len,
-                cudaStream_t stream,
+                hipStream_t stream,
                 bool setzero = false,
                 math_t thres = 1e-15)
 {
@@ -174,28 +175,28 @@ void reciprocal(math_t* inout,
 }
 
 template <typename math_t, typename IdxType = int>
-void reciprocal(math_t* inout, IdxType len, cudaStream_t stream)
+void reciprocal(math_t* inout, IdxType len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   reciprocal(inout, scalar, len, stream);
 }
 
 template <typename math_t, typename IdxType = int>
-void reciprocal(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
+void reciprocal(math_t* in, math_t* out, IdxType len, hipStream_t stream)
 {
   math_t scalar = 1.0;
   reciprocal(in, out, scalar, len, stream);
 }
 
 template <typename math_t>
-void setValue(math_t* out, const math_t* in, math_t scalar, int len, cudaStream_t stream = 0)
+void setValue(math_t* out, const math_t* in, math_t scalar, int len, hipStream_t stream = 0)
 {
   raft::linalg::unaryOp(out, in, len, raft::const_op(scalar), stream);
 }
 
 template <typename math_t, typename IdxType = int>
 void ratio(
-  raft::resources const& handle, math_t* src, math_t* dest, IdxType len, cudaStream_t stream)
+  raft::resources const& handle, math_t* src, math_t* dest, IdxType len, hipStream_t stream)
 {
   auto d_src  = src;
   auto d_dest = dest;
@@ -214,7 +215,7 @@ void matrixVectorBinaryMult(Type* data,
                             IdxType n_col,
                             bool rowMajor,
                             bool bcastAlongRows,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     data, data, vec, n_col, n_row, rowMajor, bcastAlongRows, raft::mul_op(), stream);
@@ -227,7 +228,7 @@ void matrixVectorBinaryMultSkipZero(Type* data,
                                     IdxType n_col,
                                     bool rowMajor,
                                     bool bcastAlongRows,
-                                    cudaStream_t stream)
+                                    hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     data,
@@ -253,7 +254,7 @@ void matrixVectorBinaryDiv(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     data, data, vec, n_col, n_row, rowMajor, bcastAlongRows, raft::div_op(), stream);
@@ -266,7 +267,7 @@ void matrixVectorBinaryDivSkipZero(Type* data,
                                    IdxType n_col,
                                    bool rowMajor,
                                    bool bcastAlongRows,
-                                   cudaStream_t stream,
+                                   hipStream_t stream,
                                    bool return_zero = false)
 {
   if (return_zero) {
@@ -311,7 +312,7 @@ void matrixVectorBinaryAdd(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     data, data, vec, n_col, n_row, rowMajor, bcastAlongRows, raft::add_op(), stream);
@@ -324,7 +325,7 @@ void matrixVectorBinarySub(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     data, data, vec, n_col, n_row, rowMajor, bcastAlongRows, raft::sub_op(), stream);
@@ -335,13 +336,13 @@ template <typename RedOp, int TPB, typename T, typename OutT, typename IdxT>
 RAFT_KERNEL argReduceKernel(const T* d_in, IdxT D, IdxT N, OutT* out)
 {
   typedef cub::
-    BlockReduce<cub::KeyValuePair<IdxT, T>, TPB, cub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY>
+    BlockReduce<hipcub::KeyValuePair<IdxT, T>, TPB, hipcub::BLOCK_REDUCE_RAKING_COMMUTATIVE_ONLY>
       BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
 
-  using KVP     = cub::KeyValuePair<IdxT, T>;
+  using KVP     = hipcub::KeyValuePair<IdxT, T>;
   IdxT rowStart = static_cast<IdxT>(blockIdx.x) * D;
-  KVP thread_data(0, std::is_same_v<RedOp, cub::ArgMax> ? -raft::myInf<T>() : raft::myInf<T>());
+  KVP thread_data(0, std::is_same_v<RedOp, hipcub::ArgMax> ? -raft::myInf<T>() : raft::myInf<T>());
 
   for (IdxT i = threadIdx.x; i < D; i += TPB) {
     IdxT idx    = rowStart + i;
@@ -356,7 +357,7 @@ RAFT_KERNEL argReduceKernel(const T* d_in, IdxT D, IdxT N, OutT* out)
 /**
  * @brief Computes an argmin/argmax coalesced reduction
  *
- * @tparam RedOp Reduction operation (cub::ArgMin or cub::ArgMax)
+ * @tparam RedOp Reduction operation (hipcub::ArgMin or hipcub::ArgMax)
  * @tparam math_t Value type
  * @tparam out_t Output key type
  * @tparam idx_t Matrix index type
@@ -367,7 +368,7 @@ RAFT_KERNEL argReduceKernel(const T* d_in, IdxT D, IdxT N, OutT* out)
  * @param[in]  stream CUDA stream
  */
 template <typename RedOp, typename math_t, typename out_t, typename idx_t>
-inline void argReduce(const math_t* in, idx_t D, idx_t N, out_t* out, cudaStream_t stream)
+inline void argReduce(const math_t* in, idx_t D, idx_t N, out_t* out, hipStream_t stream)
 {
   if (D <= 32) {
     argReduceKernel<RedOp, 32><<<N, 32, 0, stream>>>(in, D, N, out);
@@ -378,19 +379,19 @@ inline void argReduce(const math_t* in, idx_t D, idx_t N, out_t* out, cudaStream
   } else {
     argReduceKernel<RedOp, 256><<<N, 256, 0, stream>>>(in, D, N, out);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename math_t, typename out_t, typename idx_t>
-void argmin(const math_t* in, idx_t D, idx_t N, out_t* out, cudaStream_t stream)
+void argmin(const math_t* in, idx_t D, idx_t N, out_t* out, hipStream_t stream)
 {
-  argReduce<cub::ArgMin>(in, D, N, out, stream);
+  argReduce<hipcub::ArgMin>(in, D, N, out, stream);
 }
 
 template <typename math_t, typename out_t, typename idx_t>
-void argmax(const math_t* in, idx_t D, idx_t N, out_t* out, cudaStream_t stream)
+void argmax(const math_t* in, idx_t D, idx_t N, out_t* out, hipStream_t stream)
 {
-  argReduce<cub::ArgMax>(in, D, N, out, stream);
+  argReduce<hipcub::ArgMax>(in, D, N, out, stream);
 }
 
 // Utility kernel needed for signFlip.
@@ -399,18 +400,18 @@ void argmax(const math_t* in, idx_t D, idx_t N, out_t* out, cudaStream_t stream)
 template <typename T, int TPB>
 RAFT_KERNEL signFlipKernel(T* d_in, int D, int N)
 {
-  typedef cub::BlockReduce<cub::KeyValuePair<int, T>, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<hipcub::KeyValuePair<int, T>, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
 
   // compute maxIndex=argMax (with abs()) index for column
-  using KVP    = cub::KeyValuePair<int, T>;
+  using KVP    = hipcub::KeyValuePair<int, T>;
   int rowStart = blockIdx.x * D;
   KVP thread_data(0, 0);
   for (int i = threadIdx.x; i < D; i += TPB) {
     int idx     = rowStart + i;
-    thread_data = cub::ArgMax()(thread_data, KVP(idx, abs(d_in[idx])));
+    thread_data = hipcub::ArgMax()(thread_data, KVP(idx, abs(d_in[idx])));
   }
-  auto maxKV = BlockReduce(temp_storage).Reduce(thread_data, cub::ArgMax());
+  auto maxKV = BlockReduce(temp_storage).Reduce(thread_data, hipcub::ArgMax());
 
   // flip column sign if d_in[maxIndex] < 0
   __shared__ bool need_sign_flip;
@@ -426,7 +427,7 @@ RAFT_KERNEL signFlipKernel(T* d_in, int D, int N)
 }
 
 template <typename math_t>
-void signFlip(math_t* inout, int n_rows, int n_cols, cudaStream_t stream)
+void signFlip(math_t* inout, int n_rows, int n_cols, hipStream_t stream)
 {
   int D     = n_rows;
   int N     = n_cols;
@@ -440,7 +441,7 @@ void signFlip(math_t* inout, int n_rows, int n_cols, cudaStream_t stream)
   } else {
     signFlipKernel<math_t, 256><<<N, 256, 0, stream>>>(data, D, N);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // end namespace detail

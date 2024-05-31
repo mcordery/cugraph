@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/detail/distance_ops/all_ops.cuh>
 #include <raft/distance/detail/pairwise_matrix/dispatch.cuh>
 #include <raft/distance/detail/pairwise_matrix/dispatch_sm60.cuh>
@@ -107,7 +107,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
 }
@@ -130,7 +130,7 @@ void distance_impl(raft::resources const& handle,
   ASSERT(!(worksize < 2 * (m + n) * sizeof(AccT)), "workspace size error");
   ASSERT(workspace != nullptr, "workspace is null");
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   AccT* x_norm    = workspace;
   AccT* y_norm    = workspace;
@@ -215,7 +215,7 @@ void distance_impl(raft::resources const& handle,
   ASSERT(!(worksize < (m + n) * sizeof(AccT)), "workspace size error");
   ASSERT(workspace != nullptr, "workspace is null");
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   DataT* x_norm = workspace;
   DataT* y_norm = workspace;
@@ -258,7 +258,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -279,7 +279,7 @@ void distance_impl(raft::resources const& handle,
                    bool is_row_major,
                    DataT)  // metric_arg unused
 {
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
   raft::linalg::gemm(handle,
                      out,
                      const_cast<DataT*>(x),
@@ -308,7 +308,7 @@ void distance_impl(raft::resources const& handle,
                    bool is_row_major,
                    DataT)  // metric_arg unused
 {
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   // First sqrt x and y
   const auto raft_sqrt = raft::linalg::unaryOp<DataT, raft::sqrt_op, IdxT>;
@@ -329,7 +329,7 @@ void distance_impl(raft::resources const& handle,
   raft_sqrt((DataT*)x, x, m * k, raft::sqrt_op{}, stream);
   if (x != y) { raft_sqrt((DataT*)y, y, n * k, raft::sqrt_op{}, stream); }
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename DataT, typename AccT, typename OutT, typename FinOpT, typename IdxT = int>
@@ -352,7 +352,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -373,7 +373,7 @@ void distance_impl(raft::resources const& handle,
                    bool is_row_major,
                    DataT)  // metric_arg unused
 {
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   auto unaryOp_lambda = [] __device__(DataT input) {
     const bool x_zero = (input == 0);
@@ -428,7 +428,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
 }
@@ -449,7 +449,7 @@ void distance_impl_l2_expanded(  // NOTE: different name
   AccT* workspace,
   size_t worksize,
   FinOpT fin_op,
-  cudaStream_t stream,
+  hipStream_t stream,
   bool is_row_major)
 {
   // raft distance support inputs as float/double and output as uint8_t/float/double.
@@ -503,7 +503,7 @@ void distance_impl(raft::resources const& handle,
                    DataT)  // metric_arg unused
 {
   bool perform_sqrt   = false;
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
   distance_impl_l2_expanded(
     perform_sqrt, x, y, out, m, n, k, workspace, worksize, fin_op, stream, is_row_major);
 }
@@ -524,7 +524,7 @@ void distance_impl(raft::resources const& handle,
                    DataT)  // metric_arg unused
 {
   bool perform_sqrt   = true;
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
   distance_impl_l2_expanded(
     perform_sqrt, x, y, out, m, n, k, workspace, worksize, fin_op, stream, is_row_major);
 }
@@ -551,7 +551,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(l2_op), DataT, AccT, OutT, FinOpT, IdxT>(
     l2_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -579,7 +579,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(l2_op), DataT, AccT, OutT, FinOpT, IdxT>(
     l2_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -605,7 +605,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -631,7 +631,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -657,7 +657,7 @@ void distance_impl(raft::resources const& handle,
   const DataT* x_norm = nullptr;
   const DataT* y_norm = nullptr;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   pairwise_matrix_dispatch<decltype(distance_op), DataT, AccT, OutT, FinOpT, IdxT>(
     distance_op, m, n, k, x, y, x_norm, y_norm, out, fin_op, stream, is_row_major);
@@ -727,7 +727,7 @@ void distance(raft::resources const& handle,
     fin_op,
     isRowMajor,
     metric_arg);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**

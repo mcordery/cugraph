@@ -45,7 +45,7 @@ double homogeneity_score(const T* truthClusterArray,
                          int size,
                          T lowerLabelRange,
                          T upperLabelRange,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   if (size == 0) return 1.0;
 

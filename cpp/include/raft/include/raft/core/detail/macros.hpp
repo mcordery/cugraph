@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2023, NVIDIA CORPORATION.
  *
@@ -17,8 +18,8 @@
 #pragma once
 
 #ifndef _RAFT_HAS_CUDA
-#if defined(__CUDACC__)
-#define _RAFT_HAS_CUDA __CUDACC__
+#if defined(__HIPCC__)
+#define _RAFT_HAS_CUDA __HIPCC__
 #endif
 #endif
 

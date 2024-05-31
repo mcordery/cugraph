@@ -41,7 +41,7 @@ void generate_labels(IdxT* labels,
                      IdxT n_clusters,
                      bool shuffle,
                      raft::random::RngState& r,
-                     cudaStream_t stream)
+                     hipStream_t stream)
 {
   raft::handle_t handle(stream);
   IdxT a, b;
@@ -153,7 +153,7 @@ void generate_data(DataT* out,
                    IdxT n_rows,
                    IdxT n_cols,
                    IdxT n_clusters,
-                   cudaStream_t stream,
+                   hipStream_t stream,
                    bool row_major,
                    const DataT* centers,
                    const DataT* cluster_std,
@@ -219,7 +219,7 @@ void make_blobs_caller(DataT* out,
                        IdxT n_rows,
                        IdxT n_cols,
                        IdxT n_clusters,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        bool row_major,
                        const DataT* centers,
                        const DataT* cluster_std,

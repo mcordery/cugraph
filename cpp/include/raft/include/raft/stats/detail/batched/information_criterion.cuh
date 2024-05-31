@@ -47,7 +47,7 @@ void information_criterion(ScalarT* d_ic,
                            IdxT n_params,
                            IdxT batch_size,
                            IdxT n_samples,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   ScalarT ic_base{};
   ScalarT N = static_cast<ScalarT>(n_params);

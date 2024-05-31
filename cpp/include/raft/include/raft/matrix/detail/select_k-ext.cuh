@@ -20,7 +20,7 @@
 #include <raft/matrix/select_k_types.hpp>
 #include <raft/util/raft_explicit.hpp>  // RAFT_EXPLICIT
 
-#include <cuda_fp16.h>  // __half
+#include <hip/hip_fp16.h>  // __half
 
 #include <cstdint>  // uint32_t
 

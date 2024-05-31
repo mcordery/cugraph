@@ -26,7 +26,7 @@
 #include <raft/matrix/detail/select_k-inl.cuh>
 #include <raft/matrix/select_k_types.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <type_traits>
 

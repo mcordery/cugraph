@@ -20,7 +20,7 @@
 
 #include <raft/core/host_mdspan.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/binary_op.cuh>
 #include <raft/linalg/unary_op.cuh>
 #include <raft/util/input_validation.hpp>
@@ -40,7 +40,7 @@ namespace linalg {
  * @{
  */
 template <typename in_t, typename out_t = in_t, typename IdxType = int>
-void powerScalar(out_t* out, const in_t* in, const in_t scalar, IdxType len, cudaStream_t stream)
+void powerScalar(out_t* out, const in_t* in, const in_t scalar, IdxType len, hipStream_t stream)
 {
   raft::linalg::unaryOp(out, in, len, raft::pow_const_op<in_t>(scalar), stream);
 }
@@ -59,7 +59,7 @@ void powerScalar(out_t* out, const in_t* in, const in_t scalar, IdxType len, cud
  * @{
  */
 template <typename in_t, typename out_t = in_t, typename IdxType = int>
-void power(out_t* out, const in_t* in1, const in_t* in2, IdxType len, cudaStream_t stream)
+void power(out_t* out, const in_t* in1, const in_t* in2, IdxType len, hipStream_t stream)
 {
   raft::linalg::binaryOp(out, in1, in2, len, raft::pow_op(), stream);
 }

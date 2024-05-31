@@ -56,7 +56,7 @@ inline void knn_merge_parts(const value_t* in_keys,
                             size_t n_samples,
                             int n_parts,
                             int k,
-                            cudaStream_t stream,
+                            hipStream_t stream,
                             idx_t* translations)
 {
   raft::neighbors::detail::knn_merge_parts(

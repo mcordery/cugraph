@@ -17,7 +17,7 @@
 
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/cudart_utils.hpp>   // get_device_for_address
 #include <raft/util/integer_utils.hpp>  // rounding up
@@ -141,8 +141,8 @@ auto make_strided_dataset(const raft::resources& res, const SrcT& src, uint32_t 
                 "The input must be row-major");
   RAFT_EXPECTS(src.extent(1) <= required_stride,
                "The input row length must be not larger than the desired stride.");
-  cudaPointerAttributes ptr_attrs;
-  RAFT_CUDA_TRY(cudaPointerGetAttributes(&ptr_attrs, src.data_handle()));
+  hipPointerAttribute_t ptr_attrs;
+  RAFT_CUDA_TRY(hipPointerGetAttributes(&ptr_attrs, src.data_handle()));
   auto* device_ptr             = reinterpret_cast<value_type*>(ptr_attrs.devicePointer);
   const uint32_t src_stride    = src.stride(0) > 0 ? src.stride(0) : src.extent(1);
   const bool device_accessible = device_ptr != nullptr;
@@ -166,17 +166,17 @@ auto make_strided_dataset(const raft::resources& res, const SrcT& src, uint32_t 
   using out_owning_type =
     owning_dataset<value_type, index_type, out_layout_type, out_container_policy_type>;
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(out_array.data_handle(),
+  RAFT_CUDA_TRY(hipMemsetAsync(out_array.data_handle(),
                                 0,
                                 out_array.size() * sizeof(value_type),
                                 resource::get_cuda_stream(res)));
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(out_array.data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(out_array.data_handle(),
                                   sizeof(value_type) * required_stride,
                                   src.data_handle(),
                                   sizeof(value_type) * src_stride,
                                   sizeof(value_type) * src.extent(1),
                                   src.extent(0),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   resource::get_cuda_stream(res)));
 
   return std::make_unique<out_owning_type>(std::move(out_array), out_layout);

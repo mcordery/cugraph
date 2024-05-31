@@ -23,11 +23,11 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -55,7 +55,7 @@ namespace detail {
  * @param[in] stream : Cuda stream for ordering events
  */
 template <typename value_idx, typename value_t>
-void csr_transpose(cusparseHandle_t handle,
+void csr_transpose(hipsparseHandle_t handle,
                    const value_idx* csr_indptr,
                    const value_idx* csr_indices,
                    const value_t* csr_data,
@@ -65,7 +65,7 @@ void csr_transpose(cusparseHandle_t handle,
                    value_idx csr_nrows,
                    value_idx csr_ncols,
                    value_idx nnz,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   size_t convert_csc_workspace_size = 0;
 
@@ -79,9 +79,9 @@ void csr_transpose(cusparseHandle_t handle,
                                                                      csc_data,
                                                                      csc_indptr,
                                                                      csc_indices,
-                                                                     CUSPARSE_ACTION_NUMERIC,
-                                                                     CUSPARSE_INDEX_BASE_ZERO,
-                                                                     CUSPARSE_CSR2CSC_ALG1,
+                                                                     HIPSPARSE_ACTION_NUMERIC,
+                                                                     HIPSPARSE_INDEX_BASE_ZERO,
+                                                                     HIPSPARSE_CSR2CSC_ALG1,
                                                                      &convert_csc_workspace_size,
                                                                      stream));
 
@@ -97,9 +97,9 @@ void csr_transpose(cusparseHandle_t handle,
                                                           csc_data,
                                                           csc_indptr,
                                                           csc_indices,
-                                                          CUSPARSE_ACTION_NUMERIC,
-                                                          CUSPARSE_INDEX_BASE_ZERO,
-                                                          CUSPARSE_CSR2CSC_ALG1,
+                                                          HIPSPARSE_ACTION_NUMERIC,
+                                                          HIPSPARSE_INDEX_BASE_ZERO,
+                                                          HIPSPARSE_CSR2CSC_ALG1,
                                                           convert_csc_workspace.data(),
                                                           stream));
 }

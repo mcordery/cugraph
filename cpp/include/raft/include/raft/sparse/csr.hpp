@@ -56,7 +56,7 @@ void weak_cc_batched(Index_* labels,
                      Index_ start_vertex_id,
                      Index_ batch_size,
                      WeakCCState* state,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      Lambda filter_op)
 {
   detail::weak_cc_batched<Index_, TPB_X, Lambda>(
@@ -92,7 +92,7 @@ void weak_cc_batched(Index_* labels,
                      Index_ start_vertex_id,
                      Index_ batch_size,
                      WeakCCState* state,
-                     cudaStream_t stream)
+                     hipStream_t stream)
 {
   weak_cc_batched(labels,
                   row_ind,
@@ -135,7 +135,7 @@ void weak_cc(Index_* labels,
              const Index_* row_ind_ptr,
              Index_ nnz,
              Index_ N,
-             cudaStream_t stream,
+             hipStream_t stream,
              Lambda filter_op)
 {
   rmm::device_scalar<bool> m(stream);
@@ -170,7 +170,7 @@ void weak_cc(Index_* labels,
              const Index_* row_ind_ptr,
              Index_ nnz,
              Index_ N,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   rmm::device_scalar<bool> m(stream);
   WeakCCState state(m.data());

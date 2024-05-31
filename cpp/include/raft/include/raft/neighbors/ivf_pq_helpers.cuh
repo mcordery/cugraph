@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/neighbors/detail/ivf_pq_build.cuh>
 #include <raft/neighbors/ivf_pq_types.hpp>
@@ -779,13 +779,13 @@ void extract_centers(raft::resources const& res,
     cluster_centers.extent(1) == index.dim(),
     "Number of columns in the output buffer for cluster centers and index dim are different");
   auto stream = resource::get_cuda_stream(res);
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(cluster_centers.data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(cluster_centers.data_handle(),
                                   sizeof(float) * index.dim(),
                                   index.centers().data_handle(),
                                   sizeof(float) * index.dim_ext(),
                                   sizeof(float) * index.dim(),
                                   index.n_lists(),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   stream));
 }
 /** @} */

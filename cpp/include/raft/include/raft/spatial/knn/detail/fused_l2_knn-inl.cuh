@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -17,7 +18,7 @@
 #include <raft/linalg/norm.cuh>
 #include <raft/neighbors/detail/faiss_select/Select.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <limits>
 // TODO: Need to hide the PairwiseDistance class impl and expose to public API
@@ -218,7 +219,7 @@ __launch_bounds__(Policy::Nthreads, 2) RAFT_KERNEL fusedL2kNN(const DataT* x,
   using AccT = typename OpT::AccT;
   extern __shared__ char smem[];
 
-  typedef cub::KeyValuePair<uint32_t, AccT> Pair;
+  typedef hipcub::KeyValuePair<uint32_t, AccT> Pair;
   constexpr auto identity = std::numeric_limits<AccT>::max();
   constexpr auto keyMax   = std::numeric_limits<uint32_t>::max();
   constexpr auto Dir      = false;
@@ -536,7 +537,7 @@ void fusedL2UnexpKnnImpl(const DataT* x,
                          OutT* out_dists,
                          IdxT* out_inds,
                          IdxT numOfNN,
-                         cudaStream_t stream,
+                         hipStream_t stream,
                          void* workspace,
                          size_t& worksize)
 {
@@ -549,7 +550,7 @@ void fusedL2UnexpKnnImpl(const DataT* x,
 
   dim3 blk(KPolicy::Nthreads);
   // Accumulation operation lambda
-  typedef cub::KeyValuePair<uint32_t, AccT> Pair;
+  typedef hipcub::KeyValuePair<uint32_t, AccT> Pair;
 
   raft::distance::detail::ops::l2_unexp_distance_op<DataT, AccT, IdxT> distance_op{sqrt};
   raft::identity_op fin_op{};
@@ -597,7 +598,7 @@ void fusedL2UnexpKnnImpl(const DataT* x,
         worksize = sizeof(int32_t) * numMutexes;
         return;
       } else {
-        RAFT_CUDA_TRY(cudaMemsetAsync(workspace, 0, sizeof(int32_t) * numMutexes, stream));
+        RAFT_CUDA_TRY(hipMemsetAsync(workspace, 0, sizeof(int32_t) * numMutexes, stream));
       }
     }
 
@@ -620,7 +621,7 @@ void fusedL2UnexpKnnImpl(const DataT* x,
   } else {
   }
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename DataT,
@@ -641,7 +642,7 @@ void fusedL2UnexpKnn(IdxT m,
                      OutT* out_dists,
                      IdxT* out_inds,
                      IdxT numOfNN,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      void* workspace,
                      size_t& worksize)
 {
@@ -721,7 +722,7 @@ void fusedL2ExpKnnImpl(const DataT* x,
                        OutT* out_dists,
                        IdxT* out_inds,
                        IdxT numOfNN,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        void* workspace,
                        size_t& worksize)
 {
@@ -738,7 +739,7 @@ void fusedL2ExpKnnImpl(const DataT* x,
 
   dim3 blk(KPolicy::Nthreads);
 
-  typedef cub::KeyValuePair<uint32_t, AccT> Pair;
+  typedef hipcub::KeyValuePair<uint32_t, AccT> Pair;
 
   raft::distance::detail::ops::l2_exp_distance_op<DataT, AccT, IdxT> distance_op{sqrt};
   raft::identity_op fin_op{};
@@ -788,7 +789,7 @@ void fusedL2ExpKnnImpl(const DataT* x,
         return;
       } else {
         mutexes = (int32_t*)((char*)workspace + normsSize);
-        RAFT_CUDA_TRY(cudaMemsetAsync(mutexes, 0, sizeof(int32_t) * numMutexes, stream));
+        RAFT_CUDA_TRY(hipMemsetAsync(mutexes, 0, sizeof(int32_t) * numMutexes, stream));
       }
     }
 
@@ -830,7 +831,7 @@ void fusedL2ExpKnnImpl(const DataT* x,
   } else {
   }
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename DataT,
@@ -853,7 +854,7 @@ void fusedL2ExpKnn(IdxT m,
                    OutT* out_dists,
                    IdxT* out_inds,
                    IdxT numOfNN,
-                   cudaStream_t stream,
+                   hipStream_t stream,
                    void* workspace,
                    size_t& worksize)
 {
@@ -945,7 +946,7 @@ void fusedL2Knn(size_t D,
                 int k,
                 bool rowMajorIndex,
                 bool rowMajorQuery,
-                cudaStream_t stream,
+                hipStream_t stream,
                 raft::distance::DistanceType metric,
                 const value_t* index_norms = NULL,
                 const value_t* query_norms = NULL)

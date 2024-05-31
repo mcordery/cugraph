@@ -20,7 +20,7 @@
 #include "cusolver_wrappers.hpp"
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/binary_op.cuh>
 
@@ -35,8 +35,8 @@ void choleskyRank1Update(raft::resources const& handle,
                          int ld,
                          void* workspace,
                          int* n_bytes,
-                         cublasFillMode_t uplo,
-                         cudaStream_t stream,
+                         hipblasFillMode_t uplo,
+                         hipStream_t stream,
                          math_t eps = -1)
 {
   // The matrix A' is defined as:
@@ -56,10 +56,10 @@ void choleskyRank1Update(raft::resources const& handle,
   // L_12 and L_22 are the new quantities that we need to calculate.
 
   // We need a workspace in device memory to store a scalar. Additionally, in
-  // CUBLAS_FILL_MODE_LOWER we need space for n-1 floats.
+  // HIPBLAS_FILL_MODE_LOWER we need space for n-1 floats.
   const int align = 256;
   int offset =
-    (uplo == CUBLAS_FILL_MODE_LOWER) ? raft::alignTo<int>(sizeof(math_t) * (n - 1), align) : 0;
+    (uplo == HIPBLAS_FILL_MODE_LOWER) ? raft::alignTo<int>(sizeof(math_t) * (n - 1), align) : 0;
   if (workspace == nullptr) {
     *n_bytes = offset + 1 * sizeof(math_t);
     return;
@@ -69,7 +69,7 @@ void choleskyRank1Update(raft::resources const& handle,
 
   math_t* A_new = nullptr;
   math_t* A_row = nullptr;
-  if (uplo == CUBLAS_FILL_MODE_UPPER) {
+  if (uplo == HIPBLAS_FILL_MODE_UPPER) {
     // A_new is stored as the n-1 th column of L
     A_new = L + (n - 1) * ld;
   } else {
@@ -81,15 +81,15 @@ void choleskyRank1Update(raft::resources const& handle,
     RAFT_CUBLAS_TRY(
       cublasCopy(resource::get_cublas_handle(handle), n - 1, A_row, ld, A_new, 1, stream));
   }
-  cublasOperation_t op = (uplo == CUBLAS_FILL_MODE_UPPER) ? CUBLAS_OP_T : CUBLAS_OP_N;
+  hipblasOperation_t op = (uplo == HIPBLAS_FILL_MODE_UPPER) ? HIPBLAS_OP_T : HIPBLAS_OP_N;
   if (n > 1) {
     // Calculate L_12 = x by solving equation L_11 x = A_12
     math_t alpha = 1;
     RAFT_CUBLAS_TRY(cublastrsm(resource::get_cublas_handle(handle),
-                               CUBLAS_SIDE_LEFT,
+                               HIPBLAS_SIDE_LEFT,
                                uplo,
                                op,
-                               CUBLAS_DIAG_NON_UNIT,
+                               HIPBLAS_DIAG_NON_UNIT,
                                n - 1,
                                1,
                                &alpha,
@@ -103,13 +103,13 @@ void choleskyRank1Update(raft::resources const& handle,
     RAFT_CUBLAS_TRY(
       cublasdot(resource::get_cublas_handle(handle), n - 1, A_new, 1, A_new, 1, s, stream));
 
-    if (uplo == CUBLAS_FILL_MODE_LOWER) {
+    if (uplo == HIPBLAS_FILL_MODE_LOWER) {
       // Copy back the L_12 elements as the n-th row of L
       RAFT_CUBLAS_TRY(
         cublasCopy(resource::get_cublas_handle(handle), n - 1, A_new, 1, A_row, ld, stream));
     }
   } else {  // n == 1 case
-    RAFT_CUDA_TRY(cudaMemsetAsync(s, 0, sizeof(math_t), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(s, 0, sizeof(math_t), stream));
   }
 
   // L_22 = sqrt(A_22 - L_12 * L_12)

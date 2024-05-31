@@ -21,7 +21,7 @@
 #include <raft/core/resources.hpp>
 
 #if defined(_RAFT_HAS_CUDA)
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #endif
 
 #include <algorithm>

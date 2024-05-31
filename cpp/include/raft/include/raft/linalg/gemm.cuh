@@ -31,7 +31,7 @@
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/input_validation.hpp>
 
@@ -74,7 +74,7 @@ void gemm(raft::resources const& handle,
           const math_t* beta,
           math_t* C,
           const int ldc,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   return detail::legacy_gemm(
     handle, trans_a, trans_b, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc, stream);
@@ -107,11 +107,11 @@ void gemm(raft::resources const& handle,
           math_t* c,
           int n_rows_c,
           int n_cols_c,
-          cublasOperation_t trans_a,
-          cublasOperation_t trans_b,
+          hipblasOperation_t trans_a,
+          hipblasOperation_t trans_b,
           math_t alpha,
           math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::legacy_gemm(
     handle, a, n_rows_a, n_cols_a, b, c, n_rows_c, n_cols_c, trans_a, trans_b, alpha, beta, stream);
@@ -142,9 +142,9 @@ void gemm(raft::resources const& handle,
           math_t* c,
           int n_rows_c,
           int n_cols_c,
-          cublasOperation_t trans_a,
-          cublasOperation_t trans_b,
-          cudaStream_t stream)
+          hipblasOperation_t trans_a,
+          hipblasOperation_t trans_b,
+          hipStream_t stream)
 {
   detail::legacy_gemm(
     handle, a, n_rows_a, n_cols_a, b, c, n_rows_c, n_cols_c, trans_a, trans_b, stream);
@@ -180,7 +180,7 @@ void gemm(raft::resources const& handle,
           bool isZColMajor,
           bool isXColMajor,
           bool isYColMajor,
-          cudaStream_t stream,
+          hipStream_t stream,
           T alpha = T(1.0),
           T beta  = T(0.0))
 {

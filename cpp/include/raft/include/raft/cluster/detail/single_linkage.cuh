@@ -20,7 +20,7 @@
 #include <raft/cluster/detail/connectivities.cuh>
 #include <raft/cluster/detail/mst.cuh>
 #include <raft/cluster/single_linkage_types.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/cudart_utils.hpp>
 
 #include <rmm/device_uvector.hpp>

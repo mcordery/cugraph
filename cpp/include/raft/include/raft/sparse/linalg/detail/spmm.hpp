@@ -18,7 +18,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/sparse/detail/cusparse_wrappers.h>
@@ -74,14 +74,14 @@ void spmm(raft::resources const& handle,
           const bool trans_y,
           const bool is_row_major,
           const ValueType* alpha,
-          cusparseSpMatDescr_t& descr_x,
-          cusparseDnMatDescr_t& descr_y,
+          hipsparseSpMatDescr_t& descr_x,
+          hipsparseDnMatDescr_t& descr_y,
           const ValueType* beta,
-          cusparseDnMatDescr_t& descr_z)
+          hipsparseDnMatDescr_t& descr_z)
 {
-  auto opX = trans_x ? CUSPARSE_OPERATION_TRANSPOSE : CUSPARSE_OPERATION_NON_TRANSPOSE;
-  auto opY = trans_y ? CUSPARSE_OPERATION_TRANSPOSE : CUSPARSE_OPERATION_NON_TRANSPOSE;
-  auto alg = is_row_major ? CUSPARSE_SPMM_CSR_ALG2 : CUSPARSE_SPMM_CSR_ALG1;
+  auto opX = trans_x ? HIPSPARSE_OPERATION_TRANSPOSE : HIPSPARSE_OPERATION_NON_TRANSPOSE;
+  auto opY = trans_y ? HIPSPARSE_OPERATION_TRANSPOSE : HIPSPARSE_OPERATION_NON_TRANSPOSE;
+  auto alg = is_row_major ? HIPSPARSE_SPMM_CSR_ALG2 : HIPSPARSE_SPMM_CSR_ALG1;
   size_t bufferSize;
   RAFT_CUSPARSE_TRY(
     raft::sparse::detail::cusparsespmm_bufferSize(resource::get_cusparse_handle(handle),

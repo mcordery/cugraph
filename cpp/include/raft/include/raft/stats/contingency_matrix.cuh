@@ -22,7 +22,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/contingencyMatrix.cuh>
 
@@ -40,7 +40,7 @@ namespace stats {
  */
 template <typename T>
 void getInputClassCardinality(
-  const T* groundTruth, const int nSamples, cudaStream_t stream, T& minLabel, T& maxLabel)
+  const T* groundTruth, const int nSamples, hipStream_t stream, T& minLabel, T& maxLabel)
 {
   detail::getInputClassCardinality(groundTruth, nSamples, stream, minLabel, maxLabel);
 }
@@ -58,7 +58,7 @@ void getInputClassCardinality(
 template <typename T, typename OutT = int>
 size_t getContingencyMatrixWorkspaceSize(int nSamples,
                                          const T* groundTruth,
-                                         cudaStream_t stream,
+                                         hipStream_t stream,
                                          T minLabel = std::numeric_limits<T>::max(),
                                          T maxLabel = std::numeric_limits<T>::max())
 {
@@ -88,7 +88,7 @@ void contingencyMatrix(const T* groundTruth,
                        const T* predictedLabel,
                        int nSamples,
                        OutT* outMat,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        void* workspace      = nullptr,
                        size_t workspaceSize = 0,
                        T minLabel           = std::numeric_limits<T>::max(),

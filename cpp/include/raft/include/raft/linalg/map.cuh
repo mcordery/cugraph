@@ -49,7 +49,7 @@ template <typename InType,
           typename OutType = InType,
           typename... Args>
 [[deprecated("Use function `map` from the same file")]] void map_k(
-  OutType* out, IdxType len, MapOp map, cudaStream_t stream, const InType* in, Args... args)
+  OutType* out, IdxType len, MapOp map, hipStream_t stream, const InType* in, Args... args)
 {
   return detail::map<false>(stream, out, len, map, in, args...);
 }

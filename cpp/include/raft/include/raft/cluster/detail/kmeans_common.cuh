@@ -22,7 +22,7 @@
 #include <raft/core/logger.hpp>
 #include <raft/core/mdarray.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance.cuh>
@@ -39,8 +39,8 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
-#include <cuda.h>
+#include <hipcub/hipcub.hpp>
+#include <hip/hip_runtime.h>
 #include <thrust/fill.h>
 #include <thrust/for_each.h>
 
@@ -63,7 +63,7 @@ struct SamplingOp {
   double oversampling_factor;
   IndexT n_clusters;
 
-  CUB_RUNTIME_FUNCTION __forceinline__
+  HIPCUB_RUNTIME_FUNCTION __forceinline__
   SamplingOp(DataT c, double l, IndexT k, DataT* rand, uint8_t* ptr)
     : cluster_cost(c), oversampling_factor(l), n_clusters(k), rnd(rand), flag(ptr)
   {
@@ -98,7 +98,7 @@ void countLabels(raft::resources const& handle,
                  IndexT n_clusters,
                  rmm::device_uvector<char>& workspace)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
 
   // CUB::DeviceHistogram requires a signed index type
   typedef typename std::make_signed_t<IndexT> CubIndexT;
@@ -108,7 +108,7 @@ void countLabels(raft::resources const& handle,
   CubIndexT upper_level = n_clusters;
 
   size_t temp_storage_bytes = 0;
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(nullptr,
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(nullptr,
                                                     temp_storage_bytes,
                                                     labels,
                                                     count,
@@ -120,7 +120,7 @@ void countLabels(raft::resources const& handle,
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(workspace.data(),
                                                     temp_storage_bytes,
                                                     labels,
                                                     count,
@@ -136,17 +136,17 @@ void checkWeight(raft::resources const& handle,
                  raft::device_vector_view<DataT, IndexT> weight,
                  rmm::device_uvector<char>& workspace)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto wt_aggr        = raft::make_device_scalar<DataT>(handle, 0);
   auto n_samples      = weight.extent(0);
 
   size_t temp_storage_bytes = 0;
-  RAFT_CUDA_TRY(cub::DeviceReduce::Sum(
+  RAFT_CUDA_TRY(hipcub::DeviceReduce::Sum(
     nullptr, temp_storage_bytes, weight.data_handle(), wt_aggr.data_handle(), n_samples, stream));
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceReduce::Sum(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceReduce::Sum(workspace.data(),
                                        temp_storage_bytes,
                                        weight.data_handle(),
                                        wt_aggr.data_handle(),
@@ -197,13 +197,13 @@ void computeClusterCost(raft::resources const& handle,
                         MainOpT main_op,
                         ReductionOpT reduction_op)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
 
-  cub::TransformInputIterator<OutputT, MainOpT, InputT*> itr(minClusterDistance.data_handle(),
+  hipcub::TransformInputIterator<OutputT, MainOpT, InputT*> itr(minClusterDistance.data_handle(),
                                                              main_op);
 
   size_t temp_storage_bytes = 0;
-  RAFT_CUDA_TRY(cub::DeviceReduce::Reduce(nullptr,
+  RAFT_CUDA_TRY(hipcub::DeviceReduce::Reduce(nullptr,
                                           temp_storage_bytes,
                                           itr,
                                           clusterCost.data_handle(),
@@ -214,7 +214,7 @@ void computeClusterCost(raft::resources const& handle,
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceReduce::Reduce(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceReduce::Reduce(workspace.data(),
                                           temp_storage_bytes,
                                           itr,
                                           clusterCost.data_handle(),
@@ -233,16 +233,16 @@ void sampleCentroids(raft::resources const& handle,
                      rmm::device_uvector<DataT>& inRankCp,
                      rmm::device_uvector<char>& workspace)
 {
-  cudaStream_t stream  = resource::get_cuda_stream(handle);
+  hipStream_t stream  = resource::get_cuda_stream(handle);
   auto n_local_samples = X.extent(0);
   auto n_features      = X.extent(1);
 
   auto nSelected = raft::make_device_scalar<IndexT>(handle, 0);
-  cub::ArgIndexInputIterator<DataT*> ip_itr(minClusterDistance.data_handle());
+  hipcub::ArgIndexInputIterator<DataT*> ip_itr(minClusterDistance.data_handle());
   auto sampledMinClusterDistance =
     raft::make_device_vector<raft::KeyValuePair<ptrdiff_t, DataT>, IndexT>(handle, n_local_samples);
   size_t temp_storage_bytes = 0;
-  RAFT_CUDA_TRY(cub::DeviceSelect::If(nullptr,
+  RAFT_CUDA_TRY(hipcub::DeviceSelect::If(nullptr,
                                       temp_storage_bytes,
                                       ip_itr,
                                       sampledMinClusterDistance.data_handle(),
@@ -253,7 +253,7 @@ void sampleCentroids(raft::resources const& handle,
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceSelect::If(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceSelect::If(workspace.data(),
                                       temp_storage_bytes,
                                       ip_itr,
                                       sampledMinClusterDistance.data_handle(),
@@ -323,7 +323,7 @@ void shuffleAndGather(raft::resources const& handle,
                       uint32_t n_samples_to_gather,
                       uint64_t seed)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = in.extent(0);
   auto n_features     = in.extent(1);
 
@@ -363,7 +363,7 @@ void minClusterAndDistanceCompute(
   int batch_centroids,
   rmm::device_uvector<char>& workspace)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = centroids.extent(0);
@@ -496,7 +496,7 @@ void minClusterDistanceCompute(raft::resources const& handle,
                                int batch_centroids,
                                rmm::device_uvector<char>& workspace)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = centroids.extent(0);
@@ -611,7 +611,7 @@ void countSamplesInCluster(raft::resources const& handle,
                            rmm::device_uvector<char>& workspace,
                            raft::device_vector_view<DataT, IndexT> sampleCountInCluster)
 {
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = centroids.extent(0);
@@ -645,7 +645,7 @@ void countSamplesInCluster(raft::resources const& handle,
   // and converting them to just return the Key to be used in reduce_rows_by_key
   // prims
   detail::KeyValueIndexOp<IndexT, DataT> conversion_op;
-  cub::TransformInputIterator<IndexT,
+  hipcub::TransformInputIterator<IndexT,
                               detail::KeyValueIndexOp<IndexT, DataT>,
                               raft::KeyValuePair<IndexT, DataT>*>
     itr(minClusterAndDistance.data_handle(), conversion_op);

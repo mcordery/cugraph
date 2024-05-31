@@ -24,11 +24,11 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -138,7 +138,7 @@ void weak_cc_batched(Index_* labels,
                      Index_ start_vertex_id,
                      Index_ batch_size,
                      WeakCCState* state,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      Lambda filter_op)
 {
   ASSERT(sizeof(Index_) == 4 || sizeof(Index_) == 8, "Index_ should be 4 or 8 bytes");
@@ -148,20 +148,20 @@ void weak_cc_batched(Index_* labels,
   Index_ MAX_LABEL = std::numeric_limits<Index_>::max();
   weak_cc_init_all_kernel<Index_, TPB_X>
     <<<raft::ceildiv(N, Index_(TPB_X)), TPB_X, 0, stream>>>(labels, N, MAX_LABEL, filter_op);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   int n_iters = 0;
   do {
-    RAFT_CUDA_TRY(cudaMemsetAsync(state->m, false, sizeof(bool), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(state->m, false, sizeof(bool), stream));
 
     weak_cc_label_device<Index_, TPB_X>
       <<<raft::ceildiv(batch_size, Index_(TPB_X)), TPB_X, 0, stream>>>(
         labels, row_ind, row_ind_ptr, nnz, state->m, start_vertex_id, batch_size, N, filter_op);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
 
     //** Updating m *
     raft::update_host(&host_m, state->m, 1, stream);
-    RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+    RAFT_CUDA_TRY(hipStreamSynchronize(stream));
 
     n_iters++;
   } while (host_m);

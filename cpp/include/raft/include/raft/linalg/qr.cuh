@@ -20,7 +20,7 @@
 
 #include "detail/qr.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 namespace raft {
@@ -41,7 +41,7 @@ void qrGetQ(raft::resources const& handle,
             math_t* Q,
             int n_rows,
             int n_cols,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::qrGetQ(handle, M, Q, n_rows, n_cols, stream);
 }
@@ -63,7 +63,7 @@ void qrGetQR(raft::resources const& handle,
              math_t* R,
              int n_rows,
              int n_cols,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   detail::qrGetQR(handle, M, Q, R, n_rows, n_cols, stream);
 }

@@ -25,7 +25,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/adjusted_rand_index.cuh>
 
 namespace raft {
@@ -45,7 +45,7 @@ template <typename T, typename MathT = int>
 double adjusted_rand_index(const T* firstClusterArray,
                            const T* secondClusterArray,
                            int size,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   return detail::compute_adjusted_rand_index(firstClusterArray, secondClusterArray, size, stream);
 }

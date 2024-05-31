@@ -19,7 +19,7 @@
 
 #pragma once
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/entropy.cuh>
 
 namespace raft {
@@ -42,7 +42,7 @@ double entropy(const T* clusterArray,
                const int size,
                const T lowerLabelRange,
                const T upperLabelRange,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   return detail::entropy(clusterArray, size, lowerLabelRange, upperLabelRange, stream);
 }

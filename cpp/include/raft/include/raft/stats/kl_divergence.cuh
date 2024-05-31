@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/kl_divergence.cuh>
 
 namespace raft {
@@ -38,7 +38,7 @@ namespace stats {
  * @param stream: the cudaStream object
  */
 template <typename DataT>
-DataT kl_divergence(const DataT* modelPDF, const DataT* candidatePDF, int size, cudaStream_t stream)
+DataT kl_divergence(const DataT* modelPDF, const DataT* candidatePDF, int size, hipStream_t stream)
 {
   return detail::kl_divergence(modelPDF, candidatePDF, size, stream);
 }

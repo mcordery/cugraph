@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
@@ -187,14 +188,14 @@ void epsUnexpL2SqNeighImpl(bool* adj,
                            IdxT n,
                            IdxT k,
                            DataT eps,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   typedef typename raft::linalg::Policy4x4<DataT, VecLen>::Policy Policy;
   dim3 grid(raft::ceildiv<int>(m, Policy::Mblk), raft::ceildiv<int>(n, Policy::Nblk));
   dim3 blk(Policy::Nthreads);
   epsUnexpL2SqNeighKernel<DataT, IdxT, Policy>
     <<<grid, blk, Policy::SmemSize, stream>>>(adj, vd, x, y, m, n, k, eps);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 /**
@@ -223,9 +224,9 @@ void epsUnexpL2SqNeighborhood(bool* adj,
                               IdxT n,
                               IdxT k,
                               DataT eps,
-                              cudaStream_t stream)
+                              hipStream_t stream)
 {
-  if (vd != nullptr) { RAFT_CUDA_TRY(cudaMemsetAsync(vd, 0, (m + 1) * sizeof(IdxT), stream)); }
+  if (vd != nullptr) { RAFT_CUDA_TRY(hipMemsetAsync(vd, 0, (m + 1) * sizeof(IdxT), stream)); }
 
   size_t bytes = sizeof(DataT) * k;
   if (16 % sizeof(DataT) == 0 && bytes % 16 == 0) {

@@ -39,13 +39,13 @@ namespace linalg {
  * - A'[:,n-1] = A[n-1,:] = A_new
  *
  * On entry, the new column A_new, is stored as the n-th column of L if uplo ==
- * CUBLAS_FILL_MODE_UPPER, else A_new is stored as the n-th row of L.
+ * HIPBLAS_FILL_MODE_UPPER, else A_new is stored as the n-th row of L.
  *
  * On exit L contains the Cholesky decomposition of A'. In practice the elements
  * of A_new are overwritten with new row/column of the L matrix.
  *
  * The uplo parameter is used to select the matrix layout.
- * If (uplo != CUBLAS_FILL_MODE_UPPER) then the input arg L stores the
+ * If (uplo != HIPBLAS_FILL_MODE_UPPER) then the input arg L stores the
  * lower triangular matrix L, so that A = L * L.T. Otherwise the input arg L
  * stores an upper triangular matrix U: A = U.T * U.
  *
@@ -66,7 +66,7 @@ namespace linalg {
  * int ld_L = n_rows;
  * rmm::device_uvector<math_t> L(ld_L * n_rows, stream);
  * raft::linalg::choleskyRank1Update(handle, L, n_rows, ld_L, nullptr,
- *                                       &n_bytes, CUBLAS_FILL_MODE_LOWER,
+ *                                       &n_bytes, HIPBLAS_FILL_MODE_LOWER,
  *                                       stream);
  * rmm::device_uvector<char> workspace(n_bytes, stream);
  *
@@ -78,7 +78,7 @@ namespace linalg {
  *                           L + n - 1, ld_L, stream));
  *   // Update Cholesky factorization
  *   raft::linalg::choleskyRank1Update(
- *       handle, L, rank, ld_L, workspace, &n_bytes, CUBLAS_FILL_MODE_LOWER,
+ *       handle, L, rank, ld_L, workspace, &n_bytes, HIPBLAS_FILL_MODE_LOWER,
  *       stream);
  * }
  * Now L stores the Cholesky decomposition of A: A = L * L.T
@@ -90,7 +90,7 @@ namespace linalg {
  * int ld_U = n_rows;
  * rmm::device_uvector<math_t> U(ld_U * n_rows, stream);
  * raft::linalg::choleskyRank1Update(handle, L, n_rows, ld_U, nullptr,
- *                                       &n_bytes, CUBLAS_FILL_MODE_UPPER,
+ *                                       &n_bytes, HIPBLAS_FILL_MODE_UPPER,
  *                                       stream);
  * rmm::device_uvector<char> workspace(stream, n_bytes, stream);
  *
@@ -102,7 +102,7 @@ namespace linalg {
  *   //
  *   // Update Cholesky factorization
  *   raft::linalg::choleskyRank1Update(
- *       handle, U, n, ld_U, workspace, &n_bytes, CUBLAS_FILL_MODE_UPPER,
+ *       handle, U, n, ld_U, workspace, &n_bytes, HIPBLAS_FILL_MODE_UPPER,
  *       stream);
  * }
  * // Now U stores the Cholesky decomposition of A: A = U.T * U
@@ -118,7 +118,7 @@ namespace linalg {
  * @param n_bytes size of workspace is returned here if workspace==nullptr.
  * @param stream CUDA stream
  * @param uplo indicates whether L is stored as an upper or lower triangular
- *    matrix (CUBLAS_FILL_MODE_UPPER or CUBLAS_FILL_MODE_LOWER)
+ *    matrix (HIPBLAS_FILL_MODE_UPPER or HIPBLAS_FILL_MODE_LOWER)
  * @param eps numerical parameter that can act as a regularizer for ill
  *    conditioned systems. Negative values mean no regularizaton.
  */
@@ -129,8 +129,8 @@ void choleskyRank1Update(raft::resources const& handle,
                          int ld,
                          void* workspace,
                          int* n_bytes,
-                         cublasFillMode_t uplo,
-                         cudaStream_t stream,
+                         hipblasFillMode_t uplo,
+                         hipStream_t stream,
                          math_t eps = -1)
 {
   detail::choleskyRank1Update(handle, L, n, ld, workspace, n_bytes, uplo, stream, eps);

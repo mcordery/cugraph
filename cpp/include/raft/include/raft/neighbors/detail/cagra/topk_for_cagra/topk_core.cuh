@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -16,7 +17,7 @@
 #pragma once
 #include "topk.h"
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <assert.h>
 #include <float.h>
@@ -179,32 +180,32 @@ __device__ inline void block_scan(const T input, T& output)
 {
   switch (blockDim.x) {
     case 32: {
-      typedef cub::BlockScan<T, 32> BlockScanT;
+      typedef hipcub::BlockScan<T, 32> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
     case 64: {
-      typedef cub::BlockScan<T, 64> BlockScanT;
+      typedef hipcub::BlockScan<T, 64> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
     case 128: {
-      typedef cub::BlockScan<T, 128> BlockScanT;
+      typedef hipcub::BlockScan<T, 128> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
     case 256: {
-      typedef cub::BlockScan<T, 256> BlockScanT;
+      typedef hipcub::BlockScan<T, 256> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
     case 512: {
-      typedef cub::BlockScan<T, 512> BlockScanT;
+      typedef hipcub::BlockScan<T, 512> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
     case 1024: {
-      typedef cub::BlockScan<T, 1024> BlockScanT;
+      typedef hipcub::BlockScan<T, 1024> BlockScanT;
       __shared__ typename BlockScanT::TempStorage temp_storage;
       BlockScanT(temp_storage).InclusiveSum(input, output);
     } break;
@@ -334,7 +335,7 @@ __device__ inline void select_best_index_for_next_threshold_core(uint32_t& my_in
                                                                  const uint32_t shift,
                                                                  const uint32_t topk)
 {
-  typedef cub::BlockScan<uint32_t, blockDim_x> BlockScanT;
+  typedef hipcub::BlockScan<uint32_t, blockDim_x> BlockScanT;
   __shared__ typename BlockScanT::TempStorage temp_storage;
   if (num_bins == 2048) {
     constexpr int n_data = 2048 / blockDim_x;
@@ -908,7 +909,7 @@ __launch_bounds__(1024, 1) RAFT_KERNEL
 size_t inline _cuann_find_topk_bufferSize(uint32_t topK,
                                           uint32_t sizeBatch,
                                           uint32_t numElements,
-                                          cudaDataType_t sampleDtype)
+                                          hipDataType sampleDtype)
 {
   constexpr int numThreads  = NUM_THREADS;
   constexpr int stateBitLen = STATE_BIT_LENGTH;
@@ -939,7 +940,7 @@ inline void _cuann_find_topk(uint32_t topK,
                              void* workspace,
                              bool sort,
                              uint32_t* hints,
-                             cudaStream_t stream)
+                             hipStream_t stream)
 {
   assert(ldIK >= numElements);
   assert(ldIV >= numElements);

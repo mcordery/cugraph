@@ -99,8 +99,8 @@ static_assert(_MDSPAN_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14 or 
 #endif
 
 #ifndef _MDSPAN_HAS_CUDA
-#  if defined(__CUDACC__)
-#    define _MDSPAN_HAS_CUDA __CUDACC__
+#  if defined(__HIPCC__)
+#    define _MDSPAN_HAS_CUDA __HIPCC__
 #  endif
 #endif
 

@@ -41,7 +41,7 @@ void transpose(raft::resources const& handle,
                math_t* out,
                int n_rows,
                int n_cols,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   detail::transpose(handle, in, out, n_rows, n_cols, stream);
 }
@@ -53,7 +53,7 @@ void transpose(raft::resources const& handle,
  * @param stream: cuda stream
  */
 template <typename math_t>
-void transpose(math_t* inout, int n, cudaStream_t stream)
+void transpose(math_t* inout, int n, hipStream_t stream)
 {
   detail::transpose(inout, n, stream);
 }

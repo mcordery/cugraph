@@ -20,7 +20,7 @@
 #include <raft/core/resources.hpp>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 namespace raft::resource::detail {
 
@@ -40,12 +40,12 @@ class cuda_stream_sync_event_resource_factory : public resource_factory {
  * @param res raft resources instance for managing resources
  * @return
  */
-inline cudaEvent_t& get_cuda_stream_sync_event(resources const& res)
+inline hipEvent_t& get_cuda_stream_sync_event(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUDA_STREAM_SYNC_EVENT)) {
     res.add_resource_factory(std::make_shared<cuda_stream_sync_event_resource_factory>());
   }
-  return *res.get_resource<cudaEvent_t>(resource_type::CUDA_STREAM_SYNC_EVENT);
+  return *res.get_resource<hipEvent_t>(resource_type::CUDA_STREAM_SYNC_EVENT);
 };
 
 }  // namespace raft::resource::detail

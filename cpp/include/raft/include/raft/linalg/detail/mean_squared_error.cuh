@@ -24,7 +24,7 @@ namespace detail {
 
 template <typename math_t, int TPB = 256>
 void meanSquaredError(
-  math_t* out, const math_t* A, const math_t* B, size_t len, math_t weight, cudaStream_t stream)
+  math_t* out, const math_t* A, const math_t* B, size_t len, math_t weight, hipStream_t stream)
 {
   auto sq_diff = [len, weight] __device__(const math_t a, const math_t b) {
     math_t diff = a - b;

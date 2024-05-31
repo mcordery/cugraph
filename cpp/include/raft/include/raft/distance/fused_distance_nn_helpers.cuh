@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/detail/fused_distance_nn/helper_structs.cuh>
 
 namespace raft::distance {

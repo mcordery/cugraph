@@ -18,7 +18,7 @@
 
 #include <raft/core/error.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <memory>
 #include <vector>
@@ -134,7 +134,7 @@ class comms_iface {
 
   virtual void barrier() const = 0;
 
-  virtual status_t sync_stream(cudaStream_t stream) const = 0;
+  virtual status_t sync_stream(hipStream_t stream) const = 0;
 
   virtual void isend(const void* buf, size_t size, int dest, int tag, request_t* request) const = 0;
 
@@ -147,17 +147,17 @@ class comms_iface {
                          size_t count,
                          datatype_t datatype,
                          op_t op,
-                         cudaStream_t stream) const = 0;
+                         hipStream_t stream) const = 0;
 
   virtual void bcast(
-    void* buff, size_t count, datatype_t datatype, int root, cudaStream_t stream) const = 0;
+    void* buff, size_t count, datatype_t datatype, int root, hipStream_t stream) const = 0;
 
   virtual void bcast(const void* sendbuff,
                      void* recvbuff,
                      size_t count,
                      datatype_t datatype,
                      int root,
-                     cudaStream_t stream) const = 0;
+                     hipStream_t stream) const = 0;
 
   virtual void reduce(const void* sendbuff,
                       void* recvbuff,
@@ -165,27 +165,27 @@ class comms_iface {
                       datatype_t datatype,
                       op_t op,
                       int root,
-                      cudaStream_t stream) const = 0;
+                      hipStream_t stream) const = 0;
 
   virtual void allgather(const void* sendbuff,
                          void* recvbuff,
                          size_t sendcount,
                          datatype_t datatype,
-                         cudaStream_t stream) const = 0;
+                         hipStream_t stream) const = 0;
 
   virtual void allgatherv(const void* sendbuf,
                           void* recvbuf,
                           const size_t* recvcounts,
                           const size_t* displs,
                           datatype_t datatype,
-                          cudaStream_t stream) const = 0;
+                          hipStream_t stream) const = 0;
 
   virtual void gather(const void* sendbuff,
                       void* recvbuff,
                       size_t sendcount,
                       datatype_t datatype,
                       int root,
-                      cudaStream_t stream) const = 0;
+                      hipStream_t stream) const = 0;
 
   virtual void gatherv(const void* sendbuf,
                        void* recvbuf,
@@ -194,20 +194,20 @@ class comms_iface {
                        const size_t* displs,
                        datatype_t datatype,
                        int root,
-                       cudaStream_t stream) const = 0;
+                       hipStream_t stream) const = 0;
 
   virtual void reducescatter(const void* sendbuff,
                              void* recvbuff,
                              size_t recvcount,
                              datatype_t datatype,
                              op_t op,
-                             cudaStream_t stream) const = 0;
+                             hipStream_t stream) const = 0;
 
   // if a thread is sending & receiving at the same time, use device_sendrecv to avoid deadlock
-  virtual void device_send(const void* buf, size_t size, int dest, cudaStream_t stream) const = 0;
+  virtual void device_send(const void* buf, size_t size, int dest, hipStream_t stream) const = 0;
 
   // if a thread is sending & receiving at the same time, use device_sendrecv to avoid deadlock
-  virtual void device_recv(void* buf, size_t size, int source, cudaStream_t stream) const = 0;
+  virtual void device_recv(void* buf, size_t size, int source, hipStream_t stream) const = 0;
 
   virtual void device_sendrecv(const void* sendbuf,
                                size_t sendsize,
@@ -215,7 +215,7 @@ class comms_iface {
                                void* recvbuf,
                                size_t recvsize,
                                int source,
-                               cudaStream_t stream) const = 0;
+                               hipStream_t stream) const = 0;
 
   virtual void device_multicast_sendrecv(const void* sendbuf,
                                          std::vector<size_t> const& sendsizes,
@@ -225,7 +225,7 @@ class comms_iface {
                                          std::vector<size_t> const& recvsizes,
                                          std::vector<size_t> const& recvoffsets,
                                          std::vector<int> const& sources,
-                                         cudaStream_t stream) const = 0;
+                                         hipStream_t stream) const = 0;
 
   virtual void group_start() const = 0;
 
@@ -284,12 +284,12 @@ class comms_t {
   /**
    * Some collective communications implementations (eg. NCCL) might use asynchronous
    * collectives that are explicitly synchronized. It's important to always synchronize
-   * using this method to allow failures to propagate, rather than `cudaStreamSynchronize()`,
+   * using this method to allow failures to propagate, rather than `hipStreamSynchronize()`,
    * to prevent the potential for deadlocks.
    *
    * @param stream the cuda stream to sync collective operations on
    */
-  status_t sync_stream(cudaStream_t stream) const { return impl_->sync_stream(stream); }
+  status_t sync_stream(hipStream_t stream) const { return impl_->sync_stream(stream); }
 
   /**
    * Performs an asynchronous point-to-point send
@@ -344,7 +344,7 @@ class comms_t {
    */
   template <typename value_t>
   void allreduce(
-    const value_t* sendbuff, value_t* recvbuff, size_t count, op_t op, cudaStream_t stream) const
+    const value_t* sendbuff, value_t* recvbuff, size_t count, op_t op, hipStream_t stream) const
   {
     impl_->allreduce(static_cast<const void*>(sendbuff),
                      static_cast<void*>(recvbuff),
@@ -363,7 +363,7 @@ class comms_t {
    * @param stream CUDA stream to synchronize operation
    */
   template <typename value_t>
-  void bcast(value_t* buff, size_t count, int root, cudaStream_t stream) const
+  void bcast(value_t* buff, size_t count, int root, hipStream_t stream) const
   {
     impl_->bcast(static_cast<void*>(buff), count, get_type<value_t>(), root, stream);
   }
@@ -379,7 +379,7 @@ class comms_t {
    */
   template <typename value_t>
   void bcast(
-    const value_t* sendbuff, value_t* recvbuff, size_t count, int root, cudaStream_t stream) const
+    const value_t* sendbuff, value_t* recvbuff, size_t count, int root, hipStream_t stream) const
   {
     impl_->bcast(static_cast<const void*>(sendbuff),
                  static_cast<void*>(recvbuff),
@@ -405,7 +405,7 @@ class comms_t {
               size_t count,
               op_t op,
               int root,
-              cudaStream_t stream) const
+              hipStream_t stream) const
   {
     impl_->reduce(static_cast<const void*>(sendbuff),
                   static_cast<void*>(recvbuff),
@@ -428,7 +428,7 @@ class comms_t {
   void allgather(const value_t* sendbuff,
                  value_t* recvbuff,
                  size_t sendcount,
-                 cudaStream_t stream) const
+                 hipStream_t stream) const
   {
     impl_->allgather(static_cast<const void*>(sendbuff),
                      static_cast<void*>(recvbuff),
@@ -453,7 +453,7 @@ class comms_t {
                   value_t* recvbuf,
                   const size_t* recvcounts,
                   const size_t* displs,
-                  cudaStream_t stream) const
+                  hipStream_t stream) const
   {
     impl_->allgatherv(static_cast<const void*>(sendbuf),
                       static_cast<void*>(recvbuf),
@@ -477,7 +477,7 @@ class comms_t {
               value_t* recvbuff,
               size_t sendcount,
               int root,
-              cudaStream_t stream) const
+              hipStream_t stream) const
   {
     impl_->gather(static_cast<const void*>(sendbuff),
                   static_cast<void*>(recvbuff),
@@ -507,7 +507,7 @@ class comms_t {
                const size_t* recvcounts,
                const size_t* displs,
                int root,
-               cudaStream_t stream) const
+               hipStream_t stream) const
   {
     impl_->gatherv(static_cast<const void*>(sendbuf),
                    static_cast<void*>(recvbuf),
@@ -533,7 +533,7 @@ class comms_t {
                      value_t* recvbuff,
                      size_t recvcount,
                      op_t op,
-                     cudaStream_t stream) const
+                     hipStream_t stream) const
   {
     impl_->reducescatter(static_cast<const void*>(sendbuff),
                          static_cast<void*>(recvbuff),
@@ -555,7 +555,7 @@ class comms_t {
    * @param stream CUDA stream to synchronize operation
    */
   template <typename value_t>
-  void device_send(const value_t* buf, size_t size, int dest, cudaStream_t stream) const
+  void device_send(const value_t* buf, size_t size, int dest, hipStream_t stream) const
   {
     impl_->device_send(static_cast<const void*>(buf), size * sizeof(value_t), dest, stream);
   }
@@ -572,7 +572,7 @@ class comms_t {
    * @param stream CUDA stream to synchronize operation
    */
   template <typename value_t>
-  void device_recv(value_t* buf, size_t size, int source, cudaStream_t stream) const
+  void device_recv(value_t* buf, size_t size, int source, hipStream_t stream) const
   {
     impl_->device_recv(static_cast<void*>(buf), size * sizeof(value_t), source, stream);
   }
@@ -596,7 +596,7 @@ class comms_t {
                        value_t* recvbuf,
                        size_t recvsize,
                        int source,
-                       cudaStream_t stream) const
+                       hipStream_t stream) const
   {
     impl_->device_sendrecv(static_cast<const void*>(sendbuf),
                            sendsize * sizeof(value_t),
@@ -630,7 +630,7 @@ class comms_t {
                                  std::vector<size_t> const& recvsizes,
                                  std::vector<size_t> const& recvoffsets,
                                  std::vector<int> const& sources,
-                                 cudaStream_t stream) const
+                                 hipStream_t stream) const
   {
     auto sendbytesizes   = sendsizes;
     auto sendbyteoffsets = sendoffsets;

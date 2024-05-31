@@ -47,30 +47,30 @@ namespace {
 /** Operate a CUDA event if we're in the concurrent mode; no-op otherwise. */
 struct DeviceEvent {
  private:
-  cudaEvent_t e;
+  hipEvent_t e;
 
  public:
   DeviceEvent(bool concurrent)
   {
     if (concurrent)
-      RAFT_CUDA_TRY(cudaEventCreateWithFlags(&e, cudaEventDisableTiming));
+      RAFT_CUDA_TRY(hipEventCreateWithFlags(&e, hipEventDisableTiming));
     else
       e = nullptr;
   }
 
   ~DeviceEvent()
   {
-    if (e != nullptr) RAFT_CUDA_TRY_NO_THROW(cudaEventDestroy(e));
+    if (e != nullptr) RAFT_CUDA_TRY_NO_THROW(hipEventDestroy(e));
   }
 
-  void record(cudaStream_t stream)
+  void record(hipStream_t stream)
   {
-    if (e != nullptr) RAFT_CUDA_TRY(cudaEventRecord(e, stream));
+    if (e != nullptr) RAFT_CUDA_TRY(hipEventRecord(e, stream));
   }
 
-  void wait_by(cudaStream_t stream)
+  void wait_by(hipStream_t stream)
   {
-    if (e != nullptr) RAFT_CUDA_TRY(cudaStreamWaitEvent(stream, e, 0u));
+    if (e != nullptr) RAFT_CUDA_TRY(hipStreamWaitEvent(stream, e, 0u));
   }
 
   DeviceEvent& operator=(const DeviceEvent& other) = delete;
@@ -90,12 +90,12 @@ bool are_implicitly_synchronized(rmm::cuda_stream_view a, rmm::cuda_stream_view 
   // legacy + blocking streams
   unsigned int flags = 0;
   if (a.is_default()) {
-    RAFT_CUDA_TRY(cudaStreamGetFlags(b.value(), &flags));
-    if ((flags & cudaStreamNonBlocking) == 0) return true;
+    RAFT_CUDA_TRY(hipStreamGetFlags(b.value(), &flags));
+    if ((flags & hipStreamNonBlocking) == 0) return true;
   }
   if (b.is_default()) {
-    RAFT_CUDA_TRY(cudaStreamGetFlags(a.value(), &flags));
-    if ((flags & cudaStreamNonBlocking) == 0) return true;
+    RAFT_CUDA_TRY(hipStreamGetFlags(a.value(), &flags));
+    if ((flags & hipStreamNonBlocking) == 0) return true;
   }
   return false;
 }
@@ -127,10 +127,10 @@ void lstsqSvdQR(raft::resources const& handle,
                 const int n_cols,
                 const math_t* b,
                 math_t* w,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   const int minmn              = min(n_rows, n_cols);
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
   int cusolverWorkSetSize      = 0;
   // #TODO: Call from public API when ready
   RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDngesvd_bufferSize<math_t>(
@@ -187,17 +187,17 @@ void lstsqSvdJacobi(raft::resources const& handle,
                     const int n_cols,
                     const math_t* b,
                     math_t* w,
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   const int minmn = min(n_rows, n_cols);
-  gesvdjInfo_t gesvdj_params;
-  RAFT_CUSOLVER_TRY(cusolverDnCreateGesvdjInfo(&gesvdj_params));
+  hipsolverGesvdjInfo_t gesvdj_params;
+  RAFT_CUSOLVER_TRY(hipsolverDnCreateGesvdjInfo(&gesvdj_params));
   int cusolverWorkSetSize      = 0;
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
   // #TODO: Call from public API when ready
   RAFT_CUSOLVER_TRY(
     raft::linalg::detail::cusolverDngesvdj_bufferSize<math_t>(cusolverH,
-                                                              CUSOLVER_EIG_MODE_VECTOR,
+                                                              HIPSOLVER_EIG_MODE_VECTOR,
                                                               1,
                                                               n_rows,
                                                               n_cols,
@@ -226,7 +226,7 @@ void lstsqSvdJacobi(raft::resources const& handle,
   int* devInfo            = reinterpret_cast<int*>(Ub + minmn);
   // #TODO: Call from public API when ready
   RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDngesvdj<math_t>(cusolverH,
-                                                                   CUSOLVER_EIG_MODE_VECTOR,
+                                                                   HIPSOLVER_EIG_MODE_VECTOR,
                                                                    1,
                                                                    n_rows,
                                                                    n_cols,
@@ -258,7 +258,7 @@ void lstsqEig(raft::resources const& handle,
               const int n_cols,
               const math_t* b,
               math_t* w,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   rmm::cuda_stream_view mainStream   = rmm::cuda_stream_view(stream);
   rmm::cuda_stream_view multAbStream = resource::get_next_usable_stream(handle);
@@ -298,8 +298,8 @@ void lstsqEig(raft::resources const& handle,
                      covA,
                      n_cols,
                      n_cols,
-                     CUBLAS_OP_T,
-                     CUBLAS_OP_N,
+                     HIPBLAS_OP_T,
+                     HIPBLAS_OP_N,
                      alpha,
                      beta,
                      mainStream);
@@ -327,8 +327,8 @@ void lstsqEig(raft::resources const& handle,
                      covA,
                      n_cols,
                      n_cols,
-                     CUBLAS_OP_N,
-                     CUBLAS_OP_T,
+                     HIPBLAS_OP_N,
+                     HIPBLAS_OP_T,
                      alpha,
                      beta,
                      mainStream);
@@ -362,10 +362,10 @@ void lstsqQR(raft::resources const& handle,
              const int n_cols,
              math_t* b,
              math_t* w,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
-  cublasHandle_t cublasH       = resource::get_cublas_handle(handle);
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   int m = n_rows;
   int n = n_cols;
@@ -374,8 +374,8 @@ void lstsqQR(raft::resources const& handle,
   rmm::device_uvector<math_t> d_tau(n, stream);
   rmm::device_scalar<int> d_info(stream);
 
-  const cublasSideMode_t side   = CUBLAS_SIDE_LEFT;
-  const cublasOperation_t trans = CUBLAS_OP_T;
+  const hipblasSideMode_t side   = HIPBLAS_SIDE_LEFT;
+  const hipblasOperation_t trans = HIPBLAS_OP_T;
 
   int lwork_geqrf = 0;
   int lwork_ormqr = 0;
@@ -410,8 +410,8 @@ void lstsqQR(raft::resources const& handle,
   RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDngeqrf(
     cusolverH, m, n, A, lda, d_tau.data(), d_work.data(), lwork, d_info.data(), stream));
 
-  RAFT_CUDA_TRY(cudaMemcpyAsync(&info, d_info.data(), sizeof(int), cudaMemcpyDeviceToHost, stream));
-  RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(&info, d_info.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipStreamSynchronize(stream));
   ASSERT(0 == info, "lstsq.h: QR wasn't successful");
 
   // #TODO: Call from public API when ready
@@ -431,8 +431,8 @@ void lstsqQR(raft::resources const& handle,
                                                           d_info.data(),
                                                           stream));
 
-  RAFT_CUDA_TRY(cudaMemcpyAsync(&info, d_info.data(), sizeof(int), cudaMemcpyDeviceToHost, stream));
-  RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(&info, d_info.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipStreamSynchronize(stream));
   ASSERT(0 == info, "lstsq.h: QR wasn't successful");
 
   const math_t one = 1;
@@ -440,9 +440,9 @@ void lstsqQR(raft::resources const& handle,
   // #TODO: Call from public API when ready
   RAFT_CUBLAS_TRY(raft::linalg::detail::cublastrsm(cublasH,
                                                    side,
-                                                   CUBLAS_FILL_MODE_UPPER,
-                                                   CUBLAS_OP_N,
-                                                   CUBLAS_DIAG_NON_UNIT,
+                                                   HIPBLAS_FILL_MODE_UPPER,
+                                                   HIPBLAS_OP_N,
+                                                   HIPBLAS_DIAG_NON_UNIT,
                                                    n,
                                                    1,
                                                    &one,
@@ -452,7 +452,7 @@ void lstsqQR(raft::resources const& handle,
                                                    ldb,
                                                    stream));
 
-  RAFT_CUDA_TRY(cudaMemcpyAsync(w, b, sizeof(math_t) * n, cudaMemcpyDeviceToDevice, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(w, b, sizeof(math_t) * n, hipMemcpyDeviceToDevice, stream));
 }
 };  // namespace detail
 };  // namespace linalg

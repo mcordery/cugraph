@@ -22,7 +22,7 @@
 
 #include <raft/core/error.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <cstdio>
 
@@ -42,22 +42,22 @@ struct cuda_error : public raft::exception {
  * @brief Error checking macro for CUDA runtime API functions.
  *
  * Invokes a CUDA runtime API function call, if the call does not return
- * cudaSuccess, invokes cudaGetLastError() to clear the error and throws an
+ * hipSuccess, invokes hipGetLastError() to clear the error and throws an
  * exception detailing the CUDA error that occurred
  *
  */
 #define RAFT_CUDA_TRY(call)                        \
   do {                                             \
-    cudaError_t const status = call;               \
-    if (status != cudaSuccess) {                   \
-      cudaGetLastError();                          \
+    hipError_t const status = call;               \
+    if (status != hipSuccess) {                   \
+      hipGetLastError();                          \
       std::string msg{};                           \
       SET_ERROR_MSG(msg,                           \
                     "CUDA error encountered at: ", \
                     "call='%s', Reason=%s:%s",     \
                     #call,                         \
-                    cudaGetErrorName(status),      \
-                    cudaGetErrorString(status));   \
+                    hipGetErrorName(status),      \
+                    hipGetErrorString(status));   \
       throw raft::cuda_error(msg);                 \
     }                                              \
   } while (0)
@@ -72,13 +72,13 @@ struct cuda_error : public raft::exception {
  *
  * The intent of this macro is to provide a mechanism for synchronous and
  * deterministic execution for debugging asynchronous CUDA execution. It should
- * be used after any asynchronous CUDA call, e.g., cudaMemcpyAsync, or an
+ * be used after any asynchronous CUDA call, e.g., hipMemcpyAsync, or an
  * asynchronous kernel launch.
  */
 #ifndef NDEBUG
-#define RAFT_CHECK_CUDA(stream) RAFT_CUDA_TRY(cudaStreamSynchronize(stream));
+#define RAFT_CHECK_CUDA(stream) RAFT_CUDA_TRY(hipStreamSynchronize(stream));
 #else
-#define RAFT_CHECK_CUDA(stream) RAFT_CUDA_TRY(cudaPeekAtLastError());
+#define RAFT_CHECK_CUDA(stream) RAFT_CUDA_TRY(hipPeekAtLastError());
 #endif
 
 // /**
@@ -87,12 +87,12 @@ struct cuda_error : public raft::exception {
 //  */
 #define RAFT_CUDA_TRY_NO_THROW(call)                               \
   do {                                                             \
-    cudaError_t const status = call;                               \
-    if (cudaSuccess != status) {                                   \
+    hipError_t const status = call;                               \
+    if (hipSuccess != status) {                                   \
       printf("CUDA call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                \
              __FILE__,                                             \
              __LINE__,                                             \
-             cudaGetErrorString(status));                          \
+             hipGetErrorString(status));                          \
     }                                                              \
   } while (0)

@@ -40,7 +40,7 @@ void fusedL2NNMinReduce(OutT* min,
                         void* workspace,
                         bool sqrt,
                         bool initOutBuffer,
-                        cudaStream_t stream) RAFT_EXPLICIT;
+                        hipStream_t stream) RAFT_EXPLICIT;
 
 }  // namespace distance
 }  // namespace raft
@@ -59,7 +59,7 @@ void fusedL2NNMinReduce(OutT* min,
                                                                              void* workspace,    \
                                                                              bool sqrt,          \
                                                                              bool initOutBuffer, \
-                                                                             cudaStream_t stream)
+                                                                             hipStream_t stream)
 
 instantiate_raft_distance_fusedL2NNMinReduce(double, double, int);
 instantiate_raft_distance_fusedL2NNMinReduce(double, double, int64_t);

@@ -19,7 +19,7 @@
 #include <raft/core/device_span.hpp>
 #include <raft/util/cuda_dev_essentials.cuh>  // DI
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 #include <cstdint>  // uintX_t
 

@@ -18,7 +18,7 @@
 
 #include "base_strategy.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 
 #include <hipco/static_map.cuh>
@@ -62,7 +62,7 @@ class hash_strategy : public coo_spmv_strategy<value_idx, value_t, tpb> {
                        const value_idx n_rows,
                        rmm::device_uvector<value_idx>& mask_indptr,
                        std::tuple<value_idx, value_idx>& n_rows_divided,
-                       cudaStream_t stream)
+                       hipStream_t stream)
   {
     auto policy = resource::get_thrust_policy(this->config.handle);
 

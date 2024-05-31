@@ -19,7 +19,7 @@
 #include <raft/core/resources.hpp>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 namespace raft::resource {
 
@@ -28,7 +28,7 @@ class device_id_resource : public resource {
   device_id_resource()
     : dev_id_([]() -> int {
         int cur_dev = -1;
-        RAFT_CUDA_TRY_NO_THROW(cudaGetDevice(&cur_dev));
+        RAFT_CUDA_TRY_NO_THROW(hipGetDevice(&cur_dev));
         return cur_dev;
       }())
   {

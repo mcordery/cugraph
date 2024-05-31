@@ -34,7 +34,7 @@ namespace raft::linalg {
  * \param [in] stream cuda stream
  */
 template <typename T>
-void range(T* out, int start, int end, cudaStream_t stream)
+void range(T* out, int start, int end, hipStream_t stream)
 {
   return detail::map<true>(
     stream, out, end - start, compose_op{cast_op<T>{}, add_const_op<int>{start}});
@@ -50,7 +50,7 @@ void range(T* out, int start, int end, cudaStream_t stream)
  * \param [in] stream cuda stream
  */
 template <typename T, int TPB = 256>
-void range(T* out, int n, cudaStream_t stream)
+void range(T* out, int n, hipStream_t stream)
 {
   return detail::map<true>(stream, out, n, cast_op<T>{});
 }
@@ -63,9 +63,9 @@ void range(T* out, int n, cudaStream_t stream)
  * \param [in] stream cuda stream
  */
 template <typename T>
-void zero(T* out, int n, cudaStream_t stream)
+void zero(T* out, int n, hipStream_t stream)
 {
-  RAFT_CUDA_TRY(cudaMemsetAsync(static_cast<void*>(out), 0, n * sizeof(T), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(static_cast<void*>(out), 0, n * sizeof(T), stream));
 }
 
 }  // namespace raft::linalg

@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/weighted_mean.cuh>
 
 namespace raft {
@@ -49,7 +49,7 @@ void weightedMean(Type* mu,
                   IdxType N,
                   bool row_major,
                   bool along_rows,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   detail::weightedMean(mu, data, weights, D, N, row_major, along_rows, stream);
 }
@@ -69,7 +69,7 @@ void weightedMean(Type* mu,
  */
 template <typename Type, typename IdxType = int>
 void rowWeightedMean(
-  Type* mu, const Type* data, const Type* weights, IdxType D, IdxType N, cudaStream_t stream)
+  Type* mu, const Type* data, const Type* weights, IdxType D, IdxType N, hipStream_t stream)
 {
   weightedMean(mu, data, weights, D, N, true, true, stream);
 }
@@ -89,7 +89,7 @@ void rowWeightedMean(
  */
 template <typename Type, typename IdxType = int>
 void colWeightedMean(
-  Type* mu, const Type* data, const Type* weights, IdxType D, IdxType N, cudaStream_t stream)
+  Type* mu, const Type* data, const Type* weights, IdxType D, IdxType N, hipStream_t stream)
 {
   weightedMean(mu, data, weights, D, N, true, false, stream);
 }

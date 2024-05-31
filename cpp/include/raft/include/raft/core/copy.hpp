@@ -35,7 +35,7 @@ namespace raft {
  * function that require the custom kernel will be SFINAE-omitted when this
  * header is used instead of `copy.cuh`. This header _does_ support
  * device-to-device copies that can be performed with cuBLAS or a
- * straightforward cudaMemcpy. Any necessary device operations will be stream-ordered via the CUDA
+ * straightforward hipMemcpy. Any necessary device operations will be stream-ordered via the CUDA
  * stream provided by the `raft::resources` argument.
  *
  * Limitations: Currently this function does not support copying directly

@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/linalg_types.hpp>
 #include <raft/matrix/detail/math.cuh>
 #include <raft/util/input_validation.hpp>

@@ -38,11 +38,11 @@ class CosineMetricProcessor : public MetricProcessor<math_t> {
   bool row_major_;
   size_t n_rows_;
   size_t n_cols_;
-  cudaStream_t stream_;
+  hipStream_t stream_;
   rmm::device_uvector<math_t> colsums_;
 
  public:
-  CosineMetricProcessor(size_t n_rows, size_t n_cols, int k, bool row_major, cudaStream_t stream)
+  CosineMetricProcessor(size_t n_rows, size_t n_cols, int k, bool row_major, hipStream_t stream)
     : stream_(stream),
       colsums_(n_rows, stream),
       n_cols_(n_cols),
@@ -90,7 +90,7 @@ class CorrelationMetricProcessor : public CosineMetricProcessor<math_t> {
 
  public:
   CorrelationMetricProcessor(
-    size_t n_rows, size_t n_cols, int k, bool row_major, cudaStream_t stream)
+    size_t n_rows, size_t n_cols, int k, bool row_major, hipStream_t stream)
     : CosineMetricProcessor<math_t>(n_rows, n_cols, k, row_major, stream), means_(n_rows, stream)
   {
   }
@@ -161,7 +161,7 @@ class DefaultMetricProcessor : public MetricProcessor<math_t> {
 
 template <typename math_t>
 inline std::unique_ptr<MetricProcessor<math_t>> create_processor(
-  distance::DistanceType metric, int n, int D, int k, bool rowMajorQuery, cudaStream_t userStream)
+  distance::DistanceType metric, int n, int D, int k, bool rowMajorQuery, hipStream_t userStream)
 {
   MetricProcessor<math_t>* mp = nullptr;
 

@@ -21,7 +21,7 @@
 #include "detail/mean_squared_error.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft {
 namespace linalg {
@@ -39,7 +39,7 @@ namespace linalg {
  */
 template <typename in_t, typename out_t, typename idx_t = size_t>
 void meanSquaredError(
-  out_t* out, const in_t* A, const in_t* B, idx_t len, in_t weight, cudaStream_t stream)
+  out_t* out, const in_t* A, const in_t* B, idx_t len, in_t weight, hipStream_t stream)
 {
   detail::meanSquaredError(out, A, B, len, weight, stream);
 }

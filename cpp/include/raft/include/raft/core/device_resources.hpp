@@ -23,7 +23,7 @@
 #include <raft/core/resource/comms.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/core/resource/cuda_event.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
 #include <raft/core/resource/cusolver_sp_handle.hpp>
@@ -39,12 +39,12 @@
 #include <rmm/exec_policy.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
-#include <cublas_v2.h>
-#include <cusolverDn.h>
-#include <cusolverSp.h>
-#include <cusparse.h>
+#include <hipblas.h>
+#include <hipsolver.h>
+#include <hipsolver.h>
+#include <hipsparse.h>
 
 #include <memory>
 #include <mutex>
@@ -107,9 +107,9 @@ class device_resources : public resources {
 
   int get_device() const { return resource::get_device_id(*this); }
 
-  cublasHandle_t get_cublas_handle() const { return resource::get_cublas_handle(*this); }
+  hipblasHandle_t get_cublas_handle() const { return resource::get_cublas_handle(*this); }
 
-  cusolverDnHandle_t get_cusolver_dn_handle() const
+  hipsolverHandle_t get_cusolver_dn_handle() const
   {
     return resource::get_cusolver_dn_handle(*this);
   }
@@ -119,7 +119,7 @@ class device_resources : public resources {
     return resource::get_cusolver_sp_handle(*this);
   }
 
-  cusparseHandle_t get_cusparse_handle() const { return resource::get_cusparse_handle(*this); }
+  hipsparseHandle_t get_cusparse_handle() const { return resource::get_cusparse_handle(*this); }
 
   rmm::exec_policy_nosync& get_thrust_policy() const { return resource::get_thrust_policy(*this); }
 
@@ -232,7 +232,7 @@ class device_resources : public resources {
 
   bool comms_initialized() const { return resource::comms_initialized(*this); }
 
-  const cudaDeviceProp& get_device_properties() const
+  const hipDeviceProp_t& get_device_properties() const
   {
     return resource::get_device_properties(*this);
   }

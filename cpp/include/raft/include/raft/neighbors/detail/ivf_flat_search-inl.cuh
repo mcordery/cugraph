@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/logger.hpp>  // RAFT_LOG_TRACE
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>                              // raft::resources
 #include <raft/distance/distance_types.hpp>                     // is_min_close, DistanceType
 #include <raft/linalg/gemm.cuh>                                 // raft::linalg::gemm

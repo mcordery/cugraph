@@ -46,7 +46,7 @@ void meanCenter(Type* out,
                 IdxType N,
                 bool rowMajor,
                 bool bcastAlongRows,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     out, data, mu, D, N, rowMajor, bcastAlongRows, raft::sub_op{}, stream);
@@ -74,7 +74,7 @@ void meanAdd(Type* out,
              IdxType N,
              bool rowMajor,
              bool bcastAlongRows,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     out, data, mu, D, N, rowMajor, bcastAlongRows, raft::add_op{}, stream);

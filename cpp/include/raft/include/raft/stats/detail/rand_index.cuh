@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -58,7 +59,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <math.h>
 
@@ -100,7 +101,7 @@ RAFT_KERNEL computeTheNumerator(
   }
 
   // specialize blockReduce for a 2D block of 1024 threads of type uint64_t
-  typedef cub::BlockReduce<uint64_t, BLOCK_DIM_X, cub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
+  typedef hipcub::BlockReduce<uint64_t, BLOCK_DIM_X, hipcub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
     BlockReduce;
 
   // Allocate shared memory for blockReduce
@@ -131,14 +132,14 @@ template <typename T>
 double compute_rand_index(const T* firstClusterArray,
                           const T* secondClusterArray,
                           uint64_t size,
-                          cudaStream_t stream)
+                          hipStream_t stream)
 {
   // rand index for size less than 2 is not defined
   ASSERT(size >= 2, "Rand Index for size less than 2 not defined!");
 
   // allocating and initializing memory for a and b in the GPU
   rmm::device_uvector<uint64_t> arr_buf(2, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(arr_buf.data(), 0, 2 * sizeof(uint64_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(arr_buf.data(), 0, 2 * sizeof(uint64_t), stream));
 
   // kernel configuration
   static const int BLOCK_DIM_Y = 16, BLOCK_DIM_X = 16;
@@ -156,7 +157,7 @@ double compute_rand_index(const T* firstClusterArray,
   raft::interruptible::synchronize(stream);
 
   // error handling
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 
   // denominator
   uint64_t nChooseTwo = size * (size - 1) / 2;

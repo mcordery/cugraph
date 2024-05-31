@@ -30,7 +30,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <curand_kernel.h>
+#include <hiprand/hiprand_kernel.h>
 
 #include <random>
 
@@ -68,7 +68,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(uniform)
-  void uniform(OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  void uniform(OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
   {
     static_assert(std::is_floating_point<OutType>::value,
                   "Type for 'uniform' can only be floating point!");
@@ -80,7 +80,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(uniformInt)
-  void uniformInt(OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  void uniformInt(OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
   {
     static_assert(std::is_integral<OutType>::value, "Type for 'uniformInt' can only be integer!");
     ASSERT(end > start, "'end' must be greater than 'start'");
@@ -103,7 +103,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(normal)
-  void normal(OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  void normal(OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
   {
     static_assert(std::is_floating_point<OutType>::value,
                   "Type for 'normal' can only be floating point!");
@@ -115,7 +115,7 @@ class RngImpl {
 
   template <typename IntType, typename LenType = int>
   METHOD_DEPR(normalInt)
-  void normalInt(IntType* ptr, LenType len, IntType mu, IntType sigma, cudaStream_t stream)
+  void normalInt(IntType* ptr, LenType len, IntType mu, IntType sigma, hipStream_t stream)
   {
     static_assert(std::is_integral<IntType>::value, "Type for 'normalInt' can only be integer!");
     NormalIntDistParams<IntType> params;
@@ -132,7 +132,7 @@ class RngImpl {
                    const OutType* mu_vec,
                    const OutType* sigma_vec,
                    OutType sigma,
-                   cudaStream_t stream)
+                   hipStream_t stream)
   {
     NormalTableDistParams<OutType, LenType> params;
     params.n_rows    = n_rows;
@@ -147,7 +147,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(fill)
-  void fill(OutType* ptr, LenType len, OutType val, cudaStream_t stream)
+  void fill(OutType* ptr, LenType len, OutType val, hipStream_t stream)
   {
     InvariantDistParams<OutType> params;
     params.const_val = val;
@@ -156,7 +156,7 @@ class RngImpl {
 
   template <typename Type, typename OutType = bool, typename LenType = int>
   METHOD_DEPR(bernoulli)
-  void bernoulli(OutType* ptr, LenType len, Type prob, cudaStream_t stream)
+  void bernoulli(OutType* ptr, LenType len, Type prob, hipStream_t stream)
   {
     BernoulliDistParams<Type> params;
     params.prob = prob;
@@ -165,7 +165,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(scaled_bernoulli)
-  void scaled_bernoulli(OutType* ptr, LenType len, OutType prob, OutType scale, cudaStream_t stream)
+  void scaled_bernoulli(OutType* ptr, LenType len, OutType prob, OutType scale, hipStream_t stream)
   {
     static_assert(std::is_floating_point<OutType>::value,
                   "Type for 'scaled_bernoulli' can only be floating point!");
@@ -178,7 +178,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(gumbel)
-  void gumbel(OutType* ptr, LenType len, OutType mu, OutType beta, cudaStream_t stream)
+  void gumbel(OutType* ptr, LenType len, OutType mu, OutType beta, hipStream_t stream)
   {
     GumbelDistParams<OutType> params;
     params.mu   = mu;
@@ -188,7 +188,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(lognormal)
-  void lognormal(OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  void lognormal(OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
   {
     LogNormalDistParams<OutType> params;
     params.mu    = mu;
@@ -198,7 +198,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(logistic)
-  void logistic(OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  void logistic(OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
   {
     LogisticDistParams<OutType> params;
     params.mu    = mu;
@@ -208,7 +208,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(exponential)
-  void exponential(OutType* ptr, LenType len, OutType lambda, cudaStream_t stream)
+  void exponential(OutType* ptr, LenType len, OutType lambda, hipStream_t stream)
   {
     ExponentialDistParams<OutType> params;
     params.lambda = lambda;
@@ -217,7 +217,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(rayleigh)
-  void rayleigh(OutType* ptr, LenType len, OutType sigma, cudaStream_t stream)
+  void rayleigh(OutType* ptr, LenType len, OutType sigma, hipStream_t stream)
   {
     RayleighDistParams<OutType> params;
     params.sigma = sigma;
@@ -226,7 +226,7 @@ class RngImpl {
 
   template <typename OutType, typename LenType = int>
   METHOD_DEPR(laplace)
-  void laplace(OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  void laplace(OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
   {
     LaplaceDistParams<OutType> params;
     params.mu    = mu;
@@ -241,7 +241,7 @@ class RngImpl {
   }
 
   template <typename OutType, typename LenType, int ITEMS_PER_CALL, typename ParamType>
-  void kernel_dispatch(OutType* ptr, LenType len, cudaStream_t stream, ParamType params)
+  void kernel_dispatch(OutType* ptr, LenType len, hipStream_t stream, ParamType params)
   {
     switch (state.type) {
       case GenPhilox:
@@ -269,7 +269,7 @@ class RngImpl {
                                 const WeightsT* wts,
                                 IdxT sampledLen,
                                 IdxT len,
-                                cudaStream_t stream)
+                                hipStream_t stream)
   {
     ASSERT(sampledLen <= len, "sampleWithoutReplacement: 'sampledLen' cant be more than 'len'.");
 
@@ -290,8 +290,8 @@ class RngImpl {
     rmm::device_uvector<char> workspace(0, stream);
     sortPairs(workspace, expWts.data(), sortedWts.data(), inIdxPtr, outIdxPtr, (int)len, stream);
     if (outIdx != nullptr) {
-      RAFT_CUDA_TRY(cudaMemcpyAsync(
-        outIdx, outIdxPtr, sizeof(IdxT) * sampledLen, cudaMemcpyDeviceToDevice, stream));
+      RAFT_CUDA_TRY(hipMemcpyAsync(
+        outIdx, outIdxPtr, sizeof(IdxT) * sampledLen, hipMemcpyDeviceToDevice, stream));
     }
     scatter<DataT, IdxT>(out, in, outIdxPtr, sampledLen, stream);
   }

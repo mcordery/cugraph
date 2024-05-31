@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/linalg/unary_op.cuh>
 #include <raft/matrix/select_k.cuh>
@@ -64,7 +64,7 @@ struct csr_batcher_t {
     batch_rows_ = (batch_stop_ - batch_start_) + 1;
   }
 
-  value_idx get_batch_csr_indptr_nnz(value_idx* batch_indptr, cudaStream_t stream)
+  value_idx get_batch_csr_indptr_nnz(value_idx* batch_indptr, hipStream_t stream)
   {
     raft::sparse::op::csr_row_slice_indptr(batch_start_,
                                            batch_stop_,
@@ -77,7 +77,7 @@ struct csr_batcher_t {
     return batch_csr_stop_offset_ - batch_csr_start_offset_;
   }
 
-  void get_batch_csr_indices_data(value_idx* csr_indices, value_t* csr_data, cudaStream_t stream)
+  void get_batch_csr_indices_data(value_idx* csr_indices, value_t* csr_data, hipStream_t stream)
   {
     raft::sparse::op::csr_row_slice_populate(batch_csr_start_offset_,
                                              batch_csr_stop_offset_,
@@ -234,7 +234,7 @@ class sparse_knn_t {
           (uint64_t)idx_batcher.batch_rows() * (uint64_t)query_batcher.batch_rows();
         rmm::device_uvector<value_t> batch_dists(dense_size, resource::get_cuda_stream(handle));
 
-        RAFT_CUDA_TRY(cudaMemset(batch_dists.data(), 0, batch_dists.size() * sizeof(value_t)));
+        RAFT_CUDA_TRY(hipMemset(batch_dists.data(), 0, batch_dists.size() * sizeof(value_t)));
 
         compute_distances(idx_batcher,
                           query_batcher,

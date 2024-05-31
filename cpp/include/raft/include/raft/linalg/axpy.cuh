@@ -22,7 +22,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft::linalg {
 
@@ -49,7 +49,7 @@ void axpy(raft::resources const& handle,
           const int incx,
           T* y,
           const int incy,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::axpy<T, DevicePointerMode>(handle, n, alpha, x, incx, y, incy, stream);
 }

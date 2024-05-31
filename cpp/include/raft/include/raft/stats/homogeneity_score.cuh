@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/homogeneity_score.cuh>
 
 namespace raft {
@@ -43,7 +43,7 @@ double homogeneity_score(const T* truthClusterArray,
                          int size,
                          T lowerLabelRange,
                          T upperLabelRange,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   return detail::homogeneity_score(
     truthClusterArray, predClusterArray, size, lowerLabelRange, upperLabelRange, stream);

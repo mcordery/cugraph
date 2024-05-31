@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/device_atomics.cuh>
@@ -24,7 +24,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cooperative_groups.h>
+#include <hip/hip_cooperative_groups.h>
 
 namespace raft {
 namespace sparse {
@@ -148,16 +148,16 @@ void adj_to_csr(raft::resources const& handle,
 
   // Zero-fill a temporary vector that is be used by the kernel to keep track of
   // the number of entries added to a row.
-  RAFT_CUDA_TRY(cudaMemsetAsync(tmp, 0, num_rows * sizeof(index_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(tmp, 0, num_rows * sizeof(index_t), stream));
 
   // Split the grid in the row direction (since each row can be processed
   // independently). If the maximum number of active blocks (num_sms *
   // occupancy) exceeds the number of rows, assign multiple blocks to a single
   // row.
   int dev_id, sm_count, blocks_per_sm;
-  cudaGetDevice(&dev_id);
-  cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, dev_id);
-  cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  hipGetDevice(&dev_id);
+  hipDeviceGetAttribute(&sm_count, hipDeviceAttributeMultiprocessorCount, dev_id);
+  hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &blocks_per_sm, adj_to_csr_kernel<index_t>, adj_to_csr_tpb, 0);
 
   index_t max_active_blocks = sm_count * blocks_per_sm;
@@ -168,7 +168,7 @@ void adj_to_csr(raft::resources const& handle,
 
   adj_to_csr_kernel<index_t>
     <<<grid, block, 0, stream>>>(adj, row_ind, num_rows, num_cols, tmp, out_col_ind);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 };  // end NAMESPACE detail

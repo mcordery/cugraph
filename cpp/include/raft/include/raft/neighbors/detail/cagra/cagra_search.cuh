@@ -24,7 +24,7 @@
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
 //#include <raft/core/nvtx.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/neighbors/cagra_types.hpp>
@@ -100,7 +100,7 @@ void search_main_core(
   RAFT_EXPECTS(queries.extent(1) == dataset_desc.dim, "Queries and index dim must match");
   const uint32_t topk = neighbors.extent(1);
 
-  cudaDeviceProp deviceProp = resource::get_device_properties(res);
+  hipDeviceProp_t deviceProp = resource::get_device_properties(res);
   if (params.max_queries == 0) {
     params.max_queries = std::min<size_t>(queries.extent(0), deviceProp.maxGridSize[1]);
   }

@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <cuda.h>
-#include <cuda_fp16.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
 
 namespace raft::neighbors::detail::faiss_select {
 

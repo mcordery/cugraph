@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/map.cuh>
 
@@ -45,7 +45,7 @@ template <typename InType,
           typename IdxType = int,
           typename OutType = InType,
           int TPB          = 256>
-void unaryOp(OutType* out, const InType* in, IdxType len, Lambda op, cudaStream_t stream)
+void unaryOp(OutType* out, const InType* in, IdxType len, Lambda op, hipStream_t stream)
 {
   return detail::map<false>(stream, out, len, op, in);
 }
@@ -68,7 +68,7 @@ void unaryOp(OutType* out, const InType* in, IdxType len, Lambda op, cudaStream_
  * @param[in]  stream cuda stream where to launch work
  */
 template <typename OutType, typename Lambda, typename IdxType = int, int TPB = 256>
-void writeOnlyUnaryOp(OutType* out, IdxType len, Lambda op, cudaStream_t stream)
+void writeOnlyUnaryOp(OutType* out, IdxType len, Lambda op, hipStream_t stream)
 {
   return detail::map<true>(stream, out, len, [op] __device__(IdxType offset) {
     OutType r;

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2023, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include "rmat_rectangular_generator_types.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/random/rng_device.cuh>
 #include <raft/random/rng_state.hpp>
@@ -119,7 +120,7 @@ void rmat_rectangular_gen_caller(IdxT* out,
                                  IdxT r_scale,
                                  IdxT c_scale,
                                  IdxT n_edges,
-                                 cudaStream_t stream,
+                                 hipStream_t stream,
                                  raft::random::RngState& r)
 {
   if (n_edges <= 0) return;
@@ -129,7 +130,7 @@ void rmat_rectangular_gen_caller(IdxT* out,
   auto n_blks                    = raft::ceildiv<IdxT>(n_edges, N_THREADS);
   rmat_gen_kernel<<<n_blks, N_THREADS, smem_size, stream>>>(
     out, out_src, out_dst, theta, r_scale, c_scale, n_edges, max_scale, r);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   r.advance(n_edges, max_scale);
 }
 
@@ -173,7 +174,7 @@ void rmat_rectangular_gen_caller(IdxT* out,
                                  IdxT r_scale,
                                  IdxT c_scale,
                                  IdxT n_edges,
-                                 cudaStream_t stream,
+                                 hipStream_t stream,
                                  raft::random::RngState& r)
 {
   if (n_edges <= 0) return;
@@ -182,7 +183,7 @@ void rmat_rectangular_gen_caller(IdxT* out,
   auto n_blks                    = raft::ceildiv<IdxT>(n_edges, N_THREADS);
   rmat_gen_kernel<<<n_blks, N_THREADS, 0, stream>>>(
     out, out_src, out_dst, a, b, c, r_scale, c_scale, n_edges, max_scale, r);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   r.advance(n_edges, max_scale);
 }
 

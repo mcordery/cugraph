@@ -18,7 +18,7 @@
 
 #include "common.hpp"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/sparse/detail/utils.h>
 #include <raft/sparse/distance/detail/ip_distance.cuh>
@@ -79,7 +79,7 @@ void compute_binary(value_t* C,
                     value_idx n_rows,
                     value_idx n_cols,
                     expansion_f expansion_func,
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   int blocks = raft::ceildiv<size_t>((size_t)n_rows * n_cols, tpb);
   compute_binary_warp_kernel<<<blocks, tpb, 0, stream>>>(
@@ -96,13 +96,13 @@ void compute_bin_distance(value_t* out,
                           value_idx R_nnz,
                           value_idx m,
                           value_idx n,
-                          cudaStream_t stream,
+                          hipStream_t stream,
                           expansion_f expansion_func)
 {
   rmm::device_uvector<value_t> Q_norms(m, stream);
   rmm::device_uvector<value_t> R_norms(n, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(Q_norms.data(), 0, Q_norms.size() * sizeof(value_t)));
-  RAFT_CUDA_TRY(cudaMemsetAsync(R_norms.data(), 0, R_norms.size() * sizeof(value_t)));
+  RAFT_CUDA_TRY(hipMemsetAsync(Q_norms.data(), 0, Q_norms.size() * sizeof(value_t)));
+  RAFT_CUDA_TRY(hipMemsetAsync(R_norms.data(), 0, R_norms.size() * sizeof(value_t)));
 
   compute_binary_row_norm_kernel<<<raft::ceildiv(Q_nnz, tpb), tpb, 0, stream>>>(
     Q_norms.data(), Q_coo_rows, Q_data, Q_nnz);

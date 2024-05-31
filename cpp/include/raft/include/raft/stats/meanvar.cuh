@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/meanvar.cuh>
 
 namespace raft::stats {
@@ -52,7 +52,7 @@ void meanvar(Type* mean,
              IdxType N,
              bool sample,
              bool rowMajor,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   detail::meanvar(mean, var, data, D, N, sample, rowMajor, stream);
 }

@@ -18,7 +18,7 @@
 
 #include <raft/core/error.hpp>
 
-#include <cusparse.h>
+#include <hipsparse.h>
 ///@todo: enable this once logging is enabled
 // #include <cuml/common/logger.hpp>
 
@@ -57,20 +57,20 @@ struct cusparse_error : public raft::exception {
 namespace sparse {
 namespace detail {
 
-inline const char* cusparse_error_to_string(cusparseStatus_t err)
+inline const char* cusparse_error_to_string(hipsparseStatus_t err)
 {
 #if defined(CUDART_VERSION) && CUDART_VERSION >= 10100
-  return cusparseGetErrorString(err);
+  return hipsparseGetErrorString(err);
 #else   // CUDART_VERSION
   switch (err) {
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_SUCCESS);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_NOT_INITIALIZED);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_ALLOC_FAILED);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_INVALID_VALUE);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_ARCH_MISMATCH);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_EXECUTION_FAILED);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_INTERNAL_ERROR);
-    _CUSPARSE_ERR_TO_STR(CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_SUCCESS);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_NOT_INITIALIZED);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_ALLOC_FAILED);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_INVALID_VALUE);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_ARCH_MISMATCH);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_EXECUTION_FAILED);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_INTERNAL_ERROR);
+    _CUSPARSE_ERR_TO_STR(HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED);
     default: return "CUSPARSE_STATUS_UNKNOWN";
   };
 #endif  // CUDART_VERSION
@@ -91,12 +91,12 @@ inline const char* cusparse_error_to_string(cusparseStatus_t err)
  * @brief Error checking macro for cuSparse runtime API functions.
  *
  * Invokes a cuSparse runtime API function call, if the call does not return
- * CUSPARSE_STATUS_SUCCESS, throws an exception detailing the cuSparse error that occurred
+ * HIPSPARSE_STATUS_SUCCESS, throws an exception detailing the cuSparse error that occurred
  */
 #define RAFT_CUSPARSE_TRY(call)                                              \
   do {                                                                       \
-    cusparseStatus_t const status = (call);                                  \
-    if (CUSPARSE_STATUS_SUCCESS != status) {                                 \
+    hipsparseStatus_t const status = (call);                                  \
+    if (HIPSPARSE_STATUS_SUCCESS != status) {                                 \
       std::string msg{};                                                     \
       SET_ERROR_MSG(msg,                                                     \
                     "cuSparse error encountered at: ",                       \
@@ -130,8 +130,8 @@ inline const char* cusparse_error_to_string(cusparseStatus_t err)
 /** check for cusparse runtime API errors but do not assert */
 #define RAFT_CUSPARSE_TRY_NO_THROW(call)                           \
   do {                                                             \
-    cusparseStatus_t err = call;                                   \
-    if (err != CUSPARSE_STATUS_SUCCESS) {                          \
+    hipsparseStatus_t err = call;                                   \
+    if (err != HIPSPARSE_STATUS_SUCCESS) {                          \
       printf("CUSPARSE call='%s' got errorcode=%d err=%s",         \
              #call,                                                \
              err,                                                  \

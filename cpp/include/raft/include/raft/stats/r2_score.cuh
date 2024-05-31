@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/scores.cuh>
 
 namespace raft {
@@ -42,7 +42,7 @@ namespace stats {
  * @return: The R-squared value.
  */
 template <typename math_t>
-math_t r2_score(math_t* y, math_t* y_hat, int n, cudaStream_t stream)
+math_t r2_score(math_t* y, math_t* y_hat, int n, hipStream_t stream)
 {
   return detail::r2_score(y, y_hat, n, stream);
 }

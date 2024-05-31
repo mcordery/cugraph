@@ -25,7 +25,7 @@
 #include <raft/core/logger.hpp>
 #include <raft/core/mdarray.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -41,7 +41,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include <thrust/fill.h>
 #include <thrust/transform.h>
 
@@ -68,7 +68,7 @@ void initRandom(raft::resources const& handle,
                 raft::device_matrix_view<DataT, IndexT> centroids)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("initRandom");
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_clusters     = params.n_clusters;
   detail::shuffleAndGather<DataT, IndexT>(handle, X, centroids, n_clusters, params.rng_state.seed);
 }
@@ -95,7 +95,7 @@ void kmeansPlusPlus(raft::resources const& handle,
                     rmm::device_uvector<char>& workspace)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("kmeansPlusPlus");
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = params.n_clusters;
@@ -122,7 +122,7 @@ void kmeansPlusPlus(raft::resources const& handle,
 
   rmm::device_uvector<DataT> L2NormBuf_OR_DistBuf(0, stream);
   rmm::device_scalar<DataT> clusterCost(stream);
-  rmm::device_scalar<cub::KeyValuePair<int, DataT>> minClusterIndexAndDistance(stream);
+  rmm::device_scalar<hipcub::KeyValuePair<int, DataT>> minClusterIndexAndDistance(stream);
 
   // Device and matrix views
   raft::device_vector_view<IndexT, IndexT> indices_view(indices.data_handle(), n_trials);
@@ -227,7 +227,7 @@ void kmeansPlusPlus(raft::resources const& handle,
     {
       // Determine temporary device storage requirements
       size_t temp_storage_bytes = 0;
-      cub::DeviceReduce::ArgMin(nullptr,
+      hipcub::DeviceReduce::ArgMin(nullptr,
                                 temp_storage_bytes,
                                 costPerCandidate.data_handle(),
                                 minClusterIndexAndDistance.data(),
@@ -238,7 +238,7 @@ void kmeansPlusPlus(raft::resources const& handle,
       workspace.resize(temp_storage_bytes, stream);
 
       // Run argmin-reduction
-      cub::DeviceReduce::ArgMin(workspace.data(),
+      hipcub::DeviceReduce::ArgMin(workspace.data(),
                                 temp_storage_bytes,
                                 costPerCandidate.data_handle(),
                                 minClusterIndexAndDistance.data(),
@@ -340,7 +340,7 @@ void update_centroids(raft::resources const& handle,
                                resource::get_cuda_stream(handle));
 
   // copy centroids[i] to new_centroids[i] when weight_per_cluster[i] is 0
-  cub::ArgIndexInputIterator<DataT*> itr_wt(weight_per_cluster.data_handle());
+  hipcub::ArgIndexInputIterator<DataT*> itr_wt(weight_per_cluster.data_handle());
   raft::matrix::gather_if(
     const_cast<DataT*>(centroids.data_handle()),
     static_cast<int>(centroids.extent(1)),
@@ -370,7 +370,7 @@ void kmeans_fit_main(raft::resources const& handle,
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("kmeans_fit_main");
   logger::get(RAFT_NAME).set_level(params.verbosity);
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = params.n_clusters;
@@ -447,7 +447,7 @@ void kmeans_fit_main(raft::resources const& handle,
     // raft::KeyValuePair and converting them to just return the Key to be used
     // in reduce_rows_by_key prims
     detail::KeyValueIndexOp<IndexT, DataT> conversion_op;
-    cub::TransformInputIterator<IndexT,
+    hipcub::TransformInputIterator<IndexT,
                                 detail::KeyValueIndexOp<IndexT, DataT>,
                                 raft::KeyValuePair<IndexT, DataT>*>
       itr(minClusterAndDistance.data_handle(), conversion_op);
@@ -583,7 +583,7 @@ void initScalableKMeansPlusPlus(raft::resources const& handle,
                                 rmm::device_uvector<char>& workspace)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("initScalableKMeansPlusPlus");
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = params.n_clusters;
@@ -831,7 +831,7 @@ void kmeans_fit(raft::resources const& handle,
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = params.n_clusters;
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   // Check that parameters are valid
   if (sample_weight.has_value())
     RAFT_EXPECTS(sample_weight.value().extent(0) == n_samples,
@@ -997,7 +997,7 @@ void kmeans_predict(raft::resources const& handle,
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("kmeans_predict");
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   // Check that parameters are valid
   if (sample_weight.has_value())
     RAFT_EXPECTS(sample_weight.value().extent(0) == n_samples,
@@ -1202,7 +1202,7 @@ void kmeans_transform(raft::resources const& handle,
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("kmeans_transform");
   logger::get(RAFT_NAME).set_level(params.verbosity);
-  cudaStream_t stream = resource::get_cuda_stream(handle);
+  hipStream_t stream = resource::get_cuda_stream(handle);
   auto n_samples      = X.extent(0);
   auto n_features     = X.extent(1);
   auto n_clusters     = params.n_clusters;

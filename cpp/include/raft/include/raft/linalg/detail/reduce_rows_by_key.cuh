@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2023, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <limits>
 
@@ -46,7 +47,7 @@ RAFT_KERNEL convert_array_kernel(IteratorT1 dst, IteratorT2 src, int n)
 //
 
 template <typename IteratorT1, typename IteratorT2>
-void convert_array(IteratorT1 dst, IteratorT2 src, int n, cudaStream_t st)
+void convert_array(IteratorT1 dst, IteratorT2 src, int n, hipStream_t st)
 {
   dim3 grid, block;
   block.x = 256;
@@ -105,7 +106,7 @@ __launch_bounds__(SUM_ROWS_SMALL_K_DIMX, 4)
                                                  SumsT* d_sums)
 {
   typedef typename std::iterator_traits<DataIteratorT>::value_type DataType;
-  typedef cub::BlockReduce<quad<SumsT>, SUM_ROWS_SMALL_K_DIMX> BlockReduce;
+  typedef hipcub::BlockReduce<quad<SumsT>, SUM_ROWS_SMALL_K_DIMX> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
 
   for (IdxT idim = static_cast<IdxT>(blockIdx.y); idim < ncols; idim += gridDim.y) {
@@ -146,7 +147,7 @@ __launch_bounds__(SUM_ROWS_SMALL_K_DIMX, 4)
 
     if (threadIdx.x < 32) {
       // We only need 4
-      thread_sums = cub::ShuffleIndex<32>(thread_sums, 0, 0xffffffff);
+      thread_sums = hipcub::ShuffleIndex<32>(thread_sums, 0, 0xffffffff);
       if (static_cast<IdxT>(threadIdx.x) < nkeys) {
         if (threadIdx.x == 0) raft::myAtomicAdd(&d_sums[threadIdx.x * ncols + idim], thread_sums.x);
         if (threadIdx.x == 1) raft::myAtomicAdd(&d_sums[threadIdx.x * ncols + idim], thread_sums.y);
@@ -166,7 +167,7 @@ void sum_rows_by_key_small_nkeys(const DataIteratorT d_A,
                                  IdxT ncols,
                                  IdxT nkeys,
                                  SumsT* d_sums,
-                                 cudaStream_t st)
+                                 hipStream_t st)
 {
   dim3 grid, block;
   block.x = SUM_ROWS_SMALL_K_DIMX;
@@ -250,7 +251,7 @@ void sum_rows_by_key_large_nkeys_colmajor(const DataIteratorT d_A,
                                           int key_offset,
                                           IdxT nkeys,
                                           SumsT* d_sums,
-                                          cudaStream_t st)
+                                          hipStream_t st)
 {
   dim3 grid, block;
   block.x = SUM_ROWS_SMALL_K_DIMX;
@@ -299,7 +300,7 @@ void sum_rows_by_key_large_nkeys_rowmajor(const DataIteratorT d_A,
                                           IdxT nrows,
                                           IdxT ncols,
                                           SumsT* d_sums,
-                                          cudaStream_t st)
+                                          hipStream_t st)
 {
   uint32_t block_dim = 128;
   auto grid_dim      = static_cast<uint32_t>(ceildiv<IdxT>(nrows * ncols, (IdxT)block_dim));
@@ -343,13 +344,13 @@ void reduce_rows_by_key(const DataIteratorT d_A,
                         IdxT ncols,
                         IdxT nkeys,
                         SumsT* d_sums,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums)
 {
   typedef typename std::iterator_traits<KeysIteratorT>::value_type KeyType;
 
   // Following kernel needs memset
-  if (reset_sums) { cudaMemsetAsync(d_sums, 0, ncols * nkeys * sizeof(SumsT), stream); }
+  if (reset_sums) { hipMemsetAsync(d_sums, 0, ncols * nkeys * sizeof(SumsT), stream); }
 
   if (d_keys_char != nullptr && nkeys <= SUM_ROWS_BY_KEY_SMALL_K_MAX_K) {
     // sum_rows_by_key_small_k is BW bounded. d_keys is loaded ncols time - avoiding wasting BW
@@ -390,7 +391,7 @@ void reduce_rows_by_key(const DataIteratorT d_A,
                         IdxT ncols,
                         IdxT nkeys,
                         SumsT* d_sums,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums)
 {
   typedef typename std::iterator_traits<DataIteratorT>::value_type DataType;

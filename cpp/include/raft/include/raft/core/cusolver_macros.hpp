@@ -19,8 +19,8 @@
 
 #pragma once
 
-#include <cusolverDn.h>
-#include <cusolverSp.h>
+#include <hipsolver.h>
+#include <hipsolver.h>
 ///@todo: enable this once logging is enabled
 // #include <cuml/common/logger.hpp>
 #include <raft/util/cudart_utils.hpp>
@@ -52,19 +52,19 @@ struct cusolver_error : public raft::exception {
 namespace linalg {
 namespace detail {
 
-inline const char* cusolver_error_to_string(cusolverStatus_t err)
+inline const char* cusolver_error_to_string(hipsolverStatus_t err)
 {
   switch (err) {
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_SUCCESS);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_NOT_INITIALIZED);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_ALLOC_FAILED);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_INVALID_VALUE);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_ARCH_MISMATCH);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_EXECUTION_FAILED);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_INTERNAL_ERROR);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_SUCCESS);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_NOT_INITIALIZED);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_ALLOC_FAILED);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_INVALID_VALUE);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_ARCH_MISMATCH);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_EXECUTION_FAILED);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_INTERNAL_ERROR);
     _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_MATRIX_TYPE_NOT_SUPPORTED);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_ZERO_PIVOT);
-    _CUSOLVER_ERR_TO_STR(CUSOLVER_STATUS_NOT_SUPPORTED);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_ZERO_PIVOT);
+    _CUSOLVER_ERR_TO_STR(HIPSOLVER_STATUS_NOT_SUPPORTED);
     default: return "CUSOLVER_STATUS_UNKNOWN";
   };
 }
@@ -88,8 +88,8 @@ inline const char* cusolver_error_to_string(cusolverStatus_t err)
  */
 #define RAFT_CUSOLVER_TRY(call)                                              \
   do {                                                                       \
-    cusolverStatus_t const status = (call);                                  \
-    if (CUSOLVER_STATUS_SUCCESS != status) {                                 \
+    hipsolverStatus_t const status = (call);                                  \
+    if (HIPSOLVER_STATUS_SUCCESS != status) {                                 \
       std::string msg{};                                                     \
       SET_ERROR_MSG(msg,                                                     \
                     "cuSOLVER error encountered at: ",                       \
@@ -112,8 +112,8 @@ inline const char* cusolver_error_to_string(cusolverStatus_t err)
 //  */
 #define RAFT_CUSOLVER_TRY_NO_THROW(call)                               \
   do {                                                                 \
-    cusolverStatus_t const status = call;                              \
-    if (CUSOLVER_STATUS_SUCCESS != status) {                           \
+    hipsolverStatus_t const status = call;                              \
+    if (HIPSOLVER_STATUS_SUCCESS != status) {                           \
       printf("CUSOLVER call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                    \
              __FILE__,                                                 \

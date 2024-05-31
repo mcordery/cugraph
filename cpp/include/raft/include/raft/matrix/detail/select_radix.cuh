@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/device_properties.hpp>
 #include <raft/linalg/map.cuh>
@@ -83,19 +84,19 @@ _RAFT_DEVICE constexpr unsigned calc_mask(int pass)
  * as of integers.
  */
 template <typename T>
-_RAFT_DEVICE typename cub::Traits<T>::UnsignedBits twiddle_in(T key, bool select_min)
+_RAFT_DEVICE typename hipcub::Traits<T>::UnsignedBits twiddle_in(T key, bool select_min)
 {
-  auto bits = reinterpret_cast<typename cub::Traits<T>::UnsignedBits&>(key);
-  bits      = cub::Traits<T>::TwiddleIn(bits);
+  auto bits = reinterpret_cast<typename hipcub::Traits<T>::UnsignedBits&>(key);
+  bits      = hipcub::Traits<T>::TwiddleIn(bits);
   if (!select_min) { bits = ~bits; }
   return bits;
 }
 
 template <typename T>
-_RAFT_DEVICE T twiddle_out(typename cub::Traits<T>::UnsignedBits bits, bool select_min)
+_RAFT_DEVICE T twiddle_out(typename hipcub::Traits<T>::UnsignedBits bits, bool select_min)
 {
   if (!select_min) { bits = ~bits; }
-  bits = cub::Traits<T>::TwiddleOut(bits);
+  bits = hipcub::Traits<T>::TwiddleOut(bits);
   return reinterpret_cast<T&>(bits);
 }
 
@@ -200,7 +201,7 @@ struct alignas(128) Counter {
   // already known bits are stored in `kth_value_bits`. It's used to discriminate a element is a
   // result (written to `out`), a candidate for next pass (written to `out_buf`), or not useful
   // (discarded). The bits that are not yet processed do not matter for this purpose.
-  typename cub::Traits<T>::UnsignedBits kth_value_bits;
+  typename hipcub::Traits<T>::UnsignedBits kth_value_bits;
 
   // Record how many elements have passed filtering. It's used to determine the position in the
   // `out_buf` where an element should be written.
@@ -342,10 +343,10 @@ _RAFT_DEVICE void scan(volatile IdxT* histogram)
   if constexpr (num_buckets >= BlockSize) {
     static_assert(num_buckets % BlockSize == 0);
     constexpr int items_per_thread = num_buckets / BlockSize;
-    typedef cub::BlockLoad<IdxT, BlockSize, items_per_thread, cub::BLOCK_LOAD_TRANSPOSE> BlockLoad;
-    typedef cub::BlockStore<IdxT, BlockSize, items_per_thread, cub::BLOCK_STORE_TRANSPOSE>
+    typedef hipcub::BlockLoad<IdxT, BlockSize, items_per_thread, hipcub::BLOCK_LOAD_TRANSPOSE> BlockLoad;
+    typedef hipcub::BlockStore<IdxT, BlockSize, items_per_thread, hipcub::BLOCK_STORE_TRANSPOSE>
       BlockStore;
-    typedef cub::BlockScan<IdxT, BlockSize> BlockScan;
+    typedef hipcub::BlockScan<IdxT, BlockSize> BlockScan;
 
     __shared__ union {
       typename BlockLoad::TempStorage load;
@@ -362,7 +363,7 @@ _RAFT_DEVICE void scan(volatile IdxT* histogram)
 
     BlockStore(temp_storage.store).Store(histogram, thread_data);
   } else {
-    typedef cub::BlockScan<IdxT, BlockSize> BlockScan;
+    typedef hipcub::BlockScan<IdxT, BlockSize> BlockScan;
     __shared__ typename BlockScan::TempStorage temp_storage;
 
     IdxT thread_data = 0;
@@ -394,7 +395,7 @@ _RAFT_DEVICE void choose_bucket(Counter<T, IdxT>* counter,
     if (prev < k && cur >= k) {
       counter->k   = k - prev;    // how many values still are there to find
       counter->len = cur - prev;  // number of values in next pass
-      typename cub::Traits<T>::UnsignedBits bucket = i;
+      typename hipcub::Traits<T>::UnsignedBits bucket = i;
       int start_bit                                = calc_start_bit<T, BitsPerPass>(pass);
       counter->kth_value_bits |= bucket << start_bit;
     }
@@ -814,7 +815,7 @@ int calc_chunk_size(int batch_size, IdxT len, int sm_cnt, Kernel kernel, bool on
 {
   int active_blocks;
   RAFT_CUDA_TRY(
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks, kernel, BlockSize, 0));
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks, kernel, BlockSize, 0));
 
   // The chunk size is chosen so that there is enough workload to fully utilize GPU.
   // One full wave contains (sm_cnt * active_blocks) blocks, and 10 waves is an empirically safe
@@ -848,7 +849,7 @@ unsigned calc_grid_dim(int batch_size, IdxT len, int sm_cnt)
   static_assert(VECTORIZED_READ_SIZE / sizeof(T) >= 1);
 
   int active_blocks;
-  RAFT_CUDA_TRY(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  RAFT_CUDA_TRY(hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &active_blocks, radix_kernel<T, IdxT, BitsPerPass, BlockSize, false, true>, BlockSize, 0));
   active_blocks *= sm_cnt;
 
@@ -919,8 +920,8 @@ void radix_topk(const T* in,
   for (size_t offset = 0; offset < static_cast<size_t>(batch_size); offset += max_chunk_size) {
     int chunk_size = std::min(max_chunk_size, batch_size - offset);
     RAFT_CUDA_TRY(
-      cudaMemsetAsync(counters.data(), 0, counters.size() * sizeof(Counter<T, IdxT>), stream));
-    RAFT_CUDA_TRY(cudaMemsetAsync(histograms.data(), 0, histograms.size() * sizeof(IdxT), stream));
+      hipMemsetAsync(counters.data(), 0, counters.size() * sizeof(Counter<T, IdxT>), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(histograms.data(), 0, histograms.size() * sizeof(IdxT), stream));
     auto kernel = radix_kernel<T, IdxT, BitsPerPass, BlockSize, false, len_or_indptr>;
 
     T* chunk_out            = out + offset * k;
@@ -948,7 +949,7 @@ void radix_topk(const T* in,
                                                k,
                                                select_min,
                                                pass);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     }
 
     if (!fused_last_filter) {
@@ -964,7 +965,7 @@ void radix_topk(const T* in,
                                            k,
                                            counters.data(),
                                            select_min);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     }
   }
 }
@@ -1290,10 +1291,10 @@ void select_k(raft::resources const& res,
   auto mr     = resource::get_workspace_resource(res);
   if (k == len && len_or_indptr) {
     RAFT_CUDA_TRY(
-      cudaMemcpyAsync(out, in, sizeof(T) * batch_size * len, cudaMemcpyDeviceToDevice, stream));
+      hipMemcpyAsync(out, in, sizeof(T) * batch_size * len, hipMemcpyDeviceToDevice, stream));
     if (in_idx) {
-      RAFT_CUDA_TRY(cudaMemcpyAsync(
-        out_idx, in_idx, sizeof(IdxT) * batch_size * len, cudaMemcpyDeviceToDevice, stream));
+      RAFT_CUDA_TRY(hipMemcpyAsync(
+        out_idx, in_idx, sizeof(IdxT) * batch_size * len, hipMemcpyDeviceToDevice, stream));
     } else {
       auto out_idx_view =
         raft::make_device_vector_view(out_idx, static_cast<size_t>(len) * batch_size);

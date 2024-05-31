@@ -21,7 +21,7 @@
 #include "detail/rsvd.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft {
 namespace linalg {
@@ -63,7 +63,7 @@ void rsvdFixedRank(raft::resources const& handle,
                    bool use_jacobi,
                    math_t tol,
                    int max_sweeps,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   detail::rsvdFixedRank(handle,
                         M,
@@ -120,7 +120,7 @@ void rsvdPerc(raft::resources const& handle,
               bool use_jacobi,
               math_t tol,
               int max_sweeps,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   detail::rsvdPerc(handle,
                    M,

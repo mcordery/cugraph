@@ -17,14 +17,14 @@
 #pragma once
 
 #include <raft/core/detail/mdspan_util.cuh>  // detail::popc
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/sparse/convert/detail/adj_to_csr.cuh>
 
 #include <rmm/device_uvector.hpp>
 
-#include <cooperative_groups.h>
+#include <hip/hip_cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 #include <thrust/copy.h>
 #include <thrust/functional.h>
@@ -105,9 +105,9 @@ void calc_nnz_by_rows(raft::resources const& handle,
 
   int dev_id, sm_count, blocks_per_sm;
 
-  cudaGetDevice(&dev_id);
-  cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, dev_id);
-  cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  hipGetDevice(&dev_id);
+  hipDeviceGetAttribute(&sm_count, hipDeviceAttributeMultiprocessorCount, dev_id);
+  hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &blocks_per_sm, calc_nnz_by_rows_kernel<bitmap_t, index_t, nnz_t>, calc_nnz_by_rows_tpb, 0);
 
   index_t max_active_blocks = sm_count * blocks_per_sm;
@@ -116,7 +116,7 @@ void calc_nnz_by_rows(raft::resources const& handle,
 
   calc_nnz_by_rows_kernel<bitmap_t, index_t, nnz_t>
     <<<grid, block, 0, stream>>>(bitmap, num_rows, num_cols, bitmap_num, nnz_per_row);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /*
@@ -221,9 +221,9 @@ void fill_indices_by_rows(raft::resources const& handle,
 
   int dev_id, sm_count, blocks_per_sm;
 
-  cudaGetDevice(&dev_id);
-  cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, dev_id);
-  cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+  hipGetDevice(&dev_id);
+  hipDeviceGetAttribute(&sm_count, hipDeviceAttributeMultiprocessorCount, dev_id);
+  hipOccupancyMaxActiveBlocksPerMultiprocessor(
     &blocks_per_sm,
     fill_indices_by_rows_kernel<bitmap_t, index_t, nnz_t, check_nnz>,
     fill_indices_by_rows_tpb,
@@ -235,7 +235,7 @@ void fill_indices_by_rows(raft::resources const& handle,
 
   fill_indices_by_rows_kernel<bitmap_t, index_t, nnz_t, check_nnz>
     <<<grid, block, 0, stream>>>(bitmap, indptr, num_rows, num_cols, nnz, bitmap_num, indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename bitmap_t,
@@ -266,15 +266,15 @@ void bitmap_to_csr(raft::resources const& handle,
   index_t* indptr  = csr_view.get_indptr().data();
   index_t* indices = csr_view.get_indices().data();
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(indptr, 0, (csr_view.get_n_rows() + 1) * sizeof(index_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(indptr, 0, (csr_view.get_n_rows() + 1) * sizeof(index_t), stream));
 
   calc_nnz_by_rows(handle, bitmap.data(), csr_view.get_n_rows(), csr_view.get_n_cols(), indptr);
   thrust::exclusive_scan(thrust_policy, indptr, indptr + csr_view.get_n_rows() + 1, indptr);
 
   if constexpr (is_device_csr_sparsity_owning_v<csr_matrix_t>) {
     index_t nnz = 0;
-    RAFT_CUDA_TRY(cudaMemcpyAsync(
-      &nnz, indptr + csr_view.get_n_rows(), sizeof(index_t), cudaMemcpyDeviceToHost, stream));
+    RAFT_CUDA_TRY(hipMemcpyAsync(
+      &nnz, indptr + csr_view.get_n_rows(), sizeof(index_t), hipMemcpyDeviceToHost, stream));
     resource::sync_stream(handle);
     csr.initialize_sparsity(nnz);
   }

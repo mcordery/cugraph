@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/stddev.cuh>
 
@@ -52,7 +52,7 @@ void stddev(Type* std,
             IdxType N,
             bool sample,
             bool rowMajor,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::stddev(std, data, mu, D, N, sample, rowMajor, stream);
 }
@@ -83,7 +83,7 @@ void vars(Type* var,
           IdxType N,
           bool sample,
           bool rowMajor,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   detail::vars(var, data, mu, D, N, sample, rowMajor, stream);
 }

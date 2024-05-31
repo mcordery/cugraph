@@ -21,11 +21,11 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -59,13 +59,13 @@ RAFT_KERNEL csr_row_op_kernel(const T* row_ind, T n_rows, T nnz, Lambda op)
  * @param stream cuda stream to use
  */
 template <typename Index_, int TPB_X = 256, typename Lambda = auto(Index_, Index_, Index_)->void>
-void csr_row_op(const Index_* row_ind, Index_ n_rows, Index_ nnz, Lambda op, cudaStream_t stream)
+void csr_row_op(const Index_* row_ind, Index_ n_rows, Index_ nnz, Lambda op, hipStream_t stream)
 {
   dim3 grid(raft::ceildiv(n_rows, Index_(TPB_X)), 1, 1);
   dim3 blk(TPB_X, 1, 1);
   csr_row_op_kernel<Index_, TPB_X><<<grid, blk, 0, stream>>>(row_ind, n_rows, nnz, op);
 
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 };  // namespace detail

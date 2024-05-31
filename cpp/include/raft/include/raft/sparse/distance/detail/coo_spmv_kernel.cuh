@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <cub/block/block_load.cuh>
 #include <cub/block/block_radix_sort.cuh>
 #include <cub/block/block_store.cuh>
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace sparse {
@@ -105,7 +106,7 @@ RAFT_KERNEL balanced_coo_generalized_spmv_kernel(strategy_t strategy,
                                                  accum_f accum_func,
                                                  write_f write_func)
 {
-  typedef cub::WarpReduce<value_t> warp_reduce;
+  typedef hipcub::WarpReduce<value_t> warp_reduce;
 
   value_idx cur_row_a        = indptrA.get_row_idx(n_blocks_per_row);
   value_idx cur_chunk_offset = blockIdx.x % n_blocks_per_row;

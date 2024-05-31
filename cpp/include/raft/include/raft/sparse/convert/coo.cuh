@@ -34,7 +34,7 @@ namespace convert {
  */
 template <typename value_idx = int>
 void csr_to_coo(
-  const value_idx* row_ind, value_idx m, value_idx* coo_rows, value_idx nnz, cudaStream_t stream)
+  const value_idx* row_ind, value_idx m, value_idx* coo_rows, value_idx nnz, hipStream_t stream)
 {
   detail::csr_to_coo<value_idx, 32>(row_ind, m, coo_rows, nnz, stream);
 }

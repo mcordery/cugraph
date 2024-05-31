@@ -42,11 +42,11 @@ RAFT_KERNEL scatterKernel(DataT* out, const DataT* in, const IdxT* idx, IdxT len
 
 template <typename DataT, int VecLen, typename Lambda, typename IdxT, int TPB>
 void scatterImpl(
-  DataT* out, const DataT* in, const IdxT* idx, IdxT len, Lambda op, cudaStream_t stream)
+  DataT* out, const DataT* in, const IdxT* idx, IdxT len, Lambda op, hipStream_t stream)
 {
   const IdxT nblks = raft::ceildiv(VecLen ? len / VecLen : len, (IdxT)TPB);
   scatterKernel<DataT, VecLen, Lambda, IdxT><<<nblks, TPB, 0, stream>>>(out, in, idx, len, op);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 }  // namespace raft::detail

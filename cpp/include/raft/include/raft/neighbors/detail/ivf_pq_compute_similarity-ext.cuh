@@ -25,7 +25,7 @@
 
 #include <rmm/cuda_stream_view.hpp>  // rmm::cuda_stream_view
 
-#include <cuda_fp16.h>  // __half
+#include <hip/hip_fp16.h>  // __half
 
 #ifdef RAFT_EXPLICIT_INSTANTIATE_ONLY
 
@@ -120,7 +120,7 @@ void compute_similarity_run(selected<OutT, LutT, IvfSampleFilterT> s,
  *    would improve locality anymore.
  */
 template <typename OutT, typename LutT, typename IvfSampleFilterT>
-auto compute_similarity_select(const cudaDeviceProp& dev_props,
+auto compute_similarity_select(const hipDeviceProp_t& dev_props,
                                bool manage_local_topk,
                                int locality_hint,
                                double preferred_shmem_carveout,
@@ -140,7 +140,7 @@ auto compute_similarity_select(const cudaDeviceProp& dev_props,
   OutT, LutT, IvfSampleFilterT)                                                             \
   extern template auto                                                                      \
   raft::neighbors::ivf_pq::detail::compute_similarity_select<OutT, LutT, IvfSampleFilterT>( \
-    const cudaDeviceProp& dev_props,                                                        \
+    const hipDeviceProp_t& dev_props,                                                        \
     bool manage_local_topk,                                                                 \
     int locality_hint,                                                                      \
     double preferred_shmem_carveout,                                                        \

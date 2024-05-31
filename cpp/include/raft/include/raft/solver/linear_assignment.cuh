@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/solver/detail/lap_functions.cuh>
 #include <raft/solver/linear_assignment_types.hpp>
@@ -193,7 +193,7 @@ class LinearAssignmentProblem {
   // Helper function for initializing global variables and arrays on a single host.
   void initializeDevice()
   {
-    cudaStream_t stream = resource::get_cuda_stream(handle_);
+    hipStream_t stream = resource::get_cuda_stream(handle_);
     row_covers_v.resize(batchsize_ * size_, stream);
     col_covers_v.resize(batchsize_ * size_, stream);
     row_duals_v.resize(batchsize_ * size_, stream);

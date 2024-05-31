@@ -18,7 +18,7 @@
 #include <raft/neighbors/sample_filter_types.hpp>
 #include <raft/util/raft_explicit.hpp>  // RAFT_EXPLICIT
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 namespace raft::neighbors::cagra::detail {
 namespace single_cta_search {
@@ -55,7 +55,7 @@ void select_and_run(  // raft::resources const& res,
   size_t max_iterations,
   SAMPLE_FILTER_T sample_filter,
   raft::distance::DistanceType metric,
-  cudaStream_t stream) RAFT_EXPLICIT;
+  hipStream_t stream) RAFT_EXPLICIT;
 
 #endif  // RAFT_EXPLICIT_INSTANTIATE_ONLY
 
@@ -92,7 +92,7 @@ void select_and_run(  // raft::resources const& res,
     size_t max_iterations,                                                                      \
     SAMPLE_FILTER_T sample_filter,                                                              \
     raft::distance::DistanceType metric,                                                        \
-    cudaStream_t stream);
+    hipStream_t stream);
 
 instantiate_single_cta_select_and_run(
   32, 1024, float, uint32_t, float, raft::neighbors::filtering::none_cagra_sample_filter);
@@ -178,7 +178,7 @@ instantiate_single_cta_select_and_run(
     size_t max_iterations,                                                                      \
     SAMPLE_FILTER_T sample_filter,                                                              \
     raft::distance::DistanceType metric,                                                        \
-    cudaStream_t stream);
+    hipStream_t stream);
 
 instantiate_q_single_cta_select_and_run(
   8, 128, half, 8, 2, half, uint32_t, float, raft::neighbors::filtering::none_cagra_sample_filter);

@@ -59,7 +59,7 @@ class COO {
   /**
    * @param stream: CUDA stream to use
    */
-  COO(cudaStream_t stream)
+  COO(hipStream_t stream)
     : rows_arr(0, stream), cols_arr(0, stream), vals_arr(0, stream), nnz(0), n_rows(0), n_cols(0)
   {
   }
@@ -89,7 +89,7 @@ class COO {
    * @param n_cols: number of cols in the dense matrix
    * @param init: initialize arrays with zeros
    */
-  COO(cudaStream_t stream,
+  COO(hipStream_t stream,
       Index_Type nnz,
       Index_Type n_rows = 0,
       Index_Type n_cols = 0,
@@ -104,13 +104,13 @@ class COO {
     if (init) init_arrays(stream);
   }
 
-  void init_arrays(cudaStream_t stream)
+  void init_arrays(hipStream_t stream)
   {
     RAFT_CUDA_TRY(
-      cudaMemsetAsync(this->rows_arr.data(), 0, this->nnz * sizeof(Index_Type), stream));
+      hipMemsetAsync(this->rows_arr.data(), 0, this->nnz * sizeof(Index_Type), stream));
     RAFT_CUDA_TRY(
-      cudaMemsetAsync(this->cols_arr.data(), 0, this->nnz * sizeof(Index_Type), stream));
-    RAFT_CUDA_TRY(cudaMemsetAsync(this->vals_arr.data(), 0, this->nnz * sizeof(T), stream));
+      hipMemsetAsync(this->cols_arr.data(), 0, this->nnz * sizeof(Index_Type), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(this->vals_arr.data(), 0, this->nnz * sizeof(T), stream));
   }
 
   ~COO() {}
@@ -159,8 +159,8 @@ class COO {
   friend std::ostream& operator<<(std::ostream& out, const COO<T, Index_Type>& c)
   {
     if (c.validate_size() && c.validate_mem()) {
-      cudaStream_t stream;
-      RAFT_CUDA_TRY(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+      hipStream_t stream;
+      RAFT_CUDA_TRY(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
 
       out << raft::arr2Str(c.rows_arr.data(), c.nnz, "rows", stream) << std::endl;
       out << raft::arr2Str(c.cols_arr.data(), c.nnz, "cols", stream) << std::endl;
@@ -169,7 +169,7 @@ class COO {
       out << "n_rows=" << c.n_rows << std::endl;
       out << "n_cols=" << c.n_cols << std::endl;
 
-      RAFT_CUDA_TRY(cudaStreamDestroy(stream));
+      RAFT_CUDA_TRY(hipStreamDestroy(stream));
     } else {
       out << "Cannot print COO object: Uninitialized or invalid." << std::endl;
     }
@@ -204,7 +204,7 @@ class COO {
    * @param init: should values be initialized to 0?
    * @param stream: CUDA stream to use
    */
-  void allocate(int nnz, bool init, cudaStream_t stream) { this->allocate(nnz, 0, init, stream); }
+  void allocate(int nnz, bool init, hipStream_t stream) { this->allocate(nnz, 0, init, stream); }
 
   /**
    * @brief Allocate the underlying arrays
@@ -213,7 +213,7 @@ class COO {
    * @param init: should values be initialized to 0?
    * @param stream: CUDA stream to use
    */
-  void allocate(int nnz, int size, bool init, cudaStream_t stream)
+  void allocate(int nnz, int size, bool init, hipStream_t stream)
   {
     this->allocate(nnz, size, size, init, stream);
   }
@@ -226,7 +226,7 @@ class COO {
    * @param init: should values be initialized to 0?
    * @param stream: stream to use for init
    */
-  void allocate(int nnz, int n_rows, int n_cols, bool init, cudaStream_t stream)
+  void allocate(int nnz, int n_rows, int n_cols, bool init, hipStream_t stream)
   {
     this->n_rows = n_rows;
     this->n_cols = n_cols;

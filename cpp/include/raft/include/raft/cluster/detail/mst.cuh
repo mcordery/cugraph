@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/sparse/neighbors/cross_component_nn.cuh>
 #include <raft/sparse/op/sort.cuh>
 #include <raft/sparse/solver/mst.cuh>
@@ -34,7 +34,7 @@ namespace raft::cluster::detail {
 template <typename value_idx, typename value_t>
 void merge_msts(sparse::solver::Graph_COO<value_idx, value_idx, value_t>& coo1,
                 sparse::solver::Graph_COO<value_idx, value_idx, value_t>& coo2,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   /** Add edges to existing mst **/
   int final_nnz = coo2.n_edges + coo1.n_edges;

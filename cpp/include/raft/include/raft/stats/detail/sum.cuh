@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/linalg/eltwise.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace stats {
@@ -81,7 +82,7 @@ RAFT_KERNEL sumKahanKernelRowMajor(Type* mu, const Type* data, IdxType D, IdxTyp
 template <typename Type, typename IdxType, int TPB>
 RAFT_KERNEL sumKahanKernelColMajor(Type* mu, const Type* data, IdxType D, IdxType N)
 {
-  typedef cub::BlockReduce<Type, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<Type, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   Type thread_sum  = Type(0);
   Type thread_c    = Type(0);
@@ -104,7 +105,7 @@ RAFT_KERNEL sumKahanKernelColMajor(Type* mu, const Type* data, IdxType D, IdxTyp
 }
 
 template <typename Type, typename IdxType = int>
-void sum(Type* output, const Type* input, IdxType D, IdxType N, bool rowMajor, cudaStream_t stream)
+void sum(Type* output, const Type* input, IdxType D, IdxType N, bool rowMajor, hipStream_t stream)
 {
   static const int TPB = 256;
   if (rowMajor) {
@@ -118,13 +119,13 @@ void sum(Type* output, const Type* input, IdxType D, IdxType N, bool rowMajor, c
       raft::min((IdxType)MaxBlocksDimX, raft::ceildiv(N, (IdxType)MinRowsPerBlk));
 
     dim3 grid(grid_x, grid_y);
-    RAFT_CUDA_TRY(cudaMemset(output, 0, sizeof(Type) * D));
+    RAFT_CUDA_TRY(hipMemset(output, 0, sizeof(Type) * D));
     sumKahanKernelRowMajor<Type, IdxType, TPB, ColsPerBlk>
       <<<grid, TPB, 0, stream>>>(output, input, D, N);
   } else {
     sumKahanKernelColMajor<Type, IdxType, TPB><<<D, TPB, 0, stream>>>(output, input, D, N);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace detail

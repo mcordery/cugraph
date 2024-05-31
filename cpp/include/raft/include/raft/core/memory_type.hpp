@@ -19,7 +19,7 @@
 #ifndef RAFT_DISABLE_CUDA
 #include <raft/util/cuda_rt_essentials.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <type_traits>
 #else
@@ -88,12 +88,12 @@ auto memory_type_from_pointer(T* ptr)
 {
   auto result = memory_type::host;
 #ifndef RAFT_DISABLE_CUDA
-  auto attrs = cudaPointerAttributes{};
-  RAFT_CUDA_TRY(cudaPointerGetAttributes(&attrs, ptr));
+  auto attrs = hipPointerAttribute_t{};
+  RAFT_CUDA_TRY(hipPointerGetAttributes(&attrs, ptr));
   switch (attrs.type) {
-    case cudaMemoryTypeDevice: result = memory_type::device; break;
-    case cudaMemoryTypeHost: result = memory_type::host; break;
-    case cudaMemoryTypeManaged: result = memory_type::managed; break;
+    case hipMemoryTypeDevice: result = memory_type::device; break;
+    case hipMemoryTypeHost: result = memory_type::host; break;
+    case hipMemoryTypeManaged: result = memory_type::managed; break;
     default: result = memory_type::host;
   }
 #else

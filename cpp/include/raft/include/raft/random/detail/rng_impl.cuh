@@ -29,7 +29,7 @@
 
 #include <rmm/device_scalar.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace random {
@@ -72,7 +72,7 @@ namespace detail {
 template <int ITEMS_PER_CALL, typename GenType, typename... ArgsT>
 void call_rng_kernel(DeviceState<GenType> const& dev_state,
                      RngState& rng_state,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      ArgsT... args)
 {
   auto n_threads = 256;
@@ -83,7 +83,7 @@ void call_rng_kernel(DeviceState<GenType> const& dev_state,
 
 template <typename OutType, typename LenType = int>
 void uniform(
-  RngState& rng_state, OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
 {
   static_assert(std::is_floating_point<OutType>::value,
                 "Type for 'uniform' can only be floating point!");
@@ -95,7 +95,7 @@ void uniform(
 
 template <typename OutType, typename LenType = int>
 void uniformInt(
-  RngState& rng_state, OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
 {
   static_assert(std::is_integral<OutType>::value, "Type for 'uniformInt' can only be integer!");
   ASSERT(end > start, "'end' must be greater than 'start'");
@@ -116,7 +116,7 @@ void uniformInt(
 
 template <typename OutType, typename LenType = int>
 void normal(
-  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
 {
   static_assert(std::is_floating_point<OutType>::value,
                 "Type for 'normal' can only be floating point!");
@@ -128,7 +128,7 @@ void normal(
 
 template <typename IntType, typename LenType = int>
 void normalInt(
-  RngState& rng_state, IntType* ptr, LenType len, IntType mu, IntType sigma, cudaStream_t stream)
+  RngState& rng_state, IntType* ptr, LenType len, IntType mu, IntType sigma, hipStream_t stream)
 {
   static_assert(std::is_integral<IntType>::value, "Type for 'normalInt' can only be integer!");
   NormalIntDistParams<IntType> params;
@@ -145,7 +145,7 @@ void normalTable(RngState& rng_state,
                  const OutType* mu_vec,
                  const OutType* sigma_vec,
                  OutType sigma,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   NormalTableDistParams<OutType, LenType> params;
   params.n_rows    = n_rows;
@@ -158,7 +158,7 @@ void normalTable(RngState& rng_state,
 }
 
 template <typename OutType, typename LenType = int>
-void fill(RngState& rng_state, OutType* ptr, LenType len, OutType val, cudaStream_t stream)
+void fill(RngState& rng_state, OutType* ptr, LenType len, OutType val, hipStream_t stream)
 {
   InvariantDistParams<OutType> params;
   params.const_val = val;
@@ -166,7 +166,7 @@ void fill(RngState& rng_state, OutType* ptr, LenType len, OutType val, cudaStrea
 }
 
 template <typename Type, typename OutType = bool, typename LenType = int>
-void bernoulli(RngState& rng_state, OutType* ptr, LenType len, Type prob, cudaStream_t stream)
+void bernoulli(RngState& rng_state, OutType* ptr, LenType len, Type prob, hipStream_t stream)
 {
   BernoulliDistParams<Type> params;
   params.prob = prob;
@@ -175,7 +175,7 @@ void bernoulli(RngState& rng_state, OutType* ptr, LenType len, Type prob, cudaSt
 
 template <typename OutType, typename LenType = int>
 void scaled_bernoulli(
-  RngState& rng_state, OutType* ptr, LenType len, OutType prob, OutType scale, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType prob, OutType scale, hipStream_t stream)
 {
   static_assert(std::is_floating_point<OutType>::value,
                 "Type for 'scaled_bernoulli' can only be floating point!");
@@ -187,7 +187,7 @@ void scaled_bernoulli(
 
 template <typename OutType, typename LenType = int>
 void gumbel(
-  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType beta, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType beta, hipStream_t stream)
 {
   GumbelDistParams<OutType> params;
   params.mu   = mu;
@@ -197,7 +197,7 @@ void gumbel(
 
 template <typename OutType, typename LenType = int>
 void lognormal(
-  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
 {
   LogNormalDistParams<OutType> params;
   params.mu    = mu;
@@ -207,7 +207,7 @@ void lognormal(
 
 template <typename OutType, typename LenType = int>
 void logistic(
-  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
 {
   LogisticDistParams<OutType> params;
   params.mu    = mu;
@@ -217,7 +217,7 @@ void logistic(
 
 template <typename OutType, typename LenType = int>
 void exponential(
-  RngState& rng_state, OutType* ptr, LenType len, OutType lambda, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType lambda, hipStream_t stream)
 {
   ExponentialDistParams<OutType> params;
   params.lambda = lambda;
@@ -225,7 +225,7 @@ void exponential(
 }
 
 template <typename OutType, typename LenType = int>
-void rayleigh(RngState& rng_state, OutType* ptr, LenType len, OutType sigma, cudaStream_t stream)
+void rayleigh(RngState& rng_state, OutType* ptr, LenType len, OutType sigma, hipStream_t stream)
 {
   RayleighDistParams<OutType> params;
   params.sigma = sigma;
@@ -234,7 +234,7 @@ void rayleigh(RngState& rng_state, OutType* ptr, LenType len, OutType sigma, cud
 
 template <typename OutType, typename LenType = int>
 void laplace(
-  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  RngState& rng_state, OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
 {
   LaplaceDistParams<OutType> params;
   params.mu    = mu;
@@ -245,7 +245,7 @@ void laplace(
 template <typename GenType, typename OutType, typename WeightType, typename IdxType>
 void call_sample_with_replacement_kernel(DeviceState<GenType> const& dev_state,
                                          RngState& rng_state,
-                                         cudaStream_t stream,
+                                         hipStream_t stream,
                                          OutType* out,
                                          const WeightType* weights_csum,
                                          IdxType sampledLen,
@@ -264,15 +264,15 @@ std::enable_if_t<std::is_integral_v<OutType>> discrete(RngState& rng_state,
                                                        const WeightType* weights,
                                                        IndexType sampledLen,
                                                        IndexType len,
-                                                       cudaStream_t stream)
+                                                       hipStream_t stream)
 {
   // Compute the cumulative sums of the weights
   size_t temp_storage_bytes = 0;
   rmm::device_uvector<WeightType> weights_csum(len, stream);
-  cub::DeviceScan::InclusiveSum(
+  hipcub::DeviceScan::InclusiveSum(
     nullptr, temp_storage_bytes, weights, weights_csum.data(), len, stream);
   rmm::device_uvector<uint8_t> temp_storage(temp_storage_bytes, stream);
-  cub::DeviceScan::InclusiveSum(
+  hipcub::DeviceScan::InclusiveSum(
     temp_storage.data(), temp_storage_bytes, weights, weights_csum.data(), len, stream);
 
   // Sample indices with replacement
@@ -295,7 +295,7 @@ void sampleWithoutReplacement(RngState& rng_state,
                               const WeightsT* wts,
                               IdxT sampledLen,
                               IdxT len,
-                              cudaStream_t stream)
+                              hipStream_t stream)
 {
   ASSERT(sampledLen <= len, "sampleWithoutReplacement: 'sampledLen' cant be more than 'len'.");
 
@@ -317,8 +317,8 @@ void sampleWithoutReplacement(RngState& rng_state,
   rmm::device_uvector<char> workspace(0, stream);
   sortPairs(workspace, expWts.data(), sortedWts.data(), inIdxPtr, outIdxPtr, (int)len, stream);
   if (outIdx != nullptr) {
-    RAFT_CUDA_TRY(cudaMemcpyAsync(
-      outIdx, outIdxPtr, sizeof(IdxT) * sampledLen, cudaMemcpyDeviceToDevice, stream));
+    RAFT_CUDA_TRY(hipMemcpyAsync(
+      outIdx, outIdxPtr, sizeof(IdxT) * sampledLen, hipMemcpyDeviceToDevice, stream));
   }
   scatter<DataT, IdxT>(out, in, outIdxPtr, sampledLen, stream);
 }
@@ -385,7 +385,7 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   // Sort indices according to rnd keys
   size_t workspace_size = 0;
   auto stream           = resource::get_cuda_stream(res);
-  cub::DeviceMergeSort::SortPairs(nullptr,
+  hipcub::DeviceMergeSort::SortPairs(nullptr,
                                   workspace_size,
                                   rnd_idx.data_handle(),
                                   linear_idx.data_handle(),
@@ -393,7 +393,7 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
                                   raft::less_op{},
                                   stream);
   auto workspace = raft::make_device_vector<char, IdxT>(res, workspace_size);
-  cub::DeviceMergeSort::SortPairs(workspace.data_handle(),
+  hipcub::DeviceMergeSort::SortPairs(workspace.data_handle(),
                                   workspace_size,
                                   rnd_idx.data_handle(),
                                   linear_idx.data_handle(),
@@ -415,7 +415,7 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   auto values_out = raft::make_device_vector<IdxT, IdxT>(res, rnd_idx.size());
   rmm::device_scalar<IdxT> num_selected(stream);
   size_t worksize2 = 0;
-  cub::DeviceSelect::UniqueByKey(nullptr,
+  hipcub::DeviceSelect::UniqueByKey(nullptr,
                                  worksize2,
                                  rnd_idx.data_handle(),
                                  linear_idx.data_handle(),
@@ -430,7 +430,7 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
     workspace_size = workspace.size();
   }
 
-  cub::DeviceSelect::UniqueByKey(workspace.data_handle(),
+  hipcub::DeviceSelect::UniqueByKey(workspace.data_handle(),
                                  workspace_size,
                                  rnd_idx.data_handle(),
                                  linear_idx.data_handle(),
@@ -451,7 +451,7 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   }
 
   // After duplicates are removed, we need to shuffle back to random order
-  cub::DeviceMergeSort::SortPairs(workspace.data_handle(),
+  hipcub::DeviceMergeSort::SortPairs(workspace.data_handle(),
                                   workspace_size,
                                   values_out.data_handle(),
                                   keys_out.data_handle(),

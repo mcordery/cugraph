@@ -18,7 +18,7 @@
 
 #include <raft/util/cuda_utils.cuh>
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 namespace raft {
 

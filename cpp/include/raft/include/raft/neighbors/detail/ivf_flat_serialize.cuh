@@ -18,7 +18,7 @@
 
 #include <raft/core/detail/mdspan_numpy_serializer.hpp>
 #include <raft/core/mdarray.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/serialize.hpp>
 #include <raft/neighbors/detail/ivf_flat_build.cuh>
 #include <raft/neighbors/ivf_flat_types.hpp>

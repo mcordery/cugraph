@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2023, NVIDIA CORPORATION.
  *
@@ -198,13 +199,13 @@ void minmax(const T* data,
             T* globalmin,
             T* globalmax,
             T* sampledcols,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   using E    = typename encode_traits<T>::E;
   int nblks  = raft::ceildiv(ncols, TPB);
   T init_val = std::numeric_limits<T>::max();
   minmaxInitKernel<T, E><<<nblks, TPB, 0, stream>>>(ncols, globalmin, globalmax, init_val);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
   nblks           = raft::ceildiv(nrows * ncols, TPB);
   nblks           = min(nblks, 65536);
   size_t smemSize = sizeof(T) * 2 * ncols;
@@ -228,9 +229,9 @@ void minmax(const T* data,
                                                        init_val,
                                                        batch_ncols,
                                                        num_batches);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
   decodeKernel<T, E><<<nblks, TPB, 0, stream>>>(globalmin, globalmax, ncols);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 };  // end namespace detail

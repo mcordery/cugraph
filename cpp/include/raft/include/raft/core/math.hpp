@@ -24,7 +24,7 @@
 
 #if defined(_RAFT_HAS_CUDA)
 #include <cuda_bf16.h>
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #endif
 
 namespace raft {

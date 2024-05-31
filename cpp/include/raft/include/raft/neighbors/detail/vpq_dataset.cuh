@@ -21,7 +21,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/map.cuh>
 #include <raft/neighbors/detail/ivf_pq_build.cuh>  // pq_bits-bitfield
@@ -60,13 +60,13 @@ auto subsample(raft::resources const& res,
   size_t trainset_ratio = dataset.extent(0) / n_samples;
   auto result = raft::make_device_matrix<value_type, index_type>(res, n_samples, dataset.extent(1));
 
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(result.data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(result.data_handle(),
                                   sizeof(value_type) * dim,
                                   dataset.data_handle(),
                                   sizeof(value_type) * dim * trainset_ratio,
                                   sizeof(value_type) * dim,
                                   n_samples,
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   raft::resource::get_cuda_stream(res)));
   return result;
 }
@@ -376,7 +376,7 @@ auto process_and_fill_codes(const raft::resources& res,
       vq_centers,
       make_const_mdspan(labels.view()),
       pq_centers);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 
   return codes;

@@ -38,7 +38,7 @@ namespace raft {
  *
  * @code{.cpp}
  * #include <raft/core/resources.hpp>
- * #include <raft/core/resource/cuda_stream.hpp>
+ * #include <raft/core/resource/hip_stream.hpp>
  * #include <raft/core/resource/cublas_handle.hpp>
  *
  * raft::resources res;

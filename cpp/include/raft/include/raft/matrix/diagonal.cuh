@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/matrix/detail/matrix.cuh>
 #include <raft/matrix/init.cuh>
 #include <raft/util/input_validation.hpp>
@@ -103,7 +103,7 @@ void eye(const raft::resources& handle, raft::device_matrix_view<math_t, idx_t, 
   RAFT_EXPECTS(raft::is_row_or_column_major(out), "Output must be contiguous");
 
   auto diag = raft::make_device_vector<math_t, idx_t>(handle, min(out.extent(0), out.extent(1)));
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     out.data_handle(), 0, out.size() * sizeof(math_t), resource::get_cuda_stream(handle)));
   raft::matrix::fill(handle, diag.view(), math_t(1));
   set_diagonal(handle, raft::make_const_mdspan(diag.view()), out);

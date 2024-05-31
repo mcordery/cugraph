@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/batched/silhouette_score.cuh>
 #include <raft/stats/detail/silhouette_score.cuh>
 
@@ -52,7 +52,7 @@ DataT silhouette_score(
   LabelT* labels,
   int nLabels,
   DataT* silhouette_scorePerSample,
-  cudaStream_t stream,
+  hipStream_t stream,
   raft::distance::DistanceType metric = raft::distance::DistanceType::L2Unexpanded)
 {
   return detail::silhouette_score(

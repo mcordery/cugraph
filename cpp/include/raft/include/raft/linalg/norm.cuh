@@ -24,7 +24,7 @@
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/mdspan.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/norm_types.hpp>
 #include <raft/util/input_validation.hpp>
 
@@ -57,7 +57,7 @@ void rowNorm(Type* dots,
              IdxType N,
              NormType type,
              bool rowMajor,
-             cudaStream_t stream,
+             hipStream_t stream,
              Lambda fin_op = raft::identity_op())
 {
   detail::rowNormCaller(dots, data, D, N, type, rowMajor, stream, fin_op);
@@ -84,7 +84,7 @@ void colNorm(Type* dots,
              IdxType N,
              NormType type,
              bool rowMajor,
-             cudaStream_t stream,
+             hipStream_t stream,
              Lambda fin_op = raft::identity_op())
 {
   detail::colNormCaller(dots, data, D, N, type, rowMajor, stream, fin_op);

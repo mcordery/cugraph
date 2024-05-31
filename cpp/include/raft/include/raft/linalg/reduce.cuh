@@ -23,7 +23,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/input_validation.hpp>
 
 namespace raft {
@@ -71,7 +71,7 @@ void reduce(OutType* dots,
             OutType init,
             bool rowMajor,
             bool alongRows,
-            cudaStream_t stream,
+            hipStream_t stream,
             bool inplace           = false,
             MainLambda main_op     = raft::identity_op(),
             ReduceLambda reduce_op = raft::add_op(),

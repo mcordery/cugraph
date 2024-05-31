@@ -21,7 +21,7 @@
 #include <raft/core/mdarray.hpp>
 //#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/add.cuh>
 #include <raft/linalg/map.cuh>
@@ -290,7 +290,7 @@ void extend(raft::resources const& handle,
                                            dim,
                                            index->veclen(),
                                            batch.offset());
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
 
     if (batch.offset() > next_report_offset) {
       float progress = batch.offset() * 100.0f / n_rows;
@@ -369,13 +369,13 @@ inline auto build(raft::resources const& handle,
     auto n_rows_train = n_rows / trainset_ratio;
     rmm::device_uvector<T> trainset(n_rows_train * index.dim(), stream);
     // TODO: a proper sampling
-    RAFT_CUDA_TRY(cudaMemcpy2DAsync(trainset.data(),
+    RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset.data(),
                                     sizeof(T) * index.dim(),
                                     dataset,
                                     sizeof(T) * index.dim() * trainset_ratio,
                                     sizeof(T) * index.dim(),
                                     n_rows_train,
-                                    cudaMemcpyDefault,
+                                    hipMemcpyDefault,
                                     stream));
     auto trainset_const_view =
       raft::make_device_matrix_view<const T, IdxT>(trainset.data(), n_rows_train, index.dim());
@@ -447,7 +447,7 @@ inline void fill_refinement_index(raft::resources const& handle,
   // Update the pointers and the sizes
   ivf::detail::recompute_internal_state(handle, *refinement_index);
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(list_sizes_ptr, 0, n_lists * sizeof(uint32_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(list_sizes_ptr, 0, n_lists * sizeof(uint32_t), stream));
 
   const dim3 block_dim(256);
   const dim3 grid_dim(raft::ceildiv<IdxT>(n_queries * n_candidates, block_dim.x));
@@ -461,7 +461,7 @@ inline void fill_refinement_index(raft::resources const& handle,
                                          n_queries * n_candidates,
                                          refinement_index->dim(),
                                          refinement_index->veclen());
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename T>
@@ -512,7 +512,7 @@ void pack_list_data(
   auto stream = resource::get_cuda_stream(res);
   pack_interleaved_list_kernel<<<blocks, threads, 0, stream>>>(
     codes.data_handle(), list_data.data_handle(), n_rows, dim, veclen, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename T, typename IdxT>
@@ -532,7 +532,7 @@ void unpack_list_data(
   auto stream = resource::get_cuda_stream(res);
   unpack_interleaved_list_kernel<<<blocks, threads, 0, stream>>>(
     list_data.data_handle(), codes.data_handle(), n_rows, dim, veclen, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace raft::neighbors::ivf_flat::detail

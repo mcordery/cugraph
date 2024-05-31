@@ -25,7 +25,7 @@ namespace detail {
 
 template <typename math_t, typename IdxType = int>
 void multiplyScalar(
-  math_t* out, const math_t* in, const math_t scalar, IdxType len, cudaStream_t stream)
+  math_t* out, const math_t* in, const math_t scalar, IdxType len, hipStream_t stream)
 {
   raft::linalg::unaryOp(out, in, len, raft::mul_const_op<math_t>{scalar}, stream);
 }

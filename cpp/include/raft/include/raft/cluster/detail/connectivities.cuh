@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/cluster/single_linkage_types.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance.cuh>

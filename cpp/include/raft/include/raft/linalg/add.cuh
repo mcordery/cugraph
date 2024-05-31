@@ -22,7 +22,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/input_validation.hpp>
 
 namespace raft {
@@ -48,7 +48,7 @@ namespace linalg {
  * @param stream cuda stream where to launch work
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void addScalar(OutT* out, const InT* in, const InT scalar, IdxType len, cudaStream_t stream)
+void addScalar(OutT* out, const InT* in, const InT scalar, IdxType len, hipStream_t stream)
 {
   detail::addScalar(out, in, scalar, len, stream);
 }
@@ -67,7 +67,7 @@ void addScalar(OutT* out, const InT* in, const InT scalar, IdxType len, cudaStre
  * @param stream cuda stream where to launch work
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void add(OutT* out, const InT* in1, const InT* in2, IdxType len, cudaStream_t stream)
+void add(OutT* out, const InT* in1, const InT* in2, IdxType len, hipStream_t stream)
 {
   detail::add(out, in1, in2, len, stream);
 }
@@ -86,7 +86,7 @@ void add(OutT* out, const InT* in1, const InT* in2, IdxType len, cudaStream_t st
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
 void addDevScalar(
-  OutT* outDev, const InT* inDev, const InT* singleScalarDev, IdxType len, cudaStream_t stream)
+  OutT* outDev, const InT* inDev, const InT* singleScalarDev, IdxType len, hipStream_t stream)
 {
   detail::addDevScalar(outDev, inDev, singleScalarDev, len, stream);
 }

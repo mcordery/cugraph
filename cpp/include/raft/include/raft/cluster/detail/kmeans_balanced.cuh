@@ -22,7 +22,7 @@
 #include <raft/core/cudart_utils.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/distance/distance.cuh>
@@ -288,7 +288,7 @@ void calc_centers_and_sizes(const raft::resources& handle,
       dataset, dim, labels, nullptr, n_rows, dim, n_clusters, centers, stream, reset_counters);
   } else {
     // todo(lsugy): use iterator from KV output of fusedL2NN
-    cub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset, mapping_op);
+    hipcub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset, mapping_op);
     raft::linalg::reduce_rows_by_key(
       mapping_itr, dim, labels, nullptr, n_rows, dim, n_clusters, centers, stream, reset_counters);
   }
@@ -894,7 +894,7 @@ auto build_fine_clusters(const raft::resources& handle,
                    "Number of fine clusters must be non-zero for a non-empty mesocluster");
     }
 
-    cub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset_mptr, mapping_op);
+    hipcub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset_mptr, mapping_op);
     raft::matrix::gather(mapping_itr, dim, n_rows, mc_trainset_ids, k, mc_trainset, stream);
     if (params.metric == raft::distance::DistanceType::L2Expanded ||
         params.metric == raft::distance::DistanceType::L2SqrtExpanded) {
@@ -992,7 +992,7 @@ void build_hierarchical(const raft::resources& handle,
     dataset_norm = (const MathT*)dataset_norm_buf.data();
   }
 
-  /* Temporary workaround to cub::DeviceHistogram not supporting any type that isn't natively
+  /* Temporary workaround to hipcub::DeviceHistogram not supporting any type that isn't natively
    * supported by atomicAdd: find a supported CounterT based on the IdxT. */
   typedef typename std::conditional_t<sizeof(IdxT) == 8, unsigned long long int, unsigned int>
     CounterT;

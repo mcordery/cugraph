@@ -30,7 +30,7 @@
   OutT, LutT, IvfSampleFilterT)                                                             \
   template auto                                                                             \
   raft::neighbors::ivf_pq::detail::compute_similarity_select<OutT, LutT, IvfSampleFilterT>( \
-    const cudaDeviceProp& dev_props,                                                        \
+    const hipDeviceProp_t& dev_props,                                                        \
     bool manage_local_topk,                                                                 \
     int locality_hint,                                                                      \
     double preferred_shmem_carveout,                                                        \

@@ -22,7 +22,7 @@
 #include "detail/make_blobs.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 #include <optional>
@@ -69,7 +69,7 @@ void make_blobs(DataT* out,
                 IdxT n_rows,
                 IdxT n_cols,
                 IdxT n_clusters,
-                cudaStream_t stream,
+                hipStream_t stream,
                 bool row_major                 = true,
                 const DataT* centers           = nullptr,
                 const DataT* cluster_std       = nullptr,

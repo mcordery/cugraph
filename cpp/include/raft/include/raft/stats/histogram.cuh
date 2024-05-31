@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/histogram.cuh>
 #include <raft/stats/stats_types.hpp>
 
@@ -65,7 +65,7 @@ void histogram(HistType type,
                const DataT* data,
                IdxT nrows,
                IdxT ncols,
-               cudaStream_t stream,
+               hipStream_t stream,
                BinnerOp binner = IdentityBinner<DataT, IdxT>())
 {
   detail::histogram<DataT, IdxT, BinnerOp>(type, bins, nbins, data, nrows, ncols, stream, binner);

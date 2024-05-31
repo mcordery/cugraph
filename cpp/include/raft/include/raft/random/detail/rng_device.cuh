@@ -22,7 +22,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <curand_kernel.h>
+#include <hiprand/hiprand_kernel.h>
 
 #include <random>
 
@@ -437,17 +437,17 @@ struct PhiloxGenerator {
   /**
    * @brief ctor. Initializes the state for RNG
    * @param seed random seed (can be same across all threads)
-   * @param subsequence as found in curand docs
-   * @param offset as found in curand docs
+   * @param subsequence as found in hiprand docs
+   * @param offset as found in hiprand docs
    */
   DI PhiloxGenerator(uint64_t seed, uint64_t subsequence, uint64_t offset)
   {
-    curand_init(seed, subsequence, offset, &philox_state);
+    hiprand_init(seed, subsequence, offset, &philox_state);
   }
 
   DI PhiloxGenerator(const DeviceState<PhiloxGenerator>& rng_state, const uint64_t subsequence)
   {
-    curand_init(rng_state.seed, rng_state.base_subsequence + subsequence, 0, &philox_state);
+    hiprand_init(rng_state.seed, rng_state.base_subsequence + subsequence, 0, &philox_state);
   }
 
   /**
@@ -456,7 +456,7 @@ struct PhiloxGenerator {
    */
   DI uint32_t next_u32()
   {
-    uint32_t ret = curand(&(this->philox_state));
+    uint32_t ret = hiprand(&(this->philox_state));
     return ret;
   }
 
@@ -506,13 +506,13 @@ struct PhiloxGenerator {
 
   DI void next(float& ret)
   {
-    // ret = curand_uniform(&(this->philox_state));
+    // ret = hiprand_uniform(&(this->philox_state));
     ret = next_float();
   }
 
   DI void next(double& ret)
   {
-    // ret = curand_uniform_double(&(this->philox_state));
+    // ret = hiprand_uniform_double(&(this->philox_state));
     ret = next_double();
   }
 
@@ -525,7 +525,7 @@ struct PhiloxGenerator {
 
  private:
   /** the state for RNG */
-  curandStatePhilox4_32_10_t philox_state;
+  hiprandStatePhilox4_32_10_t philox_state;
 };
 
 /** PCG random number generator */

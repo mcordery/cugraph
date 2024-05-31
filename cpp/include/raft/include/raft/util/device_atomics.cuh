@@ -27,7 +27,7 @@
  * binary operator.
  */
 
-#include <cooperative_groups.h>
+#include <hip/hip_cooperative_groups.h>
 
 #include <type_traits>
 

@@ -96,7 +96,7 @@ RAFT_KERNEL iota_fill_block_kernel(value_idx* indices, value_idx ncols)
 }
 
 template <typename value_idx>
-void iota_fill(value_idx* indices, value_idx nrows, value_idx ncols, cudaStream_t stream)
+void iota_fill(value_idx* indices, value_idx nrows, value_idx ncols, hipStream_t stream)
 {
   int blockdim = block_dim(ncols);
 

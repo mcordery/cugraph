@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace cache {
@@ -205,7 +206,7 @@ template <int nthreads, int associativity>
 DI void rank_set_entries(const int* cache_time, int n_cache_sets, int* rank)
 {
   const int items_per_thread = raft::ceildiv(associativity, nthreads);
-  typedef cub::BlockRadixSort<int, nthreads, items_per_thread, int> BlockRadixSort;
+  typedef hipcub::BlockRadixSort<int, nthreads, items_per_thread, int> BlockRadixSort;
   __shared__ typename BlockRadixSort::TempStorage temp_storage;
 
   int key[items_per_thread];

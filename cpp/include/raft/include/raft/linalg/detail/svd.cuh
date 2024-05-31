@@ -21,7 +21,7 @@
 
 //#include <raft/common/nvtx.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/eig.cuh>
@@ -52,12 +52,12 @@ void svdQR(raft::resources const& handle,
            bool trans_right,
            bool gen_left_vec,
            bool gen_right_vec,
-           cudaStream_t stream)
+           hipStream_t stream)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
 //    "raft::linalg::svdQR(%d, %d)", n_rows, n_cols);
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  cublasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
 
   const int m = n_rows;
   const int n = n_cols;
@@ -98,7 +98,7 @@ void svdQR(raft::resources const& handle,
   if (trans_right && right_sing_vecs != nullptr)
     raft::linalg::transpose(right_sing_vecs, n_cols, stream);
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 
   int dev_info;
   raft::update_host(&dev_info, devInfo.data(), 1, stream);
@@ -117,12 +117,12 @@ void svdEig(raft::resources const& handle,
             math_t* U,
             math_t* V,
             bool gen_left_vec,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
 //    "raft::linalg::svdEig(%d, %d)", n_rows, n_cols);
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  cublasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
 
   auto len = n_cols * n_cols;
   rmm::device_uvector<math_t> in_cross_mult(len, stream);
@@ -137,8 +137,8 @@ void svdEig(raft::resources const& handle,
                      in_cross_mult.data(),
                      n_cols,
                      n_cols,
-                     CUBLAS_OP_T,
-                     CUBLAS_OP_N,
+                     HIPBLAS_OP_T,
+                     HIPBLAS_OP_N,
                      alpha,
                      beta,
                      stream);
@@ -161,8 +161,8 @@ void svdEig(raft::resources const& handle,
                        U,
                        n_rows,
                        n_cols,
-                       CUBLAS_OP_N,
-                       CUBLAS_OP_N,
+                       HIPBLAS_OP_N,
+                       HIPBLAS_OP_N,
                        alpha,
                        beta,
                        stream);
@@ -182,17 +182,17 @@ void svdJacobi(raft::resources const& handle,
                bool gen_right_vec,
                math_t tol,
                int max_sweeps,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
 //    "raft::linalg::svdJacobi(%d, %d)", n_rows, n_cols);
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
-  gesvdjInfo_t gesvdj_params = NULL;
+  hipsolverGesvdjInfo_t gesvdj_params = NULL;
 
-  RAFT_CUSOLVER_TRY(cusolverDnCreateGesvdjInfo(&gesvdj_params));
-  RAFT_CUSOLVER_TRY(cusolverDnXgesvdjSetTolerance(gesvdj_params, tol));
-  RAFT_CUSOLVER_TRY(cusolverDnXgesvdjSetMaxSweeps(gesvdj_params, max_sweeps));
+  RAFT_CUSOLVER_TRY(hipsolverDnCreateGesvdjInfo(&gesvdj_params));
+  RAFT_CUSOLVER_TRY(hipsolverDnXgesvdjSetTolerance(gesvdj_params, tol));
+  RAFT_CUSOLVER_TRY(hipsolverDnXgesvdjSetMaxSweeps(gesvdj_params, max_sweeps));
 
   int m = n_rows;
   int n = n_cols;
@@ -203,7 +203,7 @@ void svdJacobi(raft::resources const& handle,
   int econ  = 1;
 
   RAFT_CUSOLVER_TRY(cusolverDngesvdj_bufferSize(cusolverH,
-                                                CUSOLVER_EIG_MODE_VECTOR,
+                                                HIPSOLVER_EIG_MODE_VECTOR,
                                                 econ,
                                                 m,
                                                 n,
@@ -220,7 +220,7 @@ void svdJacobi(raft::resources const& handle,
   rmm::device_uvector<math_t> d_work(lwork, stream);
 
   RAFT_CUSOLVER_TRY(cusolverDngesvdj(cusolverH,
-                                     CUSOLVER_EIG_MODE_VECTOR,
+                                     HIPSOLVER_EIG_MODE_VECTOR,
                                      econ,
                                      m,
                                      n,
@@ -237,7 +237,7 @@ void svdJacobi(raft::resources const& handle,
                                      gesvdj_params,
                                      stream));
 
-  RAFT_CUSOLVER_TRY(cusolverDnDestroyGesvdjInfo(gesvdj_params));
+  RAFT_CUSOLVER_TRY(hipsolverDnDestroyGesvdjInfo(gesvdj_params));
 }
 
 template <typename math_t>
@@ -249,13 +249,13 @@ void svdReconstruction(raft::resources const& handle,
                        int n_rows,
                        int n_cols,
                        int k,
-                       cudaStream_t stream)
+                       hipStream_t stream)
 {
   const math_t alpha = 1.0, beta = 0.0;
   rmm::device_uvector<math_t> SVT(k * n_cols, stream);
 
   raft::linalg::gemm(
-    handle, S, k, k, V, SVT.data(), k, n_cols, CUBLAS_OP_N, CUBLAS_OP_T, alpha, beta, stream);
+    handle, S, k, k, V, SVT.data(), k, n_cols, HIPBLAS_OP_N, HIPBLAS_OP_T, alpha, beta, stream);
   raft::linalg::gemm(handle,
                      U,
                      n_rows,
@@ -264,8 +264,8 @@ void svdReconstruction(raft::resources const& handle,
                      out,
                      n_rows,
                      n_cols,
-                     CUBLAS_OP_N,
-                     CUBLAS_OP_N,
+                     HIPBLAS_OP_N,
+                     HIPBLAS_OP_N,
                      alpha,
                      beta,
                      stream);
@@ -281,17 +281,17 @@ bool evaluateSVDByL2Norm(raft::resources const& handle,
                          int n_cols,
                          int k,
                          math_t tol,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
-  cublasHandle_t cublasH = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH = resource::get_cublas_handle(handle);
 
   int m = n_rows, n = n_cols;
 
   // form product matrix
   rmm::device_uvector<math_t> P_d(m * n, stream);
   rmm::device_uvector<math_t> S_mat(k * k, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(P_d.data(), 0, sizeof(math_t) * m * n, stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(S_mat.data(), 0, sizeof(math_t) * k * k, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(P_d.data(), 0, sizeof(math_t) * m * n, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(S_mat.data(), 0, sizeof(math_t) * k * k, stream));
 
   raft::matrix::set_diagonal(handle,
                              make_device_vector_view<const math_t>(S_vec, k),
@@ -310,11 +310,11 @@ bool evaluateSVDByL2Norm(raft::resources const& handle,
   // calculate percent error
   const math_t alpha = 1.0, beta = -1.0;
   rmm::device_uvector<math_t> A_minus_P(m * n, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(A_minus_P.data(), 0, sizeof(math_t) * m * n, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(A_minus_P.data(), 0, sizeof(math_t) * m * n, stream));
 
   RAFT_CUBLAS_TRY(cublasgeam(cublasH,
-                             CUBLAS_OP_N,
-                             CUBLAS_OP_N,
+                             HIPBLAS_OP_N,
+                             HIPBLAS_OP_N,
                              m,
                              n,
                              &alpha,

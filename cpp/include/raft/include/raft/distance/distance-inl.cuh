@@ -16,7 +16,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/detail/distance.cuh>
 #include <raft/distance/distance_types.hpp>
@@ -248,7 +248,7 @@ void pairwise_distance(raft::resources const& handle,
                        bool isRowMajor = true,
                        Type metric_arg = 2.0f)
 {
-  cudaStream_t stream = raft::resource::get_cuda_stream(handle);
+  hipStream_t stream = raft::resource::get_cuda_stream(handle);
 
   auto dispatch = [&](auto distance_type) {
     auto worksize = getWorkspaceSize<distance_type(), Type, Type, Type, IdxT>(x, y, m, n, k);

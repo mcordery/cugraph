@@ -19,7 +19,7 @@
 
 #pragma once
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/v_measure.cuh>
 
@@ -43,7 +43,7 @@ double v_measure(const T* truthClusterArray,
                  int size,
                  T lowerLabelRange,
                  T upperLabelRange,
-                 cudaStream_t stream,
+                 hipStream_t stream,
                  double beta = 1.0)
 {
   return detail::v_measure(

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -16,7 +17,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/distance/detail/compress_to_bits.cuh>
 #include <raft/distance/detail/fused_distance_nn/fused_l2_nn.cuh>
@@ -265,8 +266,8 @@ void masked_l2_nn_impl(raft::resources const& handle,
   size_t m_div_64 = raft::ceildiv(m, IdxT(64));
   rmm::device_uvector<uint64_t> ws_adj64{m_div_64 * num_groups, stream, ws_mr};
   rmm::device_uvector<int> ws_fused_nn{size_t(m), stream, ws_mr};
-  RAFT_CUDA_TRY(cudaMemsetAsync(ws_adj64.data(), 0, ws_adj64.size() * sizeof(uint64_t), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(ws_fused_nn.data(), 0, ws_fused_nn.size() * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(ws_adj64.data(), 0, ws_adj64.size() * sizeof(uint64_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(ws_fused_nn.data(), 0, ws_fused_nn.size() * sizeof(int), stream));
 
   // Compress boolean adjacency matrix to bitfield.
   auto adj_view = raft::make_device_matrix_view<const bool, int>(adj, m, num_groups);
@@ -282,7 +283,7 @@ void masked_l2_nn_impl(raft::resources const& handle,
     dim3 block(P::Nthreads);
 
     initKernel<DataT, OutT, IdxT, ReduceOpT><<<grid, block, 0, stream>>>(out, m, maxVal, redOp);
-    RAFT_CUDA_TRY(cudaGetLastError());
+    RAFT_CUDA_TRY(hipGetLastError());
   }
 
   // Accumulation operation lambda
@@ -320,7 +321,7 @@ void masked_l2_nn_impl(raft::resources const& handle,
                                             core_lambda,
                                             fin_op);
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 }  // namespace detail

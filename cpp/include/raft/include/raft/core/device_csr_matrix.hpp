@@ -18,7 +18,7 @@
 #include <raft/core/csr_matrix.hpp>
 #include <raft/core/device_container_policy.hpp>
 #include <raft/core/device_span.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/core/sparse_types.hpp>
 

@@ -42,7 +42,7 @@ void legacy_gemm(raft::resources const& res,
                  const T* beta,
                  T* C,
                  const int ldc,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   return legacy_matmul<DevicePointerMode, T, T, T, T>(res,
                                                       trans_a,
@@ -70,26 +70,26 @@ void legacy_gemm(raft::resources const& res,
                  T* c,
                  int n_rows_c,
                  int n_cols_c,
-                 cublasOperation_t trans_a,
-                 cublasOperation_t trans_b,
+                 hipblasOperation_t trans_a,
+                 hipblasOperation_t trans_b,
                  T alpha,
                  T beta,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   int m  = n_rows_c;
   int n  = n_cols_c;
-  auto k = trans_a == CUBLAS_OP_T ? n_rows_a : n_cols_a;
+  auto k = trans_a == HIPBLAS_OP_T ? n_rows_a : n_cols_a;
   return legacy_matmul<false, T, T, T, T>(res,
-                                          trans_a == CUBLAS_OP_T,
-                                          trans_b == CUBLAS_OP_T,
+                                          trans_a == HIPBLAS_OP_T,
+                                          trans_b == HIPBLAS_OP_T,
                                           static_cast<uint64_t>(n_rows_c),
                                           static_cast<uint64_t>(n_cols_c),
                                           static_cast<uint64_t>(k),
                                           &alpha,
                                           a,
-                                          static_cast<uint64_t>(trans_a == CUBLAS_OP_T ? k : m),
+                                          static_cast<uint64_t>(trans_a == HIPBLAS_OP_T ? k : m),
                                           b,
-                                          static_cast<uint64_t>(trans_b == CUBLAS_OP_T ? n : k),
+                                          static_cast<uint64_t>(trans_b == HIPBLAS_OP_T ? n : k),
                                           &beta,
                                           c,
                                           static_cast<uint64_t>(m),
@@ -105,9 +105,9 @@ void legacy_gemm(raft::resources const& res,
                  T* c,
                  int n_rows_c,
                  int n_cols_c,
-                 cublasOperation_t trans_a,
-                 cublasOperation_t trans_b,
-                 cudaStream_t stream)
+                 hipblasOperation_t trans_a,
+                 hipblasOperation_t trans_b,
+                 hipStream_t stream)
 {
   return legacy_gemm(
     res, a, n_rows_a, n_cols_a, b, c, n_rows_c, n_cols_c, trans_a, trans_b, T{1}, T{0}, stream);
@@ -124,7 +124,7 @@ void legacy_gemm(raft::resources const& res,
                  bool isZColMajor,
                  bool isXColMajor,
                  bool isYColMajor,
-                 cudaStream_t stream,
+                 hipStream_t stream,
                  const T* alpha,
                  const T* beta)
 {

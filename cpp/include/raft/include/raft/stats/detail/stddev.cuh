@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/linalg/binary_op.cuh>
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace stats {
@@ -51,7 +52,7 @@ RAFT_KERNEL stddevKernelRowMajor(Type* std, const Type* data, IdxType D, IdxType
 template <typename Type, typename IdxType, int TPB>
 RAFT_KERNEL stddevKernelColMajor(Type* std, const Type* data, const Type* mu, IdxType D, IdxType N)
 {
-  typedef cub::BlockReduce<Type, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<Type, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   Type thread_data = Type(0);
   IdxType colStart = N * blockIdx.x;
@@ -68,7 +69,7 @@ RAFT_KERNEL stddevKernelColMajor(Type* std, const Type* data, const Type* mu, Id
 template <typename Type, typename IdxType, int TPB>
 RAFT_KERNEL varsKernelColMajor(Type* var, const Type* data, const Type* mu, IdxType D, IdxType N)
 {
-  typedef cub::BlockReduce<Type, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<Type, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   Type thread_data = Type(0);
   IdxType colStart = N * blockIdx.x;
@@ -108,7 +109,7 @@ void stddev(Type* std,
             IdxType N,
             bool sample,
             bool rowMajor,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   static const int TPB = 256;
   if (rowMajor) {
@@ -116,7 +117,7 @@ void stddev(Type* std,
     static const int ColsPerBlk    = 32;
     static const int RowsPerBlk    = (TPB / ColsPerBlk) * RowsPerThread;
     dim3 grid(raft::ceildiv(N, (IdxType)RowsPerBlk), raft::ceildiv(D, (IdxType)ColsPerBlk));
-    RAFT_CUDA_TRY(cudaMemset(std, 0, sizeof(Type) * D));
+    RAFT_CUDA_TRY(hipMemset(std, 0, sizeof(Type) * D));
     stddevKernelRowMajor<Type, IdxType, TPB, ColsPerBlk><<<grid, TPB, 0, stream>>>(std, data, D, N);
     Type ratio = Type(1) / (sample ? Type(N - 1) : Type(N));
     raft::linalg::binaryOp(
@@ -129,7 +130,7 @@ void stddev(Type* std,
   } else {
     stddevKernelColMajor<Type, IdxType, TPB><<<D, TPB, 0, stream>>>(std, data, mu, D, N);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -158,7 +159,7 @@ void vars(Type* var,
           IdxType N,
           bool sample,
           bool rowMajor,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   static const int TPB = 256;
   if (rowMajor) {
@@ -166,7 +167,7 @@ void vars(Type* var,
     static const int ColsPerBlk    = 32;
     static const int RowsPerBlk    = (TPB / ColsPerBlk) * RowsPerThread;
     dim3 grid(raft::ceildiv(N, (IdxType)RowsPerBlk), raft::ceildiv(D, (IdxType)ColsPerBlk));
-    RAFT_CUDA_TRY(cudaMemset(var, 0, sizeof(Type) * D));
+    RAFT_CUDA_TRY(hipMemset(var, 0, sizeof(Type) * D));
     stddevKernelRowMajor<Type, IdxType, TPB, ColsPerBlk><<<grid, TPB, 0, stream>>>(var, data, D, N);
     Type ratio = Type(1) / (sample ? Type(N - 1) : Type(N));
     raft::linalg::binaryOp(
@@ -174,7 +175,7 @@ void vars(Type* var,
   } else {
     varsKernelColMajor<Type, IdxType, TPB><<<D, TPB, 0, stream>>>(var, data, mu, D, N);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // namespace detail

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -22,10 +23,10 @@
 #include <raft/core/math.hpp>
 #include <raft/core/mdspan_types.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <cuda/atomic>
 
 #include <cstddef>
@@ -74,7 +75,7 @@ RAFT_KERNEL neighborhood_recall(
   }
 
   // Reduce across a warp for row score
-  typedef cub::BlockReduce<IndexType, kThreadsPerBlock> BlockReduce;
+  typedef hipcub::BlockReduce<IndexType, kThreadsPerBlock> BlockReduce;
 
   __shared__ typename BlockReduce::TempStorage temp_storage;
 

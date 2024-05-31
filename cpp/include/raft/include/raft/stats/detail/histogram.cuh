@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -46,7 +47,7 @@ dim3 computeGridDim(IdxT nrows, IdxT ncols, const void* kernel)
 {
   int occupancy;
   RAFT_CUDA_TRY(
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&occupancy, kernel, ThreadsPerBlock, 0));
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&occupancy, kernel, ThreadsPerBlock, 0));
   const auto maxBlks = occupancy * raft::getMultiProcessorCount();
   int nblksx         = raft::ceildiv<int>(VecLen ? nrows / VecLen : nrows, ThreadsPerBlock);
   // for cases when there aren't a lot of blocks for computing one histogram
@@ -100,7 +101,7 @@ void gmemHist(int* bins,
               IdxT nrows,
               IdxT ncols,
               BinnerOp binner,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   auto blks = computeGridDim<IdxT, VecLen>(
     nrows, ncols, (const void*)gmemHistKernel<DataT, BinnerOp, IdxT, VecLen>);
@@ -150,7 +151,7 @@ void smemHist(int* bins,
               IdxT nrows,
               IdxT ncols,
               BinnerOp binner,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   auto blks = computeGridDim<IdxT, VecLen>(
     nrows, ncols, (const void*)smemHistKernel<DataT, BinnerOp, IdxT, VecLen, UseMatchAny>);
@@ -235,7 +236,7 @@ void smemBitsHist(int* bins,
                   IdxT nrows,
                   IdxT ncols,
                   BinnerOp binner,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   typedef BitsInfo<BIN_BITS> Bits;
   auto blks = computeGridDim<IdxT, VecLen>(
@@ -352,7 +353,7 @@ void smemHashHist(int* bins,
                   IdxT nrows,
                   IdxT ncols,
                   BinnerOp binner,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   static const int flushThreshold = 10;
   auto blks                       = computeGridDim<IdxT, 1>(
@@ -370,10 +371,10 @@ void histogramVecLen(HistType type,
                      const DataT* data,
                      IdxT nrows,
                      IdxT ncols,
-                     cudaStream_t stream,
+                     hipStream_t stream,
                      BinnerOp binner)
 {
-  RAFT_CUDA_TRY(cudaMemsetAsync(bins, 0, ncols * nbins * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(bins, 0, ncols * nbins * sizeof(int), stream));
   switch (type) {
     case HistTypeGmem:
       gmemHist<DataT, BinnerOp, IdxT, VecLen>(bins, nbins, data, nrows, ncols, binner, stream);
@@ -411,7 +412,7 @@ void histogramVecLen(HistType type,
       break;
     default: ASSERT(false, "histogram: Invalid type passed '%d'!", type);
   };
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename DataT, typename BinnerOp, typename IdxT>
@@ -421,7 +422,7 @@ void histogramImpl(HistType type,
                    const DataT* data,
                    IdxT nrows,
                    IdxT ncols,
-                   cudaStream_t stream,
+                   hipStream_t stream,
                    BinnerOp binner)
 {
   size_t bytes = nrows * sizeof(DataT);
@@ -483,7 +484,7 @@ void histogram(HistType type,
                const DataT* data,
                IdxT nrows,
                IdxT ncols,
-               cudaStream_t stream,
+               hipStream_t stream,
                BinnerOp binner = IdentityBinner<DataT, IdxT>())
 {
   HistType computedType = type;

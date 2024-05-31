@@ -44,7 +44,7 @@ namespace convert {
  * @param[in] row_major : Is row-major output desired?
  */
 template <typename value_idx, typename value_t>
-void csr_to_dense(cusparseHandle_t handle,
+void csr_to_dense(hipsparseHandle_t handle,
                   value_idx nrows,
                   value_idx ncols,
                   value_idx nnz,
@@ -53,7 +53,7 @@ void csr_to_dense(cusparseHandle_t handle,
                   const value_t* csr_data,
                   value_idx lda,
                   value_t* out,
-                  cudaStream_t stream,
+                  hipStream_t stream,
                   bool row_major = true)
 {
   detail::csr_to_dense<value_idx, value_t>(

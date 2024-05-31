@@ -26,12 +26,12 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -102,23 +102,23 @@ void coo_remove_scalar(const int* rows,
                        int* cur_cnnz,
                        T scalar,
                        int n,
-                       cudaStream_t stream)
+                       hipStream_t stream)
 {
   rmm::device_uvector<int> ex_scan(n, stream);
   rmm::device_uvector<int> cur_ex_scan(n, stream);
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(ex_scan.data(), 0, n * sizeof(int), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(cur_ex_scan.data(), 0, n * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(ex_scan.data(), 0, n * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(cur_ex_scan.data(), 0, n * sizeof(int), stream));
 
   thrust::device_ptr<int> dev_cnnz    = thrust::device_pointer_cast(cnnz);
   thrust::device_ptr<int> dev_ex_scan = thrust::device_pointer_cast(ex_scan.data());
   thrust::exclusive_scan(rmm::exec_policy(stream), dev_cnnz, dev_cnnz + n, dev_ex_scan);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   thrust::device_ptr<int> dev_cur_cnnz    = thrust::device_pointer_cast(cur_cnnz);
   thrust::device_ptr<int> dev_cur_ex_scan = thrust::device_pointer_cast(cur_ex_scan.data());
   thrust::exclusive_scan(rmm::exec_policy(stream), dev_cur_cnnz, dev_cur_cnnz + n, dev_cur_ex_scan);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   dim3 grid(raft::ceildiv(n, TPB_X), 1, 1);
   dim3 blk(TPB_X, 1, 1);
@@ -134,7 +134,7 @@ void coo_remove_scalar(const int* rows,
                                                             dev_cur_ex_scan.get(),
                                                             n,
                                                             scalar);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -146,19 +146,19 @@ void coo_remove_scalar(const int* rows,
  * @param stream: cuda stream to use
  */
 template <int TPB_X, typename T>
-void coo_remove_scalar(COO<T>* in, COO<T>* out, T scalar, cudaStream_t stream)
+void coo_remove_scalar(COO<T>* in, COO<T>* out, T scalar, hipStream_t stream)
 {
   rmm::device_uvector<int> row_count_nz(in->n_rows, stream);
   rmm::device_uvector<int> row_count(in->n_rows, stream);
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(row_count_nz.data(), 0, in->n_rows * sizeof(int), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(row_count.data(), 0, in->n_rows * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(row_count_nz.data(), 0, in->n_rows * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(row_count.data(), 0, in->n_rows * sizeof(int), stream));
 
   linalg::coo_degree(in->rows(), in->nnz, row_count.data(), stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   linalg::coo_degree_scalar(in->rows(), in->vals(), in->nnz, scalar, row_count_nz.data(), stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   thrust::device_ptr<int> d_row_count_nz = thrust::device_pointer_cast(row_count_nz.data());
   int out_nnz =
@@ -178,7 +178,7 @@ void coo_remove_scalar(COO<T>* in, COO<T>* out, T scalar, cudaStream_t stream)
                               scalar,
                               in->n_rows,
                               stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -189,7 +189,7 @@ void coo_remove_scalar(COO<T>* in, COO<T>* out, T scalar, cudaStream_t stream)
  * @param stream: cuda stream to use
  */
 template <int TPB_X, typename T>
-void coo_remove_zeros(COO<T>* in, COO<T>* out, cudaStream_t stream)
+void coo_remove_zeros(COO<T>* in, COO<T>* out, hipStream_t stream)
 {
   coo_remove_scalar<TPB_X, T>(in, out, T(0.0), stream);
 }

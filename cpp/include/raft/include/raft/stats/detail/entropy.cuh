@@ -28,7 +28,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <math.h>
 
@@ -71,14 +71,14 @@ void countLabels(const LabelT* labels,
                  LabelT lowerLabelRange,
                  LabelT upperLabelRange,
                  rmm::device_uvector<char>& workspace,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   int num_levels            = upperLabelRange - lowerLabelRange + 2;
   LabelT lower_level        = lowerLabelRange;
   LabelT upper_level        = upperLabelRange + 1;
   size_t temp_storage_bytes = 0;
 
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(nullptr,
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(nullptr,
                                                     temp_storage_bytes,
                                                     labels,
                                                     binCountArray,
@@ -90,7 +90,7 @@ void countLabels(const LabelT* labels,
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(workspace.data(),
                                                     temp_storage_bytes,
                                                     labels,
                                                     binCountArray,
@@ -117,7 +117,7 @@ double entropy(const T* clusterArray,
                const int size,
                const T lowerLabelRange,
                const T upperLabelRange,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   if (!size) return 1.0;
 
@@ -125,9 +125,9 @@ double entropy(const T* clusterArray,
 
   // declaring, allocating and initializing memory for bincount array and entropy values
   rmm::device_uvector<double> prob(numUniqueClasses, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(prob.data(), 0, numUniqueClasses * sizeof(double), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(prob.data(), 0, numUniqueClasses * sizeof(double), stream));
   rmm::device_scalar<double> d_entropy(stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_entropy.data(), 0, sizeof(double), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_entropy.data(), 0, sizeof(double), stream));
 
   // workspace allocation
   rmm::device_uvector<char> workspace(1, stream);

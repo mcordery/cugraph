@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/sparse/convert/csr.cuh>
 #include <raft/sparse/coo.hpp>
@@ -29,11 +29,11 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -100,9 +100,9 @@ RAFT_KERNEL max_duplicates_kernel(const value_idx* src_rows,
  */
 template <typename value_idx>
 void compute_duplicates_mask(
-  value_idx* mask, const value_idx* rows, const value_idx* cols, size_t nnz, cudaStream_t stream)
+  value_idx* mask, const value_idx* rows, const value_idx* cols, size_t nnz, hipStream_t stream)
 {
-  RAFT_CUDA_TRY(cudaMemsetAsync(mask, 0, nnz * sizeof(value_idx), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(mask, 0, nnz * sizeof(value_idx), stream));
 
   compute_duplicates_diffs_kernel<<<raft::ceildiv(nnz, (size_t)256), 256, 0, stream>>>(
     rows, cols, mask, nnz);

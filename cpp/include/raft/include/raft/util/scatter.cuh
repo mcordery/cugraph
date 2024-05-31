@@ -43,7 +43,7 @@ void scatter(DataT* out,
              const DataT* in,
              const IdxT* idx,
              IdxT len,
-             cudaStream_t stream,
+             hipStream_t stream,
              Lambda op = raft::identity_op())
 {
   if (len <= 0) return;

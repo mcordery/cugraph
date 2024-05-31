@@ -26,7 +26,7 @@ namespace random {
 
 /** all different generator types used */
 enum GeneratorType {
-  /** curand-based philox generator */
+  /** hiprand-based philox generator */
   GenPhilox = 0,
   /** Permuted Congruential Generator */
   GenPC

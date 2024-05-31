@@ -81,7 +81,7 @@ void cutlassFusedDistanceNN(const DataT* x,
                             DistanceFn dist_op,
                             ReduceOpT redOp,
                             KVPReduceOpT pairRedOp,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
   using EpilogueOutputOp = cutlass::epilogue::thread::FusedDistanceNNEpilogueElementwise<
     DataT,  // ElementC_

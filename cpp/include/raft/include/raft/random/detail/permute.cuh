@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -20,7 +21,7 @@
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/vectorized.cuh>
 
-#include <cooperative_groups.h>
+#include <hip/hip_cooperative_groups.h>
 
 #include <memory>
 
@@ -83,7 +84,7 @@ struct permute_impl_t {
                           int nblks,
                           IdxType a,
                           IdxType b,
-                          cudaStream_t stream)
+                          hipStream_t stream)
   {
     // determine vector type and set new pointers
     typedef typename raft::IOType<Type, VLen>::Type VType;
@@ -95,7 +96,7 @@ struct permute_impl_t {
         raft::is_aligned(vin, sizeof(VType))) {
       permuteKernel<VType, IntType, IdxType, TPB, rowMajor>
         <<<nblks, TPB, 0, stream>>>(perms, vout, vin, a, b, N, D / VLen);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     } else {  // otherwise try the next lower vector length
       permute_impl_t<Type, IntType, IdxType, TPB, rowMajor, VLen / 2>::permuteImpl(
         perms, out, in, N, D, nblks, a, b, stream);
@@ -114,11 +115,11 @@ struct permute_impl_t<Type, IntType, IdxType, TPB, rowMajor, 1> {
                           int nblks,
                           IdxType a,
                           IdxType b,
-                          cudaStream_t stream)
+                          hipStream_t stream)
   {
     permuteKernel<Type, IntType, IdxType, TPB, rowMajor>
       <<<nblks, TPB, 0, stream>>>(perms, out, in, a, b, N, D);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 };
 
@@ -129,7 +130,7 @@ void permute(IntType* perms,
              IntType D,
              IntType N,
              bool rowMajor,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   auto nblks = raft::ceildiv(N, (IntType)TPB);
 

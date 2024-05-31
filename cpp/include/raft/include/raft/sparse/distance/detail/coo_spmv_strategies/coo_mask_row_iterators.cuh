@@ -108,7 +108,7 @@ class chunked_mask_row_it : public mask_row_it<value_idx> {
                       int row_chunk_size_,
                       const value_idx* n_chunks_per_row_,
                       const value_idx* chunk_indices_,
-                      const cudaStream_t stream_)
+                      const hipStream_t stream_)
     : mask_row_it<value_idx>(full_indptr_, n_rows_, mask_row_idx_),
       row_chunk_size(row_chunk_size_),
       n_chunks_per_row(n_chunks_per_row_),
@@ -123,7 +123,7 @@ class chunked_mask_row_it : public mask_row_it<value_idx> {
                    const int row_chunk_size,
                    rmm::device_uvector<value_idx>& n_chunks_per_row,
                    rmm::device_uvector<value_idx>& chunk_indices,
-                   cudaStream_t stream)
+                   hipStream_t stream)
   {
     auto policy = rmm::exec_policy(stream);
 
@@ -189,7 +189,7 @@ class chunked_mask_row_it : public mask_row_it<value_idx> {
   }
 
   inline static value_idx total_row_blocks = 0;
-  const cudaStream_t stream;
+  const hipStream_t stream;
   const value_idx *n_chunks_per_row, *chunk_indices;
   value_idx row_chunk_size;
 
@@ -214,7 +214,7 @@ class chunked_mask_row_it : public mask_row_it<value_idx> {
   static void fill_chunk_indices(const value_idx& n_rows,
                                  rmm::device_uvector<value_idx>& n_chunks_per_row,
                                  rmm::device_uvector<value_idx>& chunk_indices,
-                                 cudaStream_t stream)
+                                 hipStream_t stream)
   {
     auto n_threads = std::min(n_rows, 256);
     auto n_blocks  = raft::ceildiv(n_rows, (value_idx)n_threads);

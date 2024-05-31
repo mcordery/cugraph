@@ -46,13 +46,13 @@ namespace detail {
  */
 template <typename math_t>
 void qrGetQ_inplace(
-  raft::resources const& handle, math_t* Q, int n_rows, int n_cols, cudaStream_t stream)
+  raft::resources const& handle, math_t* Q, int n_rows, int n_cols, hipStream_t stream)
 {
   RAFT_EXPECTS(n_rows >= n_cols, "QR decomposition expects n_rows >= n_cols.");
-  cusolverDnHandle_t cusolver = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolver = resource::get_cusolver_dn_handle(handle);
 
   rmm::device_uvector<math_t> tau(n_cols, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(tau.data(), 0, sizeof(math_t) * n_cols, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(tau.data(), 0, sizeof(math_t) * n_cols, stream));
 
   rmm::device_scalar<int> dev_info(stream);
   int ws_size;
@@ -92,7 +92,7 @@ void qrGetQ(raft::resources const& handle,
             math_t* Q,
             int n_rows,
             int n_cols,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   raft::copy(Q, M, n_rows * n_cols, stream);
   qrGetQ_inplace(handle, Q, n_rows, n_cols, stream);
@@ -105,17 +105,17 @@ void qrGetQR(raft::resources const& handle,
              math_t* R,
              int n_rows,
              int n_cols,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
-  cusolverDnHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
+  hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   int m = n_rows, n = n_cols;
   rmm::device_uvector<math_t> R_full(m * n, stream);
   rmm::device_uvector<math_t> tau(std::min(m, n), stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(tau.data(), 0, sizeof(math_t) * std::min(m, n), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(tau.data(), 0, sizeof(math_t) * std::min(m, n), stream));
   int R_full_nrows = m, R_full_ncols = n;
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(R_full.data(), M, sizeof(math_t) * m * n, cudaMemcpyDeviceToDevice, stream));
+    hipMemcpyAsync(R_full.data(), M, sizeof(math_t) * m * n, hipMemcpyDeviceToDevice, stream));
 
   int Lwork;
   rmm::device_scalar<int> devInfo(stream);
@@ -140,7 +140,7 @@ void qrGetQR(raft::resources const& handle,
     make_device_matrix_view<math_t, int, col_major>(R, std::min(m, n), std::min(m, n)));
 
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(Q, R_full.data(), sizeof(math_t) * m * n, cudaMemcpyDeviceToDevice, stream));
+    hipMemcpyAsync(Q, R_full.data(), sizeof(math_t) * m * n, hipMemcpyDeviceToDevice, stream));
   int Q_nrows = m, Q_ncols = n;
 
   RAFT_CUSOLVER_TRY(cusolverDnorgqr_bufferSize(

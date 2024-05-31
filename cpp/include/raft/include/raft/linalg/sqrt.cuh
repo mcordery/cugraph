@@ -20,7 +20,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/unary_op.cuh>
 
 namespace raft {
@@ -37,7 +37,7 @@ namespace linalg {
  * @{
  */
 template <typename in_t, typename out_t = in_t, typename IdxType = int>
-void sqrt(out_t* out, const in_t* in, IdxType len, cudaStream_t stream)
+void sqrt(out_t* out, const in_t* in, IdxType len, hipStream_t stream)
 {
   raft::linalg::unaryOp(out, in, len, raft::sqrt_op{}, stream);
 }

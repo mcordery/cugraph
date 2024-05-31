@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_csr_matrix.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance.cuh>
 #include <raft/distance/distance_types.hpp>
@@ -51,12 +51,12 @@ using csr_input_matrix_view_t = raft::device_csr_matrix_view<const math_t, int, 
 template <typename math_t>
 class GramMatrixBase {
  protected:
-  cublasHandle_t cublas_handle;
+  hipblasHandle_t cublas_handle;
   bool legacy_interface;
 
  public:
   GramMatrixBase() : legacy_interface(false){};
-  [[deprecated]] GramMatrixBase(cublasHandle_t cublas_handle)
+  [[deprecated]] GramMatrixBase(hipblasHandle_t cublas_handle)
     : cublas_handle(cublas_handle), legacy_interface(true){};
 
   virtual ~GramMatrixBase(){};
@@ -200,7 +200,7 @@ class GramMatrixBase {
                                        int n2,
                                        math_t* out,
                                        bool is_row_major,
-                                       cudaStream_t stream,
+                                       hipStream_t stream,
                                        int ld1,
                                        int ld2,
                                        int ld_out)
@@ -230,7 +230,7 @@ class GramMatrixBase {
                                  int n2,
                                  math_t* out,
                                  bool is_row_major,
-                                 cudaStream_t stream,
+                                 hipStream_t stream,
                                  int ld1    = 0,
                                  int ld2    = 0,
                                  int ld_out = 0)
@@ -269,7 +269,7 @@ class GramMatrixBase {
                              int n2,
                              math_t* out,
                              bool is_row_major,
-                             cudaStream_t stream,
+                             hipStream_t stream,
                              int ld1,
                              int ld2,
                              int ld_out)
@@ -279,8 +279,8 @@ class GramMatrixBase {
     if (is_row_major) {
       // #TODO: Call from public API when ready
       RAFT_CUBLAS_TRY(raft::linalg::detail::cublasgemm(cublas_handle,
-                                                       CUBLAS_OP_T,
-                                                       CUBLAS_OP_N,
+                                                       HIPBLAS_OP_T,
+                                                       HIPBLAS_OP_N,
                                                        n2,
                                                        n1,
                                                        n_cols,
@@ -296,8 +296,8 @@ class GramMatrixBase {
     } else {
       // #TODO: Call from public API when ready
       RAFT_CUBLAS_TRY(raft::linalg::detail::cublasgemm(cublas_handle,
-                                                       CUBLAS_OP_N,
-                                                       CUBLAS_OP_T,
+                                                       HIPBLAS_OP_N,
+                                                       HIPBLAS_OP_T,
                                                        n1,
                                                        n2,
                                                        n_cols,

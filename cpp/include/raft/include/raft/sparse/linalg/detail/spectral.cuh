@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/sparse/convert/csr.cuh>
 #include <raft/sparse/coo.hpp>
 #include <raft/spectral/cluster_solvers.cuh>
@@ -108,7 +108,7 @@ void fit_embedding(raft::resources const& handle,
 
   raft::copy<T>(out, eigVecs.data() + n, n * n_components, stream);
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 };  // namespace detail

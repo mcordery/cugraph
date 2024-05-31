@@ -22,7 +22,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/input_validation.hpp>
 
 namespace raft {
@@ -41,7 +41,7 @@ namespace linalg {
  * @{
  */
 template <typename in_t, typename out_t = in_t, typename IdxType = int>
-void multiplyScalar(out_t* out, const in_t* in, in_t scalar, IdxType len, cudaStream_t stream)
+void multiplyScalar(out_t* out, const in_t* in, in_t scalar, IdxType len, hipStream_t stream)
 {
   detail::multiplyScalar(out, in, scalar, len, stream);
 }

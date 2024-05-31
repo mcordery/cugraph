@@ -37,7 +37,7 @@ using FixConnectivitiesRedOp = detail::FixConnectivitiesRedOp<value_idx, value_t
  * @return total number of components
  */
 template <typename value_idx>
-value_idx get_n_components(value_idx* colors, size_t n_rows, cudaStream_t stream)
+value_idx get_n_components(value_idx* colors, size_t n_rows, hipStream_t stream)
 {
   return detail::get_n_components(colors, n_rows, stream);
 }

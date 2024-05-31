@@ -22,7 +22,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cusparse.h>
+#include <hipsparse.h>
 
 namespace raft {
 namespace sparse {
@@ -32,44 +32,44 @@ namespace detail {
  * @defgroup gather cusparse gather methods
  * @{
  */
-inline cusparseStatus_t cusparsegather(cusparseHandle_t handle,
-                                       cusparseDnVecDescr_t vecY,
-                                       cusparseSpVecDescr_t vecX,
-                                       cudaStream_t stream)
+inline hipsparseStatus_t cusparsegather(hipsparseHandle_t handle,
+                                       hipsparseDnVecDescr_t vecY,
+                                       hipsparseSpVecDescr_t vecX,
+                                       hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseGather(handle, vecY, vecX);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseGather(handle, vecY, vecX);
 }
 
 template <
   typename T,
   typename std::enable_if_t<std::is_same_v<T, float> || std::is_same_v<T, double>>* = nullptr>
-cusparseStatus_t cusparsegthr(
-  cusparseHandle_t handle, int nnz, const T* vals, T* vals_sorted, int* d_P, cudaStream_t stream)
+hipsparseStatus_t cusparsegthr(
+  hipsparseHandle_t handle, int nnz, const T* vals, T* vals_sorted, int* d_P, hipStream_t stream)
 {
   auto constexpr float_type = []() constexpr {
     if constexpr (std::is_same_v<T, float>) {
-      return CUDA_R_32F;
+      return HIP_R_32F;
     } else if constexpr (std::is_same_v<T, double>) {
-      return CUDA_R_64F;
+      return HIP_R_64F;
     }
   }();
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  auto dense_vector_descr  = cusparseDnVecDescr_t{};
-  auto sparse_vector_descr = cusparseSpVecDescr_t{};
-  CUSPARSE_CHECK(cusparseCreateDnVec(
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  auto dense_vector_descr  = hipsparseDnVecDescr_t{};
+  auto sparse_vector_descr = hipsparseSpVecDescr_t{};
+  CUSPARSE_CHECK(hipsparseCreateDnVec(
     &dense_vector_descr, nnz, static_cast<void*>(const_cast<T*>(vals)), float_type));
-  CUSPARSE_CHECK(cusparseCreateSpVec(&sparse_vector_descr,
+  CUSPARSE_CHECK(hipsparseCreateSpVec(&sparse_vector_descr,
                                      nnz,
                                      nnz,
                                      static_cast<void*>(d_P),
                                      static_cast<void*>(vals_sorted),
-                                     CUSPARSE_INDEX_32I,
-                                     CUSPARSE_INDEX_BASE_ZERO,
+                                     HIPSPARSE_INDEX_32I,
+                                     HIPSPARSE_INDEX_BASE_ZERO,
                                      float_type));
-  auto return_value = cusparseGather(handle, dense_vector_descr, sparse_vector_descr);
-  CUSPARSE_CHECK(cusparseDestroyDnVec(dense_vector_descr));
-  CUSPARSE_CHECK(cusparseDestroySpVec(sparse_vector_descr));
+  auto return_value = hipsparseGather(handle, dense_vector_descr, sparse_vector_descr);
+  CUSPARSE_CHECK(hipsparseDestroyDnVec(dense_vector_descr));
+  CUSPARSE_CHECK(hipsparseDestroySpVec(sparse_vector_descr));
   return return_value;
 }
 /** @} */
@@ -80,17 +80,17 @@ cusparseStatus_t cusparsegthr(
  */
 template <typename T>
 void cusparsecoo2csr(
-  cusparseHandle_t handle, const T* cooRowInd, int nnz, int m, T* csrRowPtr, cudaStream_t stream);
+  hipsparseHandle_t handle, const T* cooRowInd, int nnz, int m, T* csrRowPtr, hipStream_t stream);
 template <>
-inline void cusparsecoo2csr(cusparseHandle_t handle,
+inline void cusparsecoo2csr(hipsparseHandle_t handle,
                             const int* cooRowInd,
                             int nnz,
                             int m,
                             int* csrRowPtr,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  CUSPARSE_CHECK(cusparseXcoo2csr(handle, cooRowInd, nnz, m, csrRowPtr, CUSPARSE_INDEX_BASE_ZERO));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseXcoo2csr(handle, cooRowInd, nnz, m, csrRowPtr, HIPSPARSE_INDEX_BASE_ZERO));
 }
 /** @} */
 
@@ -100,32 +100,32 @@ inline void cusparsecoo2csr(cusparseHandle_t handle,
  */
 template <typename T>
 size_t cusparsecoosort_bufferSizeExt(  // NOLINT
-  cusparseHandle_t handle,
+  hipsparseHandle_t handle,
   int m,
   int n,
   int nnz,
   const T* cooRows,
   const T* cooCols,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
 inline size_t cusparsecoosort_bufferSizeExt(  // NOLINT
-  cusparseHandle_t handle,
+  hipsparseHandle_t handle,
   int m,
   int n,
   int nnz,
   const int* cooRows,
   const int* cooCols,
-  cudaStream_t stream)
+  hipStream_t stream)
 {
   size_t val;
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  CUSPARSE_CHECK(cusparseXcoosort_bufferSizeExt(handle, m, n, nnz, cooRows, cooCols, &val));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseXcoosort_bufferSizeExt(handle, m, n, nnz, cooRows, cooCols, &val));
   return val;
 }
 
 template <typename T>
 void cusparsecoosortByRow(  // NOLINT
-  cusparseHandle_t handle,
+  hipsparseHandle_t handle,
   int m,
   int n,
   int nnz,
@@ -133,10 +133,10 @@ void cusparsecoosortByRow(  // NOLINT
   T* cooCols,
   T* P,
   void* pBuffer,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
 inline void cusparsecoosortByRow(  // NOLINT
-  cusparseHandle_t handle,
+  hipsparseHandle_t handle,
   int m,
   int n,
   int nnz,
@@ -144,10 +144,10 @@ inline void cusparsecoosortByRow(  // NOLINT
   int* cooCols,
   int* P,
   void* pBuffer,
-  cudaStream_t stream)
+  hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  CUSPARSE_CHECK(cusparseXcoosortByRow(handle, m, n, nnz, cooRows, cooCols, P, pBuffer));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseXcoosortByRow(handle, m, n, nnz, cooRows, cooCols, P, pBuffer));
 }
 /** @} */
 
@@ -157,7 +157,7 @@ inline void cusparsecoosortByRow(  // NOLINT
  * @{
  */
 template <typename ValueT, typename IndptrType, typename IndicesType>
-cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
+hipsparseStatus_t cusparsecreatecsr(hipsparseSpMatDescr_t* spMatDescr,
                                    int64_t rows,
                                    int64_t cols,
                                    int64_t nnz,
@@ -165,7 +165,7 @@ cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
                                    IndicesType* csrColInd,
                                    ValueT* csrValues);
 template <>
-inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
+inline hipsparseStatus_t cusparsecreatecsr(hipsparseSpMatDescr_t* spMatDescr,
                                           int64_t rows,
                                           int64_t cols,
                                           int64_t nnz,
@@ -173,20 +173,20 @@ inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
                                           int32_t* csrColInd,
                                           float* csrValues)
 {
-  return cusparseCreateCsr(spMatDescr,
+  return hipsparseCreateCsr(spMatDescr,
                            rows,
                            cols,
                            nnz,
                            csrRowOffsets,
                            csrColInd,
                            csrValues,
-                           CUSPARSE_INDEX_32I,
-                           CUSPARSE_INDEX_32I,
-                           CUSPARSE_INDEX_BASE_ZERO,
-                           CUDA_R_32F);
+                           HIPSPARSE_INDEX_32I,
+                           HIPSPARSE_INDEX_32I,
+                           HIPSPARSE_INDEX_BASE_ZERO,
+                           HIP_R_32F);
 }
 template <>
-inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
+inline hipsparseStatus_t cusparsecreatecsr(hipsparseSpMatDescr_t* spMatDescr,
                                           int64_t rows,
                                           int64_t cols,
                                           int64_t nnz,
@@ -194,20 +194,20 @@ inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
                                           int32_t* csrColInd,
                                           double* csrValues)
 {
-  return cusparseCreateCsr(spMatDescr,
+  return hipsparseCreateCsr(spMatDescr,
                            rows,
                            cols,
                            nnz,
                            csrRowOffsets,
                            csrColInd,
                            csrValues,
-                           CUSPARSE_INDEX_32I,
-                           CUSPARSE_INDEX_32I,
-                           CUSPARSE_INDEX_BASE_ZERO,
-                           CUDA_R_64F);
+                           HIPSPARSE_INDEX_32I,
+                           HIPSPARSE_INDEX_32I,
+                           HIPSPARSE_INDEX_BASE_ZERO,
+                           HIP_R_64F);
 }
 template <>
-inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
+inline hipsparseStatus_t cusparsecreatecsr(hipsparseSpMatDescr_t* spMatDescr,
                                           int64_t rows,
                                           int64_t cols,
                                           int64_t nnz,
@@ -215,20 +215,20 @@ inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
                                           int64_t* csrColInd,
                                           float* csrValues)
 {
-  return cusparseCreateCsr(spMatDescr,
+  return hipsparseCreateCsr(spMatDescr,
                            rows,
                            cols,
                            nnz,
                            csrRowOffsets,
                            csrColInd,
                            csrValues,
-                           CUSPARSE_INDEX_64I,
-                           CUSPARSE_INDEX_64I,
-                           CUSPARSE_INDEX_BASE_ZERO,
-                           CUDA_R_32F);
+                           HIPSPARSE_INDEX_64I,
+                           HIPSPARSE_INDEX_64I,
+                           HIPSPARSE_INDEX_BASE_ZERO,
+                           HIP_R_32F);
 }
 template <>
-inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
+inline hipsparseStatus_t cusparsecreatecsr(hipsparseSpMatDescr_t* spMatDescr,
                                           int64_t rows,
                                           int64_t cols,
                                           int64_t nnz,
@@ -236,17 +236,17 @@ inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
                                           int64_t* csrColInd,
                                           double* csrValues)
 {
-  return cusparseCreateCsr(spMatDescr,
+  return hipsparseCreateCsr(spMatDescr,
                            rows,
                            cols,
                            nnz,
                            csrRowOffsets,
                            csrColInd,
                            csrValues,
-                           CUSPARSE_INDEX_64I,
-                           CUSPARSE_INDEX_64I,
-                           CUSPARSE_INDEX_BASE_ZERO,
-                           CUDA_R_64F);
+                           HIPSPARSE_INDEX_64I,
+                           HIPSPARSE_INDEX_64I,
+                           HIPSPARSE_INDEX_BASE_ZERO,
+                           HIP_R_64F);
 }
 /** @} */
 /**
@@ -254,20 +254,20 @@ inline cusparseStatus_t cusparsecreatecsr(cusparseSpMatDescr_t* spMatDescr,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsecreatednvec(cusparseDnVecDescr_t* dnVecDescr, int64_t size, T* values);
+hipsparseStatus_t cusparsecreatednvec(hipsparseDnVecDescr_t* dnVecDescr, int64_t size, T* values);
 template <>
-inline cusparseStatus_t cusparsecreatednvec(cusparseDnVecDescr_t* dnVecDescr,
+inline hipsparseStatus_t cusparsecreatednvec(hipsparseDnVecDescr_t* dnVecDescr,
                                             int64_t size,
                                             float* values)
 {
-  return cusparseCreateDnVec(dnVecDescr, size, values, CUDA_R_32F);
+  return hipsparseCreateDnVec(dnVecDescr, size, values, HIP_R_32F);
 }
 template <>
-inline cusparseStatus_t cusparsecreatednvec(cusparseDnVecDescr_t* dnVecDescr,
+inline hipsparseStatus_t cusparsecreatednvec(hipsparseDnVecDescr_t* dnVecDescr,
                                             int64_t size,
                                             double* values)
 {
-  return cusparseCreateDnVec(dnVecDescr, size, values, CUDA_R_64F);
+  return hipsparseCreateDnVec(dnVecDescr, size, values, HIP_R_64F);
 }
 /** @} */
 
@@ -276,31 +276,31 @@ inline cusparseStatus_t cusparsecreatednvec(cusparseDnVecDescr_t* dnVecDescr,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsecreatednmat(cusparseDnMatDescr_t* dnMatDescr,
+hipsparseStatus_t cusparsecreatednmat(hipsparseDnMatDescr_t* dnMatDescr,
                                      int64_t rows,
                                      int64_t cols,
                                      int64_t ld,
                                      T* values,
-                                     cusparseOrder_t order);
+                                     hipsparseOrder_t order);
 template <>
-inline cusparseStatus_t cusparsecreatednmat(cusparseDnMatDescr_t* dnMatDescr,
+inline hipsparseStatus_t cusparsecreatednmat(hipsparseDnMatDescr_t* dnMatDescr,
                                             int64_t rows,
                                             int64_t cols,
                                             int64_t ld,
                                             float* values,
-                                            cusparseOrder_t order)
+                                            hipsparseOrder_t order)
 {
-  return cusparseCreateDnMat(dnMatDescr, rows, cols, ld, values, CUDA_R_32F, order);
+  return hipsparseCreateDnMat(dnMatDescr, rows, cols, ld, values, HIP_R_32F, order);
 }
 template <>
-inline cusparseStatus_t cusparsecreatednmat(cusparseDnMatDescr_t* dnMatDescr,
+inline hipsparseStatus_t cusparsecreatednmat(hipsparseDnMatDescr_t* dnMatDescr,
                                             int64_t rows,
                                             int64_t cols,
                                             int64_t ld,
                                             double* values,
-                                            cusparseOrder_t order)
+                                            hipsparseOrder_t order)
 {
-  return cusparseCreateDnMat(dnMatDescr, rows, cols, ld, values, CUDA_R_64F, order);
+  return hipsparseCreateDnMat(dnMatDescr, rows, cols, ld, values, HIP_R_64F, order);
 }
 /** @} */
 
@@ -309,89 +309,89 @@ inline cusparseStatus_t cusparsecreatednmat(cusparseDnMatDescr_t* dnMatDescr,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsespmv_buffersize(cusparseHandle_t handle,
-                                         cusparseOperation_t opA,
+hipsparseStatus_t cusparsespmv_buffersize(hipsparseHandle_t handle,
+                                         hipsparseOperation_t opA,
                                          const T* alpha,
-                                         const cusparseSpMatDescr_t matA,
-                                         const cusparseDnVecDescr_t vecX,
+                                         const hipsparseSpMatDescr_t matA,
+                                         const hipsparseDnVecDescr_t vecX,
                                          const T* beta,
-                                         const cusparseDnVecDescr_t vecY,
-                                         cusparseSpMVAlg_t alg,
+                                         const hipsparseDnVecDescr_t vecY,
+                                         hipsparseSpMVAlg_t alg,
                                          size_t* bufferSize,
-                                         cudaStream_t stream);
+                                         hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsespmv_buffersize(cusparseHandle_t handle,
-                                                cusparseOperation_t opA,
+inline hipsparseStatus_t cusparsespmv_buffersize(hipsparseHandle_t handle,
+                                                hipsparseOperation_t opA,
                                                 const float* alpha,
-                                                const cusparseSpMatDescr_t matA,
-                                                const cusparseDnVecDescr_t vecX,
+                                                const hipsparseSpMatDescr_t matA,
+                                                const hipsparseDnVecDescr_t vecX,
                                                 const float* beta,
-                                                const cusparseDnVecDescr_t vecY,
-                                                cusparseSpMVAlg_t alg,
+                                                const hipsparseDnVecDescr_t vecY,
+                                                hipsparseSpMVAlg_t alg,
                                                 size_t* bufferSize,
-                                                cudaStream_t stream)
+                                                hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMV_bufferSize(
-    handle, opA, alpha, matA, vecX, beta, vecY, CUDA_R_32F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMV_bufferSize(
+    handle, opA, alpha, matA, vecX, beta, vecY, HIP_R_32F, alg, bufferSize);
 }
 template <>
-inline cusparseStatus_t cusparsespmv_buffersize(cusparseHandle_t handle,
-                                                cusparseOperation_t opA,
+inline hipsparseStatus_t cusparsespmv_buffersize(hipsparseHandle_t handle,
+                                                hipsparseOperation_t opA,
                                                 const double* alpha,
-                                                const cusparseSpMatDescr_t matA,
-                                                const cusparseDnVecDescr_t vecX,
+                                                const hipsparseSpMatDescr_t matA,
+                                                const hipsparseDnVecDescr_t vecX,
                                                 const double* beta,
-                                                const cusparseDnVecDescr_t vecY,
-                                                cusparseSpMVAlg_t alg,
+                                                const hipsparseDnVecDescr_t vecY,
+                                                hipsparseSpMVAlg_t alg,
                                                 size_t* bufferSize,
-                                                cudaStream_t stream)
+                                                hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMV_bufferSize(
-    handle, opA, alpha, matA, vecX, beta, vecY, CUDA_R_64F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMV_bufferSize(
+    handle, opA, alpha, matA, vecX, beta, vecY, HIP_R_64F, alg, bufferSize);
 }
 
 template <typename T>
-cusparseStatus_t cusparsespmv(cusparseHandle_t handle,
-                              cusparseOperation_t opA,
+hipsparseStatus_t cusparsespmv(hipsparseHandle_t handle,
+                              hipsparseOperation_t opA,
                               const T* alpha,
-                              const cusparseSpMatDescr_t matA,
-                              const cusparseDnVecDescr_t vecX,
+                              const hipsparseSpMatDescr_t matA,
+                              const hipsparseDnVecDescr_t vecX,
                               const T* beta,
-                              const cusparseDnVecDescr_t vecY,
-                              cusparseSpMVAlg_t alg,
+                              const hipsparseDnVecDescr_t vecY,
+                              hipsparseSpMVAlg_t alg,
                               T* externalBuffer,
-                              cudaStream_t stream);
+                              hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsespmv(cusparseHandle_t handle,
-                                     cusparseOperation_t opA,
+inline hipsparseStatus_t cusparsespmv(hipsparseHandle_t handle,
+                                     hipsparseOperation_t opA,
                                      const float* alpha,
-                                     const cusparseSpMatDescr_t matA,
-                                     const cusparseDnVecDescr_t vecX,
+                                     const hipsparseSpMatDescr_t matA,
+                                     const hipsparseDnVecDescr_t vecX,
                                      const float* beta,
-                                     const cusparseDnVecDescr_t vecY,
-                                     cusparseSpMVAlg_t alg,
+                                     const hipsparseDnVecDescr_t vecY,
+                                     hipsparseSpMVAlg_t alg,
                                      float* externalBuffer,
-                                     cudaStream_t stream)
+                                     hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMV(handle, opA, alpha, matA, vecX, beta, vecY, CUDA_R_32F, alg, externalBuffer);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMV(handle, opA, alpha, matA, vecX, beta, vecY, HIP_R_32F, alg, externalBuffer);
 }
 template <>
-inline cusparseStatus_t cusparsespmv(cusparseHandle_t handle,
-                                     cusparseOperation_t opA,
+inline hipsparseStatus_t cusparsespmv(hipsparseHandle_t handle,
+                                     hipsparseOperation_t opA,
                                      const double* alpha,
-                                     const cusparseSpMatDescr_t matA,
-                                     const cusparseDnVecDescr_t vecX,
+                                     const hipsparseSpMatDescr_t matA,
+                                     const hipsparseDnVecDescr_t vecX,
                                      const double* beta,
-                                     const cusparseDnVecDescr_t vecY,
-                                     cusparseSpMVAlg_t alg,
+                                     const hipsparseDnVecDescr_t vecY,
+                                     hipsparseSpMVAlg_t alg,
                                      double* externalBuffer,
-                                     cudaStream_t stream)
+                                     hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMV(handle, opA, alpha, matA, vecX, beta, vecY, CUDA_R_64F, alg, externalBuffer);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMV(handle, opA, alpha, matA, vecX, beta, vecY, HIP_R_64F, alg, externalBuffer);
 }
 /** @} */
 #else
@@ -400,59 +400,59 @@ inline cusparseStatus_t cusparsespmv(cusparseHandle_t handle,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsecsrmv(  // NOLINT
-  cusparseHandle_t handle,
-  cusparseOperation_t trans,
+hipsparseStatus_t cusparsecsrmv(  // NOLINT
+  hipsparseHandle_t handle,
+  hipsparseOperation_t trans,
   int m,
   int n,
   int nnz,
   const T* alpha,
-  const cusparseMatDescr_t descr,
+  const hipsparseMatDescr_t descr,
   const T* csrVal,
   const int* csrRowPtr,
   const int* csrColInd,
   const T* x,
   const T* beta,
   T* y,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsecsrmv(cusparseHandle_t handle,
-                                      cusparseOperation_t trans,
+inline hipsparseStatus_t cusparsecsrmv(hipsparseHandle_t handle,
+                                      hipsparseOperation_t trans,
                                       int m,
                                       int n,
                                       int nnz,
                                       const float* alpha,
-                                      const cusparseMatDescr_t descr,
+                                      const hipsparseMatDescr_t descr,
                                       const float* csrVal,
                                       const int* csrRowPtr,
                                       const int* csrColInd,
                                       const float* x,
                                       const float* beta,
                                       float* y,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseScsrmv(
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseScsrmv(
     handle, trans, m, n, nnz, alpha, descr, csrVal, csrRowPtr, csrColInd, x, beta, y);
 }
 template <>
-inline cusparseStatus_t cusparsecsrmv(cusparseHandle_t handle,
-                                      cusparseOperation_t trans,
+inline hipsparseStatus_t cusparsecsrmv(hipsparseHandle_t handle,
+                                      hipsparseOperation_t trans,
                                       int m,
                                       int n,
                                       int nnz,
                                       const double* alpha,
-                                      const cusparseMatDescr_t descr,
+                                      const hipsparseMatDescr_t descr,
                                       const double* csrVal,
                                       const int* csrRowPtr,
                                       const int* csrColInd,
                                       const double* x,
                                       const double* beta,
                                       double* y,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseDcsrmv(
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseDcsrmv(
     handle, trans, m, n, nnz, alpha, descr, csrVal, csrRowPtr, csrColInd, x, beta, y);
 }
 /** @} */
@@ -464,78 +464,78 @@ inline cusparseStatus_t cusparsecsrmv(cusparseHandle_t handle,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsespmm_bufferSize(cusparseHandle_t handle,
-                                         cusparseOperation_t opA,
-                                         cusparseOperation_t opB,
+hipsparseStatus_t cusparsespmm_bufferSize(hipsparseHandle_t handle,
+                                         hipsparseOperation_t opA,
+                                         hipsparseOperation_t opB,
                                          const T* alpha,
-                                         const cusparseSpMatDescr_t matA,
-                                         const cusparseDnMatDescr_t matB,
+                                         const hipsparseSpMatDescr_t matA,
+                                         const hipsparseDnMatDescr_t matB,
                                          const T* beta,
-                                         cusparseDnMatDescr_t matC,
-                                         cusparseSpMMAlg_t alg,
+                                         hipsparseDnMatDescr_t matC,
+                                         hipsparseSpMMAlg_t alg,
                                          size_t* bufferSize,
-                                         cudaStream_t stream);
+                                         hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsespmm_bufferSize(cusparseHandle_t handle,
-                                                cusparseOperation_t opA,
-                                                cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsespmm_bufferSize(hipsparseHandle_t handle,
+                                                hipsparseOperation_t opA,
+                                                hipsparseOperation_t opB,
                                                 const float* alpha,
-                                                const cusparseSpMatDescr_t matA,
-                                                const cusparseDnMatDescr_t matB,
+                                                const hipsparseSpMatDescr_t matA,
+                                                const hipsparseDnMatDescr_t matB,
                                                 const float* beta,
-                                                cusparseDnMatDescr_t matC,
-                                                cusparseSpMMAlg_t alg,
+                                                hipsparseDnMatDescr_t matC,
+                                                hipsparseSpMMAlg_t alg,
                                                 size_t* bufferSize,
-                                                cudaStream_t stream)
+                                                hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMM_bufferSize(
-    handle, opA, opB, alpha, matA, matB, beta, matC, CUDA_R_32F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMM_bufferSize(
+    handle, opA, opB, alpha, matA, matB, beta, matC, HIP_R_32F, alg, bufferSize);
 }
 template <>
-inline cusparseStatus_t cusparsespmm_bufferSize(cusparseHandle_t handle,
-                                                cusparseOperation_t opA,
-                                                cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsespmm_bufferSize(hipsparseHandle_t handle,
+                                                hipsparseOperation_t opA,
+                                                hipsparseOperation_t opB,
                                                 const double* alpha,
-                                                const cusparseSpMatDescr_t matA,
-                                                const cusparseDnMatDescr_t matB,
+                                                const hipsparseSpMatDescr_t matA,
+                                                const hipsparseDnMatDescr_t matB,
                                                 const double* beta,
-                                                cusparseDnMatDescr_t matC,
-                                                cusparseSpMMAlg_t alg,
+                                                hipsparseDnMatDescr_t matC,
+                                                hipsparseSpMMAlg_t alg,
                                                 size_t* bufferSize,
-                                                cudaStream_t stream)
+                                                hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMM_bufferSize(
-    handle, opA, opB, alpha, matA, matB, beta, matC, CUDA_R_64F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMM_bufferSize(
+    handle, opA, opB, alpha, matA, matB, beta, matC, HIP_R_64F, alg, bufferSize);
 }
 template <typename T>
-inline cusparseStatus_t cusparsespmm(cusparseHandle_t handle,
-                                     cusparseOperation_t opA,
-                                     cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsespmm(hipsparseHandle_t handle,
+                                     hipsparseOperation_t opA,
+                                     hipsparseOperation_t opB,
                                      const T* alpha,
-                                     const cusparseSpMatDescr_t matA,
-                                     const cusparseDnMatDescr_t matB,
+                                     const hipsparseSpMatDescr_t matA,
+                                     const hipsparseDnMatDescr_t matB,
                                      const T* beta,
-                                     cusparseDnMatDescr_t matC,
-                                     cusparseSpMMAlg_t alg,
+                                     hipsparseDnMatDescr_t matC,
+                                     hipsparseSpMMAlg_t alg,
                                      T* externalBuffer,
-                                     cudaStream_t stream);
+                                     hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsespmm(cusparseHandle_t handle,
-                                     cusparseOperation_t opA,
-                                     cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsespmm(hipsparseHandle_t handle,
+                                     hipsparseOperation_t opA,
+                                     hipsparseOperation_t opB,
                                      const float* alpha,
-                                     const cusparseSpMatDescr_t matA,
-                                     const cusparseDnMatDescr_t matB,
+                                     const hipsparseSpMatDescr_t matA,
+                                     const hipsparseDnMatDescr_t matB,
                                      const float* beta,
-                                     cusparseDnMatDescr_t matC,
-                                     cusparseSpMMAlg_t alg,
+                                     hipsparseDnMatDescr_t matC,
+                                     hipsparseSpMMAlg_t alg,
                                      float* externalBuffer,
-                                     cudaStream_t stream)
+                                     hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMM(handle,
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMM(handle,
                       opA,
                       opB,
                       static_cast<void const*>(alpha),
@@ -543,25 +543,25 @@ inline cusparseStatus_t cusparsespmm(cusparseHandle_t handle,
                       matB,
                       static_cast<void const*>(beta),
                       matC,
-                      CUDA_R_32F,
+                      HIP_R_32F,
                       alg,
                       static_cast<void*>(externalBuffer));
 }
 template <>
-inline cusparseStatus_t cusparsespmm(cusparseHandle_t handle,
-                                     cusparseOperation_t opA,
-                                     cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsespmm(hipsparseHandle_t handle,
+                                     hipsparseOperation_t opA,
+                                     hipsparseOperation_t opB,
                                      const double* alpha,
-                                     const cusparseSpMatDescr_t matA,
-                                     const cusparseDnMatDescr_t matB,
+                                     const hipsparseSpMatDescr_t matA,
+                                     const hipsparseDnMatDescr_t matB,
                                      const double* beta,
-                                     cusparseDnMatDescr_t matC,
-                                     cusparseSpMMAlg_t alg,
+                                     hipsparseDnMatDescr_t matC,
+                                     hipsparseSpMMAlg_t alg,
                                      double* externalBuffer,
-                                     cudaStream_t stream)
+                                     hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSpMM(handle,
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSpMM(handle,
                       opA,
                       opB,
                       static_cast<void const*>(alpha),
@@ -569,84 +569,84 @@ inline cusparseStatus_t cusparsespmm(cusparseHandle_t handle,
                       matB,
                       static_cast<void const*>(beta),
                       matC,
-                      CUDA_R_64F,
+                      HIP_R_64F,
                       alg,
                       static_cast<void*>(externalBuffer));
 }
 
 template <typename T>
-cusparseStatus_t cusparsesddmm_bufferSize(cusparseHandle_t handle,
-                                          cusparseOperation_t opA,
-                                          cusparseOperation_t opB,
+hipsparseStatus_t cusparsesddmm_bufferSize(hipsparseHandle_t handle,
+                                          hipsparseOperation_t opA,
+                                          hipsparseOperation_t opB,
                                           const T* alpha,
-                                          const cusparseDnMatDescr_t matA,
-                                          const cusparseDnMatDescr_t matB,
+                                          const hipsparseDnMatDescr_t matA,
+                                          const hipsparseDnMatDescr_t matB,
                                           const T* beta,
-                                          cusparseSpMatDescr_t matC,
-                                          cusparseSDDMMAlg_t alg,
+                                          hipsparseSpMatDescr_t matC,
+                                          hipsparseSDDMMAlg_t alg,
                                           size_t* bufferSize,
-                                          cudaStream_t stream);
+                                          hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsesddmm_bufferSize(cusparseHandle_t handle,
-                                                 cusparseOperation_t opA,
-                                                 cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsesddmm_bufferSize(hipsparseHandle_t handle,
+                                                 hipsparseOperation_t opA,
+                                                 hipsparseOperation_t opB,
                                                  const float* alpha,
-                                                 const cusparseDnMatDescr_t matA,
-                                                 const cusparseDnMatDescr_t matB,
+                                                 const hipsparseDnMatDescr_t matA,
+                                                 const hipsparseDnMatDescr_t matB,
                                                  const float* beta,
-                                                 cusparseSpMatDescr_t matC,
-                                                 cusparseSDDMMAlg_t alg,
+                                                 hipsparseSpMatDescr_t matC,
+                                                 hipsparseSDDMMAlg_t alg,
                                                  size_t* bufferSize,
-                                                 cudaStream_t stream)
+                                                 hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSDDMM_bufferSize(
-    handle, opA, opB, alpha, matA, matB, beta, matC, CUDA_R_32F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSDDMM_bufferSize(
+    handle, opA, opB, alpha, matA, matB, beta, matC, HIP_R_32F, alg, bufferSize);
 }
 template <>
-inline cusparseStatus_t cusparsesddmm_bufferSize(cusparseHandle_t handle,
-                                                 cusparseOperation_t opA,
-                                                 cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsesddmm_bufferSize(hipsparseHandle_t handle,
+                                                 hipsparseOperation_t opA,
+                                                 hipsparseOperation_t opB,
                                                  const double* alpha,
-                                                 const cusparseDnMatDescr_t matA,
-                                                 const cusparseDnMatDescr_t matB,
+                                                 const hipsparseDnMatDescr_t matA,
+                                                 const hipsparseDnMatDescr_t matB,
                                                  const double* beta,
-                                                 cusparseSpMatDescr_t matC,
-                                                 cusparseSDDMMAlg_t alg,
+                                                 hipsparseSpMatDescr_t matC,
+                                                 hipsparseSDDMMAlg_t alg,
                                                  size_t* bufferSize,
-                                                 cudaStream_t stream)
+                                                 hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSDDMM_bufferSize(
-    handle, opA, opB, alpha, matA, matB, beta, matC, CUDA_R_64F, alg, bufferSize);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSDDMM_bufferSize(
+    handle, opA, opB, alpha, matA, matB, beta, matC, HIP_R_64F, alg, bufferSize);
 }
 template <typename T>
-inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
-                                      cusparseOperation_t opA,
-                                      cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsesddmm(hipsparseHandle_t handle,
+                                      hipsparseOperation_t opA,
+                                      hipsparseOperation_t opB,
                                       const T* alpha,
-                                      const cusparseDnMatDescr_t matA,
-                                      const cusparseDnMatDescr_t matB,
+                                      const hipsparseDnMatDescr_t matA,
+                                      const hipsparseDnMatDescr_t matB,
                                       const T* beta,
-                                      cusparseSpMatDescr_t matC,
-                                      cusparseSDDMMAlg_t alg,
+                                      hipsparseSpMatDescr_t matC,
+                                      hipsparseSDDMMAlg_t alg,
                                       T* externalBuffer,
-                                      cudaStream_t stream);
+                                      hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
-                                      cusparseOperation_t opA,
-                                      cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsesddmm(hipsparseHandle_t handle,
+                                      hipsparseOperation_t opA,
+                                      hipsparseOperation_t opB,
                                       const float* alpha,
-                                      const cusparseDnMatDescr_t matA,
-                                      const cusparseDnMatDescr_t matB,
+                                      const hipsparseDnMatDescr_t matA,
+                                      const hipsparseDnMatDescr_t matB,
                                       const float* beta,
-                                      cusparseSpMatDescr_t matC,
-                                      cusparseSDDMMAlg_t alg,
+                                      hipsparseSpMatDescr_t matC,
+                                      hipsparseSDDMMAlg_t alg,
                                       float* externalBuffer,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSDDMM(handle,
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSDDMM(handle,
                        opA,
                        opB,
                        static_cast<void const*>(alpha),
@@ -654,25 +654,25 @@ inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
                        matB,
                        static_cast<void const*>(beta),
                        matC,
-                       CUDA_R_32F,
+                       HIP_R_32F,
                        alg,
                        static_cast<void*>(externalBuffer));
 }
 template <>
-inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
-                                      cusparseOperation_t opA,
-                                      cusparseOperation_t opB,
+inline hipsparseStatus_t cusparsesddmm(hipsparseHandle_t handle,
+                                      hipsparseOperation_t opA,
+                                      hipsparseOperation_t opB,
                                       const double* alpha,
-                                      const cusparseDnMatDescr_t matA,
-                                      const cusparseDnMatDescr_t matB,
+                                      const hipsparseDnMatDescr_t matA,
+                                      const hipsparseDnMatDescr_t matB,
                                       const double* beta,
-                                      cusparseSpMatDescr_t matC,
-                                      cusparseSDDMMAlg_t alg,
+                                      hipsparseSpMatDescr_t matC,
+                                      hipsparseSDDMMAlg_t alg,
                                       double* externalBuffer,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSDDMM(handle,
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSDDMM(handle,
                        opA,
                        opB,
                        static_cast<void const*>(alpha),
@@ -680,7 +680,7 @@ inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
                        matB,
                        static_cast<void const*>(beta),
                        matC,
-                       CUDA_R_64F,
+                       HIP_R_64F,
                        alg,
                        static_cast<void*>(externalBuffer));
 }
@@ -692,15 +692,15 @@ inline cusparseStatus_t cusparsesddmm(cusparseHandle_t handle,
  * @{
  */
 template <typename T>
-cusparseStatus_t cusparsecsrmm(  // NOLINT
-  cusparseHandle_t handle,
-  cusparseOperation_t trans,
+hipsparseStatus_t cusparsecsrmm(  // NOLINT
+  hipsparseHandle_t handle,
+  hipsparseOperation_t trans,
   int m,
   int n,
   int k,
   int nnz,
   const T* alpha,
-  const cusparseMatDescr_t descr,
+  const hipsparseMatDescr_t descr,
   const T* csrVal,
   const int* csrRowPtr,
   const int* csrColInd,
@@ -709,16 +709,16 @@ cusparseStatus_t cusparsecsrmm(  // NOLINT
   const T* beta,
   T* y,
   const int ldy,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsecsrmm(cusparseHandle_t handle,
-                                      cusparseOperation_t trans,
+inline hipsparseStatus_t cusparsecsrmm(hipsparseHandle_t handle,
+                                      hipsparseOperation_t trans,
                                       int m,
                                       int n,
                                       int k,
                                       int nnz,
                                       const float* alpha,
-                                      const cusparseMatDescr_t descr,
+                                      const hipsparseMatDescr_t descr,
                                       const float* csrVal,
                                       const int* csrRowPtr,
                                       const int* csrColInd,
@@ -727,21 +727,21 @@ inline cusparseStatus_t cusparsecsrmm(cusparseHandle_t handle,
                                       const float* beta,
                                       float* y,
                                       const int ldy,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseScsrmm(
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseScsrmm(
     handle, trans, m, n, k, nnz, alpha, descr, csrVal, csrRowPtr, csrColInd, x, ldx, beta, y, ldy);
 }
 template <>
-inline cusparseStatus_t cusparsecsrmm(cusparseHandle_t handle,
-                                      cusparseOperation_t trans,
+inline hipsparseStatus_t cusparsecsrmm(hipsparseHandle_t handle,
+                                      hipsparseOperation_t trans,
                                       int m,
                                       int n,
                                       int k,
                                       int nnz,
                                       const double* alpha,
-                                      const cusparseMatDescr_t descr,
+                                      const hipsparseMatDescr_t descr,
                                       const double* csrVal,
                                       const int* csrRowPtr,
                                       const int* csrColInd,
@@ -750,10 +750,10 @@ inline cusparseStatus_t cusparsecsrmm(cusparseHandle_t handle,
                                       const double* beta,
                                       double* y,
                                       const int ldy,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseDcsrmm(
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseDcsrmm(
     handle, trans, m, n, k, nnz, alpha, descr, csrVal, csrRowPtr, csrColInd, x, ldx, beta, y, ldy);
 }
 /** @} */
@@ -765,8 +765,8 @@ inline cusparseStatus_t cusparsecsrmm(cusparseHandle_t handle,
  */
 #if CUDART_VERSION < 12000
 template <typename T>
-cusparseStatus_t cusparsegemmi(  // NOLINT
-  cusparseHandle_t handle,
+hipsparseStatus_t cusparsegemmi(  // NOLINT
+  hipsparseHandle_t handle,
   int m,
   int n,
   int k,
@@ -780,9 +780,9 @@ cusparseStatus_t cusparsegemmi(  // NOLINT
   const T* beta,
   T* C,
   int ldc,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
-inline cusparseStatus_t cusparsegemmi(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsegemmi(hipsparseHandle_t handle,
                                       int m,
                                       int n,
                                       int k,
@@ -796,17 +796,17 @@ inline cusparseStatus_t cusparsegemmi(cusparseHandle_t handle,
                                       const float* beta,
                                       float* C,
                                       int ldc,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  return cusparseSgemmi(
+  return hipsparseSgemmi(
     handle, m, n, k, nnz, alpha, A, lda, cscValB, cscColPtrB, cscRowIndB, beta, C, ldc);
 #pragma GCC diagnostic pop
 }
 template <>
-inline cusparseStatus_t cusparsegemmi(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsegemmi(hipsparseHandle_t handle,
                                       int m,
                                       int n,
                                       int k,
@@ -820,19 +820,19 @@ inline cusparseStatus_t cusparsegemmi(cusparseHandle_t handle,
                                       const double* beta,
                                       double* C,
                                       int ldc,
-                                      cudaStream_t stream)
+                                      hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  return cusparseDgemmi(
+  return hipsparseDgemmi(
     handle, m, n, k, nnz, alpha, A, lda, cscValB, cscColPtrB, cscRowIndB, beta, C, ldc);
 #pragma GCC diagnostic pop
 }
 #else  // CUDART >= 12.0
 template <typename T>
-cusparseStatus_t cusparsegemmi(  // NOLINT
-  cusparseHandle_t handle,
+hipsparseStatus_t cusparsegemmi(  // NOLINT
+  hipsparseHandle_t handle,
   int m,
   int n,
   int k,
@@ -846,41 +846,41 @@ cusparseStatus_t cusparsegemmi(  // NOLINT
   const T* beta,
   T* C,
   int ldc,
-  cudaStream_t stream)
+  hipStream_t stream)
 {
   static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>, "Unsupported data type");
 
-  cusparseDnMatDescr_t matA;
-  cusparseSpMatDescr_t matB;
-  cusparseDnMatDescr_t matC;
+  hipsparseDnMatDescr_t matA;
+  hipsparseSpMatDescr_t matB;
+  hipsparseDnMatDescr_t matC;
   rmm::device_uvector<T> CT(m * n, stream);
 
-  auto constexpr math_type = std::is_same_v<T, float> ? CUDA_R_32F : CUDA_R_64F;
+  auto constexpr math_type = std::is_same_v<T, float> ? HIP_R_32F : HIP_R_64F;
   // Create sparse matrix B
-  CUSPARSE_CHECK(cusparseCreateCsc(&matB,
+  CUSPARSE_CHECK(hipsparseCreateCsc(&matB,
                                    k,
                                    n,
                                    nnz,
                                    static_cast<void*>(const_cast<int*>(cscColPtrB)),
                                    static_cast<void*>(const_cast<int*>(cscRowIndB)),
                                    static_cast<void*>(const_cast<T*>(cscValB)),
-                                   CUSPARSE_INDEX_32I,
-                                   CUSPARSE_INDEX_32I,
-                                   CUSPARSE_INDEX_BASE_ZERO,
+                                   HIPSPARSE_INDEX_32I,
+                                   HIPSPARSE_INDEX_32I,
+                                   HIPSPARSE_INDEX_BASE_ZERO,
                                    math_type));
   /**
    *  Create dense matrices.
    *  Note: Since this is replacing `cusparse_gemmi`, it assumes dense inputs are
    *  column-ordered
    */
-  CUSPARSE_CHECK(cusparseCreateDnMat(
-    &matA, m, k, lda, static_cast<void*>(const_cast<T*>(A)), math_type, CUSPARSE_ORDER_COL));
-  CUSPARSE_CHECK(cusparseCreateDnMat(
-    &matC, n, m, n, static_cast<void*>(CT.data()), math_type, CUSPARSE_ORDER_COL));
+  CUSPARSE_CHECK(hipsparseCreateDnMat(
+    &matA, m, k, lda, static_cast<void*>(const_cast<T*>(A)), math_type, HIPSPARSE_ORDER_COL));
+  CUSPARSE_CHECK(hipsparseCreateDnMat(
+    &matC, n, m, n, static_cast<void*>(CT.data()), math_type, HIPSPARSE_ORDER_COL));
 
-  auto opA         = CUSPARSE_OPERATION_TRANSPOSE;
-  auto opB         = CUSPARSE_OPERATION_TRANSPOSE;
-  auto alg         = CUSPARSE_SPMM_CSR_ALG1;
+  auto opA         = HIPSPARSE_OPERATION_TRANSPOSE;
+  auto opB         = HIPSPARSE_OPERATION_TRANSPOSE;
+  auto alg         = HIPSPARSE_SPMM_CSR_ALG1;
   auto buffer_size = std::size_t{};
 
   CUSPARSE_CHECK(cusparsespmm_bufferSize(
@@ -894,9 +894,9 @@ cusparseStatus_t cusparsegemmi(  // NOLINT
   raft::resources rhandle;
   raft::linalg::transpose(rhandle, CT.data(), C, n, m, stream);
   // destroy matrix/vector descriptors
-  CUSPARSE_CHECK(cusparseDestroyDnMat(matA));
-  CUSPARSE_CHECK(cusparseDestroySpMat(matB));
-  CUSPARSE_CHECK(cusparseDestroyDnMat(matC));
+  CUSPARSE_CHECK(hipsparseDestroyDnMat(matA));
+  CUSPARSE_CHECK(hipsparseDestroySpMat(matB));
+  CUSPARSE_CHECK(hipsparseDestroyDnMat(matC));
   return return_value;
 }
 #endif
@@ -908,22 +908,22 @@ cusparseStatus_t cusparsegemmi(  // NOLINT
  */
 template <typename T>
 void cusparsecsr2coo(  // NOLINT
-  cusparseHandle_t handle,
+  hipsparseHandle_t handle,
   const int n,
   const int nnz,
   const T* csrRowPtr,
   T* cooRowInd,
-  cudaStream_t stream);
+  hipStream_t stream);
 template <>
-inline void cusparsecsr2coo(cusparseHandle_t handle,
+inline void cusparsecsr2coo(hipsparseHandle_t handle,
                             const int n,
                             const int nnz,
                             const int* csrRowPtr,
                             int* cooRowInd,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  CUSPARSE_CHECK(cusparseXcsr2coo(handle, csrRowPtr, nnz, n, cooRowInd, CUSPARSE_INDEX_BASE_ZERO));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseXcsr2coo(handle, csrRowPtr, nnz, n, cooRowInd, HIPSPARSE_INDEX_BASE_ZERO));
 }
 /** @} */
 
@@ -933,18 +933,18 @@ inline void cusparsecsr2coo(cusparseHandle_t handle,
  */
 // no T dependency...
 // template <typename T>
-// cusparseStatus_t cusparsesetpointermode(  // NOLINT
-//                                         cusparseHandle_t handle,
-//                                         cusparsePointerMode_t mode,
-//                                         cudaStream_t stream);
+// hipsparseStatus_t cusparsesetpointermode(  // NOLINT
+//                                         hipsparseHandle_t handle,
+//                                         hipsparsePointerMode_t mode,
+//                                         hipStream_t stream);
 
 // template<>
-inline cusparseStatus_t cusparsesetpointermode(cusparseHandle_t handle,
-                                               cusparsePointerMode_t mode,
-                                               cudaStream_t stream)
+inline hipsparseStatus_t cusparsesetpointermode(hipsparseHandle_t handle,
+                                               hipsparsePointerMode_t mode,
+                                               hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
-  return cusparseSetPointerMode(handle, mode);
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
+  return hipsparseSetPointerMode(handle, mode);
 }
 /** @} */
 
@@ -954,7 +954,7 @@ inline cusparseStatus_t cusparsesetpointermode(cusparseHandle_t handle,
  */
 
 template <typename T>
-cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
+hipsparseStatus_t cusparsecsr2csc_bufferSize(hipsparseHandle_t handle,
                                             int m,
                                             int n,
                                             int nnz,
@@ -964,14 +964,14 @@ cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
                                             void* cscVal,
                                             int* cscColPtr,
                                             int* cscRowInd,
-                                            cusparseAction_t copyValues,
-                                            cusparseIndexBase_t idxBase,
-                                            cusparseCsr2CscAlg_t alg,
+                                            hipsparseAction_t copyValues,
+                                            hipsparseIndexBase_t idxBase,
+                                            hipsparseCsr2CscAlg_t alg,
                                             size_t* bufferSize,
-                                            cudaStream_t stream);
+                                            hipStream_t stream);
 
 template <>
-inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2csc_bufferSize(hipsparseHandle_t handle,
                                                    int m,
                                                    int n,
                                                    int nnz,
@@ -981,15 +981,15 @@ inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
                                                    void* cscVal,
                                                    int* cscColPtr,
                                                    int* cscRowInd,
-                                                   cusparseAction_t copyValues,
-                                                   cusparseIndexBase_t idxBase,
-                                                   cusparseCsr2CscAlg_t alg,
+                                                   hipsparseAction_t copyValues,
+                                                   hipsparseIndexBase_t idxBase,
+                                                   hipsparseCsr2CscAlg_t alg,
                                                    size_t* bufferSize,
-                                                   cudaStream_t stream)
+                                                   hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
-  return cusparseCsr2cscEx2_bufferSize(handle,
+  return hipsparseCsr2cscEx2_bufferSize(handle,
                                        m,
                                        n,
                                        nnz,
@@ -999,14 +999,14 @@ inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
                                        cscVal,
                                        cscColPtr,
                                        cscRowInd,
-                                       CUDA_R_32F,
+                                       HIP_R_32F,
                                        copyValues,
                                        idxBase,
                                        alg,
                                        bufferSize);
 }
 template <>
-inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2csc_bufferSize(hipsparseHandle_t handle,
                                                    int m,
                                                    int n,
                                                    int nnz,
@@ -1016,15 +1016,15 @@ inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
                                                    void* cscVal,
                                                    int* cscColPtr,
                                                    int* cscRowInd,
-                                                   cusparseAction_t copyValues,
-                                                   cusparseIndexBase_t idxBase,
-                                                   cusparseCsr2CscAlg_t alg,
+                                                   hipsparseAction_t copyValues,
+                                                   hipsparseIndexBase_t idxBase,
+                                                   hipsparseCsr2CscAlg_t alg,
                                                    size_t* bufferSize,
-                                                   cudaStream_t stream)
+                                                   hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
-  return cusparseCsr2cscEx2_bufferSize(handle,
+  return hipsparseCsr2cscEx2_bufferSize(handle,
                                        m,
                                        n,
                                        nnz,
@@ -1034,7 +1034,7 @@ inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
                                        cscVal,
                                        cscColPtr,
                                        cscRowInd,
-                                       CUDA_R_64F,
+                                       HIP_R_64F,
                                        copyValues,
                                        idxBase,
                                        alg,
@@ -1042,7 +1042,7 @@ inline cusparseStatus_t cusparsecsr2csc_bufferSize(cusparseHandle_t handle,
 }
 
 template <typename T>
-cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
+hipsparseStatus_t cusparsecsr2csc(hipsparseHandle_t handle,
                                  int m,
                                  int n,
                                  int nnz,
@@ -1052,14 +1052,14 @@ cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
                                  void* cscVal,
                                  int* cscColPtr,
                                  int* cscRowInd,
-                                 cusparseAction_t copyValues,
-                                 cusparseIndexBase_t idxBase,
-                                 cusparseCsr2CscAlg_t alg,
+                                 hipsparseAction_t copyValues,
+                                 hipsparseIndexBase_t idxBase,
+                                 hipsparseCsr2CscAlg_t alg,
                                  void* buffer,
-                                 cudaStream_t stream);
+                                 hipStream_t stream);
 
 template <>
-inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2csc(hipsparseHandle_t handle,
                                         int m,
                                         int n,
                                         int nnz,
@@ -1069,15 +1069,15 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
                                         void* cscVal,
                                         int* cscColPtr,
                                         int* cscRowInd,
-                                        cusparseAction_t copyValues,
-                                        cusparseIndexBase_t idxBase,
-                                        cusparseCsr2CscAlg_t alg,
+                                        hipsparseAction_t copyValues,
+                                        hipsparseIndexBase_t idxBase,
+                                        hipsparseCsr2CscAlg_t alg,
                                         void* buffer,
-                                        cudaStream_t stream)
+                                        hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
-  return cusparseCsr2cscEx2(handle,
+  return hipsparseCsr2cscEx2(handle,
                             m,
                             n,
                             nnz,
@@ -1087,7 +1087,7 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
                             cscVal,
                             cscColPtr,
                             cscRowInd,
-                            CUDA_R_32F,
+                            HIP_R_32F,
                             copyValues,
                             idxBase,
                             alg,
@@ -1095,7 +1095,7 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
 }
 
 template <>
-inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2csc(hipsparseHandle_t handle,
                                         int m,
                                         int n,
                                         int nnz,
@@ -1105,15 +1105,15 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
                                         void* cscVal,
                                         int* cscColPtr,
                                         int* cscRowInd,
-                                        cusparseAction_t copyValues,
-                                        cusparseIndexBase_t idxBase,
-                                        cusparseCsr2CscAlg_t alg,
+                                        hipsparseAction_t copyValues,
+                                        hipsparseIndexBase_t idxBase,
+                                        hipsparseCsr2CscAlg_t alg,
                                         void* buffer,
-                                        cudaStream_t stream)
+                                        hipStream_t stream)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
-  return cusparseCsr2cscEx2(handle,
+  return hipsparseCsr2cscEx2(handle,
                             m,
                             n,
                             nnz,
@@ -1123,7 +1123,7 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
                             cscVal,
                             cscColPtr,
                             cscRowInd,
-                            CUDA_R_64F,
+                            HIP_R_64F,
                             copyValues,
                             idxBase,
                             alg,
@@ -1138,39 +1138,39 @@ inline cusparseStatus_t cusparsecsr2csc(cusparseHandle_t handle,
  */
 
 template <typename T>
-cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
+hipsparseStatus_t cusparsecsr2dense_buffersize(hipsparseHandle_t handle,
                                               int m,
                                               int n,
                                               int nnz,
-                                              const cusparseMatDescr_t descrA,
+                                              const hipsparseMatDescr_t descrA,
                                               const T* csrValA,
                                               const int* csrRowPtrA,
                                               const int* csrColIndA,
                                               T* A,
                                               int lda,
                                               size_t* buffer_size,
-                                              cudaStream_t stream,
+                                              hipStream_t stream,
                                               bool row_major = false);
 
 template <>
-inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2dense_buffersize(hipsparseHandle_t handle,
                                                      int m,
                                                      int n,
                                                      int nnz,
-                                                     const cusparseMatDescr_t descrA,
+                                                     const hipsparseMatDescr_t descrA,
                                                      const float* csrValA,
                                                      const int* csrRowPtrA,
                                                      const int* csrColIndA,
                                                      float* A,
                                                      int lda,
                                                      size_t* buffer_size,
-                                                     cudaStream_t stream,
+                                                     hipStream_t stream,
                                                      bool row_major)
 {
 #if CUDART_VERSION >= 11020
-  cusparseOrder_t order = row_major ? CUSPARSE_ORDER_ROW : CUSPARSE_ORDER_COL;
+  hipsparseOrder_t order = row_major ? HIPSPARSE_ORDER_ROW : HIPSPARSE_ORDER_COL;
 
-  cusparseSpMatDescr_t matA;
+  hipsparseSpMatDescr_t matA;
   cusparsecreatecsr(&matA,
                     static_cast<int64_t>(m),
                     static_cast<int64_t>(n),
@@ -1179,7 +1179,7 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
                     const_cast<int*>(csrColIndA),
                     const_cast<float*>(csrValA));
 
-  cusparseDnMatDescr_t matB;
+  hipsparseDnMatDescr_t matB;
   cusparsecreatednmat(&matB,
                       static_cast<int64_t>(m),
                       static_cast<int64_t>(n),
@@ -1187,15 +1187,15 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
                       const_cast<float*>(A),
                       order);
 
-  cusparseStatus_t result = cusparseSparseToDense_bufferSize(
-    handle, matA, matB, CUSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer_size);
+  hipsparseStatus_t result = hipsparseSparseToDense_bufferSize(
+    handle, matA, matB, HIPSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer_size);
 
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroySpMat(matA));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(matB));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroySpMat(matA));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(matB));
 
 #else
 
-  cusparseStatus_t result = CUSPARSE_STATUS_SUCCESS;
+  hipsparseStatus_t result = HIPSPARSE_STATUS_SUCCESS;
   buffer_size[0]          = 0;
 
 #endif
@@ -1203,23 +1203,23 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
 }
 
 template <>
-inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2dense_buffersize(hipsparseHandle_t handle,
                                                      int m,
                                                      int n,
                                                      int nnz,
-                                                     const cusparseMatDescr_t descrA,
+                                                     const hipsparseMatDescr_t descrA,
                                                      const double* csrValA,
                                                      const int* csrRowPtrA,
                                                      const int* csrColIndA,
                                                      double* A,
                                                      int lda,
                                                      size_t* buffer_size,
-                                                     cudaStream_t stream,
+                                                     hipStream_t stream,
                                                      bool row_major)
 {
 #if CUDART_VERSION >= 11020
-  cusparseOrder_t order = row_major ? CUSPARSE_ORDER_ROW : CUSPARSE_ORDER_COL;
-  cusparseSpMatDescr_t matA;
+  hipsparseOrder_t order = row_major ? HIPSPARSE_ORDER_ROW : HIPSPARSE_ORDER_COL;
+  hipsparseSpMatDescr_t matA;
   cusparsecreatecsr(&matA,
                     static_cast<int64_t>(m),
                     static_cast<int64_t>(n),
@@ -1228,7 +1228,7 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
                     const_cast<int*>(csrColIndA),
                     const_cast<double*>(csrValA));
 
-  cusparseDnMatDescr_t matB;
+  hipsparseDnMatDescr_t matB;
   cusparsecreatednmat(&matB,
                       static_cast<int64_t>(m),
                       static_cast<int64_t>(n),
@@ -1236,14 +1236,14 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
                       const_cast<double*>(A),
                       order);
 
-  cusparseStatus_t result = cusparseSparseToDense_bufferSize(
-    handle, matA, matB, CUSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer_size);
+  hipsparseStatus_t result = hipsparseSparseToDense_bufferSize(
+    handle, matA, matB, HIPSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer_size);
 
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroySpMat(matA));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(matB));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroySpMat(matA));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(matB));
 
 #else
-  cusparseStatus_t result = CUSPARSE_STATUS_SUCCESS;
+  hipsparseStatus_t result = HIPSPARSE_STATUS_SUCCESS;
   buffer_size[0]          = 0;
 
 #endif
@@ -1252,40 +1252,40 @@ inline cusparseStatus_t cusparsecsr2dense_buffersize(cusparseHandle_t handle,
 }
 
 template <typename T>
-cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
+hipsparseStatus_t cusparsecsr2dense(hipsparseHandle_t handle,
                                    int m,
                                    int n,
                                    int nnz,
-                                   const cusparseMatDescr_t descrA,
+                                   const hipsparseMatDescr_t descrA,
                                    const T* csrValA,
                                    const int* csrRowPtrA,
                                    const int* csrColIndA,
                                    T* A,
                                    int lda,
                                    void* buffer,
-                                   cudaStream_t stream,
+                                   hipStream_t stream,
                                    bool row_major = false);
 
 template <>
-inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2dense(hipsparseHandle_t handle,
                                           int m,
                                           int n,
                                           int nnz,
-                                          const cusparseMatDescr_t descrA,
+                                          const hipsparseMatDescr_t descrA,
                                           const float* csrValA,
                                           const int* csrRowPtrA,
                                           const int* csrColIndA,
                                           float* A,
                                           int lda,
                                           void* buffer,
-                                          cudaStream_t stream,
+                                          hipStream_t stream,
                                           bool row_major)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
 #if CUDART_VERSION >= 11020
-  cusparseOrder_t order = row_major ? CUSPARSE_ORDER_ROW : CUSPARSE_ORDER_COL;
-  cusparseSpMatDescr_t matA;
+  hipsparseOrder_t order = row_major ? HIPSPARSE_ORDER_ROW : HIPSPARSE_ORDER_COL;
+  hipsparseSpMatDescr_t matA;
   cusparsecreatecsr(&matA,
                     static_cast<int64_t>(m),
                     static_cast<int64_t>(n),
@@ -1294,7 +1294,7 @@ inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
                     const_cast<int*>(csrColIndA),
                     const_cast<float*>(csrValA));
 
-  cusparseDnMatDescr_t matB;
+  hipsparseDnMatDescr_t matB;
   cusparsecreatednmat(&matB,
                       static_cast<int64_t>(m),
                       static_cast<int64_t>(n),
@@ -1302,37 +1302,37 @@ inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
                       const_cast<float*>(A),
                       order);
 
-  cusparseStatus_t result =
-    cusparseSparseToDense(handle, matA, matB, CUSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer);
+  hipsparseStatus_t result =
+    hipsparseSparseToDense(handle, matA, matB, HIPSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer);
 
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroySpMat(matA));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(matB));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroySpMat(matA));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(matB));
 
   return result;
 #else
-  return cusparseScsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda);
+  return hipsparseScsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda);
 #endif
 }
 template <>
-inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
+inline hipsparseStatus_t cusparsecsr2dense(hipsparseHandle_t handle,
                                           int m,
                                           int n,
                                           int nnz,
-                                          const cusparseMatDescr_t descrA,
+                                          const hipsparseMatDescr_t descrA,
                                           const double* csrValA,
                                           const int* csrRowPtrA,
                                           const int* csrColIndA,
                                           double* A,
                                           int lda,
                                           void* buffer,
-                                          cudaStream_t stream,
+                                          hipStream_t stream,
                                           bool row_major)
 {
-  CUSPARSE_CHECK(cusparseSetStream(handle, stream));
+  CUSPARSE_CHECK(hipsparseSetStream(handle, stream));
 
 #if CUDART_VERSION >= 11020
-  cusparseOrder_t order = row_major ? CUSPARSE_ORDER_ROW : CUSPARSE_ORDER_COL;
-  cusparseSpMatDescr_t matA;
+  hipsparseOrder_t order = row_major ? HIPSPARSE_ORDER_ROW : HIPSPARSE_ORDER_COL;
+  hipsparseSpMatDescr_t matA;
   cusparsecreatecsr(&matA,
                     static_cast<int64_t>(m),
                     static_cast<int64_t>(n),
@@ -1341,7 +1341,7 @@ inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
                     const_cast<int*>(csrColIndA),
                     const_cast<double*>(csrValA));
 
-  cusparseDnMatDescr_t matB;
+  hipsparseDnMatDescr_t matB;
   cusparsecreatednmat(&matB,
                       static_cast<int64_t>(m),
                       static_cast<int64_t>(n),
@@ -1349,16 +1349,16 @@ inline cusparseStatus_t cusparsecsr2dense(cusparseHandle_t handle,
                       const_cast<double*>(A),
                       order);
 
-  cusparseStatus_t result =
-    cusparseSparseToDense(handle, matA, matB, CUSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer);
+  hipsparseStatus_t result =
+    hipsparseSparseToDense(handle, matA, matB, HIPSPARSE_SPARSETODENSE_ALG_DEFAULT, buffer);
 
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroySpMat(matA));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(matB));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroySpMat(matA));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(matB));
 
   return result;
 #else
 
-  return cusparseDcsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda);
+  return hipsparseDcsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda);
 #endif
 }
 

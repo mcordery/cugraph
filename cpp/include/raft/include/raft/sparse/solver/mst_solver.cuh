@@ -31,7 +31,7 @@ struct Graph_COO {
   rmm::device_uvector<weight_t> weights;
   edge_t n_edges;
 
-  Graph_COO(vertex_t size, cudaStream_t stream)
+  Graph_COO(vertex_t size, hipStream_t stream)
     : src(size, stream), dst(size, stream), weights(size, stream)
   {
   }
@@ -47,7 +47,7 @@ class MST_solver {
              const vertex_t v_,
              const edge_t e_,
              vertex_t* color_,
-             cudaStream_t stream_,
+             hipStream_t stream_,
              bool symmetrize_output_,
              bool initialize_colors_,
              int iterations_);
@@ -58,7 +58,7 @@ class MST_solver {
 
  private:
   raft::resources const& handle;
-  cudaStream_t stream;
+  hipStream_t stream;
   bool symmetrize_output, initialize_colors;
   int iterations;
 

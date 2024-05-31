@@ -18,7 +18,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/kvp.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/distance/masked_nn.cuh>
@@ -36,7 +36,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
 #include <thrust/gather.h>
@@ -160,7 +160,7 @@ struct CubKVPMinReduce {
  * @return total number of components
  */
 template <typename value_idx>
-value_idx get_n_components(value_idx* colors, size_t n_rows, cudaStream_t stream)
+value_idx get_n_components(value_idx* colors, size_t n_rows, hipStream_t stream)
 {
   rmm::device_uvector<value_idx> map_ids(0, stream);
   int num_clusters = raft::label::getUniquelabels(map_ids, colors, n_rows, stream);
@@ -407,7 +407,7 @@ void min_components_by_color(raft::sparse::COO<value_t, value_idx>& coo,
                              const value_idx* indices,
                              const raft::KeyValuePair<value_idx, value_t>* kvp,
                              size_t nnz,
-                             cudaStream_t stream)
+                             hipStream_t stream)
 {
   /**
    * Arrays should be ordered by: colors_indptr->colors_n->kvp.value

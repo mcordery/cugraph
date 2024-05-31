@@ -19,7 +19,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/host_mdspan.hpp>
 //#include <raft/core/nvtx.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/matrix/detail/select_warpsort.cuh>

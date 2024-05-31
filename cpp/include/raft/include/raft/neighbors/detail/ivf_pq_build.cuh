@@ -21,7 +21,7 @@
 #include <raft/core/logger.hpp>
 //#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -51,7 +51,7 @@
 #include <rmm/mr/device/managed_memory_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #include <thrust/extrema.h>
 #include <thrust/scan.h>
 
@@ -137,13 +137,13 @@ inline void make_rotation_matrix(raft::resources const& handle,
     raft::random::normal(handle, rng, mat, n * n, 0.0f, 1.0f);
     linalg::detail::qrGetQ_inplace(handle, mat, n, n, stream);
     if (!inplace) {
-      RAFT_CUDA_TRY(cudaMemcpy2DAsync(rotation_matrix,
+      RAFT_CUDA_TRY(hipMemcpy2DAsync(rotation_matrix,
                                       sizeof(float) * n_cols,
                                       mat,
                                       sizeof(float) * n,
                                       sizeof(float) * n_cols,
                                       n_rows,
-                                      cudaMemcpyDefault,
+                                      hipMemcpyDefault,
                                       stream));
     }
   } else {
@@ -180,7 +180,7 @@ void select_residuals(raft::resources const& handle,
   rmm::device_uvector<float> tmp(size_t(n_rows) * size_t(dim), stream, device_memory);
   // Note: the number of rows of the input dataset isn't actually n_rows, but matrix::gather doesn't
   // need to know it, any strictly positive number would work.
-  cub::TransformInputIterator<float, utils::mapping<float>, const T*> mapping_itr(
+  hipcub::TransformInputIterator<float, utils::mapping<float>, const T*> mapping_itr(
     dataset, utils::mapping<float>{});
   raft::matrix::gather(mapping_itr, (IdxT)dim, n_rows, row_ids, n_rows, tmp.data(), stream);
 
@@ -320,13 +320,13 @@ void set_centers(raft::resources const& handle, index<IdxT>* index, const float*
   auto* device_memory = resource::get_workspace_resource(handle);
 
   // combine cluster_centers and their norms
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(index->centers().data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(index->centers().data_handle(),
                                   sizeof(float) * index->dim_ext(),
                                   cluster_centers,
                                   sizeof(float) * index->dim(),
                                   sizeof(float) * index->dim(),
                                   index->n_lists(),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   stream));
 
   rmm::device_uvector<float> center_norms(index->n_lists(), stream, device_memory);
@@ -337,13 +337,13 @@ void set_centers(raft::resources const& handle, index<IdxT>* index, const float*
                         raft::linalg::L2Norm,
                         true,
                         stream);
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(index->centers().data_handle() + index->dim(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(index->centers().data_handle() + index->dim(),
                                   sizeof(float) * index->dim_ext(),
                                   center_norms.data(),
                                   sizeof(float),
                                   sizeof(float),
                                   index->n_lists(),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   stream));
 
   //     Rotate cluster_centers
@@ -649,7 +649,7 @@ inline void unpack_list_data(
     }
   }();
   kernel<<<blocks, threads, 0, stream>>>(codes, list_data, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /** Unpack the list data; see the public interface for the api and usage. */
@@ -740,7 +740,7 @@ inline void unpack_contiguous_list_data(
     }
   }();
   kernel<<<blocks, threads, 0, stream>>>(codes, list_data, n_rows, pq_dim, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /** Unpack the list data; see the public interface for the api and usage. */
@@ -876,7 +876,7 @@ void reconstruct_list_data(raft::resources const& res,
                                                                  index.codebook_kind(),
                                                                  label,
                                                                  offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   float* out_float_ptr = nullptr;
   rmm::device_uvector<float> out_float_buf(
@@ -981,7 +981,7 @@ inline void pack_list_data(
     }
   }();
   kernel<<<blocks, threads, 0, stream>>>(list_data, codes, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename IdxT>
@@ -1073,7 +1073,7 @@ inline void pack_contiguous_list_data(
     }
   }();
   kernel<<<blocks, threads, 0, stream>>>(list_data, codes, n_rows, pq_dim, offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename IdxT>
@@ -1289,7 +1289,7 @@ void encode_list_data(raft::resources const& res,
                                                                  index->codebook_kind(),
                                                                  label,
                                                                  offset_or_indices);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -1362,7 +1362,7 @@ void process_and_fill_codes(raft::resources const& handle,
                                                                     index.data_ptrs(),
                                                                     index.pq_centers(),
                                                                     index.codebook_kind());
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -1533,7 +1533,7 @@ void extend(raft::resources const& handle,
 
   // Available device memory
   size_t free_mem, total_mem;
-  RAFT_CUDA_TRY(cudaMemGetInfo(&free_mem, &total_mem));
+  RAFT_CUDA_TRY(hipMemGetInfo(&free_mem, &total_mem));
 
   // Allocate a buffer for the new labels (classifying the new data)
   rmm::device_uvector<uint32_t> new_data_labels(n_rows, stream, device_memory);
@@ -1582,13 +1582,13 @@ void extend(raft::resources const& handle,
     // the kmeans_balanced::predict. Thus, we need the restructuring copy.
     rmm::device_uvector<float> cluster_centers(
       size_t(n_clusters) * size_t(index->dim()), stream, device_memory);
-    RAFT_CUDA_TRY(cudaMemcpy2DAsync(cluster_centers.data(),
+    RAFT_CUDA_TRY(hipMemcpy2DAsync(cluster_centers.data(),
                                     sizeof(float) * index->dim(),
                                     index->centers().data_handle(),
                                     sizeof(float) * index->dim_ext(),
                                     sizeof(float) * index->dim(),
                                     n_clusters,
-                                    cudaMemcpyDefault,
+                                    hipMemcpyDefault,
                                     stream));
     for (const auto& batch : vec_batches) {
       auto batch_data_view = raft::make_device_matrix_view<const T, internal_extents_t>(
@@ -1716,18 +1716,18 @@ auto build(raft::resources const& handle,
     rmm::device_uvector<float> trainset(n_rows_train * index.dim(), stream, device_memory);
     // TODO: a proper sampling
     if constexpr (std::is_same_v<T, float>) {
-      RAFT_CUDA_TRY(cudaMemcpy2DAsync(trainset.data(),
+      RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset.data(),
                                       sizeof(T) * index.dim(),
                                       dataset,
                                       sizeof(T) * index.dim() * trainset_ratio,
                                       sizeof(T) * index.dim(),
                                       n_rows_train,
-                                      cudaMemcpyDefault,
+                                      hipMemcpyDefault,
                                       stream));
     } else {
       size_t dim = index.dim();
-      cudaPointerAttributes dataset_attr;
-      RAFT_CUDA_TRY(cudaPointerGetAttributes(&dataset_attr, dataset));
+      hipPointerAttribute_t dataset_attr;
+      RAFT_CUDA_TRY(hipPointerGetAttributes(&dataset_attr, dataset));
       if (dataset_attr.devicePointer != nullptr) {
         // data is available on device: just run the kernel to copy and map the data
         auto p = reinterpret_cast<T*>(dataset_attr.devicePointer);
@@ -1743,13 +1743,13 @@ auto build(raft::resources const& handle,
                                                  (sizeof(float) - sizeof(T)) * index.dim());
         // We copy the data in strides, one row at a time, and place the smaller rows of type T
         // at the end of float rows.
-        RAFT_CUDA_TRY(cudaMemcpy2DAsync(trainset_tmp,
+        RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset_tmp,
                                         sizeof(float) * index.dim(),
                                         dataset,
                                         sizeof(T) * index.dim() * trainset_ratio,
                                         sizeof(T) * index.dim(),
                                         n_rows_train,
-                                        cudaMemcpyDefault,
+                                        hipMemcpyDefault,
                                         stream));
         // Transform the input `{T -> float}`, one row per warp.
         // The threads in each warp copy the data synchronously; this and the layout of the data

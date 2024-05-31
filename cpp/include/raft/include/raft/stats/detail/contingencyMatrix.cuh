@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/extrema.h>
@@ -62,15 +63,15 @@ void computeCMatWAtomics(const T* groundTruth,
                          OutT* outMat,
                          int outIdxOffset,
                          int outDimN,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   RAFT_CUDA_TRY(
-    cudaFuncSetCacheConfig(devConstructContingencyMatrix<T, OutT>, cudaFuncCachePreferL1));
+    hipFuncSetCacheConfig(devConstructContingencyMatrix<T, OutT>, hipFuncCachePreferL1));
   static const int block = 128;
   auto grid              = raft::ceildiv(nSamples, block);
   devConstructContingencyMatrix<T, OutT><<<grid, block, 0, stream>>>(
     groundTruth, predictedLabel, nSamples, outMat, outIdxOffset, outDimN);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename T, typename OutT = int>
@@ -107,14 +108,14 @@ void computeCMatWSmemAtomics(const T* groundTruth,
                              OutT* outMat,
                              int outIdxOffset,
                              int outDimN,
-                             cudaStream_t stream)
+                             hipStream_t stream)
 {
   static const int block  = 128;
   auto grid               = raft::ceildiv(nSamples, block);
   size_t smemSizePerBlock = outDimN * outDimN * sizeof(OutT);
   devConstructContingencyMatrixSmem<T, OutT><<<grid, block, smemSizePerBlock, stream>>>(
     groundTruth, predictedLabel, nSamples, outMat, outIdxOffset, outDimN);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename T, typename OutT = int>
@@ -126,7 +127,7 @@ void contingencyMatrixWSort(const T* groundTruth,
                             T maxLabel,
                             void* workspace,
                             size_t workspaceSize,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
   T* outKeys           = reinterpret_cast<T*>(workspace);
   auto alignedBufferSz = raft::alignTo<size_t>(nSamples * sizeof(T), 256);
@@ -137,7 +138,7 @@ void contingencyMatrixWSort(const T* groundTruth,
   // we dont really need perfect sorting, should get by with some sort of
   // binning-reordering operation
   ///@todo: future work - explore "efficient" custom binning kernels vs cub sort
-  RAFT_CUDA_TRY(cub::DeviceRadixSort::SortPairs(pWorkspaceCub,
+  RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortPairs(pWorkspaceCub,
                                                 workspaceSize,
                                                 groundTruth,
                                                 outKeys,
@@ -158,8 +159,8 @@ ContingencyMatrixImplType getImplVersion(OutT outDimN)
   int l2CacheSize = 0;
   // no way to query this from CUDA APIs, value for CC 7.0, 3.0
   int maxBlocksResidentPerSM = 16;
-  RAFT_CUDA_TRY(cudaGetDevice(&currDevice));
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&l2CacheSize, cudaDevAttrL2CacheSize, currDevice));
+  RAFT_CUDA_TRY(hipGetDevice(&currDevice));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&l2CacheSize, hipDeviceAttributeL2CacheSize, currDevice));
   auto maxSmemPerBlock                  = raft::getSharedMemPerBlock();
   ContingencyMatrixImplType implVersion = IMPL_NONE;
   // keeping 8 block per SM to get good utilization
@@ -187,7 +188,7 @@ ContingencyMatrixImplType getImplVersion(OutT outDimN)
  */
 template <typename T>
 void getInputClassCardinality(
-  const T* groundTruth, const int nSamples, cudaStream_t stream, T& minLabel, T& maxLabel)
+  const T* groundTruth, const int nSamples, hipStream_t stream, T& minLabel, T& maxLabel)
 {
   thrust::device_ptr<const T> dTrueLabel = thrust::device_pointer_cast(groundTruth);
   auto min_max =
@@ -209,7 +210,7 @@ void getInputClassCardinality(
 template <typename T, typename OutT = int>
 size_t getContingencyMatrixWorkspaceSize(int nSamples,
                                          const T* groundTruth,
-                                         cudaStream_t stream,
+                                         hipStream_t stream,
                                          T minLabel = std::numeric_limits<T>::max(),
                                          T maxLabel = std::numeric_limits<T>::max())
 {
@@ -225,7 +226,7 @@ size_t getContingencyMatrixWorkspaceSize(int nSamples,
     size_t tmpStorageBytes = 0;
     // no-op pointers to get workspace size
     T* pTmpUnused{};
-    RAFT_CUDA_TRY(cub::DeviceRadixSort::SortPairs(
+    RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortPairs(
       pWorkspaceCub, tmpStorageBytes, pTmpUnused, pTmpUnused, pTmpUnused, pTmpUnused, nSamples));
     auto tmpStagingMemorySize = raft::alignTo<size_t>(nSamples * sizeof(T), 256);
     tmpStagingMemorySize *= 2;
@@ -256,7 +257,7 @@ void contingencyMatrix(const T* groundTruth,
                        const T* predictedLabel,
                        int nSamples,
                        OutT* outMat,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        void* workspace      = nullptr,
                        size_t workspaceSize = 0,
                        T minLabel           = std::numeric_limits<T>::max(),
@@ -277,7 +278,7 @@ void contingencyMatrix(const T* groundTruth,
     getInputClassCardinality<T>(groundTruth, nSamples, stream, minLabel, maxLabel);
   }
   auto outDimM_N = OutT(maxLabel - minLabel + 1);
-  RAFT_CUDA_TRY(cudaMemsetAsync(outMat, 0, sizeof(OutT) * outDimM_N * outDimM_N, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(outMat, 0, sizeof(OutT) * outDimM_N * outDimM_N, stream));
   ContingencyMatrixImplType implVersion = getImplVersion<OutT>(outDimM_N);
   switch (implVersion) {
     case SMEM_ATOMICS:

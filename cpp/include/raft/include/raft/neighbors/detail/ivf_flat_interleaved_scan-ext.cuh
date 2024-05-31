@@ -22,7 +22,7 @@
 
 #include <rmm/cuda_stream_view.hpp>  // rmm:cuda_stream_view
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 #include <cstdint>  // uintX_t
 

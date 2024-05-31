@@ -21,7 +21,7 @@
 #include "detail/eig.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft {
 namespace linalg {
@@ -45,7 +45,7 @@ void eigDC(raft::resources const& handle,
            std::size_t n_cols,
            math_t* eig_vectors,
            math_t* eig_vals,
-           cudaStream_t stream)
+           hipStream_t stream)
 {
   detail::eigDC(handle, in, n_rows, n_cols, eig_vectors, eig_vals, stream);
 }
@@ -77,7 +77,7 @@ void eigSelDC(raft::resources const& handle,
               math_t* eig_vectors,
               math_t* eig_vals,
               EigVecMemUsage memUsage,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   detail::eigSelDC(handle, in, n_rows, n_cols, n_eig_vals, eig_vectors, eig_vals, memUsage, stream);
 }
@@ -104,7 +104,7 @@ void eigJacobi(raft::resources const& handle,
                std::size_t n_cols,
                math_t* eig_vectors,
                math_t* eig_vals,
-               cudaStream_t stream,
+               hipStream_t stream,
                math_t tol = 1.e-7,
                int sweeps = 15)
 {

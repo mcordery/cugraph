@@ -47,7 +47,7 @@ template <typename InType,
           typename IdxType = int,
           int TPB          = 256>
 void binaryOp(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, Lambda op, cudaStream_t stream)
+  OutType* out, const InType* in1, const InType* in2, IdxType len, Lambda op, hipStream_t stream)
 {
   return detail::map<false>(stream, out, len, op, in1, in2);
 }

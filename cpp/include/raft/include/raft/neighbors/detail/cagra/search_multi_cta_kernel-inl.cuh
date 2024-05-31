@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -25,7 +26,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -392,12 +393,12 @@ void set_value_batch(T* const dev_ptr,
                      const T val,
                      const std::size_t count,
                      const std::size_t batch_size,
-                     cudaStream_t cuda_stream)
+                     hipStream_t hip_stream)
 {
   constexpr std::uint32_t block_size = 256;
   const auto grid_size               = (count * batch_size + block_size - 1) / block_size;
   set_value_batch_kernel<T>
-    <<<grid_size, block_size, 0, cuda_stream>>>(dev_ptr, ld, val, count, batch_size);
+    <<<grid_size, block_size, 0, hip_stream>>>(dev_ptr, ld, val, count, batch_size);
 }
 
 template <uint32_t TEAM_SIZE,
@@ -465,14 +466,14 @@ void select_and_run(
   size_t max_iterations,
   SAMPLE_FILTER_T sample_filter,
   raft::distance::DistanceType metric,
-  cudaStream_t stream)
+  hipStream_t stream)
 {
   auto kernel =
     search_kernel_config<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T>::
       choose_buffer_size(result_buffer_size, block_size);
 
-  RAFT_CUDA_TRY(cudaFuncSetAttribute(kernel,
-                                     cudaFuncAttributeMaxDynamicSharedMemorySize,
+  RAFT_CUDA_TRY(hipFuncSetAttribute(kernel,
+                                     hipFuncAttributeMaxDynamicSharedMemorySize,
                                      smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
   // Initialize hash table
   const uint32_t hash_size = hashmap::get_size(hash_bitlen);

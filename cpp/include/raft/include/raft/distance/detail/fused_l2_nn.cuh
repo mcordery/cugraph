@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -95,7 +96,7 @@ RAFT_KERNEL initKernel(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp)
 }
 
 template <typename DataT, typename OutT, typename IdxT, typename ReduceOpT>
-void initialize(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp, cudaStream_t stream)
+void initialize(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp, hipStream_t stream)
 {
   auto blks = raft::ceildiv(m, 256);
   initKernel<DataT, OutT, IdxT><<<blks, 256, 0, stream>>>(min, m, maxVal, redOp);
@@ -294,7 +295,7 @@ void fusedL2NNImpl(OutT* min,
                    KVPReduceOpT pairRedOp,
                    bool sqrt,
                    bool initOutBuffer,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   // The kernel policy is determined by fusedL2NN.
   typedef Policy P;
@@ -304,11 +305,11 @@ void fusedL2NNImpl(OutT* min,
   constexpr auto maxVal = std::numeric_limits<DataT>::max();
   typedef KeyValuePair<IdxT, DataT> KVPair;
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(workspace, 0, sizeof(int) * m, stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(workspace, 0, sizeof(int) * m, stream));
   if (initOutBuffer) {
     initKernel<DataT, OutT, IdxT, ReduceOpT>
       <<<nblks, P::Nthreads, 0, stream>>>(min, m, maxVal, redOp);
-    RAFT_CUDA_TRY(cudaGetLastError());
+    RAFT_CUDA_TRY(hipGetLastError());
   }
 
   namespace arch = raft::util::arch;
@@ -377,7 +378,7 @@ void fusedL2NNImpl(OutT* min,
 
     kernel<<<grid, blk, shmemSize, stream>>>(
       min, x, y, xn, yn, m, n, k, maxVal, workspace, redOp, pairRedOp, distance_op, fin_op);
-    RAFT_CUDA_TRY(cudaGetLastError());
+    RAFT_CUDA_TRY(hipGetLastError());
   }
 }
 

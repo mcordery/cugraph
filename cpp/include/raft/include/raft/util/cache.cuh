@@ -25,7 +25,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <cstddef>
 
@@ -59,7 +59,7 @@ namespace raft::cache {
  * // An expensive calculation that we want to accelerate with caching:
  * // we have n keys, and for each key we generate a vector with m elements.
  * // The keys and the output values are stored in GPU memory.
- * void calc(int *key, int n, int m, float *out, cudaStream_t stream) {
+ * void calc(int *key, int n, int m, float *out, hipStream_t stream) {
  *   for (k=0; k<n; k++) {
  *     // use key[k] to generate out[i + m*k],  where i=0..m-1
  *   }
@@ -68,7 +68,7 @@ namespace raft::cache {
  * // We assume that our ML algo repeatedly calls calc, and the set of keys have
  * // an overlap. We will use the cache to avoid repeated calculations.
  *
- * // Assume we have raft::resources& h, and cudaStream_t stream
+ * // Assume we have raft::resources& h, and hipStream_t stream
  * Cache<float> cache(h.get_device_allocator(), stream, m);
  *
  * // A buffer that we will reuse to store the cache indices.
@@ -78,7 +78,7 @@ namespace raft::cache {
  *   int n_cached = 0;
  *
  *   cache.GetCacheIdxPartitioned(key, n, cache_idx.data(), &n_cached,
- *                                cudaStream_t stream);
+ *                                hipStream_t stream);
  *
  *   // Note: GetCacheIdxPartitioned has reordered the keys so that
  *   // key[0..n_cached-1] are the keys already in the cache.
@@ -121,7 +121,7 @@ class Cache {
    *   cache entry
    * @param cache_size in MiB
    */
-  Cache(cudaStream_t stream, int n_vec, float cache_size = 200)
+  Cache(hipStream_t stream, int n_vec, float cache_size = 200)
     : n_vec(n_vec),
       cache_size(cache_size),
       cache(0, stream),
@@ -148,8 +148,8 @@ class Cache {
       cached_keys.resize(n_cache_vecs, stream);
       cache_time.resize(n_cache_vecs, stream);
       RAFT_CUDA_TRY(
-        cudaMemsetAsync(cached_keys.data(), 0, cached_keys.size() * sizeof(int), stream));
-      RAFT_CUDA_TRY(cudaMemsetAsync(cache_time.data(), 0, cache_time.size() * sizeof(int), stream));
+        hipMemsetAsync(cached_keys.data(), 0, cached_keys.size() * sizeof(int), stream));
+      RAFT_CUDA_TRY(hipMemsetAsync(cache_time.data(), 0, cache_time.size() * sizeof(int), stream));
     } else {
       if (cache_size > 0) {
         RAFT_LOG_WARN(
@@ -185,11 +185,11 @@ class Cache {
    * @param [out] out vectors collected from cache, size [n_vec*n]
    * @param [in] stream cuda stream
    */
-  void GetVecs(const int* idx, int n, math_t* out, cudaStream_t stream)
+  void GetVecs(const int* idx, int n, math_t* out, hipStream_t stream)
   {
     if (n > 0) {
       get_vecs<<<raft::ceildiv(n * n_vec, TPB), TPB, 0, stream>>>(cache.data(), n_vec, idx, n, out);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     }
   }
 
@@ -219,13 +219,13 @@ class Cache {
                  int n_tile,
                  int n,
                  int* cache_idx,
-                 cudaStream_t stream,
+                 hipStream_t stream,
                  const int* tile_idx = nullptr)
   {
     if (n > 0) {
       store_vecs<<<raft::ceildiv(n * n_vec, TPB), TPB, 0, stream>>>(
         tile, n_tile, n_vec, tile_idx, n, cache_idx, cache.data(), cache.size() / n_vec);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     }
   }
 
@@ -251,7 +251,7 @@ class Cache {
    *   cache, size [n]
    * @param [in] stream
    */
-  void GetCacheIdx(int* keys, int n, int* cache_idx, bool* is_cached, cudaStream_t stream)
+  void GetCacheIdx(int* keys, int n, int* cache_idx, bool* is_cached, hipStream_t stream)
   {
     n_iter++;  // we increase the iteration counter, that is used to time stamp
     // accessing entries from the cache
@@ -264,7 +264,7 @@ class Cache {
                                                              cache_idx,
                                                              is_cached,
                                                              n_iter);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 
   /** @brief Map a set of keys to cache indices.
@@ -283,14 +283,14 @@ class Cache {
    * @param [out] n_cached number of elements that are cached
    * @param [in] stream cuda stream
    */
-  void GetCacheIdxPartitioned(int* keys, int n, int* cache_idx, int* n_cached, cudaStream_t stream)
+  void GetCacheIdxPartitioned(int* keys, int n, int* cache_idx, int* n_cached, hipStream_t stream)
   {
     ResizeTmpBuffers(n, stream);
 
     GetCacheIdx(keys, n, ws_tmp.data(), is_cached.data(), stream);
 
     // Group cache indices as [already cached, non_cached]
-    cub::DevicePartition::Flagged(d_temp_storage.data(),
+    hipcub::DevicePartition::Flagged(d_temp_storage.data(),
                                   d_temp_storage_size,
                                   ws_tmp.data(),
                                   is_cached.data(),
@@ -303,7 +303,7 @@ class Cache {
 
     // Similarly re-group the input indices
     raft::copy(ws_tmp.data(), keys, n, stream);
-    cub::DevicePartition::Flagged(d_temp_storage.data(),
+    hipcub::DevicePartition::Flagged(d_temp_storage.data(),
                                   d_temp_storage_size,
                                   ws_tmp.data(),
                                   is_cached.data(),
@@ -327,10 +327,10 @@ class Cache {
    *   size[n]
    * @param [in] stream cuda stream
    */
-  void AssignCacheIdx(int* keys, int n, int* cidx, cudaStream_t stream)
+  void AssignCacheIdx(int* keys, int n, int* cidx, hipStream_t stream)
   {
     if (n <= 0) return;
-    cub::DeviceRadixSort::SortPairs(d_temp_storage.data(),
+    hipcub::DeviceRadixSort::SortPairs(d_temp_storage.data(),
                                     d_temp_storage_size,
                                     cidx,
                                     ws_tmp.data(),
@@ -344,14 +344,14 @@ class Cache {
     raft::copy(keys, idx_tmp.data(), n, stream);
 
     // set it to -1
-    RAFT_CUDA_TRY(cudaMemsetAsync(cidx, 255, n * sizeof(int), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(cidx, 255, n * sizeof(int), stream));
     const int nthreads = associativity <= 32 ? associativity : 32;
 
     assign_cache_idx<nthreads, associativity><<<n_cache_sets, nthreads, 0, stream>>>(
       keys, n, ws_tmp.data(), cached_keys.data(), n_cache_sets, cache_time.data(), n_iter, cidx);
 
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
-    if (debug_mode) RAFT_CUDA_TRY(cudaDeviceSynchronize());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
+    if (debug_mode) RAFT_CUDA_TRY(hipDeviceSynchronize());
   }
 
   /** Return approximate cache size in MiB. */
@@ -386,13 +386,13 @@ class Cache {
   rmm::device_uvector<char> d_temp_storage;
   size_t d_temp_storage_size = 0;
 
-  void ResizeTmpBuffers(int n, cudaStream_t stream)
+  void ResizeTmpBuffers(int n, hipStream_t stream)
   {
     if (ws_tmp.size() < static_cast<std::size_t>(n)) {
       ws_tmp.resize(n, stream);
       is_cached.resize(n, stream);
       idx_tmp.resize(n, stream);
-      cub::DevicePartition::Flagged(NULL,
+      hipcub::DevicePartition::Flagged(NULL,
                                     d_temp_storage_size,
                                     cached_keys.data(),
                                     is_cached.data(),

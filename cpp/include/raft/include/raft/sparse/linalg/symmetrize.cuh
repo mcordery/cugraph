@@ -39,7 +39,7 @@ template <typename T, typename Lambda>
 void coo_symmetrize(COO<T>* in,
                     COO<T>* out,
                     Lambda reduction_op,  // two-argument reducer
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   detail::coo_symmetrize(in, out, reduction_op, stream);
 }
@@ -140,7 +140,7 @@ void from_knn_symmetrize_matrix(const value_idx* __restrict__ knn_indices,
                                 const value_idx n,
                                 const int k,
                                 COO<value_t, value_idx>* out,
-                                cudaStream_t stream)
+                                hipStream_t stream)
 {
   detail::from_knn_symmetrize_matrix(knn_indices, knn_dists, n, k, out, stream);
 }

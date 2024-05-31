@@ -30,7 +30,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/batched/information_criterion.cuh>
 #include <raft/stats/stats_types.hpp>
@@ -60,7 +60,7 @@ void information_criterion_batched(ScalarT* d_ic,
                                    IdxT n_params,
                                    IdxT batch_size,
                                    IdxT n_samples,
-                                   cudaStream_t stream)
+                                   hipStream_t stream)
 {
   batched::detail::information_criterion(
     d_ic, d_loglikelihood, ic_type, n_params, batch_size, n_samples, stream);

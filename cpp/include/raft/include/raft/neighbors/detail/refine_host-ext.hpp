@@ -24,7 +24,7 @@
 #include <cstdint>  // int64_t
 
 #if defined(_RAFT_HAS_CUDA)
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #endif
 
 #ifdef RAFT_EXPLICIT_INSTANTIATE_ONLY

@@ -31,7 +31,7 @@ void rowNormCaller(Type* dots,
                    IdxType N,
                    NormType type,
                    bool rowMajor,
-                   cudaStream_t stream,
+                   hipStream_t stream,
                    Lambda fin_op)
 {
   switch (type) {
@@ -88,7 +88,7 @@ void colNormCaller(Type* dots,
                    IdxType N,
                    NormType type,
                    bool rowMajor,
-                   cudaStream_t stream,
+                   hipStream_t stream,
                    Lambda fin_op)
 {
   switch (type) {

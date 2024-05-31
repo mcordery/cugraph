@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/minmax.cuh>
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
@@ -65,7 +65,7 @@ void minmax(const T* data,
             T* globalmin,
             T* globalmax,
             T* sampledcols,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::minmax<T, TPB>(
     data, rowids, colids, nrows, ncols, row_stride, globalmin, globalmax, sampledcols, stream);

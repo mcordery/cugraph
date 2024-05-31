@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <cstddef>
 #include <limits>
@@ -44,10 +45,10 @@ struct TemplateChecker {
 
 template <typename InType, typename OutType, int BLOCK_SIZE, int ITEMS_PER_THREAD>
 struct SmemPerBlock {
-  typedef cub::BlockLoad<InType, BLOCK_SIZE, ITEMS_PER_THREAD, cub::BLOCK_LOAD_WARP_TRANSPOSE>
+  typedef hipcub::BlockLoad<InType, BLOCK_SIZE, ITEMS_PER_THREAD, hipcub::BLOCK_LOAD_WARP_TRANSPOSE>
     BlockLoadTypeKey;
 
-  typedef cub::BlockRadixSort<InType, BLOCK_SIZE, ITEMS_PER_THREAD, OutType> BlockRadixSortType;
+  typedef hipcub::BlockRadixSort<InType, BLOCK_SIZE, ITEMS_PER_THREAD, OutType> BlockRadixSortType;
 
   union TempStorage {
     typename BlockLoadTypeKey::TempStorage keyLoad;
@@ -85,10 +86,10 @@ RAFT_KERNEL __launch_bounds__(1024, 1) devKeyValSortColumnPerRow(const InType* i
                                                                  int n_cols,
                                                                  InType MAX_VALUE)
 {
-  typedef cub::BlockLoad<InType, BLOCK_SIZE, ITEMS_PER_THREAD, cub::BLOCK_LOAD_WARP_TRANSPOSE>
+  typedef hipcub::BlockLoad<InType, BLOCK_SIZE, ITEMS_PER_THREAD, hipcub::BLOCK_LOAD_WARP_TRANSPOSE>
     BlockLoadTypeKey;
 
-  typedef cub::BlockRadixSort<InType, BLOCK_SIZE, ITEMS_PER_THREAD, OutType> BlockRadixSortType;
+  typedef hipcub::BlockRadixSort<InType, BLOCK_SIZE, ITEMS_PER_THREAD, OutType> BlockRadixSortType;
 
   __shared__ SmemPerBlock<InType, OutType, BLOCK_SIZE, ITEMS_PER_THREAD> tmpSmem;
 
@@ -113,10 +114,10 @@ RAFT_KERNEL __launch_bounds__(1024, 1) devKeyValSortColumnPerRow(const InType* i
   BlockRadixSortType(tmpSmem.tempStorage.sort).SortBlockedToStriped(threadKeys, threadValues);
 
   // storing index values back (not keys)
-  cub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, inputVals + blockOffset, threadValues, n_cols);
+  hipcub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, inputVals + blockOffset, threadValues, n_cols);
 
   if (outputKeys) {
-    cub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, outputKeys + blockOffset, threadKeys, n_cols);
+    hipcub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, outputKeys + blockOffset, threadKeys, n_cols);
   }
 }
 
@@ -139,23 +140,23 @@ RAFT_KERNEL devKeyValSortColumnPerRow(const InType* inputKeys,
 
 // helper function to layout values (index's) for key-value sort
 template <typename OutType>
-cudaError_t layoutIdx(OutType* in, int n_rows, int n_columns, cudaStream_t stream)
+hipError_t layoutIdx(OutType* in, int n_rows, int n_columns, hipStream_t stream)
 {
   int totalElements = n_rows * n_columns;
   dim3 block(256);
   dim3 grid((totalElements + block.x - 1) / block.x);
   devLayoutIdx<OutType><<<grid, block, 0, stream>>>(in, n_columns, totalElements);
-  return cudaGetLastError();
+  return hipGetLastError();
 }
 
 // helper function to layout offsets for rows for DeviceSegmentedRadixSort
 template <typename T>
-cudaError_t layoutSortOffset(T* in, T value, int n_times, cudaStream_t stream)
+hipError_t layoutSortOffset(T* in, T value, int n_times, hipStream_t stream)
 {
   dim3 block(128);
   dim3 grid((n_times + block.x - 1) / block.x);
   devOffsetKernel<T><<<grid, block, 0, stream>>>(in, value, n_times);
-  return cudaGetLastError();
+  return hipGetLastError();
 }
 
 /**
@@ -179,7 +180,7 @@ void sortColumnsPerRow(const InType* in,
                        bool& bAllocWorkspace,
                        void* workspacePtr,
                        size_t& workspaceSize,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        InType* sortedKeys = nullptr)
 {
   // assume non-square row-major matrices
@@ -195,8 +196,8 @@ void sortColumnsPerRow(const InType* in,
 
   // @ToDo: Figure out dynamic shared memory for block sort kernel - better for volta and beyond
   // int currDevice = 0, smemLimit = 0;
-  // RAFT_CUDA_TRY(cudaGetDevice(&currDevice));
-  // RAFT_CUDA_TRY(cudaDeviceGetAttribute(&smemLimit, cudaDevAttrMaxSharedMemoryPerBlock,
+  // RAFT_CUDA_TRY(hipGetDevice(&currDevice));
+  // RAFT_CUDA_TRY(hipDeviceGetAttribute(&smemLimit, hipDeviceAttributeMaxSharedMemoryPerBlock,
   // currDevice)); size_t maxElementsForBlockSort = smemLimit / perElementSmemUsage;
 
   // for 48KB smem/block, can fit in 6144 4byte key-value pair
@@ -238,7 +239,7 @@ void sortColumnsPerRow(const InType* in,
       int* tmpOffsetBuffer = nullptr;
 
       // first call is to get size of workspace
-      RAFT_CUDA_TRY(cub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
+      RAFT_CUDA_TRY(hipcub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
                                                              workspaceSize,
                                                              in,
                                                              sortedKeys,
@@ -281,7 +282,7 @@ void sortColumnsPerRow(const InType* in,
       // layout segment lengths - spread out column length
       RAFT_CUDA_TRY(layoutSortOffset(dSegmentOffsets, n_columns, numSegments, stream));
 
-      RAFT_CUDA_TRY(cub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
+      RAFT_CUDA_TRY(hipcub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
                                                              workspaceSize,
                                                              in,
                                                              sortedKeys,
@@ -301,7 +302,7 @@ void sortColumnsPerRow(const InType* in,
       OutType* tmpValIn = nullptr;
 
       // first call is to get size of workspace
-      RAFT_CUDA_TRY(cub::DeviceRadixSort::SortPairs(
+      RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortPairs(
         workspacePtr, workspaceSize, in, sortedKeys, tmpValIn, out, n_columns));
       bAllocWorkspace = true;
 
@@ -333,7 +334,7 @@ void sortColumnsPerRow(const InType* in,
         OutType* rowOut =
           reinterpret_cast<OutType*>((size_t)out + (i * sizeof(OutType) * (size_t)n_columns));
 
-        RAFT_CUDA_TRY(cub::DeviceRadixSort::SortPairs(
+        RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortPairs(
           workspacePtr, workspaceSize, rowIn, sortedKeys, dValuesIn, rowOut, n_columns));
 
         if (userKeyOutputBuffer)

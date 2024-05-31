@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -26,7 +27,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
@@ -935,13 +936,13 @@ void select_and_run(
   size_t max_iterations,
   SAMPLE_FILTER_T sample_filter,
   raft::distance::DistanceType metric,
-  cudaStream_t stream)
+  hipStream_t stream)
 {
   auto kernel =
     search_kernel_config<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T>::
       choose_itopk_and_mx_candidates(itopk_size, num_itopk_candidates, block_size);
-  RAFT_CUDA_TRY(cudaFuncSetAttribute(kernel,
-                                     cudaFuncAttributeMaxDynamicSharedMemorySize,
+  RAFT_CUDA_TRY(hipFuncSetAttribute(kernel,
+                                     hipFuncAttributeMaxDynamicSharedMemorySize,
                                      smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
   dim3 thread_dims(block_size, 1, 1);
   dim3 block_dims(1, num_queries, 1);
@@ -969,7 +970,7 @@ void select_and_run(
                                                          small_hash_reset_interval,
                                                          sample_filter,
                                                          metric);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 }  // namespace single_cta_search
 }  // namespace raft::neighbors::cagra::detail

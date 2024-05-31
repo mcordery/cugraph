@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/spatial/knn/detail/epsilon_neighborhood.cuh>
 
@@ -54,7 +54,7 @@ void epsUnexpL2SqNeighborhood(bool* adj,
                               idx_t n,
                               idx_t k,
                               value_t eps,
-                              cudaStream_t stream)
+                              hipStream_t stream)
 {
   spatial::knn::detail::epsUnexpL2SqNeighborhood<value_t, idx_t>(
     adj, vd, x, y, m, n, k, eps, stream);

@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/scores.cuh>
 
 namespace raft {
@@ -36,7 +36,7 @@ namespace stats {
  * @return: Accuracy score in [0, 1]; higher is better.
  */
 template <typename math_t>
-float accuracy(const math_t* predictions, const math_t* ref_predictions, int n, cudaStream_t stream)
+float accuracy(const math_t* predictions, const math_t* ref_predictions, int n, hipStream_t stream)
 {
   return detail::accuracy_score(predictions, ref_predictions, n, stream);
 }

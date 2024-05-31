@@ -142,22 +142,22 @@ struct search_params : ann::search_params {
   /**
    * Data type of look up table to be created dynamically at search time.
    *
-   * Possible values: [CUDA_R_32F, CUDA_R_16F, CUDA_R_8U]
+   * Possible values: [HIP_R_32F, HIP_R_16F, HIP_R_8U]
    *
    * The use of low-precision types reduces the amount of shared memory required at search time, so
    * fast shared memory kernels can be used even for datasets with large dimansionality. Note that
    * the recall is slightly degraded when low-precision type is selected.
    */
-  cudaDataType_t lut_dtype = CUDA_R_32F;
+  hipDataType lut_dtype = HIP_R_32F;
   /**
    * Storage data type for distance/similarity computed at search time.
    *
-   * Possible values: [CUDA_R_16F, CUDA_R_32F]
+   * Possible values: [HIP_R_16F, HIP_R_32F]
    *
    * If the performance limiter at search time is device memory access, selecting FP16 will improve
    * performance slightly.
    */
-  cudaDataType_t internal_distance_dtype = CUDA_R_32F;
+  hipDataType internal_distance_dtype = HIP_R_32F;
   /**
    * Preferred fraction of SM's unified memory / L1 cache to be used as shared memory.
    *

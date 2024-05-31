@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
 //@HEADER
 // ************************************************************************
@@ -86,21 +87,21 @@ void throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(o.str());
 }
 
-void cuda_internal_error_throw(cudaError e, const char* name,
+void cuda_internal_error_throw(hipError_t e, const char* name,
   const char* file = NULL, const int line = 0) {
   std::ostringstream out;
-  out << name << " error( " << cudaGetErrorName(e)
-      << "): " << cudaGetErrorString(e);
+  out << name << " error( " << hipGetErrorName(e)
+      << "): " << hipGetErrorString(e);
   if (file) {
     out << " " << file << ":" << line;
   }
   throw_runtime_exception(out.str());
 }
 
-inline void cuda_internal_safe_call(cudaError e, const char* name,
+inline void cuda_internal_safe_call(hipError_t e, const char* name,
        const char* file = NULL,
        const int line   = 0) {
-  if (cudaSuccess != e) {
+  if (hipSuccess != e) {
     cuda_internal_error_throw(e, name, file, line);
   }
 }
@@ -111,14 +112,14 @@ inline void cuda_internal_safe_call(cudaError e, const char* name,
 //================================================================================
 
 dim3 get_bench_grid() {
-  cudaDeviceProp cudaProp;
-  CUDA_SAFE_CALL(cudaGetDeviceProperties(&cudaProp, 0));
+  hipDeviceProp_t cudaProp;
+  CUDA_SAFE_CALL(hipGetDeviceProperties(&cudaProp, 0));
   return dim3(cudaProp.multiProcessorCount, 1, 1);
 }
 
 dim3 get_bench_thread_block() {
-  cudaDeviceProp cudaProp;
-  CUDA_SAFE_CALL(cudaGetDeviceProperties(&cudaProp, 1));
+  hipDeviceProp_t cudaProp;
+  CUDA_SAFE_CALL(hipGetDeviceProperties(&cudaProp, 1));
   return dim3(1, cudaProp.warpSize, warpsPerBlock);
 }
 
@@ -130,18 +131,18 @@ void do_run_kernel(F f, Args... args) {
 
 template <class F, class... Args>
 float run_kernel_timed(F&& f, Args&&... args) {
-  cudaEvent_t start, stop;
-  CUDA_SAFE_CALL(cudaEventCreate(&start));
-  CUDA_SAFE_CALL(cudaEventCreate(&stop));
+  hipEvent_t start, stop;
+  CUDA_SAFE_CALL(hipEventCreate(&start));
+  CUDA_SAFE_CALL(hipEventCreate(&stop));
 
-  CUDA_SAFE_CALL(cudaEventRecord(start));
+  CUDA_SAFE_CALL(hipEventRecord(start));
   do_run_kernel<<<get_bench_grid(), get_bench_thread_block()>>>(
     (F&&)f, ((Args&&) args)...
   );
-  CUDA_SAFE_CALL(cudaEventRecord(stop));
-  CUDA_SAFE_CALL(cudaEventSynchronize(stop));
+  CUDA_SAFE_CALL(hipEventRecord(stop));
+  CUDA_SAFE_CALL(hipEventSynchronize(stop));
   float milliseconds = 0;
-  CUDA_SAFE_CALL(cudaEventElapsedTime(&milliseconds, start, stop));
+  CUDA_SAFE_CALL(hipEventElapsedTime(&milliseconds, start, stop));
   return milliseconds;
 }
 
@@ -157,9 +158,9 @@ MDSpan fill_device_mdspan(MDSpan, DynSizes... dyn) {
   mdspan_benchmark::fill_random(host_mdspan);
 
   value_type* device_buffer = nullptr;
-  CUDA_SAFE_CALL(cudaMalloc(&device_buffer, buffer_size * sizeof(value_type)));
-  CUDA_SAFE_CALL(cudaMemcpy(
-    device_buffer, host_buffer.get(), buffer_size * sizeof(value_type), cudaMemcpyHostToDevice
+  CUDA_SAFE_CALL(hipMalloc(&device_buffer, buffer_size * sizeof(value_type)));
+  CUDA_SAFE_CALL(hipMemcpy(
+    device_buffer, host_buffer.get(), buffer_size * sizeof(value_type), hipMemcpyHostToDevice
   ));
   return MDSpan{device_buffer, dyn...};
 }
@@ -197,8 +198,8 @@ void BM_MDSpan_Cuda_Sum_3D(benchmark::State& state, MDSpan, DynSizes... dyn) {
   state.SetBytesProcessed(s.size() * sizeof(value_type) * state.iterations() * repeats);
   state.counters["repeats"] = repeats;
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(s.data()));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(s.data()));
 }
 MDSPAN_BENCHMARK_ALL_3D_MANUAL(BM_MDSpan_Cuda_Sum_3D, right_, rmdspan, 80, 80, 80);
 MDSPAN_BENCHMARK_ALL_3D_MANUAL(BM_MDSpan_Cuda_Sum_3D, left_, lmdspan, 80, 80, 80);
@@ -244,8 +245,8 @@ void BM_Raw_Cuda_Sum_3D_right(benchmark::State& state, T, SizeX x, SizeY y, Size
   state.SetBytesProcessed(x * y * z * sizeof(value_type) * state.iterations() * repeats);
   state.counters["repeats"] = repeats;
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(data));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(data));
 }
 BENCHMARK_CAPTURE(BM_Raw_Cuda_Sum_3D_right, size_80_80_80, int(), 80, 80, 80);
 BENCHMARK_CAPTURE(BM_Raw_Cuda_Sum_3D_right, size_400_400_400, int(), 400, 400, 400);
@@ -289,8 +290,8 @@ void BM_Raw_Cuda_Sum_3D_left(benchmark::State& state, T, SizeX x, SizeY y, SizeZ
   state.SetBytesProcessed(x * y * z * sizeof(value_type) * state.iterations() * repeats);
   state.counters["repeats"] = repeats;
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(data));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(data));
 }
 BENCHMARK_CAPTURE(BM_Raw_Cuda_Sum_3D_left, size_80_80_80, int(), 80, 80, 80);
 BENCHMARK_CAPTURE(BM_Raw_Cuda_Sum_3D_left, size_400_400_400, int(), 400, 400, 400);

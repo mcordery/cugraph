@@ -59,14 +59,14 @@ struct pointer_residency_count<Type, Types...> {
   static inline auto run(const Type* ptr, const Types*... ptrs) -> std::tuple<int, int>
   {
     auto [on_device, on_host] = pointer_residency_count<Types...>::run(ptrs...);
-    cudaPointerAttributes attr;
-    RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, ptr));
+    hipPointerAttribute_t attr;
+    RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, ptr));
     switch (attr.type) {
       case cudaMemoryTypeUnregistered: return std::make_tuple(on_device, on_host + 1);
-      case cudaMemoryTypeHost:
+      case hipMemoryTypeHost:
         return std::make_tuple(on_device + int(attr.devicePointer == ptr), on_host + 1);
-      case cudaMemoryTypeDevice: return std::make_tuple(on_device + 1, on_host);
-      case cudaMemoryTypeManaged: return std::make_tuple(on_device + 1, on_host + 1);
+      case hipMemoryTypeDevice: return std::make_tuple(on_device + 1, on_host);
+      case hipMemoryTypeManaged: return std::make_tuple(on_device + 1, on_host + 1);
       default: return std::make_tuple(on_device, on_host);
     }
   }
@@ -97,15 +97,15 @@ struct with_mapped_memory_t {
       } break;
       default: {
         host_ptr_ = (void*)ptr;  // NOLINT
-        RAFT_CUDA_TRY(cudaHostRegister(host_ptr_, size, choose_flags(ptr)));
-        RAFT_CUDA_TRY(cudaHostGetDevicePointer(&dev_ptr_, host_ptr_, 0));
+        RAFT_CUDA_TRY(hipHostRegister(host_ptr_, size, choose_flags(ptr)));
+        RAFT_CUDA_TRY(hipHostGetDevicePointer(&dev_ptr_, host_ptr_, 0));
       } break;
     }
   }
 
   ~with_mapped_memory_t()
   {
-    if (host_ptr_ != nullptr) { cudaHostUnregister(host_ptr_); }
+    if (host_ptr_ != nullptr) { hipHostUnregister(host_ptr_); }
   }
 
   auto operator()() { return action_((PtrT)dev_ptr_); }  // NOLINT
@@ -119,20 +119,20 @@ struct with_mapped_memory_t {
   static auto choose_flags(const T*) -> unsigned int
   {
     int dev_id, readonly_supported;
-    RAFT_CUDA_TRY(cudaGetDevice(&dev_id));
-    RAFT_CUDA_TRY(cudaDeviceGetAttribute(
+    RAFT_CUDA_TRY(hipGetDevice(&dev_id));
+    RAFT_CUDA_TRY(hipDeviceGetAttribute(
       &readonly_supported, cudaDevAttrHostRegisterReadOnlySupported, dev_id));
     if (readonly_supported) {
-      return cudaHostRegisterMapped | cudaHostRegisterReadOnly;
+      return hipHostRegisterMapped | hipHostRegisterReadOnly;
     } else {
-      return cudaHostRegisterMapped;
+      return hipHostRegisterMapped;
     }
   }
 
   template <typename T>
   static auto choose_flags(T*) -> unsigned int
   {
-    return cudaHostRegisterMapped;
+    return hipHostRegisterMapped;
   }
 };
 
@@ -211,7 +211,7 @@ inline void memzero(T* ptr, IdxT n_elems, rmm::cuda_stream_view stream)
   switch (check_pointer_residency(ptr)) {
     case pointer_residency::host_and_device:
     case pointer_residency::device_only: {
-      RAFT_CUDA_TRY(cudaMemsetAsync(ptr, 0, n_elems * sizeof(T), stream));
+      RAFT_CUDA_TRY(hipMemsetAsync(ptr, 0, n_elems * sizeof(T), stream));
     } break;
     case pointer_residency::host_only: {
       stream.synchronize();
@@ -430,8 +430,8 @@ struct batch_load_iterator {
         needs_copy_(false)
     {
       if (source_ == nullptr) { return; }
-      cudaPointerAttributes attr;
-      RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, source_));
+      hipPointerAttribute_t attr;
+      RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, source_));
       dev_ptr_ = reinterpret_cast<T*>(attr.devicePointer);
       if (dev_ptr_ == nullptr) {
         buf_.resize(row_width_ * batch_size_, stream);

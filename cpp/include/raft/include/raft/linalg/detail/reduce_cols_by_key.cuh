@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include <raft/util/cuda_utils.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <stdlib.h>
 
@@ -104,7 +105,7 @@ void reduce_cols_by_key(const T* data,
                         IdxType nrows,
                         IdxType ncols,
                         IdxType nkeys,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums)
 {
   typedef typename std::iterator_traits<KeyIteratorT>::value_type KeyType;
@@ -117,7 +118,7 @@ void reduce_cols_by_key(const T* data,
                "Index type too small to represent indices in the output array.");
 
   // Memset the output to zero to use atomics-based reduction.
-  if (reset_sums) { RAFT_CUDA_TRY(cudaMemsetAsync(out, 0, sizeof(T) * nrows * nkeys, stream)); }
+  if (reset_sums) { RAFT_CUDA_TRY(hipMemsetAsync(out, 0, sizeof(T) * nrows * nkeys, stream)); }
 
   // The cached version is used when the cache fits in shared memory and the number of input
   // elements is above a threshold (the cached version is slightly slower for small input arrays,
@@ -137,7 +138,7 @@ void reduce_cols_by_key(const T* data,
     reduce_cols_by_key_direct_kernel<<<nblks, TPB, 0, stream>>>(
       data, keys, out, nrows, ncols, nkeys);
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 };  // end namespace detail

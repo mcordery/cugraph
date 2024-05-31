@@ -27,10 +27,10 @@ namespace raft {
 inline std::pair<int, int> getDeviceCapability()
 {
   int devId;
-  RAFT_CUDA_TRY(cudaGetDevice(&devId));
+  RAFT_CUDA_TRY(hipGetDevice(&devId));
   int major, minor;
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, devId));
-  RAFT_CUDA_TRY(cudaDeviceGetAttribute(&minor, cudaDevAttrComputeCapabilityMinor, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&major, hipDeviceAttributeComputeCapabilityMajor, devId));
+  RAFT_CUDA_TRY(hipDeviceGetAttribute(&minor, hipDeviceAttributeComputeCapabilityMinor, devId));
   return std::make_pair(major, minor);
 }
 

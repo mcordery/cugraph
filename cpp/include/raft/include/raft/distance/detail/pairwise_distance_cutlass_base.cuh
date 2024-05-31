@@ -69,7 +69,7 @@ std::enable_if_t<ops::has_cutlass_op<OpT>::value> cutlassDistanceKernel(const Da
                                                                         OutT* dOutput,
                                                                         FinalLambda fin_op,
                                                                         OpT distance_op,
-                                                                        cudaStream_t stream)
+                                                                        hipStream_t stream)
 {
   static_assert(!(std::is_same<OutT, bool>::value),
                 "OutType bool is not supported use uint8_t instead");

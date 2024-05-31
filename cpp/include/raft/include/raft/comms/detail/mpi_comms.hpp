@@ -217,13 +217,13 @@ class mpi_comms : public comms_iface {
                  size_t count,
                  datatype_t datatype,
                  op_t op,
-                 cudaStream_t stream) const
+                 hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclAllReduce(
       sendbuff, recvbuff, count, get_nccl_datatype(datatype), get_nccl_op(op), nccl_comm_, stream));
   }
 
-  void bcast(void* buff, size_t count, datatype_t datatype, int root, cudaStream_t stream) const
+  void bcast(void* buff, size_t count, datatype_t datatype, int root, hipStream_t stream) const
   {
     RAFT_NCCL_TRY(
       ncclBroadcast(buff, buff, count, get_nccl_datatype(datatype), root, nccl_comm_, stream));
@@ -234,7 +234,7 @@ class mpi_comms : public comms_iface {
              size_t count,
              datatype_t datatype,
              int root,
-             cudaStream_t stream) const
+             hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclBroadcast(
       sendbuff, recvbuff, count, get_nccl_datatype(datatype), root, nccl_comm_, stream));
@@ -246,7 +246,7 @@ class mpi_comms : public comms_iface {
               datatype_t datatype,
               op_t op,
               int root,
-              cudaStream_t stream) const
+              hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclReduce(sendbuff,
                              recvbuff,
@@ -262,7 +262,7 @@ class mpi_comms : public comms_iface {
                  void* recvbuff,
                  size_t sendcount,
                  datatype_t datatype,
-                 cudaStream_t stream) const
+                 hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclAllGather(
       sendbuff, recvbuff, sendcount, get_nccl_datatype(datatype), nccl_comm_, stream));
@@ -273,7 +273,7 @@ class mpi_comms : public comms_iface {
                   const size_t* recvcounts,
                   const size_t* displs,
                   datatype_t datatype,
-                  cudaStream_t stream) const
+                  hipStream_t stream) const
   {
     RAFT_EXPECTS(size_ <= 2048,
                  "# NCCL operations between ncclGroupStart & ncclGroupEnd shouldn't exceed 2048.");
@@ -298,7 +298,7 @@ class mpi_comms : public comms_iface {
               size_t sendcount,
               datatype_t datatype,
               int root,
-              cudaStream_t stream) const
+              hipStream_t stream) const
   {
     size_t dtype_size = get_datatype_size(datatype);
     RAFT_NCCL_TRY(ncclGroupStart());
@@ -324,7 +324,7 @@ class mpi_comms : public comms_iface {
                const size_t* displs,
                datatype_t datatype,
                int root,
-               cudaStream_t stream) const
+               hipStream_t stream) const
   {
     size_t dtype_size = get_datatype_size(datatype);
     RAFT_NCCL_TRY(ncclGroupStart());
@@ -348,7 +348,7 @@ class mpi_comms : public comms_iface {
                      size_t recvcount,
                      datatype_t datatype,
                      op_t op,
-                     cudaStream_t stream) const
+                     hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclReduceScatter(sendbuff,
                                     recvbuff,
@@ -359,16 +359,16 @@ class mpi_comms : public comms_iface {
                                     stream));
   }
 
-  status_t sync_stream(cudaStream_t stream) const { return nccl_sync_stream(nccl_comm_, stream); }
+  status_t sync_stream(hipStream_t stream) const { return nccl_sync_stream(nccl_comm_, stream); }
 
   // if a thread is sending & receiving at the same time, use device_sendrecv to avoid deadlock
-  void device_send(const void* buf, size_t size, int dest, cudaStream_t stream) const
+  void device_send(const void* buf, size_t size, int dest, hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclSend(buf, size, ncclUint8, dest, nccl_comm_, stream));
   }
 
   // if a thread is sending & receiving at the same time, use device_sendrecv to avoid deadlock
-  void device_recv(void* buf, size_t size, int source, cudaStream_t stream) const
+  void device_recv(void* buf, size_t size, int source, hipStream_t stream) const
   {
     RAFT_NCCL_TRY(ncclRecv(buf, size, ncclUint8, source, nccl_comm_, stream));
   }
@@ -379,7 +379,7 @@ class mpi_comms : public comms_iface {
                        void* recvbuf,
                        size_t recvsize,
                        int source,
-                       cudaStream_t stream) const
+                       hipStream_t stream) const
   {
     // ncclSend/ncclRecv pair needs to be inside ncclGroupStart/ncclGroupEnd to avoid deadlock
     RAFT_NCCL_TRY(ncclGroupStart());
@@ -396,7 +396,7 @@ class mpi_comms : public comms_iface {
                                  std::vector<size_t> const& recvsizes,
                                  std::vector<size_t> const& recvoffsets,
                                  std::vector<int> const& sources,
-                                 cudaStream_t stream) const
+                                 hipStream_t stream) const
   {
     // ncclSend/ncclRecv pair needs to be inside ncclGroupStart/ncclGroupEnd to avoid deadlock
     RAFT_NCCL_TRY(ncclGroupStart());
@@ -427,7 +427,7 @@ class mpi_comms : public comms_iface {
   bool owns_mpi_comm_;
   MPI_Comm mpi_comm_;
 
-  cudaStream_t stream_;
+  hipStream_t stream_;
   rmm::device_scalar<int32_t> status_;
   int32_t* buf_;
 

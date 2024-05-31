@@ -30,7 +30,7 @@
                   " Please use the sparse/spatial version instead.")
 #endif
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/sparse/neighbors/brute_force.cuh>
 
 namespace raft::sparse::neighbors {

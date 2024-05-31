@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -18,7 +19,7 @@
 
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/util/bitonic_sort.cuh>
@@ -825,7 +826,7 @@ struct launch_setup {
       return calc_smem_size_for_block_wide<T, IdxT>(num_of_warp, k);
     };
     launch_params ps;
-    RAFT_CUDA_TRY(cudaOccupancyMaxPotentialBlockSizeVariableSMem(
+    RAFT_CUDA_TRY(hipOccupancyMaxPotentialBlockSizeVariableSMem(
       &ps.min_grid_size,
       &ps.block_size,
       block_kernel<WarpSortClass, Capacity, true, T, IdxT>,
@@ -882,7 +883,7 @@ struct launch_setup {
         block_kernel<WarpSortClass, Capacity, false, T, IdxT><<<gs, block_dim, smem_size, stream>>>(
           in_key, in_idx, in_indptr, g_offset, IdxT(len), k, out_key, out_idx);
       }
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
       out_key += batch_chunk * num_blocks * k;
       out_idx += batch_chunk * num_blocks * k;
 

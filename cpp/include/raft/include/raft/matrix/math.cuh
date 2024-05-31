@@ -49,7 +49,7 @@ namespace matrix {
  * @param stream cuda stream
  */
 template <typename math_t>
-void power(math_t* in, math_t* out, math_t scalar, int len, cudaStream_t stream)
+void power(math_t* in, math_t* out, math_t scalar, int len, hipStream_t stream)
 {
   detail::power(in, out, scalar, len, stream);
 }
@@ -62,7 +62,7 @@ void power(math_t* in, math_t* out, math_t scalar, int len, cudaStream_t stream)
  * @param stream cuda stream
  */
 template <typename math_t>
-void power(math_t* inout, math_t scalar, int len, cudaStream_t stream)
+void power(math_t* inout, math_t scalar, int len, hipStream_t stream)
 {
   detail::power(inout, scalar, len, stream);
 }
@@ -74,7 +74,7 @@ void power(math_t* inout, math_t scalar, int len, cudaStream_t stream)
  * @param stream cuda stream
  */
 template <typename math_t>
-void power(math_t* inout, int len, cudaStream_t stream)
+void power(math_t* inout, int len, hipStream_t stream)
 {
   detail::power(inout, len, stream);
 }
@@ -88,7 +88,7 @@ void power(math_t* inout, int len, cudaStream_t stream)
  * @{
  */
 template <typename math_t>
-void power(math_t* in, math_t* out, int len, cudaStream_t stream)
+void power(math_t* in, math_t* out, int len, hipStream_t stream)
 {
   detail::power(in, out, len, stream);
 }
@@ -109,7 +109,7 @@ void seqRoot(math_t* in,
              math_t* out,
              math_t scalar,
              IdxType len,
-             cudaStream_t stream,
+             hipStream_t stream,
              bool set_neg_zero = false)
 {
   detail::seqRoot(in, out, scalar, len, stream, set_neg_zero);
@@ -127,7 +127,7 @@ void seqRoot(math_t* in,
  */
 template <typename math_t, typename IdxType = int>
 void seqRoot(
-  math_t* inout, math_t scalar, IdxType len, cudaStream_t stream, bool set_neg_zero = false)
+  math_t* inout, math_t scalar, IdxType len, hipStream_t stream, bool set_neg_zero = false)
 {
   detail::seqRoot(inout, scalar, len, stream, set_neg_zero);
 }
@@ -142,7 +142,7 @@ void seqRoot(
  * @param stream cuda stream
  */
 template <typename math_t, typename IdxType = int>
-void seqRoot(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
+void seqRoot(math_t* in, math_t* out, IdxType len, hipStream_t stream)
 {
   detail::seqRoot(in, out, len, stream);
 }
@@ -156,7 +156,7 @@ void seqRoot(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
  * @param stream cuda stream
  */
 template <typename math_t, typename IdxType = int>
-void seqRoot(math_t* inout, IdxType len, cudaStream_t stream)
+void seqRoot(math_t* inout, IdxType len, hipStream_t stream)
 {
   detail::seqRoot(inout, len, stream);
 }
@@ -173,7 +173,7 @@ void seqRoot(math_t* inout, IdxType len, cudaStream_t stream)
  */
 template <typename math_t, typename IdxType = int>
 void setSmallValuesZero(
-  math_t* out, const math_t* in, IdxType len, cudaStream_t stream, math_t thres = 1e-15)
+  math_t* out, const math_t* in, IdxType len, hipStream_t stream, math_t thres = 1e-15)
 {
   detail::setSmallValuesZero(out, in, len, stream, thres);
 }
@@ -188,7 +188,7 @@ void setSmallValuesZero(
  * @param thres: threshold
  */
 template <typename math_t, typename IdxType = int>
-void setSmallValuesZero(math_t* inout, IdxType len, cudaStream_t stream, math_t thres = 1e-15)
+void setSmallValuesZero(math_t* inout, IdxType len, hipStream_t stream, math_t thres = 1e-15)
 {
   detail::setSmallValuesZero(inout, len, stream, thres);
 }
@@ -211,7 +211,7 @@ void reciprocal(math_t* in,
                 math_t* out,
                 math_t scalar,
                 int len,
-                cudaStream_t stream,
+                hipStream_t stream,
                 bool setzero = false,
                 math_t thres = 1e-15)
 {
@@ -234,7 +234,7 @@ template <typename math_t, typename IdxType = int>
 void reciprocal(math_t* inout,
                 math_t scalar,
                 IdxType len,
-                cudaStream_t stream,
+                hipStream_t stream,
                 bool setzero = false,
                 math_t thres = 1e-15)
 {
@@ -250,7 +250,7 @@ void reciprocal(math_t* inout,
  * @param stream cuda stream
  */
 template <typename math_t, typename IdxType = int>
-void reciprocal(math_t* inout, IdxType len, cudaStream_t stream)
+void reciprocal(math_t* inout, IdxType len, hipStream_t stream)
 {
   detail::reciprocal(inout, len, stream);
 }
@@ -265,7 +265,7 @@ void reciprocal(math_t* inout, IdxType len, cudaStream_t stream)
  * @param stream cuda stream
  */
 template <typename math_t, typename IdxType = int>
-void reciprocal(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
+void reciprocal(math_t* in, math_t* out, IdxType len, hipStream_t stream)
 {
   detail::reciprocal(in, out, len, stream);
 }
@@ -280,7 +280,7 @@ void reciprocal(math_t* in, math_t* out, IdxType len, cudaStream_t stream)
  * @param stream cuda stream
  */
 template <typename math_t>
-void setValue(math_t* out, const math_t* in, math_t scalar, int len, cudaStream_t stream = 0)
+void setValue(math_t* out, const math_t* in, math_t scalar, int len, hipStream_t stream = 0)
 {
   detail::setValue(out, in, scalar, len, stream);
 }
@@ -297,7 +297,7 @@ void setValue(math_t* out, const math_t* in, math_t scalar, int len, cudaStream_
  */
 template <typename math_t, typename IdxType = int>
 void ratio(
-  raft::resources const& handle, math_t* src, math_t* dest, IdxType len, cudaStream_t stream)
+  raft::resources const& handle, math_t* src, math_t* dest, IdxType len, hipStream_t stream)
 {
   detail::ratio(handle, src, dest, len, stream);
 }
@@ -313,7 +313,7 @@ void ratio(
  * @param stream: cuda stream
  */
 template <typename math_t, typename out_t, typename idx_t = int>
-void argmin(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, cudaStream_t stream)
+void argmin(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, hipStream_t stream)
 {
   detail::argmin(in, n_rows, n_cols, out, stream);
 }
@@ -327,7 +327,7 @@ void argmin(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, cudaStream
  * @param stream: cuda stream
  */
 template <typename math_t, typename out_t, typename idx_t = int>
-void argmax(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, cudaStream_t stream)
+void argmax(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, hipStream_t stream)
 {
   detail::argmax(in, n_rows, n_cols, out, stream);
 }
@@ -341,7 +341,7 @@ void argmax(const math_t* in, idx_t n_rows, idx_t n_cols, out_t* out, cudaStream
  * @param stream cuda stream
  */
 template <typename math_t>
-void signFlip(math_t* inout, int n_rows, int n_cols, cudaStream_t stream)
+void signFlip(math_t* inout, int n_rows, int n_cols, hipStream_t stream)
 {
   detail::signFlip(inout, n_rows, n_cols, stream);
 }
@@ -363,7 +363,7 @@ void matrixVectorBinaryMult(Type* data,
                             IdxType n_col,
                             bool rowMajor,
                             bool bcastAlongRows,
-                            cudaStream_t stream)
+                            hipStream_t stream)
 {
   detail::matrixVectorBinaryMult<Type, IdxType, TPB>(
     data, vec, n_row, n_col, rowMajor, bcastAlongRows, stream);
@@ -386,7 +386,7 @@ void matrixVectorBinaryMultSkipZero(Type* data,
                                     IdxType n_col,
                                     bool rowMajor,
                                     bool bcastAlongRows,
-                                    cudaStream_t stream)
+                                    hipStream_t stream)
 {
   detail::matrixVectorBinaryMultSkipZero<Type, IdxType, TPB>(
     data, vec, n_row, n_col, rowMajor, bcastAlongRows, stream);
@@ -409,7 +409,7 @@ void matrixVectorBinaryDiv(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   detail::matrixVectorBinaryDiv<Type, IdxType, TPB>(
     data, vec, n_row, n_col, rowMajor, bcastAlongRows, stream);
@@ -434,7 +434,7 @@ void matrixVectorBinaryDivSkipZero(Type* data,
                                    IdxType n_col,
                                    bool rowMajor,
                                    bool bcastAlongRows,
-                                   cudaStream_t stream,
+                                   hipStream_t stream,
                                    bool return_zero = false)
 {
   detail::matrixVectorBinaryDivSkipZero<Type, IdxType, TPB>(
@@ -458,7 +458,7 @@ void matrixVectorBinaryAdd(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   detail::matrixVectorBinaryAdd<Type, IdxType, TPB>(
     data, vec, n_row, n_col, rowMajor, bcastAlongRows, stream);
@@ -481,7 +481,7 @@ void matrixVectorBinarySub(Type* data,
                            IdxType n_col,
                            bool rowMajor,
                            bool bcastAlongRows,
-                           cudaStream_t stream)
+                           hipStream_t stream)
 {
   detail::matrixVectorBinarySub<Type, IdxType, TPB>(
     data, vec, n_row, n_col, rowMajor, bcastAlongRows, stream);

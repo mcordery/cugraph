@@ -26,7 +26,7 @@
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/host_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/neighbors/detail/refine.cuh>
 #include <raft/neighbors/ivf_pq.cuh>
@@ -90,8 +90,8 @@ void build_knn_graph(raft::resources const& res,
   if (!search_params) {
     search_params            = ivf_pq::search_params{};
     search_params->n_probes  = std::min<IdxT>(dataset.extent(1) * 2, build_params->n_lists);
-    search_params->lut_dtype = CUDA_R_8U;
-    search_params->internal_distance_dtype = CUDA_R_32F;
+    search_params->lut_dtype = HIP_R_8U;
+    search_params->internal_distance_dtype = HIP_R_32F;
   }
   const auto top_k          = node_degree + 1;
   uint32_t gpu_top_k        = node_degree * refine_rate.value_or(2.0f);

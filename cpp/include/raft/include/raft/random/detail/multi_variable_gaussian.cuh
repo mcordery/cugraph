@@ -18,7 +18,7 @@
 #include "curand_wrappers.hpp"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
@@ -59,7 +59,7 @@ enum Filler : unsigned char {
  * @param stream cuda stream
  */
 template <typename T>
-void epsilonToZero(T* eig, T epsilon, int size, cudaStream_t stream)
+void epsilonToZero(T* eig, T epsilon, int size, hipStream_t stream)
 {
   raft::linalg::unaryOp(
     eig,
@@ -82,7 +82,7 @@ void epsilonToZero(T* eig, T epsilon, int size, cudaStream_t stream)
  */
 template <typename T>
 void matVecAdd(
-  T* out, const T* in_m, const T* in_v, T scalar, int rows, int cols, cudaStream_t stream)
+  T* out, const T* in_m, const T* in_v, T scalar, int rows, int cols, hipStream_t stream)
 {
   raft::linalg::matrixVectorOp(
     out,
@@ -138,16 +138,16 @@ class multi_variable_gaussian_impl {
   const double tol      = 1.e-7;
   const T epsilon       = 1.e-12;
   const int max_sweeps  = 100;
-  cublasFillMode_t uplo = CUBLAS_FILL_MODE_LOWER;
+  hipblasFillMode_t uplo = HIPBLAS_FILL_MODE_LOWER;
   const Decomposer method;
 
   // not so much
   T *P = 0, *X = 0, *x = 0, *workspace_decomp = 0, *eig = 0;
   int *info, Lwork, info_h;
-  syevjInfo_t syevj_params = NULL;
-  curandGenerator_t gen;
+  hipsolverSyevjInfo_t syevj_params = NULL;
+  hiprandGenerator_t gen;
   raft::resources const& handle;
-  cusolverEigMode_t jobz = CUSOLVER_EIG_MODE_VECTOR;
+  hipsolverEigMode_t jobz = HIPSOLVER_EIG_MODE_VECTOR;
   bool deinitilized      = false;
 
  public:  // functions
@@ -157,15 +157,15 @@ class multi_variable_gaussian_impl {
   {
     auto cusolverHandle = resource::get_cusolver_dn_handle(handle);
 
-    CURAND_CHECK(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT));
-    CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(gen, 28));  // SEED
+    CURAND_CHECK(hiprandCreateGenerator(&gen, HIPRAND_RNG_PSEUDO_DEFAULT));
+    CURAND_CHECK(hiprandSetPseudoRandomGeneratorSeed(gen, 28));  // SEED
     if (method == chol_decomp) {
       RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDnpotrf_bufferSize(
         cusolverHandle, uplo, dim, P, dim, &Lwork));
     } else if (method == jacobi) {  // jacobi init
-      RAFT_CUSOLVER_TRY(cusolverDnCreateSyevjInfo(&syevj_params));
-      RAFT_CUSOLVER_TRY(cusolverDnXsyevjSetTolerance(syevj_params, tol));
-      RAFT_CUSOLVER_TRY(cusolverDnXsyevjSetMaxSweeps(syevj_params, max_sweeps));
+      RAFT_CUSOLVER_TRY(hipsolverDnCreateSyevjInfo(&syevj_params));
+      RAFT_CUSOLVER_TRY(hipsolverDnXsyevjSetTolerance(syevj_params, tol));
+      RAFT_CUSOLVER_TRY(hipsolverDnXsyevjSetMaxSweeps(syevj_params, max_sweeps));
       RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDnsyevj_bufferSize(
         cusolverHandle, jobz, uplo, dim, P, dim, eig, &Lwork, syevj_params));
     } else {  // method == qr
@@ -221,19 +221,19 @@ class multi_variable_gaussian_impl {
         cusolverHandle, jobz, uplo, dim, P, dim, eig, workspace_decomp, Lwork, info, cudaStream));
     }
     raft::update_host(&info_h, info, 1, cudaStream);
-    RAFT_CUDA_TRY(cudaStreamSynchronize(cudaStream));
+    RAFT_CUDA_TRY(hipStreamSynchronize(cudaStream));
     ASSERT(info_h == 0, "mvg: error in syevj/syevd/potrf, info=%d | expected=0", info_h);
     T mean = 0.0, stddv = 1.0;
     // generate nxN gaussian nums in X
     CURAND_CHECK(
-      detail::curandGenerateNormal(gen, X, (nPoints * dim) + (nPoints * dim) % 2, mean, stddv));
+      detail::hiprandGenerateNormal(gen, X, (nPoints * dim) + (nPoints * dim) % 2, mean, stddv));
     T alfa = 1.0, beta = 0.0;
     if (method == chol_decomp) {
       // upper part (0) being filled with 0.0
       dim3 block(32, 32);
       dim3 grid(raft::ceildiv(dim, (int)block.x), raft::ceildiv(dim, (int)block.y));
       fill_uplo<T><<<grid, block, 0, cudaStream>>>(dim, UPPER, (T)0.0, P);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
 
       // P is lower triangular chol decomp mtrx
       raft::linalg::gemm(
@@ -242,14 +242,14 @@ class multi_variable_gaussian_impl {
       epsilonToZero(eig, epsilon, dim, cudaStream);
       dim3 block(64);
       dim3 grid(raft::ceildiv(dim, (int)block.x));
-      RAFT_CUDA_TRY(cudaMemsetAsync(info, 0, sizeof(int), cudaStream));
+      RAFT_CUDA_TRY(hipMemsetAsync(info, 0, sizeof(int), cudaStream));
       grid.x = raft::ceildiv(dim * dim, (int)block.x);
       combined_dot_product<T><<<grid, block, 0, cudaStream>>>(dim, dim, eig, P, info);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
 
       // checking if any eigen vals were negative
       raft::update_host(&info_h, info, 1, cudaStream);
-      RAFT_CUDA_TRY(cudaStreamSynchronize(cudaStream));
+      RAFT_CUDA_TRY(hipStreamSynchronize(cudaStream));
       ASSERT(info_h == 0, "mvg: Cov matrix has %dth Eigenval negative", info_h);
 
       // Got Q = eigvect*eigvals.sqrt in P, Q*X in X below
@@ -264,8 +264,8 @@ class multi_variable_gaussian_impl {
   void deinit()
   {
     if (deinitilized) return;
-    CURAND_CHECK(curandDestroyGenerator(gen));
-    RAFT_CUSOLVER_TRY(cusolverDnDestroySyevjInfo(syevj_params));
+    CURAND_CHECK(hiprandDestroyGenerator(gen));
+    RAFT_CUSOLVER_TRY(hipsolverDnDestroySyevjInfo(syevj_params));
     deinitilized = true;
   }
 

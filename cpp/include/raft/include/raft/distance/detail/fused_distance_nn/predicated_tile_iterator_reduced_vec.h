@@ -62,7 +62,7 @@ gmem.
 
 #pragma once
 
-#include <cooperative_groups.h>
+#include <hip/hip_cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 
 #include <cutlass/arch/arch.h>

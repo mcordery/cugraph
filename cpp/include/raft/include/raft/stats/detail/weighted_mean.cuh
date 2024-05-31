@@ -48,7 +48,7 @@ void weightedMean(Type* mu,
                   IdxType N,
                   bool row_major,
                   bool along_rows,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   // sum the weights & copy back to CPU
   auto weight_size = along_rows ? D : N;

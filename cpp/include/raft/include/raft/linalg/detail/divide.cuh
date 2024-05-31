@@ -25,7 +25,7 @@ namespace linalg {
 namespace detail {
 
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void divideScalar(OutT* out, const InT* in, InT scalar, IdxType len, cudaStream_t stream)
+void divideScalar(OutT* out, const InT* in, InT scalar, IdxType len, hipStream_t stream)
 {
   raft::linalg::unaryOp(out, in, len, raft::div_const_op<InT>(scalar), stream);
 }

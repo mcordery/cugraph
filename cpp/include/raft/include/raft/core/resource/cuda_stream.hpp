@@ -22,7 +22,7 @@
 
 #include <rmm/cuda_stream_view.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 namespace raft::resource {
 class cuda_stream_resource : public resource {

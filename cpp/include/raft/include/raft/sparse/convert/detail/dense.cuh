@@ -23,11 +23,11 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -78,7 +78,7 @@ RAFT_KERNEL csr_to_dense_warp_per_row_kernel(
  * @param[in] row_major : Is row-major output desired?
  */
 template <typename value_idx, typename value_t>
-void csr_to_dense(cusparseHandle_t handle,
+void csr_to_dense(hipsparseHandle_t handle,
                   value_idx nrows,
                   value_idx ncols,
                   value_idx nnz,
@@ -87,17 +87,17 @@ void csr_to_dense(cusparseHandle_t handle,
                   const value_t* csr_data,
                   value_idx lda,
                   value_t* out,
-                  cudaStream_t stream,
+                  hipStream_t stream,
                   bool row_major = true)
 {
   if (!row_major) {
     /**
      * If we need col-major, use cusparse.
      */
-    cusparseMatDescr_t out_mat;
-    RAFT_CUSPARSE_TRY(cusparseCreateMatDescr(&out_mat));
-    RAFT_CUSPARSE_TRY(cusparseSetMatIndexBase(out_mat, CUSPARSE_INDEX_BASE_ZERO));
-    RAFT_CUSPARSE_TRY(cusparseSetMatType(out_mat, CUSPARSE_MATRIX_TYPE_GENERAL));
+    hipsparseMatDescr_t out_mat;
+    RAFT_CUSPARSE_TRY(hipsparseCreateMatDescr(&out_mat));
+    RAFT_CUSPARSE_TRY(hipsparseSetMatIndexBase(out_mat, HIPSPARSE_INDEX_BASE_ZERO));
+    RAFT_CUSPARSE_TRY(hipsparseSetMatType(out_mat, HIPSPARSE_MATRIX_TYPE_GENERAL));
 
     size_t buffer_size;
     RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsecsr2dense_buffersize(handle,
@@ -128,11 +128,11 @@ void csr_to_dense(cusparseHandle_t handle,
                                                               buffer.data(),
                                                               stream));
 
-    RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyMatDescr(out_mat));
+    RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyMatDescr(out_mat));
 
   } else {
     int blockdim = block_dim(ncols);
-    RAFT_CUDA_TRY(cudaMemsetAsync(out, 0, nrows * ncols * sizeof(value_t), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(out, 0, nrows * ncols * sizeof(value_t), stream));
     csr_to_dense_warp_per_row_kernel<<<nrows, blockdim, 0, stream>>>(
       ncols, csr_data, csr_indptr, csr_indices, out);
   }

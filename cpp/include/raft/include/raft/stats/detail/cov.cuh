@@ -54,7 +54,7 @@ void cov(raft::resources const& handle,
          bool sample,
          bool rowMajor,
          bool stable,
-         cudaStream_t stream)
+         hipStream_t stream)
 {
   if (stable) {
     // since mean operation is assumed to be along a given column, broadcast
@@ -69,7 +69,7 @@ void cov(raft::resources const& handle,
     ///@todo: implement this using cutlass + customized epilogue!
     ASSERT(false, "cov: Implement stable=false case!");
   }
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 };  // end namespace detail
 };  // end namespace stats

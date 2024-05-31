@@ -10,7 +10,7 @@
 #include <raft/neighbors/detail/faiss_select/MergeNetworkUtils.cuh>
 #include <raft/neighbors/detail/faiss_select/StaticUtils.h>
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 namespace raft::neighbors::detail::faiss_select {
 

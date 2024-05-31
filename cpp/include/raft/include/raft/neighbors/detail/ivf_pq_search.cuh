@@ -21,7 +21,7 @@
 #include <raft/core/logger.hpp>
 //#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/device_properties.hpp>
@@ -47,8 +47,8 @@
 
 #include <rmm/resource_ref.hpp>
 
-#include <cub/cub.cuh>
-#include <cuda_fp16.h>
+#include <hipcub/hipcub.hpp>
+#include <hip/hip_fp16.h>
 
 #include <optional>
 
@@ -330,7 +330,7 @@ void ivfpq_search_worker(raft::resources const& handle,
     int begin_bit             = 0;
     int end_bit               = sizeof(uint32_t) * 8;
     size_t cub_workspace_size = 0;
-    cub::DeviceRadixSort::SortPairs(nullptr,
+    hipcub::DeviceRadixSort::SortPairs(nullptr,
                                     cub_workspace_size,
                                     clusters_to_probe,
                                     cluster_labels_out.data(),
@@ -341,7 +341,7 @@ void ivfpq_search_worker(raft::resources const& handle,
                                     end_bit,
                                     stream);
     rmm::device_buffer cub_workspace(cub_workspace_size, stream, mr);
-    cub::DeviceRadixSort::SortPairs(cub_workspace.data(),
+    hipcub::DeviceRadixSort::SortPairs(cub_workspace.data(),
                                     cub_workspace_size,
                                     clusters_to_probe,
                                     cluster_labels_out.data(),
@@ -508,10 +508,10 @@ struct ivfpq_search {
     }
 
     switch (params.lut_dtype) {
-      case CUDA_R_32F: return filter_reasonable_instances<ScoreT, float>(params);
-      case CUDA_R_16F: return filter_reasonable_instances<ScoreT, half>(params);
-      case CUDA_R_8U:
-      case CUDA_R_8I:
+      case HIP_R_32F: return filter_reasonable_instances<ScoreT, float>(params);
+      case HIP_R_16F: return filter_reasonable_instances<ScoreT, half>(params);
+      case HIP_R_8U:
+      case HIP_R_8I:
         if (signed_metric) {
           return filter_reasonable_instances<ScoreT, fp_8bit<5, true>>(params);
         } else {
@@ -524,8 +524,8 @@ struct ivfpq_search {
   static auto fun_try_score_t(const search_params& params, distance::DistanceType metric) -> fun_t
   {
     switch (params.internal_distance_dtype) {
-      case CUDA_R_32F: return fun_try_lut_t<float>(params, metric);
-      case CUDA_R_16F: return fun_try_lut_t<half>(params, metric);
+      case HIP_R_32F: return fun_try_lut_t<float>(params, metric);
+      case HIP_R_16F: return fun_try_lut_t<half>(params, metric);
       default:
         RAFT_FAIL("Unexpected internal_distance_dtype (%d)", int(params.internal_distance_dtype));
     }
@@ -606,11 +606,11 @@ inline void search(raft::resources const& handle,
 //    index.dim());
 
   RAFT_EXPECTS(
-    params.internal_distance_dtype == CUDA_R_16F || params.internal_distance_dtype == CUDA_R_32F,
-    "internal_distance_dtype must be either CUDA_R_16F or CUDA_R_32F");
-  RAFT_EXPECTS(params.lut_dtype == CUDA_R_16F || params.lut_dtype == CUDA_R_32F ||
-                 params.lut_dtype == CUDA_R_8U,
-               "lut_dtype must be CUDA_R_16F, CUDA_R_32F or CUDA_R_8U");
+    params.internal_distance_dtype == HIP_R_16F || params.internal_distance_dtype == HIP_R_32F,
+    "internal_distance_dtype must be either HIP_R_16F or HIP_R_32F");
+  RAFT_EXPECTS(params.lut_dtype == HIP_R_16F || params.lut_dtype == HIP_R_32F ||
+                 params.lut_dtype == HIP_R_8U,
+               "lut_dtype must be HIP_R_16F, HIP_R_32F or HIP_R_8U");
   RAFT_EXPECTS(k > 0, "parameter `k` in top-k must be positive.");
   RAFT_EXPECTS(
     k <= index.size(),

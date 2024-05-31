@@ -19,7 +19,7 @@
 
 #include <raft/core/detail/macros.hpp>
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 #include <cfloat>
 #include <cstdint>

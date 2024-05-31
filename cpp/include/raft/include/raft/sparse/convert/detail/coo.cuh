@@ -22,11 +22,11 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 
 #include <algorithm>
 #include <iostream>
@@ -62,7 +62,7 @@ RAFT_KERNEL csr_to_coo_kernel(const value_idx* row_ind,
  */
 template <typename value_idx = int, int TPB_X = 32>
 void csr_to_coo(
-  const value_idx* row_ind, value_idx m, value_idx* coo_rows, value_idx nnz, cudaStream_t stream)
+  const value_idx* row_ind, value_idx m, value_idx* coo_rows, value_idx nnz, hipStream_t stream)
 {
   // @TODO: Use cusparse for this.
   dim3 grid(raft::ceildiv(m, (value_idx)TPB_X), 1, 1);
@@ -70,7 +70,7 @@ void csr_to_coo(
 
   csr_to_coo_kernel<value_idx, TPB_X><<<grid, blk, 0, stream>>>(row_ind, m, coo_rows, nnz);
 
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 };  // end NAMESPACE detail

@@ -21,7 +21,7 @@
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/core/resources.hpp>
 
-#include <cublas_v2.h>
+#include <hipblas.h>
 
 namespace raft {
 namespace linalg {
@@ -40,12 +40,12 @@ void gemv(raft::resources const& handle,
           const math_t* beta,
           math_t* y,
           const int incy,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
-  cublasHandle_t cublas_h = resource::get_cublas_handle(handle);
+  hipblasHandle_t hipblas.h = resource::get_cublas_handle(handle);
   detail::cublas_device_pointer_mode<DevicePointerMode> pmode(cublas_h);
   RAFT_CUBLAS_TRY(detail::cublasgemv(cublas_h,
-                                     trans_a ? CUBLAS_OP_T : CUBLAS_OP_N,
+                                     trans_a ? HIPBLAS_OP_T : HIPBLAS_OP_N,
                                      m,
                                      n,
                                      alpha,
@@ -71,7 +71,7 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   gemv(handle, trans_a, n_rows, n_cols, &alpha, A, n_rows, x, incx, &beta, y, incy, stream);
 }
@@ -86,7 +86,7 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   gemv(handle, A, n_rows_a, n_cols_a, x, 1, y, 1, trans_a, alpha, beta, stream);
 }
@@ -99,7 +99,7 @@ void gemv(raft::resources const& handle,
           const math_t* x,
           math_t* y,
           const bool trans_a,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   math_t alpha = math_t(1);
   math_t beta  = math_t(0);
@@ -118,10 +118,10 @@ void gemv(raft::resources const& handle,
           const bool trans_a,
           const math_t alpha,
           const math_t beta,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
-  cublasHandle_t cublas_h = resource::get_cublas_handle(handle);
-  cublasOperation_t op_a  = trans_a ? CUBLAS_OP_T : CUBLAS_OP_N;
+  hipblasHandle_t hipblas.h = resource::get_cublas_handle(handle);
+  hipblasOperation_t op_a  = trans_a ? HIPBLAS_OP_T : HIPBLAS_OP_N;
   RAFT_CUBLAS_TRY(
     cublasgemv(cublas_h, op_a, n_rows_a, n_cols_a, &alpha, A, lda, x, 1, &beta, y, 1, stream));
 }
@@ -135,7 +135,7 @@ void gemv(raft::resources const& handle,
           const math_t* x,
           math_t* y,
           const bool trans_a,
-          cudaStream_t stream)
+          hipStream_t stream)
 {
   math_t alpha = math_t(1);
   math_t beta  = math_t(0);

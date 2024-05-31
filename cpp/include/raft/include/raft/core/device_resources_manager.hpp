@@ -19,7 +19,7 @@
 #include <raft/core/device_setter.hpp>
 
 #include <rmm/cuda_device.hpp>
-#include <rmm/cuda_stream.hpp>
+#include <rmm/hip_stream.hpp>
 #include <rmm/cuda_stream_pool.hpp>
 #include <rmm/mr/device/cuda_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
@@ -272,7 +272,7 @@ struct device_resources_manager {
   {
     thread_local auto thread_resources = std::vector<std::optional<raft::device_resources>>([]() {
       auto result = 0;
-      RAFT_CUDA_TRY(cudaGetDeviceCount(&result));
+      RAFT_CUDA_TRY(hipGetDeviceCount(&result));
       RAFT_EXPECTS(result != 0, "No CUDA devices found");
       return result;
     }());

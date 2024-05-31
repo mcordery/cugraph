@@ -58,7 +58,7 @@ template <typename OpT,
 void pairwise_matrix_sm80_dispatch(OpT,
                                    pairwise_matrix_params<IdxT, DataT, OutT, FinOpT>,
                                    SM_compat_t,
-                                   cudaStream_t);
+                                   hipStream_t);
 
 template <typename OpT,
           typename DataT,
@@ -76,7 +76,7 @@ void pairwise_matrix_dispatch(OpT distance_op,
                               const DataT* y_norm,
                               OutT* out,
                               FinOpT fin_op,
-                              cudaStream_t stream,
+                              hipStream_t stream,
                               bool is_row_major)
 {
   // Create kernel parameter struct. Flip x and y if column major.

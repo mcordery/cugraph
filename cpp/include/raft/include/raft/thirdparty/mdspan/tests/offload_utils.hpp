@@ -21,7 +21,7 @@ void dispatch(LAMBDA&& f) {
     static_cast<LAMBDA&&>(f)();
   } else {
     dispatch_kernel<<<1,1>>>(static_cast<LAMBDA&&>(f));
-    cudaDeviceSynchronize();
+    hipDeviceSynchronize();
   }
 }
 
@@ -31,7 +31,7 @@ T* allocate_array(size_t size) {
   if(dispatch_host == true)
     ptr = new T[size];
   else
-    cudaMallocManaged(&ptr, sizeof(T)*size);
+    hipMallocManaged(&ptr, sizeof(T)*size);
   return ptr;
 }
 
@@ -40,7 +40,7 @@ void free_array(T* ptr) {
   if(dispatch_host == true)
     delete [] ptr;
   else
-    cudaFree(ptr);
+    hipFree(ptr);
 }
 
 #define __MDSPAN_TESTS_RUN_TEST(A) \

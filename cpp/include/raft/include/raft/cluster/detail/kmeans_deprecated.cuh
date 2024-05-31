@@ -22,7 +22,7 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
@@ -32,7 +32,7 @@
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/device_atomics.cuh>
 
-#include <cuda.h>
+#include <hip/hip_runtime.h>
 #include <thrust/binary_search.h>
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
@@ -387,8 +387,8 @@ static int chooseNewCentroid(raft::resources const& handle,
                          thrust::device_pointer_cast(dists + n),
                          thrust::device_pointer_cast(distsCumSum));
   RAFT_CHECK_CUDA(stream);
-  RAFT_CUDA_TRY(cudaMemcpyAsync(
-    &distsSum, distsCumSum + n - 1, sizeof(value_type_t), cudaMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(
+    &distsSum, distsCumSum + n - 1, sizeof(value_type_t), hipMemcpyDeviceToHost, stream));
 
   // Randomly choose observation vector
   //   Probabilities are proportional to square of distance to closest
@@ -410,7 +410,7 @@ static int chooseNewCentroid(raft::resources const& handle,
   //{
   value_type_t minSum{0};
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(&minSum, distsCumSum, sizeof(value_type_t), cudaMemcpyDeviceToHost, stream));
+    hipMemcpyAsync(&minSum, distsCumSum, sizeof(value_type_t), hipMemcpyDeviceToHost, stream));
   RAFT_CHECK_CUDA(stream);
 
   if (distsSum > minSum) {
@@ -426,10 +426,10 @@ static int chooseNewCentroid(raft::resources const& handle,
   obsIndex = std::min(obsIndex, n - 1);
 
   // Record new centroid position
-  RAFT_CUDA_TRY(cudaMemcpyAsync(centroid,
+  RAFT_CUDA_TRY(hipMemcpyAsync(centroid,
                                 obs + IDX(0, obsIndex, d),
                                 d * sizeof(value_type_t),
-                                cudaMemcpyDeviceToDevice,
+                                hipMemcpyDeviceToDevice,
                                 stream));
 
   return 0;
@@ -503,7 +503,7 @@ static int initializeCentroids(raft::resources const& handle,
   dim3 gridDim_block{std::min(ceildiv<unsigned>(n, BLOCK_SIZE), grid_lower_bound), 1, 1};
 
   // Assign observation vectors to code 0
-  RAFT_CUDA_TRY(cudaMemsetAsync(codes, 0, n * sizeof(index_type_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(codes, 0, n * sizeof(index_type_t), stream));
 
   // Choose first centroid
   thrust::fill(thrust_exec_policy,
@@ -515,7 +515,7 @@ static int initializeCentroids(raft::resources const& handle,
     WARNING("error in k-means++ (could not pick centroid)");
 
   // Compute distances from first centroid
-  RAFT_CUDA_TRY(cudaMemsetAsync(dists, 0, n * sizeof(value_type_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(dists, 0, n * sizeof(value_type_t), stream));
   computeDistances<<<gridDim_warp, blockDim_warp, 0, stream>>>(n, d, 1, obs, centroids, dists);
   RAFT_CHECK_CUDA(stream);
 
@@ -526,7 +526,7 @@ static int initializeCentroids(raft::resources const& handle,
       WARNING("error in k-means++ (could not pick centroid)");
 
     // Compute distances from ith centroid
-    RAFT_CUDA_TRY(cudaMemsetAsync(dists + n, 0, n * sizeof(value_type_t), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(dists + n, 0, n * sizeof(value_type_t), stream));
     computeDistances<<<gridDim_warp, blockDim_warp, 0, stream>>>(
       n, d, 1, obs, centroids + IDX(0, i, d), dists + n);
     RAFT_CHECK_CUDA(stream);
@@ -537,7 +537,7 @@ static int initializeCentroids(raft::resources const& handle,
   }
 
   // Compute cluster sizes
-  RAFT_CUDA_TRY(cudaMemsetAsync(clusterSizes, 0, k * sizeof(index_type_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(clusterSizes, 0, k * sizeof(index_type_t), stream));
   computeClusterSizes<<<gridDim_block, BLOCK_SIZE, 0, stream>>>(n, codes, clusterSizes);
   RAFT_CHECK_CUDA(stream);
 
@@ -586,7 +586,7 @@ static int assignCentroids(raft::resources const& handle,
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   // Compute distance between centroids and observation vectors
-  RAFT_CUDA_TRY(cudaMemsetAsync(dists, 0, n * k * sizeof(value_type_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(dists, 0, n * k * sizeof(value_type_t), stream));
 
   // CUDA grid dimensions
   dim3 blockDim{WARP_SIZE, 1, BLOCK_SIZE / WARP_SIZE};
@@ -601,7 +601,7 @@ static int assignCentroids(raft::resources const& handle,
   RAFT_CHECK_CUDA(stream);
 
   // Find centroid closest to each observation vector
-  RAFT_CUDA_TRY(cudaMemsetAsync(clusterSizes, 0, k * sizeof(index_type_t), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(clusterSizes, 0, k * sizeof(index_type_t), stream));
   blockDim.x = BLOCK_SIZE;
   blockDim.y = 1;
   blockDim.z = 1;
@@ -665,7 +665,7 @@ static int updateCentroids(raft::resources const& handle,
   constexpr unsigned grid_lower_bound{65535};
 
   auto stream             = resource::get_cuda_stream(handle);
-  auto cublas_h           = resource::get_cublas_handle(handle);
+  auto hipblas.h           = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   // Device memory
@@ -676,8 +676,8 @@ static int updateCentroids(raft::resources const& handle,
   // Take transpose of observation matrix
   // #TODO: Call from public API when ready
   RAFT_CUBLAS_TRY(raft::linalg::detail::cublasgeam(cublas_h,
-                                                   CUBLAS_OP_T,
-                                                   CUBLAS_OP_N,
+                                                   HIPBLAS_OP_T,
+                                                   HIPBLAS_OP_N,
                                                    n,
                                                    d,
                                                    &one,
@@ -823,14 +823,14 @@ int kmeans(raft::resources const& handle,
   // -------------------------------------------------------
 
   auto stream             = resource::get_cuda_stream(handle);
-  auto cublas_h           = resource::get_cublas_handle(handle);
+  auto hipblas.h           = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   // Trivial cases
   if (k == 1) {
-    RAFT_CUDA_TRY(cudaMemsetAsync(codes, 0, n * sizeof(index_type_t), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(codes, 0, n * sizeof(index_type_t), stream));
     RAFT_CUDA_TRY(
-      cudaMemcpyAsync(clusterSizes, &n, sizeof(index_type_t), cudaMemcpyHostToDevice, stream));
+      hipMemcpyAsync(clusterSizes, &n, sizeof(index_type_t), hipMemcpyHostToDevice, stream));
     if (updateCentroids(handle, n, d, k, obs, codes, clusterSizes, centroids, work, work_int))
       WARNING("could not compute k-means centroids");
 
@@ -840,7 +840,7 @@ int kmeans(raft::resources const& handle,
                  1,
                  std::min(ceildiv<unsigned>(n, BLOCK_SIZE / WARP_SIZE), grid_lower_bound)};
 
-    RAFT_CUDA_TRY(cudaMemsetAsync(work, 0, n * k * sizeof(value_type_t), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(work, 0, n * k * sizeof(value_type_t), stream));
     computeDistances<<<gridDim, blockDim, 0, stream>>>(n, d, 1, obs, centroids, work);
     RAFT_CHECK_CUDA(stream);
     *residual_host = thrust::reduce(
@@ -857,9 +857,9 @@ int kmeans(raft::resources const& handle,
     RAFT_CHECK_CUDA(stream);
 
     if (n < k)
-      RAFT_CUDA_TRY(cudaMemsetAsync(clusterSizes + n, 0, (k - n) * sizeof(index_type_t), stream));
-    RAFT_CUDA_TRY(cudaMemcpyAsync(
-      centroids, obs, d * n * sizeof(value_type_t), cudaMemcpyDeviceToDevice, stream));
+      RAFT_CUDA_TRY(hipMemsetAsync(clusterSizes + n, 0, (k - n) * sizeof(index_type_t), stream));
+    RAFT_CUDA_TRY(hipMemcpyAsync(
+      centroids, obs, d * n * sizeof(value_type_t), hipMemcpyDeviceToDevice, stream));
     *residual_host = 0;
     return 0;
   }
@@ -867,7 +867,7 @@ int kmeans(raft::resources const& handle,
   // Initialize cuBLAS
   // #TODO: Call from public API when ready
   RAFT_CUBLAS_TRY(
-    raft::linalg::detail::cublassetpointermode(cublas_h, CUBLAS_POINTER_MODE_HOST, stream));
+    raft::linalg::detail::cublassetpointermode(cublas_h, HIPBLAS_POINTER_MODE_HOST, stream));
 
   // -------------------------------------------------------
   // k-means++ algorithm

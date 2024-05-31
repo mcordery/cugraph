@@ -41,8 +41,8 @@ void sample_rows(raft::resources const& res,
   raft::device_vector<IdxT, IdxT> train_indices =
     raft::random::excess_subsample<IdxT, int64_t>(res, random_state, n_rows_input, n_samples);
 
-  cudaPointerAttributes attr;
-  RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, input));
+  hipPointerAttribute_t attr;
+  RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, input));
   T* ptr = reinterpret_cast<T*>(attr.devicePointer);
   if (ptr != nullptr) {
     raft::matrix::gather(res,

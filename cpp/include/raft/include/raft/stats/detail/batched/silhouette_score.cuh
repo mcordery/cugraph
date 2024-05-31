@@ -18,7 +18,7 @@
 
 #include "../silhouette_score.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/util/cuda_utils.cuh>
@@ -141,7 +141,7 @@ rmm::device_uvector<value_t> get_pairwise_distance(raft::resources const& handle
                                                    value_idx& n_right_rows,
                                                    value_idx& n_cols,
                                                    raft::distance::DistanceType metric,
-                                                   cudaStream_t stream)
+                                                   hipStream_t stream)
 {
   rmm::device_uvector<value_t> distances(n_left_rows * n_right_rows, stream);
 
@@ -163,7 +163,7 @@ void compute_chunked_a_b(raft::resources const& handle,
                          const value_t* distances,
                          value_idx& dist_rows,
                          value_idx& dist_cols,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   dim3 block_size(std::min(dist_rows, 32), std::min(dist_cols, 32));
   dim3 grid_size(raft::ceildiv(dist_rows, (value_idx)block_size.x),

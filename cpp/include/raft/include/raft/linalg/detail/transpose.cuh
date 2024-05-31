@@ -20,7 +20,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 #include <rmm/exec_policy.hpp>
@@ -38,10 +38,10 @@ void transpose(raft::resources const& handle,
                math_t* out,
                int n_rows,
                int n_cols,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
-  cublasHandle_t cublas_h = resource::get_cublas_handle(handle);
-  RAFT_CUBLAS_TRY(cublasSetStream(cublas_h, stream));
+  hipblasHandle_t hipblas.h = resource::get_cublas_handle(handle);
+  RAFT_CUBLAS_TRY(hipblasSetStream(cublas_h, stream));
 
   int out_n_rows = n_cols;
   int out_n_cols = n_rows;
@@ -49,8 +49,8 @@ void transpose(raft::resources const& handle,
   const math_t alpha = 1.0;
   const math_t beta  = 0.0;
   RAFT_CUBLAS_TRY(cublasgeam(cublas_h,
-                             CUBLAS_OP_T,
-                             CUBLAS_OP_N,
+                             HIPBLAS_OP_T,
+                             HIPBLAS_OP_N,
                              out_n_rows,
                              out_n_cols,
                              &alpha,
@@ -65,7 +65,7 @@ void transpose(raft::resources const& handle,
 }
 
 template <typename math_t>
-void transpose(math_t* inout, int n, cudaStream_t stream)
+void transpose(math_t* inout, int n, hipStream_t stream)
 {
   auto m        = n;
   auto size     = n * n;
@@ -97,8 +97,8 @@ void transpose_row_major_impl(
   T constexpr kZero = 0;
 
   CUBLAS_TRY(cublasgeam(resource::get_cublas_handle(handle),
-                        CUBLAS_OP_T,
-                        CUBLAS_OP_N,
+                        HIPBLAS_OP_T,
+                        HIPBLAS_OP_N,
                         out_n_cols,
                         out_n_rows,
                         &kOne,
@@ -124,8 +124,8 @@ void transpose_col_major_impl(
   T constexpr kZero = 0;
 
   CUBLAS_TRY(cublasgeam(resource::get_cublas_handle(handle),
-                        CUBLAS_OP_T,
-                        CUBLAS_OP_N,
+                        HIPBLAS_OP_T,
+                        HIPBLAS_OP_N,
                         out_n_rows,
                         out_n_cols,
                         &kOne,

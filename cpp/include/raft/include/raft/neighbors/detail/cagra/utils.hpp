@@ -22,8 +22,8 @@
 
 #include <rmm/resource_ref.hpp>
 
-#include <cuda.h>
-#include <cuda_fp16.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_fp16.h>
 
 #include <cfloat>
 #include <cstdint>
@@ -32,34 +32,34 @@
 namespace raft::neighbors::cagra::detail {
 namespace utils {
 template <class DATA_T>
-inline cudaDataType_t get_cuda_data_type();
+inline hipDataType get_cuda_data_type();
 template <>
-inline cudaDataType_t get_cuda_data_type<float>()
+inline hipDataType get_cuda_data_type<float>()
 {
-  return CUDA_R_32F;
+  return HIP_R_32F;
 }
 template <>
-inline cudaDataType_t get_cuda_data_type<half>()
+inline hipDataType get_cuda_data_type<half>()
 {
-  return CUDA_R_16F;
+  return HIP_R_16F;
 }
 template <>
-inline cudaDataType_t get_cuda_data_type<int8_t>()
+inline hipDataType get_cuda_data_type<int8_t>()
 {
-  return CUDA_R_8I;
+  return HIP_R_8I;
 }
 template <>
-inline cudaDataType_t get_cuda_data_type<uint8_t>()
+inline hipDataType get_cuda_data_type<uint8_t>()
 {
-  return CUDA_R_8U;
+  return HIP_R_8U;
 }
 template <>
-inline cudaDataType_t get_cuda_data_type<uint32_t>()
+inline hipDataType get_cuda_data_type<uint32_t>()
 {
-  return CUDA_R_32U;
+  return HIP_R_32U;
 }
 template <>
-inline cudaDataType_t get_cuda_data_type<uint64_t>()
+inline hipDataType get_cuda_data_type<uint64_t>()
 {
   return CUDA_R_64U;
 }
@@ -179,8 +179,8 @@ class device_matrix_view_from_host {
   device_matrix_view_from_host(raft::resources const& res, host_matrix_view<T, IdxT> host_view)
     : host_view_(host_view)
   {
-    cudaPointerAttributes attr;
-    RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, host_view.data_handle()));
+    hipPointerAttribute_t attr;
+    RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, host_view.data_handle()));
     device_ptr = reinterpret_cast<T*>(attr.devicePointer);
     if (device_ptr == NULL) {
       // allocate memory and copy over
@@ -226,8 +226,8 @@ class host_matrix_view_from_device {
   host_matrix_view_from_device(raft::resources const& res, device_matrix_view<T, IdxT> device_view)
     : device_view_(device_view)
   {
-    cudaPointerAttributes attr;
-    RAFT_CUDA_TRY(cudaPointerGetAttributes(&attr, device_view.data_handle()));
+    hipPointerAttribute_t attr;
+    RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, device_view.data_handle()));
     host_ptr = reinterpret_cast<T*>(attr.hostPointer);
     if (host_ptr == NULL) {
       // allocate memory and copy over
@@ -274,15 +274,15 @@ void copy_with_padding(raft::resources const& res,
     raft::copy(dst.data_handle(), src.data_handle(), src.size(), resource::get_cuda_stream(res));
   } else {
     // copy with padding
-    RAFT_CUDA_TRY(cudaMemsetAsync(
+    RAFT_CUDA_TRY(hipMemsetAsync(
       dst.data_handle(), 0, dst.size() * sizeof(T), resource::get_cuda_stream(res)));
-    RAFT_CUDA_TRY(cudaMemcpy2DAsync(dst.data_handle(),
+    RAFT_CUDA_TRY(hipMemcpy2DAsync(dst.data_handle(),
                                     sizeof(T) * dst.extent(1),
                                     src.data_handle(),
                                     sizeof(T) * src.extent(1),
                                     sizeof(T) * src.extent(1),
                                     src.extent(0),
-                                    cudaMemcpyDefault,
+                                    hipMemcpyDefault,
                                     resource::get_cuda_stream(res)));
   }
 }

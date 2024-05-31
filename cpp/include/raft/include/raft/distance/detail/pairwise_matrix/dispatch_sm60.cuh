@@ -75,7 +75,7 @@ template <typename OpT,
 void pairwise_matrix_sm60_dispatch(OpT distance_op,
                                    pairwise_matrix_params<IdxT, DataT, OutT, FinOpT> params,
                                    SM_compat_t sm_compat_range,
-                                   cudaStream_t stream)
+                                   hipStream_t stream)
 {
   auto wrapper = pairwise_matrix_sm60_get_wrapper(distance_op, params, sm_compat_range);
 

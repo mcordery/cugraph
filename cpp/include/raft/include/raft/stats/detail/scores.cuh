@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -55,24 +56,24 @@ namespace detail {
  * @return: The R-squared value.
  */
 template <typename math_t>
-math_t r2_score(math_t* y, math_t* y_hat, int n, cudaStream_t stream)
+math_t r2_score(math_t* y, math_t* y_hat, int n, hipStream_t stream)
 {
   rmm::device_scalar<math_t> y_bar(stream);
 
   raft::stats::mean(y_bar.data(), y, 1, n, false, false, stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   rmm::device_uvector<math_t> sse_arr(n, stream);
 
   raft::linalg::eltwiseSub(sse_arr.data(), y, y_hat, n, stream);
   raft::linalg::powerScalar(sse_arr.data(), sse_arr.data(), math_t(2.0), n, stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   rmm::device_uvector<math_t> ssto_arr(n, stream);
 
   raft::linalg::subtractDevScalar(ssto_arr.data(), y, y_bar.data(), n, stream);
   raft::linalg::powerScalar(ssto_arr.data(), ssto_arr.data(), math_t(2.0), n, stream);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   thrust::device_ptr<math_t> d_sse  = thrust::device_pointer_cast(sse_arr.data());
   thrust::device_ptr<math_t> d_ssto = thrust::device_pointer_cast(ssto_arr.data());
@@ -96,14 +97,14 @@ template <typename math_t>
 float accuracy_score(const math_t* predictions,
                      const math_t* ref_predictions,
                      int n,
-                     cudaStream_t stream)
+                     hipStream_t stream)
 {
   unsigned long long correctly_predicted = 0ULL;
   rmm::device_uvector<math_t> diffs_array(n, stream);
 
   // TODO could write a kernel instead
   raft::linalg::eltwiseSub(diffs_array.data(), predictions, ref_predictions, n, stream);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   correctly_predicted =
     thrust::count(thrust::cuda::par.on(stream), diffs_array.data(), diffs_array.data() + n, 0);
 
@@ -158,7 +159,7 @@ template <typename T>
 void regression_metrics(const T* predictions,
                         const T* ref_predictions,
                         int n,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         double& mean_abs_error,
                         double& mean_squared_error,
                         double& median_abs_error)
@@ -172,11 +173,11 @@ void regression_metrics(const T* predictions,
   rmm::device_uvector<double> abs_diffs_array(array_size, stream);
   rmm::device_uvector<double> sorted_abs_diffs(array_size, stream);
   rmm::device_uvector<double> tmp_sums(2 * sizeof(double), stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(tmp_sums.data(), 0, 2 * sizeof(double), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(tmp_sums.data(), 0, 2 * sizeof(double), stream));
 
   reg_metrics_kernel<T><<<block_cnt, thread_cnt, 0, stream>>>(
     predictions, ref_predictions, n, abs_diffs_array.data(), tmp_sums.data());
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
   raft::update_host(&mean_errors[0], tmp_sums.data(), 2, stream);
   raft::interruptible::synchronize(stream);
 
@@ -186,7 +187,7 @@ void regression_metrics(const T* predictions,
   // Compute median error. Sort diffs_array and pick median value
   char* temp_storage = nullptr;
   size_t temp_storage_bytes;
-  RAFT_CUDA_TRY(cub::DeviceRadixSort::SortKeys((void*)temp_storage,
+  RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortKeys((void*)temp_storage,
                                                temp_storage_bytes,
                                                abs_diffs_array.data(),
                                                sorted_abs_diffs.data(),
@@ -196,7 +197,7 @@ void regression_metrics(const T* predictions,
                                                stream));
   rmm::device_uvector<char> temp_storage_v(temp_storage_bytes, stream);
   temp_storage = temp_storage_v.data();
-  RAFT_CUDA_TRY(cub::DeviceRadixSort::SortKeys((void*)temp_storage,
+  RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortKeys((void*)temp_storage,
                                                temp_storage_bytes,
                                                abs_diffs_array.data(),
                                                sorted_abs_diffs.data(),

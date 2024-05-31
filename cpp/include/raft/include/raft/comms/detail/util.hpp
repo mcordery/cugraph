@@ -107,15 +107,15 @@ constexpr ncclRedOp_t get_nccl_op(const op_t op)
   }
 }
 
-inline status_t nccl_sync_stream(ncclComm_t comm, cudaStream_t stream)
+inline status_t nccl_sync_stream(ncclComm_t comm, hipStream_t stream)
 {
-  cudaError_t cudaErr;
+  hipError_t cudaErr;
   ncclResult_t ncclErr, ncclAsyncErr;
   while (1) {
-    cudaErr = cudaStreamQuery(stream);
-    if (cudaErr == cudaSuccess) return status_t::SUCCESS;
+    cudaErr = hipStreamQuery(stream);
+    if (cudaErr == hipSuccess) return status_t::SUCCESS;
 
-    if (cudaErr != cudaErrorNotReady) {
+    if (cudaErr != hipErrorNotReady) {
       // An error occurred querying the status of the stream_
       return status_t::ERROR;
     }

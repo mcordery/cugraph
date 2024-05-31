@@ -19,7 +19,7 @@
 #include <raft/linalg/detail/cublas_wrappers.hpp>
 #include <raft/linalg/detail/cusolver_wrappers.hpp>
 
-#include <cusolverDn.h>
+#include <hipsolver.h>
 
 // for now; TODO: check if/where this `define` should be;
 //
@@ -97,8 +97,8 @@ extern "C" int sgeev_(char* jobvl,
                       int* lwork,
                       int* info);
 
-extern "C" cusolverStatus_t cusolverDnSgemmHost(cublasOperation_t transa,
-                                                cublasOperation_t transb,
+extern "C" hipsolverStatus_t cusolverDnSgemmHost(hipblasOperation_t transa,
+                                                hipblasOperation_t transb,
                                                 int m,
                                                 int n,
                                                 int k,
@@ -111,8 +111,8 @@ extern "C" cusolverStatus_t cusolverDnSgemmHost(cublasOperation_t transa,
                                                 float* C,
                                                 int ldc);
 
-extern "C" cusolverStatus_t cusolverDnDgemmHost(cublasOperation_t transa,
-                                                cublasOperation_t transb,
+extern "C" hipsolverStatus_t cusolverDnDgemmHost(hipblasOperation_t transa,
+                                                hipblasOperation_t transb,
                                                 int m,
                                                 int n,
                                                 int k,
@@ -125,14 +125,14 @@ extern "C" cusolverStatus_t cusolverDnDgemmHost(cublasOperation_t transa,
                                                 double* C,
                                                 int ldc);
 
-extern "C" cusolverStatus_t cusolverDnSsterfHost(int n, float* d, float* e, int* info);
+extern "C" hipsolverStatus_t cusolverDnSsterfHost(int n, float* d, float* e, int* info);
 
-extern "C" cusolverStatus_t cusolverDnDsterfHost(int n, double* d, double* e, int* info);
+extern "C" hipsolverStatus_t cusolverDnDsterfHost(int n, double* d, double* e, int* info);
 
-extern "C" cusolverStatus_t cusolverDnSsteqrHost(
+extern "C" hipsolverStatus_t cusolverDnSsteqrHost(
   const signed char* compz, int n, float* d, float* e, float* z, int ldz, float* work, int* info);
 
-extern "C" cusolverStatus_t cusolverDnDsteqrHost(const signed char* compz,
+extern "C" hipsolverStatus_t cusolverDnDsteqrHost(const signed char* compz,
                                                  int n,
                                                  double* d,
                                                  double* e,
@@ -213,8 +213,8 @@ class Lapack {
                           float* c,
                           int ldc)
   {
-    cublasOperation_t cublas_transa = (transa == 'N') ? CUBLAS_OP_N : CUBLAS_OP_T;
-    cublasOperation_t cublas_transb = (transb == 'N') ? CUBLAS_OP_N : CUBLAS_OP_T;
+    hipblasOperation_t cublas_transa = (transa == 'N') ? HIPBLAS_OP_N : HIPBLAS_OP_T;
+    hipblasOperation_t cublas_transb = (transb == 'N') ? HIPBLAS_OP_N : HIPBLAS_OP_T;
     cusolverDnSgemmHost(
       cublas_transa, cublas_transb, m, n, k, &alpha, (float*)a, lda, (float*)b, ldb, &beta, c, ldc);
   }
@@ -233,8 +233,8 @@ class Lapack {
                           double* c,
                           int ldc)
   {
-    cublasOperation_t cublas_transa = (transa == 'N') ? CUBLAS_OP_N : CUBLAS_OP_T;
-    cublasOperation_t cublas_transb = (transb == 'N') ? CUBLAS_OP_N : CUBLAS_OP_T;
+    hipblasOperation_t cublas_transa = (transa == 'N') ? HIPBLAS_OP_N : HIPBLAS_OP_T;
+    hipblasOperation_t cublas_transb = (transb == 'N') ? HIPBLAS_OP_N : HIPBLAS_OP_T;
     cusolverDnDgemmHost(cublas_transa,
                         cublas_transb,
                         m,

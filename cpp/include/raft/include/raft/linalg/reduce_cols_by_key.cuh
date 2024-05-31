@@ -21,7 +21,7 @@
 #include "detail/reduce_cols_by_key.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 namespace raft {
@@ -53,7 +53,7 @@ void reduce_cols_by_key(const T* data,
                         IdxType nrows,
                         IdxType ncols,
                         IdxType nkeys,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums = true)
 {
   detail::reduce_cols_by_key(data, keys, out, nrows, ncols, nkeys, stream, reset_sums);

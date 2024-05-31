@@ -20,7 +20,7 @@
 
 #include "detail/svd.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 #include <optional>
 
@@ -53,7 +53,7 @@ void svdQR(raft::resources const& handle,
            bool trans_right,
            bool gen_left_vec,
            bool gen_right_vec,
-           cudaStream_t stream)
+           hipStream_t stream)
 {
   detail::svdQR(handle,
                 in,
@@ -77,7 +77,7 @@ void svdEig(raft::resources const& handle,
             math_t* U,
             math_t* V,
             bool gen_left_vec,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::svdEig(handle, in, n_rows, n_cols, S, U, V, gen_left_vec, stream);
 }
@@ -111,7 +111,7 @@ void svdJacobi(raft::resources const& handle,
                bool gen_right_vec,
                math_t tol,
                int max_sweeps,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   detail::svdJacobi(handle,
                     in,
@@ -149,7 +149,7 @@ void svdReconstruction(raft::resources const& handle,
                        int n_rows,
                        int n_cols,
                        int k,
-                       cudaStream_t stream)
+                       hipStream_t stream)
 {
   detail::svdReconstruction(handle, U, S, V, out, n_rows, n_cols, k, stream);
 }
@@ -178,7 +178,7 @@ bool evaluateSVDByL2Norm(raft::resources const& handle,
                          int n_cols,
                          int k,
                          math_t tol,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   return detail::evaluateSVDByL2Norm(handle, A_d, U, S_vec, V, n_rows, n_cols, k, tol, stream);
 }

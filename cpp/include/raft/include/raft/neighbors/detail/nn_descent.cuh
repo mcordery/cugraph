@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -21,7 +22,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/error.hpp>
 #include <raft/core/host_mdarray.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/neighbors/detail/cagra/device_common.hpp>
 #include <raft/spatial/knn/detail/ann_utils.cuh>
@@ -33,8 +34,8 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
-#include <cuda_runtime.h>
+#include <hipcub/hipcub.hpp>
+#include <hip/hip_runtime.h>
 #include <thrust/execution_policy.h>
 #include <thrust/fill.h>
 #include <thrust/host_vector.h>
@@ -354,8 +355,8 @@ class GNND {
                          Index_t* h_rev_graph_ptr,
                          Index_t* d_rev_graph_ptr,
                          int2* list_sizes,
-                         cudaStream_t stream = 0);
-  void local_join(cudaStream_t stream = 0);
+                         hipStream_t stream = 0);
+  void local_join(hipStream_t stream = 0);
 
   raft::resources const& res;
 
@@ -1179,7 +1180,7 @@ void GNND<Data_t, Index_t>::add_reverse_edges(Index_t* graph_ptr,
                                               Index_t* h_rev_graph_ptr,
                                               Index_t* d_rev_graph_ptr,
                                               int2* list_sizes,
-                                              cudaStream_t stream)
+                                              hipStream_t stream)
 {
   add_rev_edges_kernel<<<nrow_, raft::warp_size(), 0, stream>>>(
     graph_ptr, d_rev_graph_ptr, NUM_SAMPLES, list_sizes);
@@ -1188,7 +1189,7 @@ void GNND<Data_t, Index_t>::add_reverse_edges(Index_t* graph_ptr,
 }
 
 template <typename Data_t, typename Index_t>
-void GNND<Data_t, Index_t>::local_join(cudaStream_t stream)
+void GNND<Data_t, Index_t>::local_join(hipStream_t stream)
 {
   thrust::fill(thrust::device.on(stream),
                dists_buffer_.data_handle(),
@@ -1216,12 +1217,12 @@ void GNND<Data_t, Index_t>::build(Data_t* data, const Index_t nrow, Index_t* out
 {
   using input_t = typename std::remove_const<Data_t>::type;
 
-  cudaStream_t stream = raft::resource::get_cuda_stream(res);
+  hipStream_t stream = raft::resource::get_cuda_stream(res);
   nrow_               = nrow;
   graph_.h_graph      = (InternalID_t<Index_t>*)output_graph;
 
-  cudaPointerAttributes data_ptr_attr;
-  RAFT_CUDA_TRY(cudaPointerGetAttributes(&data_ptr_attr, data));
+  hipPointerAttribute_t data_ptr_attr;
+  RAFT_CUDA_TRY(hipPointerGetAttributes(&data_ptr_attr, data));
   size_t batch_size = (data_ptr_attr.devicePointer == nullptr) ? 100000 : nrow_;
 
   raft::spatial::knn::detail::utils::batch_load_iterator vec_batches{

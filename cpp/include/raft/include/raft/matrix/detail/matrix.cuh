@@ -25,11 +25,11 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/for_each.h>
 #include <thrust/iterator/counting_iterator.h>
 
-#include <cusolverDn.h>
+#include <hipsolver.h>
 
 #include <algorithm>
 #include <cstddef>
@@ -45,14 +45,14 @@ void copyRows(const m_t* in,
               m_t* out,
               const idx_array_t* indices,
               idx_t n_rows_indices,
-              cudaStream_t stream,
+              hipStream_t stream,
               bool rowMajor = false)
 {
   if (rowMajor) {
     const idx_t TPB = 256;
     cache::get_vecs<<<raft::ceildiv(n_rows_indices * n_cols, TPB), TPB, 0, stream>>>(
       in, n_cols, indices, n_rows_indices, out);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
     return;
   }
 
@@ -69,7 +69,7 @@ void copyRows(const m_t* in,
 
 template <typename m_t, typename idx_t = int>
 void truncZeroOrigin(
-  const m_t* in, idx_t in_n_rows, m_t* out, idx_t out_n_rows, idx_t out_n_cols, cudaStream_t stream)
+  const m_t* in, idx_t in_n_rows, m_t* out, idx_t out_n_rows, idx_t out_n_cols, hipStream_t stream)
 {
   auto m         = out_n_rows;
   auto k         = in_n_rows;
@@ -86,7 +86,7 @@ void truncZeroOrigin(
 }
 
 template <typename m_t, typename idx_t = int>
-void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   auto n            = n_cols;
   auto m            = n_rows;
@@ -108,7 +108,7 @@ void colReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
 }
 
 template <typename m_t, typename idx_t = int>
-void rowReverse(m_t* inout, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void rowReverse(m_t* inout, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   auto m            = n_rows;
   idx_t size        = n_rows * n_cols;
@@ -135,7 +135,7 @@ void print(const m_t* in,
            idx_t n_cols,
            char h_separator    = ' ',
            char v_separator    = '\n',
-           cudaStream_t stream = rmm::cuda_stream_default)
+           hipStream_t stream = rmm::cuda_stream_default)
 {
   std::vector<m_t> h_matrix = std::vector<m_t>(n_cols * n_rows);
   raft::update_host(h_matrix.data(), in, n_cols * n_rows, stream);
@@ -191,7 +191,7 @@ void sliceMatrix(const m_t* in,
                  idx_t x2,
                  idx_t y2,
                  bool row_major,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   auto lda = row_major ? n_cols : n_rows;
   dim3 block(64);
@@ -222,7 +222,7 @@ RAFT_KERNEL getUpperTriangular(const m_t* src, m_t* dst, idx_t n_rows, idx_t n_c
 }
 
 template <typename m_t, typename idx_t = int>
-void copyUpperTriangular(const m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, cudaStream_t stream)
+void copyUpperTriangular(const m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   idx_t m = n_rows, n = n_cols;
   idx_t k = std::min(m, n);
@@ -263,7 +263,7 @@ RAFT_KERNEL copyVectorFromMatrixDiagonal(m_t* vec, const m_t* matrix, idx_t lda,
 
 template <typename m_t, typename idx_t = int>
 void initializeDiagonalMatrix(
-  const m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, bool row_major, cudaStream_t stream)
+  const m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, bool row_major, hipStream_t stream)
 {
   idx_t k   = std::min(n_rows, n_cols);
   idx_t lda = row_major ? n_cols : n_rows;
@@ -274,7 +274,7 @@ void initializeDiagonalMatrix(
 
 template <typename m_t, typename idx_t = int>
 void getDiagonalMatrix(
-  m_t* vec, const m_t* matrix, idx_t n_rows, idx_t n_cols, bool row_major, cudaStream_t stream)
+  m_t* vec, const m_t* matrix, idx_t n_rows, idx_t n_cols, bool row_major, hipStream_t stream)
 {
   idx_t k   = std::min(n_rows, n_cols);
   idx_t lda = row_major ? n_cols : n_rows;
@@ -297,7 +297,7 @@ RAFT_KERNEL matrixDiagonalInverse(m_t* in, idx_t len)
 }
 
 template <typename m_t, typename idx_t = int>
-void getDiagonalInverseMatrix(m_t* in, idx_t len, cudaStream_t stream)
+void getDiagonalInverseMatrix(m_t* in, idx_t len, hipStream_t stream)
 {
   dim3 block(64);
   dim3 grid((len + block.x - 1) / block.x);
@@ -305,9 +305,9 @@ void getDiagonalInverseMatrix(m_t* in, idx_t len, cudaStream_t stream)
 }
 
 template <typename m_t, typename idx_t = int>
-m_t getL2Norm(raft::resources const& handle, const m_t* in, idx_t size, cudaStream_t stream)
+m_t getL2Norm(raft::resources const& handle, const m_t* in, idx_t size, hipStream_t stream)
 {
-  cublasHandle_t cublasH = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH = resource::get_cublas_handle(handle);
   m_t normval            = 0;
   RAFT_EXPECTS(
     std::is_integral_v<idx_t> && (std::size_t)size <= (std::size_t)std::numeric_limits<int>::max(),

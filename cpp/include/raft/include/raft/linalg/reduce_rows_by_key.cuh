@@ -21,7 +21,7 @@
 #include "detail/reduce_rows_by_key.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 namespace raft {
@@ -32,7 +32,7 @@ namespace linalg {
  Transform ncols*nrows read of int in 2*nrows reads of int + ncols*rows reads of chars
 **/
 template <typename IteratorT1, typename IteratorT2>
-void convert_array(IteratorT1 dst, IteratorT2 src, int n, cudaStream_t st)
+void convert_array(IteratorT1 dst, IteratorT2 src, int n, hipStream_t st)
 {
   detail::convert_array(dst, src, n, st);
 }
@@ -73,7 +73,7 @@ void reduce_rows_by_key(const DataIteratorT d_A,
                         IdxT ncols,
                         IdxT nkeys,
                         SumsT* d_sums,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums = true)
 {
   detail::reduce_rows_by_key(
@@ -108,7 +108,7 @@ void reduce_rows_by_key(const DataIteratorT d_A,
                         IdxT ncols,
                         IdxT nkeys,
                         SumsT* d_sums,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool reset_sums = true)
 {
   typedef typename std::iterator_traits<DataIteratorT>::value_type DataType;

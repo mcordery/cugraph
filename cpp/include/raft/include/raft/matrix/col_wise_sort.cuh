@@ -20,7 +20,7 @@
 
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/matrix/detail/columnWiseSort.cuh>
 
 namespace raft::matrix {
@@ -46,7 +46,7 @@ void sort_cols_per_row(const InType* in,
                        bool& bAllocWorkspace,
                        void* workspacePtr,
                        size_t& workspaceSize,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        InType* sortedKeys = nullptr)
 {
   detail::sortColumnsPerRow<InType, OutType>(

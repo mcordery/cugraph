@@ -19,7 +19,7 @@
 #include <raft/comms/comms.hpp>
 #include <raft/comms/detail/mpi_comms.hpp>
 #include <raft/core/resource/comms.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft {
 namespace comms {

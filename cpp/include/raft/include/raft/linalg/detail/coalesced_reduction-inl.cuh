@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -22,7 +23,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace linalg {
@@ -142,7 +143,7 @@ void coalescedReductionThin(OutType* dots,
                             IdxType D,
                             IdxType N,
                             OutType init,
-                            cudaStream_t stream,
+                            hipStream_t stream,
                             bool inplace           = false,
                             MainLambda main_op     = raft::identity_op(),
                             ReduceLambda reduce_op = raft::add_op(),
@@ -158,7 +159,7 @@ void coalescedReductionThin(OutType* dots,
   dim3 blocks(ceildiv<IdxType>(N, Policy::RowsPerBlock), 1, 1);
   coalescedReductionThinKernel<Policy>
     <<<blocks, threads, 0, stream>>>(dots, data, D, N, init, main_op, reduce_op, final_op, inplace);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename InType,
@@ -172,7 +173,7 @@ void coalescedReductionThinDispatcher(OutType* dots,
                                       IdxType D,
                                       IdxType N,
                                       OutType init,
-                                      cudaStream_t stream,
+                                      hipStream_t stream,
                                       bool inplace           = false,
                                       MainLambda main_op     = raft::identity_op(),
                                       ReduceLambda reduce_op = raft::add_op(),
@@ -222,7 +223,7 @@ RAFT_KERNEL __launch_bounds__(TPB) coalescedReductionMediumKernel(OutType* dots,
                                                                   FinalLambda final_op,
                                                                   bool inplace = false)
 {
-  typedef cub::BlockReduce<OutType, TPB, cub::BLOCK_REDUCE_RAKING> BlockReduce;
+  typedef hipcub::BlockReduce<OutType, TPB, hipcub::BLOCK_REDUCE_RAKING> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   OutType thread_data = init;
   IdxType rowStart    = blockIdx.x * D;
@@ -252,7 +253,7 @@ void coalescedReductionMedium(OutType* dots,
                               IdxType D,
                               IdxType N,
                               OutType init,
-                              cudaStream_t stream,
+                              hipStream_t stream,
                               bool inplace           = false,
                               MainLambda main_op     = raft::identity_op(),
                               ReduceLambda reduce_op = raft::add_op(),
@@ -261,7 +262,7 @@ void coalescedReductionMedium(OutType* dots,
 //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("coalescedReductionMedium<%d>", TPB);
   coalescedReductionMediumKernel<TPB>
     <<<N, TPB, 0, stream>>>(dots, data, D, N, init, main_op, reduce_op, final_op, inplace);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 template <typename InType,
@@ -275,7 +276,7 @@ void coalescedReductionMediumDispatcher(OutType* dots,
                                         IdxType D,
                                         IdxType N,
                                         OutType init,
-                                        cudaStream_t stream,
+                                        hipStream_t stream,
                                         bool inplace           = false,
                                         MainLambda main_op     = raft::identity_op(),
                                         ReduceLambda reduce_op = raft::add_op(),
@@ -309,7 +310,7 @@ RAFT_KERNEL __launch_bounds__(Policy::ThreadsPerBlock)
                                 MainLambda main_op,
                                 ReduceLambda reduce_op)
 {
-  typedef cub::BlockReduce<OutType, Policy::ThreadsPerBlock, cub::BLOCK_REDUCE_RAKING> BlockReduce;
+  typedef hipcub::BlockReduce<OutType, Policy::ThreadsPerBlock, hipcub::BLOCK_REDUCE_RAKING> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   OutType thread_data = init;
   IdxType rowStart    = blockIdx.x * D;
@@ -335,7 +336,7 @@ void coalescedReductionThick(OutType* dots,
                              IdxType D,
                              IdxType N,
                              OutType init,
-                             cudaStream_t stream,
+                             hipStream_t stream,
                              bool inplace           = false,
                              MainLambda main_op     = raft::identity_op(),
                              ReduceLambda reduce_op = raft::add_op(),
@@ -358,7 +359,7 @@ void coalescedReductionThick(OutType* dots,
 
   coalescedReductionThickKernel<ThickPolicy>
     <<<blocks, threads, 0, stream>>>(buffer.data(), data, D, N, init, main_op, reduce_op);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 
   coalescedReductionThin<ThinPolicy>(dots,
                                      buffer.data(),
@@ -383,7 +384,7 @@ void coalescedReductionThickDispatcher(OutType* dots,
                                        IdxType D,
                                        IdxType N,
                                        OutType init,
-                                       cudaStream_t stream,
+                                       hipStream_t stream,
                                        bool inplace           = false,
                                        MainLambda main_op     = raft::identity_op(),
                                        ReduceLambda reduce_op = raft::add_op(),
@@ -414,7 +415,7 @@ void coalescedReduction(OutType* dots,
                         IdxType D,
                         IdxType N,
                         OutType init,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         bool inplace           = false,
                         MainLambda main_op     = raft::identity_op(),
                         ReduceLambda reduce_op = raft::add_op(),

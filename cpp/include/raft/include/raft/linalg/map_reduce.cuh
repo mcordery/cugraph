@@ -21,7 +21,7 @@
 #include "detail/map_then_reduce.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 
 namespace raft::linalg {
 
@@ -55,7 +55,7 @@ void mapReduce(OutType* out,
                OutType neutral,
                MapOp map,
                ReduceLambda op,
-               cudaStream_t stream,
+               hipStream_t stream,
                const InType* in,
                Args... args)
 {

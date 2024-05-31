@@ -51,7 +51,7 @@ void csr_transpose(raft::resources const& handle,
                    value_idx csr_nrows,
                    value_idx csr_ncols,
                    value_idx nnz,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   detail::csr_transpose(resource::get_cusparse_handle(handle),
                         csr_indptr,

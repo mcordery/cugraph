@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
@@ -293,7 +294,7 @@ RAFT_KERNEL final_color_indices(const vertex_t v, const vertex_t* color, vertex_
 }
 
 // Alterate the weights, make all undirected edge weight unique while keeping Wuv == Wvu
-// Consider using curand device API instead of precomputed random_values array
+// Consider using hiprand device API instead of precomputed random_values array
 template <typename vertex_t, typename edge_t, typename weight_t, typename alteration_t>
 RAFT_KERNEL alteration_kernel(const vertex_t v,
                               const edge_t e,

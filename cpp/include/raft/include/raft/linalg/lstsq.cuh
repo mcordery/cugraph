@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/lstsq.cuh>
 namespace raft {
@@ -44,7 +44,7 @@ void lstsqSvdQR(raft::resources const& handle,
                 const int n_cols,
                 const math_t* b,
                 math_t* w,
-                cudaStream_t stream)
+                hipStream_t stream)
 {
   detail::lstsqSvdQR(handle, A, n_rows, n_cols, b, w, stream);
 }
@@ -69,7 +69,7 @@ void lstsqSvdJacobi(raft::resources const& handle,
                     const int n_cols,
                     const math_t* b,
                     math_t* w,
-                    cudaStream_t stream)
+                    hipStream_t stream)
 {
   detail::lstsqSvdJacobi(handle, A, n_rows, n_cols, b, w, stream);
 }
@@ -85,7 +85,7 @@ void lstsqEig(raft::resources const& handle,
               const int n_cols,
               const math_t* b,
               math_t* w,
-              cudaStream_t stream)
+              hipStream_t stream)
 {
   detail::lstsqEig(handle, A, n_rows, n_cols, b, w, stream);
 }
@@ -111,7 +111,7 @@ void lstsqQR(raft::resources const& handle,
              const int n_cols,
              math_t* b,
              math_t* w,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   detail::lstsqQR(handle, A, n_rows, n_cols, b, w, stream);
 }

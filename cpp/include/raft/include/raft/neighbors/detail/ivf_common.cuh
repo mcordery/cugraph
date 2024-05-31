@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2024, NVIDIA CORPORATION.
  *
@@ -19,7 +20,7 @@
 #include <raft/linalg/unary_op.cuh>
 #include <raft/matrix/detail/select_warpsort.cuh>  // matrix::detail::select::warpsort::warp_sort_distributed
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft::neighbors::ivf::detail {
 
@@ -53,7 +54,7 @@ __launch_bounds__(BlockDim) RAFT_KERNEL
                             uint32_t* n_samples                 // [n_queries]
   )
 {
-  using block_scan = cub::BlockScan<uint32_t, BlockDim>;
+  using block_scan = hipcub::BlockScan<uint32_t, BlockDim>;
   __shared__ typename block_scan::TempStorage shm;
 
   // locate the query data
@@ -91,7 +92,7 @@ struct calc_chunk_indices {
     {
       void* args[] =  // NOLINT
         {&n_probes, &cluster_sizes, &clusters_to_probe, &chunk_indices, &n_samples};
-      RAFT_CUDA_TRY(cudaLaunchKernel(kernel, grid_dim, block_dim, args, 0, stream));
+      RAFT_CUDA_TRY(hipLaunchKernel(kernel, grid_dim, block_dim, args, 0, stream));
     }
   };
 
@@ -293,7 +294,7 @@ void recompute_internal_state(const raft::resources& res, Index& index)
   int begin_bit             = 0;
   int end_bit               = sizeof(uint32_t) * 8;
   size_t cub_workspace_size = 0;
-  cub::DeviceRadixSort::SortKeysDescending(nullptr,
+  hipcub::DeviceRadixSort::SortKeysDescending(nullptr,
                                            cub_workspace_size,
                                            index.list_sizes().data_handle(),
                                            sorted_sizes.data(),
@@ -302,7 +303,7 @@ void recompute_internal_state(const raft::resources& res, Index& index)
                                            end_bit,
                                            stream);
   rmm::device_buffer cub_workspace(cub_workspace_size, stream, tmp_res);
-  cub::DeviceRadixSort::SortKeysDescending(cub_workspace.data(),
+  hipcub::DeviceRadixSort::SortKeysDescending(cub_workspace.data(),
                                            cub_workspace_size,
                                            index.list_sizes().data_handle(),
                                            sorted_sizes.data(),

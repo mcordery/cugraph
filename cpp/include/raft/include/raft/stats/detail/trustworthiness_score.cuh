@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance.cuh>
 #include <raft/matrix/col_wise_sort.cuh>
 #include <raft/spatial/knn/knn.cuh>
@@ -139,7 +139,7 @@ double trustworthiness_score(const raft::resources& h,
                              int n_neighbors,
                              int batchSize = 512)
 {
-  cudaStream_t stream = resource::get_cuda_stream(h);
+  hipStream_t stream = resource::get_cuda_stream(h);
 
   const int KNN_ALLOC = n * (n_neighbors + 1);
   rmm::device_uvector<int64_t> emb_ind(KNN_ALLOC, stream);
@@ -193,7 +193,7 @@ double trustworthiness_score(const raft::resources& h,
     build_lookup_table<<<n_blocks, N_THREADS, 0, stream>>>(
       lookup_table.data(), X_ind.data(), n, work);
 
-    RAFT_CUDA_TRY(cudaMemsetAsync(t_dbuf.data(), 0, sizeof(double), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(t_dbuf.data(), 0, sizeof(double), stream));
 
     work     = curBatchSize * (n_neighbors + 1);
     n_blocks = raft::ceildiv(work, N_THREADS);
@@ -204,7 +204,7 @@ double trustworthiness_score(const raft::resources& h,
       n,
       n_neighbors + 1,
       work);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
 
     t += t_dbuf.value(stream);
 

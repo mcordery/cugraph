@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/matrix/detail/gather.cuh>
 #include <raft/matrix/detail/gather_inplace.cuh>
@@ -55,7 +55,7 @@ void gather(const InputIteratorT in,
             const MapIteratorT map,
             IndexT map_length,
             OutputIteratorT out,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::gather(in, D, N, map, map_length, out, stream);
 }
@@ -94,7 +94,7 @@ void gather(const InputIteratorT in,
             IndexT map_length,
             OutputIteratorT out,
             MapTransformOp transform_op,
-            cudaStream_t stream)
+            hipStream_t stream)
 {
   detail::gather(in, D, N, map, map_length, out, transform_op, stream);
 }
@@ -137,7 +137,7 @@ void gather_if(const InputIteratorT in,
                IndexT map_length,
                OutputIteratorT out,
                UnaryPredicateOp pred_op,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   detail::gather_if(in, D, N, map, stencil, map_length, out, pred_op, stream);
 }
@@ -186,7 +186,7 @@ void gather_if(const InputIteratorT in,
                OutputIteratorT out,
                UnaryPredicateOp pred_op,
                MapTransformOp transform_op,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   detail::gather_if(in, D, N, map, stencil, map_length, out, pred_op, transform_op, stream);
 }

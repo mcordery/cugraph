@@ -19,7 +19,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/rand_index.cuh>
 
@@ -35,7 +35,7 @@ namespace stats {
  * @param stream: the cudaStream object
  */
 template <typename T>
-double rand_index(T* firstClusterArray, T* secondClusterArray, uint64_t size, cudaStream_t stream)
+double rand_index(T* firstClusterArray, T* secondClusterArray, uint64_t size, hipStream_t stream)
 {
   return detail::compute_rand_index(firstClusterArray, secondClusterArray, size, stream);
 }

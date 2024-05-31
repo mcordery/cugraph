@@ -115,7 +115,7 @@ RAFT_KERNEL initKernel(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp)
 }
 
 template <typename DataT, typename OutT, typename IdxT, typename ReduceOpT>
-void initialize(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp, cudaStream_t stream)
+void initialize(OutT* min, IdxT m, DataT maxVal, ReduceOpT redOp, hipStream_t stream)
 {
   auto blks = raft::ceildiv(m, 256);
   initKernel<DataT, OutT, IdxT><<<blks, 256, 0, stream>>>(min, m, maxVal, redOp);

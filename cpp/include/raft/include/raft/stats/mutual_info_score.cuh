@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/mutual_info_score.cuh>
 
 namespace raft {
@@ -42,7 +42,7 @@ double mutual_info_score(const T* firstClusterArray,
                          int size,
                          T lowerLabelRange,
                          T upperLabelRange,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   return detail::mutual_info_score(
     firstClusterArray, secondClusterArray, size, lowerLabelRange, upperLabelRange, stream);

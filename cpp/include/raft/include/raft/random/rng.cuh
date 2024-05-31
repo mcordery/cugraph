@@ -21,7 +21,7 @@
 #include "rng_state.hpp"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 #include <cassert>
@@ -918,13 +918,13 @@ class DEPR Rng : public detail::RngImpl {
    * @{
    */
   template <typename OutType, typename LenType = int>
-  void uniform(OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  void uniform(OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
   {
     detail::RngImpl::uniform(ptr, len, start, end, stream);
   }
 
   template <typename OutType, typename LenType = int>
-  void uniformInt(OutType* ptr, LenType len, OutType start, OutType end, cudaStream_t stream)
+  void uniformInt(OutType* ptr, LenType len, OutType start, OutType end, hipStream_t stream)
   {
     detail::RngImpl::uniformInt(ptr, len, start, end, stream);
   }
@@ -942,13 +942,13 @@ class DEPR Rng : public detail::RngImpl {
    * @{
    */
   template <typename OutType, typename LenType = int>
-  void normal(OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  void normal(OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
   {
     detail::RngImpl::normal(ptr, len, mu, sigma, stream);
   }
 
   template <typename IntType, typename LenType = int>
-  void normalInt(IntType* ptr, LenType len, IntType mu, IntType sigma, cudaStream_t stream)
+  void normalInt(IntType* ptr, LenType len, IntType mu, IntType sigma, hipStream_t stream)
   {
     detail::RngImpl::normalInt(ptr, len, mu, sigma, stream);
   }
@@ -981,7 +981,7 @@ class DEPR Rng : public detail::RngImpl {
                    const OutType* mu_vec,
                    const OutType* sigma_vec,
                    OutType sigma,
-                   cudaStream_t stream)
+                   hipStream_t stream)
   {
     detail::RngImpl::normalTable(ptr, n_rows, n_cols, mu_vec, sigma_vec, sigma, stream);
   }
@@ -996,7 +996,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void fill(OutType* ptr, LenType len, OutType val, cudaStream_t stream)
+  void fill(OutType* ptr, LenType len, OutType val, hipStream_t stream)
   {
     detail::RngImpl::fill(ptr, len, val, stream);
   }
@@ -1014,7 +1014,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param[in]  stream stream where to launch the kernel
    */
   template <typename Type, typename OutType = bool, typename LenType = int>
-  void bernoulli(OutType* ptr, LenType len, Type prob, cudaStream_t stream)
+  void bernoulli(OutType* ptr, LenType len, Type prob, hipStream_t stream)
   {
     detail::RngImpl::bernoulli(ptr, len, prob, stream);
   }
@@ -1030,7 +1030,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void scaled_bernoulli(OutType* ptr, LenType len, OutType prob, OutType scale, cudaStream_t stream)
+  void scaled_bernoulli(OutType* ptr, LenType len, OutType prob, OutType scale, hipStream_t stream)
   {
     detail::RngImpl::scaled_bernoulli(ptr, len, prob, scale, stream);
   }
@@ -1047,7 +1047,7 @@ class DEPR Rng : public detail::RngImpl {
    * @note https://en.wikipedia.org/wiki/Gumbel_distribution
    */
   template <typename OutType, typename LenType = int>
-  void gumbel(OutType* ptr, LenType len, OutType mu, OutType beta, cudaStream_t stream)
+  void gumbel(OutType* ptr, LenType len, OutType mu, OutType beta, hipStream_t stream)
   {
     detail::RngImpl::gumbel(ptr, len, mu, beta, stream);
   }
@@ -1063,7 +1063,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void lognormal(OutType* ptr, LenType len, OutType mu, OutType sigma, cudaStream_t stream)
+  void lognormal(OutType* ptr, LenType len, OutType mu, OutType sigma, hipStream_t stream)
   {
     detail::RngImpl::lognormal(ptr, len, mu, sigma, stream);
   }
@@ -1079,7 +1079,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void logistic(OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  void logistic(OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
   {
     detail::RngImpl::logistic(ptr, len, mu, scale, stream);
   }
@@ -1094,7 +1094,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void exponential(OutType* ptr, LenType len, OutType lambda, cudaStream_t stream)
+  void exponential(OutType* ptr, LenType len, OutType lambda, hipStream_t stream)
   {
     detail::RngImpl::exponential(ptr, len, lambda, stream);
   }
@@ -1109,7 +1109,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void rayleigh(OutType* ptr, LenType len, OutType sigma, cudaStream_t stream)
+  void rayleigh(OutType* ptr, LenType len, OutType sigma, hipStream_t stream)
   {
     detail::RngImpl::rayleigh(ptr, len, sigma, stream);
   }
@@ -1125,7 +1125,7 @@ class DEPR Rng : public detail::RngImpl {
    * @param stream stream where to launch the kernel
    */
   template <typename OutType, typename LenType = int>
-  void laplace(OutType* ptr, LenType len, OutType mu, OutType scale, cudaStream_t stream)
+  void laplace(OutType* ptr, LenType len, OutType mu, OutType scale, hipStream_t stream)
   {
     detail::RngImpl::laplace(ptr, len, mu, scale, stream);
   }
@@ -1169,7 +1169,7 @@ class DEPR Rng : public detail::RngImpl {
                                 const WeightsT* wts,
                                 IdxT sampledLen,
                                 IdxT len,
-                                cudaStream_t stream)
+                                hipStream_t stream)
   {
     detail::RngImpl::sampleWithoutReplacement(
       handle, out, outIdx, in, wts, sampledLen, len, stream);

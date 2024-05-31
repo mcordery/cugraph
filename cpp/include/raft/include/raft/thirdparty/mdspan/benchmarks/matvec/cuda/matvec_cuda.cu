@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
 //@HEADER
 // ************************************************************************
@@ -71,21 +72,21 @@ void throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(o.str());
 }
 
-void cuda_internal_error_throw(cudaError e, const char* name,
+void cuda_internal_error_throw(hipError_t e, const char* name,
   const char* file = NULL, const int line = 0) {
   std::ostringstream out;
-  out << name << " error( " << cudaGetErrorName(e)
-      << "): " << cudaGetErrorString(e);
+  out << name << " error( " << hipGetErrorName(e)
+      << "): " << hipGetErrorString(e);
   if (file) {
     out << " " << file << ":" << line;
   }
   throw_runtime_exception(out.str());
 }
 
-inline void cuda_internal_safe_call(cudaError e, const char* name,
+inline void cuda_internal_safe_call(hipError_t e, const char* name,
        const char* file = NULL,
        const int line   = 0) {
-  if (cudaSuccess != e) {
+  if (hipSuccess != e) {
     cuda_internal_error_throw(e, name, file, line);
   }
 }
@@ -104,18 +105,18 @@ void do_run_kernel(F f, Args... args) {
 
 template <class F, class... Args>
 float run_kernel_timed(size_t N, size_t M, F&& f, Args&&... args) {
-  cudaEvent_t start, stop;
-  CUDA_SAFE_CALL(cudaEventCreate(&start));
-  CUDA_SAFE_CALL(cudaEventCreate(&stop));
+  hipEvent_t start, stop;
+  CUDA_SAFE_CALL(hipEventCreate(&start));
+  CUDA_SAFE_CALL(hipEventCreate(&stop));
 
-  CUDA_SAFE_CALL(cudaEventRecord(start));
+  CUDA_SAFE_CALL(hipEventRecord(start));
   do_run_kernel<<<(N+255)/256,256>>>(
     (F&&)f, ((Args&&) args)...
   );
-  CUDA_SAFE_CALL(cudaEventRecord(stop));
-  CUDA_SAFE_CALL(cudaEventSynchronize(stop));
+  CUDA_SAFE_CALL(hipEventRecord(stop));
+  CUDA_SAFE_CALL(hipEventSynchronize(stop));
   float milliseconds = 0;
-  CUDA_SAFE_CALL(cudaEventElapsedTime(&milliseconds, start, stop));
+  CUDA_SAFE_CALL(hipEventElapsedTime(&milliseconds, start, stop));
   return milliseconds;
 }
 
@@ -131,9 +132,9 @@ MDSpan fill_device_mdspan(MDSpan, DynSizes... dyn) {
   mdspan_benchmark::fill_random(host_mdspan);
 
   value_type* device_buffer = nullptr;
-  CUDA_SAFE_CALL(cudaMalloc(&device_buffer, buffer_size * sizeof(value_type)));
-  CUDA_SAFE_CALL(cudaMemcpy(
-    device_buffer, host_buffer.get(), buffer_size * sizeof(value_type), cudaMemcpyHostToDevice
+  CUDA_SAFE_CALL(hipMalloc(&device_buffer, buffer_size * sizeof(value_type)));
+  CUDA_SAFE_CALL(hipMemcpy(
+    device_buffer, host_buffer.get(), buffer_size * sizeof(value_type), hipMemcpyHostToDevice
   ));
   return MDSpan{device_buffer, dyn...};
 }
@@ -170,10 +171,10 @@ void BM_MDSpan_CUDA_MatVec(benchmark::State& state, MDSpanMatrix, DynSizes... dy
   size_t num_elements = 2 * A.extent(0) * A.extent(1) + 2 * A.extent(0);
   state.SetBytesProcessed( num_elements * sizeof(value_type) * state.iterations() );
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(A.data()));
-  CUDA_SAFE_CALL(cudaFree(x.data()));
-  CUDA_SAFE_CALL(cudaFree(y.data()));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(A.data()));
+  CUDA_SAFE_CALL(hipFree(x.data()));
+  CUDA_SAFE_CALL(hipFree(y.data()));
 }
 
 BENCHMARK_CAPTURE(BM_MDSpan_CUDA_MatVec, left, lmdspan<double,stdex::dynamic_extent,stdex::dynamic_extent>(), 100000, 5000);
@@ -218,10 +219,10 @@ void BM_MDSpan_CUDA_MatVec_Raw_Right(benchmark::State& state, MDSpanMatrix, DynS
   size_t num_elements = 2 * A.extent(0) * A.extent(1) + 2 * A.extent(0);
   state.SetBytesProcessed( num_elements * sizeof(value_type) * state.iterations() );
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(A.data()));
-  CUDA_SAFE_CALL(cudaFree(x.data()));
-  CUDA_SAFE_CALL(cudaFree(y.data()));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(A.data()));
+  CUDA_SAFE_CALL(hipFree(x.data()));
+  CUDA_SAFE_CALL(hipFree(y.data()));
 }
 
 BENCHMARK_CAPTURE(BM_MDSpan_CUDA_MatVec_Raw_Right, right, rmdspan<double,stdex::dynamic_extent,stdex::dynamic_extent>(), 100000, 5000);
@@ -265,10 +266,10 @@ void BM_MDSpan_CUDA_MatVec_Raw_Left(benchmark::State& state, MDSpanMatrix, DynSi
   size_t num_elements = 2 * A.extent(0) * A.extent(1) + 2 * A.extent(0);
   state.SetBytesProcessed( num_elements * sizeof(value_type) * state.iterations());
 
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  CUDA_SAFE_CALL(cudaFree(A.data()));
-  CUDA_SAFE_CALL(cudaFree(x.data()));
-  CUDA_SAFE_CALL(cudaFree(y.data()));
+  CUDA_SAFE_CALL(hipDeviceSynchronize());
+  CUDA_SAFE_CALL(hipFree(A.data()));
+  CUDA_SAFE_CALL(hipFree(x.data()));
+  CUDA_SAFE_CALL(hipFree(y.data()));
 }
 
 BENCHMARK_CAPTURE(BM_MDSpan_CUDA_MatVec_Raw_Left, left, lmdspan<double,stdex::dynamic_extent,stdex::dynamic_extent>(), 100000, 5000);

@@ -22,7 +22,7 @@
 #include "detail/permute.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 
 #include <optional>
@@ -199,7 +199,7 @@ void permute(IntType* perms,
              IntType D,
              IntType N,
              bool rowMajor,
-             cudaStream_t stream)
+             hipStream_t stream)
 {
   detail::permute<Type, IntType, IdxType, TPB>(perms, out, in, D, N, rowMajor, stream);
 }

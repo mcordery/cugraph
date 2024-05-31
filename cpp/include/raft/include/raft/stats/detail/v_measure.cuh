@@ -40,7 +40,7 @@ double v_measure(const T* truthClusterArray,
                  int size,
                  T lowerLabelRange,
                  T upperLabelRange,
-                 cudaStream_t stream,
+                 hipStream_t stream,
                  double beta = 1.0)
 {
   double computedHomogeity, computedCompleteness, computedVMeasure;

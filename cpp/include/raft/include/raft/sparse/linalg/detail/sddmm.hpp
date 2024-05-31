@@ -18,7 +18,7 @@
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/linalg_types.hpp>
@@ -52,15 +52,15 @@ namespace detail {
  */
 template <typename ValueType>
 void sddmm(raft::resources const& handle,
-           cusparseDnMatDescr_t& descr_a,
-           cusparseDnMatDescr_t& descr_b,
-           cusparseSpMatDescr_t& descr_c,
-           cusparseOperation_t op_a,
-           cusparseOperation_t op_b,
+           hipsparseDnMatDescr_t& descr_a,
+           hipsparseDnMatDescr_t& descr_b,
+           hipsparseSpMatDescr_t& descr_c,
+           hipsparseOperation_t op_a,
+           hipsparseOperation_t op_b,
            const ValueType* alpha,
            const ValueType* beta)
 {
-  auto alg = CUSPARSE_SDDMM_ALG_DEFAULT;
+  auto alg = HIPSPARSE_SDDMM_ALG_DEFAULT;
   size_t bufferSize;
 
   RAFT_CUSPARSE_TRY(

@@ -20,7 +20,7 @@
 #include <raft/core/mdarray.hpp>
 #include <raft/core/mdspan_types.hpp>
 //#include <raft/core/nvtx.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/serialize.hpp>
 #include <raft/neighbors/cagra_types.hpp>
 #include <raft/neighbors/detail/dataset_serialize.hpp>
@@ -150,13 +150,13 @@ void serialize_to_hnswlib(raft::resources const& res,
   auto dataset = index_.dataset();
   // Remove padding before saving the dataset
   auto host_dataset = make_host_matrix<T, int64_t>(dataset.extent(0), dataset.extent(1));
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(host_dataset.data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(host_dataset.data_handle(),
                                   sizeof(T) * host_dataset.extent(1),
                                   dataset.data_handle(),
                                   sizeof(T) * dataset.stride(0),
                                   sizeof(T) * host_dataset.extent(1),
                                   dataset.extent(0),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   resource::get_cuda_stream(res)));
   resource::sync_stream(res);
 

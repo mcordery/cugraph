@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -25,7 +26,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/matrix/select_k.cuh>
@@ -62,17 +63,17 @@ RAFT_KERNEL set_value_kernel(T* const dev_ptr, const T val, const std::size_t co
 }
 
 template <class T>
-void set_value(T* const dev_ptr, const T val, cudaStream_t cuda_stream)
+void set_value(T* const dev_ptr, const T val, hipStream_t hip_stream)
 {
-  set_value_kernel<T><<<1, 1, 0, cuda_stream>>>(dev_ptr, val);
+  set_value_kernel<T><<<1, 1, 0, hip_stream>>>(dev_ptr, val);
 }
 
 template <class T>
-void set_value(T* const dev_ptr, const T val, const std::size_t count, cudaStream_t cuda_stream)
+void set_value(T* const dev_ptr, const T val, const std::size_t count, hipStream_t hip_stream)
 {
   constexpr std::uint32_t block_size = 256;
   const auto grid_size               = (count + block_size - 1) / block_size;
-  set_value_kernel<T><<<grid_size, block_size, 0, cuda_stream>>>(dev_ptr, val, count);
+  set_value_kernel<T><<<grid_size, block_size, 0, hip_stream>>>(dev_ptr, val, count);
 }
 
 template <class T>
@@ -82,9 +83,9 @@ RAFT_KERNEL get_value_kernel(T* const host_ptr, const T* const dev_ptr)
 }
 
 template <class T>
-void get_value(T* const host_ptr, const T* const dev_ptr, cudaStream_t cuda_stream)
+void get_value(T* const host_ptr, const T* const dev_ptr, hipStream_t hip_stream)
 {
-  get_value_kernel<T><<<1, 1, 0, cuda_stream>>>(host_ptr, dev_ptr);
+  get_value_kernel<T><<<1, 1, 0, hip_stream>>>(host_ptr, dev_ptr);
 }
 
 // MAX_DATASET_DIM : must equal to or greater than dataset_dim
@@ -192,7 +193,7 @@ void random_pickup(
   typename DATASET_DESCRIPTOR_T::INDEX_T* const visited_hashmap_ptr,  // [num_queries, 1 << bitlen]
   const std::uint32_t hash_bitlen,
   const raft::distance::DistanceType metric,
-  cudaStream_t const cuda_stream = 0)
+  hipStream_t const hip_stream = 0)
 {
   const auto block_size                = 256u;
   const auto num_teams_per_threadblock = block_size / TEAM_SIZE;
@@ -204,7 +205,7 @@ void random_pickup(
   const auto smem_size = query_smem_buffer_length * sizeof(float);
 
   random_pickup_kernel<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T>
-    <<<grid_size, block_size, smem_size, cuda_stream>>>(dataset_desc,
+    <<<grid_size, block_size, smem_size, hip_stream>>>(dataset_desc,
                                                         queries_ptr,
                                                         num_pickup,
                                                         num_distilation,
@@ -296,7 +297,7 @@ void pickup_next_parents(INDEX_T* const parent_candidates_ptr,  // [num_queries,
                          const std::size_t ldd,               // (*) ldd >= parent_list_size
                          const std::size_t parent_list_size,  //
                          std::uint32_t* const terminate_flag,
-                         cudaStream_t cuda_stream = 0)
+                         hipStream_t hip_stream = 0)
 {
   std::uint32_t block_size = 32;
   if (small_hash_bitlen) {
@@ -307,7 +308,7 @@ void pickup_next_parents(INDEX_T* const parent_candidates_ptr,  // [num_queries,
     block_size = min(block_size, (uint32_t)512);
   }
   pickup_next_parents_kernel<INDEX_T>
-    <<<num_queries, block_size, 0, cuda_stream>>>(parent_candidates_ptr,
+    <<<num_queries, block_size, 0, hip_stream>>>(parent_candidates_ptr,
                                                   lds,
                                                   parent_candidates_size,
                                                   visited_hashmap_ptr,
@@ -455,7 +456,7 @@ void compute_distance_to_child_nodes(
   const std::uint32_t ldd,  // (*) ldd >= search_width * graph_degree
   SAMPLE_FILTER_T sample_filter,
   const raft::distance::DistanceType metric,
-  cudaStream_t cuda_stream = 0)
+  hipStream_t hip_stream = 0)
 {
   const auto block_size = 128;
   const dim3 grid_size(
@@ -472,7 +473,7 @@ void compute_distance_to_child_nodes(
                                          DATASET_BLOCK_DIM,
                                          DATASET_DESCRIPTOR_T,
                                          SAMPLE_FILTER_T>
-    <<<grid_size, block_size, smem_size, cuda_stream>>>(parent_node_list,
+    <<<grid_size, block_size, smem_size, hip_stream>>>(parent_node_list,
                                                         parent_candidates_ptr,
                                                         parent_distance_ptr,
                                                         lds,
@@ -511,11 +512,11 @@ void remove_parent_bit(const std::uint32_t num_queries,
                        const std::uint32_t num_topk,
                        INDEX_T* const topk_indices_ptr,  // [ld, num_queries]
                        const std::uint32_t ld,
-                       cudaStream_t cuda_stream = 0)
+                       hipStream_t hip_stream = 0)
 {
   const std::size_t grid_size  = num_queries;
   const std::size_t block_size = 256;
-  remove_parent_bit_kernel<<<grid_size, block_size, 0, cuda_stream>>>(
+  remove_parent_bit_kernel<<<grid_size, block_size, 0, hip_stream>>>(
     num_queries, num_topk, topk_indices_ptr, ld);
 }
 
@@ -551,12 +552,12 @@ void apply_filter(INDEX_T* const result_indices_ptr,
                   const std::uint32_t num_queries,
                   const INDEX_T query_id_offset,
                   SAMPLE_FILTER_T sample_filter,
-                  cudaStream_t cuda_stream)
+                  hipStream_t hip_stream)
 {
   const std::uint32_t block_size = 256;
   const std::uint32_t grid_size  = ceildiv(num_queries * result_buffer_size, block_size);
 
-  apply_filter_kernel<<<grid_size, block_size, 0, cuda_stream>>>(result_indices_ptr,
+  apply_filter_kernel<<<grid_size, block_size, 0, hip_stream>>>(result_indices_ptr,
                                                                  result_distances_ptr,
                                                                  lds,
                                                                  result_buffer_size,
@@ -587,14 +588,14 @@ void batched_memcpy(T* const dst,  // [batch_size, ld_dst]
                     const uint64_t ld_src,
                     const uint64_t count,
                     const uint64_t batch_size,
-                    cudaStream_t cuda_stream)
+                    hipStream_t hip_stream)
 {
   assert(ld_dst >= count);
   assert(ld_src >= count);
   constexpr uint32_t block_size = 256;
   const auto grid_size          = (batch_size * count + block_size - 1) / block_size;
   batched_memcpy_kernel<T>
-    <<<grid_size, block_size, 0, cuda_stream>>>(dst, ld_dst, src, ld_src, count, batch_size);
+    <<<grid_size, block_size, 0, hip_stream>>>(dst, ld_dst, src, ld_src, count, batch_size);
 }
 
 template <class T>
@@ -617,12 +618,12 @@ void set_value_batch(T* const dev_ptr,
                      const T val,
                      const std::size_t count,
                      const std::size_t batch_size,
-                     cudaStream_t cuda_stream)
+                     hipStream_t hip_stream)
 {
   constexpr std::uint32_t block_size = 256;
   const auto grid_size               = (count * batch_size + block_size - 1) / block_size;
   set_value_batch_kernel<T>
-    <<<grid_size, block_size, 0, cuda_stream>>>(dev_ptr, ld, val, count, batch_size);
+    <<<grid_size, block_size, 0, hip_stream>>>(dev_ptr, ld, val, count, batch_size);
 }
 
 // result_buffer (work buffer) for "multi-kernel"
@@ -843,7 +844,7 @@ struct search : search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
                   SAMPLE_FILTER_T sample_filter)
   {
     // Init hashmap
-    cudaStream_t stream      = resource::get_cuda_stream(res);
+    hipStream_t stream      = resource::get_cuda_stream(res);
     const uint32_t hash_size = hashmap::get_size(hash_bitlen);
     set_value_batch(
       hashmap.data(), hash_size, utils::get_max_value<INDEX_T>(), hash_size, num_queries, stream);
@@ -1015,7 +1016,7 @@ struct search : search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
         num_executed_iterations[i] = iter;
       }
     }
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 };
 

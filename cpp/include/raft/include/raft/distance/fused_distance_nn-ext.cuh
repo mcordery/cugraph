@@ -43,7 +43,7 @@ void fusedDistanceNNMinReduce(OutT* min,
                               bool isRowMajor,
                               raft::distance::DistanceType metric,
                               float metric_arg,
-                              cudaStream_t stream) RAFT_EXPLICIT;
+                              hipStream_t stream) RAFT_EXPLICIT;
 
 }  // namespace distance
 }  // namespace raft
@@ -66,7 +66,7 @@ void fusedDistanceNNMinReduce(OutT* min,
     bool isRowMajor,                                                                \
     raft::distance::DistanceType metric,                                            \
     float metric_arg,                                                               \
-    cudaStream_t stream)
+    hipStream_t stream)
 
 instantiate_raft_distance_fusedDistanceNNMinReduce(float, float, int);
 instantiate_raft_distance_fusedDistanceNNMinReduce(float, float, int64_t);

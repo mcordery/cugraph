@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -83,7 +84,7 @@ template <int Capacity, typename T, typename IdxT>
 using block_sort_t = typename pq_block_sort<Capacity, T, IdxT>::type;
 
 /**
- * Estimate a carveout value as expected by `cudaFuncAttributePreferredSharedMemoryCarveout`
+ * Estimate a carveout value as expected by `hipFuncAttributePreferredSharedMemoryCarveout`
  * (which does not take into account `reservedSharedMemPerBlock`),
  * given by a desired schmem-L1 split and a per-block memory requirement in bytes.
  *
@@ -103,7 +104,7 @@ using block_sort_t = typename pq_block_sort<Capacity, T, IdxT>::type;
  */
 constexpr inline auto estimate_carveout(double shmem_fraction,
                                         size_t shmem_per_block,
-                                        const cudaDeviceProp& dev_props) -> int
+                                        const hipDeviceProp_t& dev_props) -> int
 {
   using shmem_unit = Pow2<128>;
   size_t m         = shmem_unit::roundUp(shmem_per_block);
@@ -596,10 +597,10 @@ struct occupancy_t {
   inline occupancy_t(size_t smem,
                      uint32_t n_threads,
                      compute_similarity_kernel_t<OutT, LutT, IvfSampleFilterT> kernel,
-                     const cudaDeviceProp& dev_props)
+                     const hipDeviceProp_t& dev_props)
   {
     RAFT_CUDA_TRY(
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(&blocks_per_sm, kernel, n_threads, smem));
+      hipOccupancyMaxActiveBlocksPerMultiprocessor(&blocks_per_sm, kernel, n_threads, smem));
     occupancy = double(blocks_per_sm * n_threads) / double(dev_props.maxThreadsPerMultiProcessor);
     shmem_use = double(shmem_unit::roundUp(smem) * blocks_per_sm) /
                 double(dev_props.sharedMemPerMultiprocessor);
@@ -683,7 +684,7 @@ void compute_similarity_run(selected<OutT, LutT, IvfSampleFilterT> s,
 template <typename OutT,
           typename LutT,
           typename IvfSampleFilterT = raft::neighbors::filtering::none_ivf_sample_filter>
-auto compute_similarity_select(const cudaDeviceProp& dev_props,
+auto compute_similarity_select(const hipDeviceProp_t& dev_props,
                                bool manage_local_topk,
                                int locality_hint,
                                double preferred_shmem_carveout,
@@ -828,22 +829,22 @@ auto compute_similarity_select(const cudaDeviceProp& dev_props,
     const int max_carveout =
       estimate_carveout(preferred_shmem_carveout, smem_size_f(WarpSize), dev_props);
     RAFT_CUDA_TRY(
-      cudaFuncSetAttribute(kernel, cudaFuncAttributePreferredSharedMemoryCarveout, max_carveout));
+      hipFuncSetAttribute(kernel, hipFuncAttributePreferredSharedMemoryCarveout, max_carveout));
 
     // Get the theoretical maximum possible number of threads per block
-    cudaFuncAttributes kernel_attrs;
-    RAFT_CUDA_TRY(cudaFuncGetAttributes(&kernel_attrs, kernel));
+    hipFuncAttributes kernel_attrs;
+    RAFT_CUDA_TRY(hipFuncGetAttributes(&kernel_attrs, kernel));
     uint32_t n_threads = round_down_safe<uint32_t>(kernel_attrs.maxThreadsPerBlock, n_threads_gty);
 
     // Actual required shmem depens on the number of threads
     size_t smem_size = smem_size_f(n_threads);
 
     // Make sure the kernel can get enough shmem.
-    cudaError_t cuda_status =
-      cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, smem_size);
-    if (cuda_status != cudaSuccess) {
+    hipError_t cuda_status =
+      hipFuncSetAttribute(kernel, hipFuncAttributeMaxDynamicSharedMemorySize, smem_size);
+    if (cuda_status != hipSuccess) {
       RAFT_EXPECTS(
-        cuda_status == cudaGetLastError(),
+        cuda_status == hipGetLastError(),
         "Tried to reset the expected cuda error code, but it didn't match the expectation");
       // Failed to request enough shmem for the kernel. Skip the candidate.
       continue;
@@ -923,7 +924,7 @@ auto compute_similarity_select(const cudaDeviceProp& dev_props,
         // and the occupancy doesn't get hurt.
         auto carveout = std::min<int>(max_carveout, std::ceil(100.0 * cur.shmem_use));
         RAFT_CUDA_TRY(
-          cudaFuncSetAttribute(kernel, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
+          hipFuncSetAttribute(kernel, hipFuncAttributePreferredSharedMemoryCarveout, carveout));
         if (cur.occupancy >= kTargetOccupancy) { break; }
       } else if (selected_perf.occupancy > 0.0) {
         // If we found a reasonable candidate on a previous iteration, and this one is not better,

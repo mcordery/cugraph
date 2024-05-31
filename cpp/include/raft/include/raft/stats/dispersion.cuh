@@ -20,7 +20,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/stats/detail/dispersion.cuh>
 
 #include <optional>
@@ -53,7 +53,7 @@ DataT dispersion(const DataT* centroids,
                  IdxT nClusters,
                  IdxT nPoints,
                  IdxT dim,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   return detail::dispersion<DataT, IdxT, TPB>(
     centroids, clusterSizes, globalCentroid, nClusters, nPoints, dim, stream);

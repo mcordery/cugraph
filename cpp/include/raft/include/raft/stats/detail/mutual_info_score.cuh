@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
@@ -34,7 +35,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <math.h>
 
@@ -76,7 +77,7 @@ RAFT_KERNEL mutual_info_kernel(const int* dContingencyMatrix,
   }
 
   // specialize blockReduce for a 2D block of 1024 threads of type uint64_t
-  typedef cub::BlockReduce<double, BLOCK_DIM_X, cub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
+  typedef hipcub::BlockReduce<double, BLOCK_DIM_X, hipcub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
     BlockReduce;
 
   // Allocate shared memory for blockReduce
@@ -106,13 +107,13 @@ double mutual_info_score(const T* firstClusterArray,
                          int size,
                          T lowerLabelRange,
                          T upperLabelRange,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   int numUniqueClasses = upperLabelRange - lowerLabelRange + 1;
 
   // declaring, allocating and initializing memory for the contingency marix
   rmm::device_uvector<int> dContingencyMatrix(numUniqueClasses * numUniqueClasses, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     dContingencyMatrix.data(), 0, numUniqueClasses * numUniqueClasses * sizeof(int), stream));
 
   // workspace allocation
@@ -141,9 +142,9 @@ double mutual_info_score(const T* firstClusterArray,
   double h_MI;
 
   // initializing device memory
-  RAFT_CUDA_TRY(cudaMemsetAsync(a.data(), 0, numUniqueClasses * sizeof(int), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(b.data(), 0, numUniqueClasses * sizeof(int), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_MI.data(), 0, sizeof(double), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(a.data(), 0, numUniqueClasses * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(b.data(), 0, numUniqueClasses * sizeof(int), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_MI.data(), 0, sizeof(double), stream));
 
   // calculating the row-wise sums
   raft::linalg::reduce<int, int, int>(

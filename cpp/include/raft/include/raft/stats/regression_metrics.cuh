@@ -20,7 +20,7 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/stats/detail/scores.cuh>
 
@@ -45,7 +45,7 @@ template <typename T>
 void regression_metrics(const T* predictions,
                         const T* ref_predictions,
                         int n,
-                        cudaStream_t stream,
+                        hipStream_t stream,
                         double& mean_abs_error,
                         double& mean_squared_error,
                         double& median_abs_error)

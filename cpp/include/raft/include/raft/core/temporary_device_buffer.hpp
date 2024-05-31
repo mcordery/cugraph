@@ -19,7 +19,7 @@
 #include "device_mdarray.hpp"
 #include "device_mdspan.hpp"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/cudart_utils.hpp>
 
 #include <variant>

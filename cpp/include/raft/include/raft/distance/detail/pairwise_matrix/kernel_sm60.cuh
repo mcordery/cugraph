@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -102,10 +103,10 @@ struct pairwise_matrix_sm60_wrapper {
 
   void launch(OpT distance_op,
               pairwise_matrix_params<IdxT, DataT, OutT, FinOpT> params,
-              cudaStream_t stream)
+              hipStream_t stream)
   {
     kernel_ptr<<<grid, block, smem_size, stream>>>(distance_op, params);
-    RAFT_CUDA_TRY(cudaGetLastError());
+    RAFT_CUDA_TRY(hipGetLastError());
   }
 };
 

@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
@@ -363,7 +363,7 @@ void brute_force_knn_impl(
   }
 
   int device;
-  RAFT_CUDA_TRY(cudaGetDevice(&device));
+  RAFT_CUDA_TRY(hipGetDevice(&device));
 
   rmm::device_uvector<IdxType> trans(id_ranges->size(), userStream);
   raft::update_device(trans.data(), id_ranges->data(), id_ranges->size(), userStream);
@@ -492,7 +492,7 @@ void brute_force_knn_impl(
       }
     }
 
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
   }
 
   // Sync internal streams if used. We don't need to

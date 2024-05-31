@@ -18,7 +18,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 
@@ -41,13 +41,13 @@ void sortPairs(rmm::device_uvector<char>& workspace,
                const ValueT* inVals,
                ValueT* outVals,
                int len,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   size_t worksize = 0;  //  Fix 'worksize' may be used uninitialized in this function.
-  cub::DeviceRadixSort::SortPairs(
+  hipcub::DeviceRadixSort::SortPairs(
     nullptr, worksize, inKeys, outKeys, inVals, outVals, len, 0, sizeof(KeyT) * 8, stream);
   workspace.resize(worksize, stream);
-  cub::DeviceRadixSort::SortPairs(
+  hipcub::DeviceRadixSort::SortPairs(
     workspace.data(), worksize, inKeys, outKeys, inVals, outVals, len, 0, sizeof(KeyT) * 8, stream);
 }
 

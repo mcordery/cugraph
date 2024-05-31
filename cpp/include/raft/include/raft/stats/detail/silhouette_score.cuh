@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/distance.cuh>
 #include <raft/distance/distance_types.hpp>
 #include <raft/linalg/add.cuh>
@@ -30,7 +30,7 @@
 
 #include <rmm/device_scalar.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 #include <math.h>
 
@@ -113,7 +113,7 @@ void countLabels(const LabelT* labels,
                  int nRows,
                  int nUniqueLabels,
                  rmm::device_uvector<char>& workspace,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   int num_levels            = nUniqueLabels + 1;
   LabelT lower_level        = 0;
@@ -122,7 +122,7 @@ void countLabels(const LabelT* labels,
 
   rmm::device_uvector<int> countArray(nUniqueLabels, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(nullptr,
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(nullptr,
                                                     temp_storage_bytes,
                                                     labels,
                                                     binCountArray,
@@ -134,7 +134,7 @@ void countLabels(const LabelT* labels,
 
   workspace.resize(temp_storage_bytes, stream);
 
-  RAFT_CUDA_TRY(cub::DeviceHistogram::HistogramEven(workspace.data(),
+  RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(workspace.data(),
                                                     temp_storage_bytes,
                                                     labels,
                                                     binCountArray,
@@ -203,7 +203,7 @@ DataT silhouette_score(
   const LabelT* labels,
   int nLabels,
   DataT* silhouette_scorePerSample,
-  cudaStream_t stream,
+  hipStream_t stream,
   raft::distance::DistanceType metric = raft::distance::DistanceType::L2Unexpanded)
 {
   ASSERT(nLabels >= 2 && nLabels <= (nRows - 1),
@@ -225,16 +225,16 @@ DataT silhouette_score(
   } else {
     perSampleSilScore = silhouette_scorePerSample;
   }
-  RAFT_CUDA_TRY(cudaMemsetAsync(perSampleSilScore, 0, nRows * sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(perSampleSilScore, 0, nRows * sizeof(DataT), stream));
 
   // getting the sample count per cluster
   rmm::device_uvector<DataT> binCountArray(nLabels, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(binCountArray.data(), 0, nLabels * sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(binCountArray.data(), 0, nLabels * sizeof(DataT), stream));
   countLabels(labels, binCountArray.data(), nRows, nLabels, workspace, stream);
 
   // calculating the sample-cluster-distance-sum-array
   rmm::device_uvector<DataT> sampleToClusterSumOfDistances(nRows * nLabels, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     sampleToClusterSumOfDistances.data(), 0, nRows * nLabels * sizeof(DataT), stream));
   raft::linalg::reduce_cols_by_key(distanceMatrix.data(),
                                    labels,
@@ -247,8 +247,8 @@ DataT silhouette_score(
   // creating the a array and b array
   rmm::device_uvector<DataT> d_aArray(nRows, stream);
   rmm::device_uvector<DataT> d_bArray(nRows, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_aArray.data(), 0, nRows * sizeof(DataT), stream));
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_bArray.data(), 0, nRows * sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_aArray.data(), 0, nRows * sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_bArray.data(), 0, nRows * sizeof(DataT), stream));
 
   // kernel that populates the d_aArray
   // kernel configuration
@@ -267,7 +267,7 @@ DataT silhouette_score(
 
   // elementwise dividing by bincounts
   rmm::device_uvector<DataT> averageDistanceBetweenSampleAndCluster(nRows * nLabels, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     averageDistanceBetweenSampleAndCluster.data(), 0, nRows * nLabels * sizeof(DataT), stream));
 
   raft::linalg::matrixVectorOp(averageDistanceBetweenSampleAndCluster.data(),
@@ -301,7 +301,7 @@ DataT silhouette_score(
 
   // calculating the sum of all the silhouette score
   rmm::device_scalar<DataT> d_avgSilhouetteScore(stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(d_avgSilhouetteScore.data(), 0, sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(d_avgSilhouetteScore.data(), 0, sizeof(DataT), stream));
 
   raft::linalg::mapThenSumReduce<double, raft::identity_op>(d_avgSilhouetteScore.data(),
                                                             nRows,

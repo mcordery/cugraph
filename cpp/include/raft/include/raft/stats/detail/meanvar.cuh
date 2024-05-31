@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2023, NVIDIA CORPORATION.
  *
@@ -167,7 +168,7 @@ template <typename T, typename I, int BlockSize>
 RAFT_KERNEL __launch_bounds__(BlockSize)
   meanvar_kernel_colmajor(T* mean, T* var, const T* data, I D, I N, bool sample)
 {
-  using BlockReduce = cub::BlockReduce<mean_var<T>, BlockSize>;
+  using BlockReduce = hipcub::BlockReduce<mean_var<T>, BlockSize>;
   __shared__ typename BlockReduce::TempStorage shm;
 
   const T* block_data = data + N * blockIdx.x;
@@ -194,7 +195,7 @@ RAFT_KERNEL meanvar_kernel_fill(T* mean, T* var, const mean_var<T>* aggr, I D, b
 
 template <typename T, typename I = int, int BlockSize = 256>
 void meanvar(
-  T* mean, T* var, const T* data, I D, I N, bool sample, bool rowMajor, cudaStream_t stream)
+  T* mean, T* var, const T* data, I D, I N, bool sample, bool rowMajor, hipStream_t stream)
 {
   if (rowMajor) {
     static_assert(BlockSize >= WarpSize, "Block size must be not smaller than the warp size.");
@@ -203,7 +204,7 @@ void meanvar(
 
     // Don't create more blocks than necessary to occupy the GPU
     int occupancy;
-    RAFT_CUDA_TRY(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    RAFT_CUDA_TRY(hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &occupancy, meanvar_kernel_rowmajor<T, I, BlockSize>, BlockSize, 0));
     gs.y =
       std::min(gs.y, raft::ceildiv<decltype(gs.y)>(occupancy * getMultiProcessorCount(), gs.x));
@@ -211,7 +212,7 @@ void meanvar(
     // Global memory: one mean_var<T> for each column
     //                one lock per all blocks working on the same set of columns
     rmm::device_buffer buf(sizeof(mean_var<T>) * D + sizeof(int) * gs.x, stream);
-    RAFT_CUDA_TRY(cudaMemsetAsync(buf.data(), 0, buf.size(), stream));
+    RAFT_CUDA_TRY(hipMemsetAsync(buf.data(), 0, buf.size(), stream));
     mean_var<T>* mvs = static_cast<mean_var<T>*>(buf.data());
     int* locks       = static_cast<int*>(static_cast<void*>(mvs + D));
 

@@ -21,7 +21,7 @@
 #include <raft/core/resources.hpp>
 #include <raft/core/serialize.hpp>
 
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 
 #include <fstream>
 #include <memory>
@@ -53,13 +53,13 @@ void serialize(const raft::resources& res,
   // Remove padding before saving the dataset
   auto src = dataset.view();
   auto dst = make_host_matrix<DataT, IdxT>(n_rows, dim);
-  RAFT_CUDA_TRY(cudaMemcpy2DAsync(dst.data_handle(),
+  RAFT_CUDA_TRY(hipMemcpy2DAsync(dst.data_handle(),
                                   sizeof(DataT) * dim,
                                   src.data_handle(),
                                   sizeof(DataT) * stride,
                                   sizeof(DataT) * dim,
                                   n_rows,
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   resource::get_cuda_stream(res)));
   resource::sync_stream(res);
   serialize_mdspan(res, os, dst.view());
@@ -90,32 +90,32 @@ void serialize(const raft::resources& res, std::ostream& os, const dataset<IdxT>
   }
   if (auto x = dynamic_cast<const strided_dataset<float, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeStridedDataset);
-    serialize_scalar(res, os, CUDA_R_32F);
+    serialize_scalar(res, os, HIP_R_32F);
     return serialize(res, os, *x);
   }
   if (auto x = dynamic_cast<const strided_dataset<half, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeStridedDataset);
-    serialize_scalar(res, os, CUDA_R_16F);
+    serialize_scalar(res, os, HIP_R_16F);
     return serialize(res, os, *x);
   }
   if (auto x = dynamic_cast<const strided_dataset<int8_t, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeStridedDataset);
-    serialize_scalar(res, os, CUDA_R_8I);
+    serialize_scalar(res, os, HIP_R_8I);
     return serialize(res, os, *x);
   }
   if (auto x = dynamic_cast<const strided_dataset<uint8_t, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeStridedDataset);
-    serialize_scalar(res, os, CUDA_R_8U);
+    serialize_scalar(res, os, HIP_R_8U);
     return serialize(res, os, *x);
   }
   if (auto x = dynamic_cast<const vpq_dataset<float, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeVPQDataset);
-    serialize_scalar(res, os, CUDA_R_32F);
+    serialize_scalar(res, os, HIP_R_32F);
     return serialize(res, os, *x);
   }
   if (auto x = dynamic_cast<const vpq_dataset<half, IdxT>*>(&dataset); x != nullptr) {
     serialize_scalar(res, os, kSerializeVPQDataset);
-    serialize_scalar(res, os, CUDA_R_16F);
+    serialize_scalar(res, os, HIP_R_16F);
     return serialize(res, os, *x);
   }
   RAFT_FAIL("unsupported dataset type.");
@@ -171,17 +171,17 @@ auto deserialize_dataset(raft::resources const& res, std::istream& is)
   switch (deserialize_scalar<dataset_instance_tag>(res, is)) {
     case kSerializeEmptyDataset: return deserialize_empty<IdxT>(res, is);
     case kSerializeStridedDataset:
-      switch (deserialize_scalar<cudaDataType_t>(res, is)) {
-        case CUDA_R_32F: return deserialize_strided<float, IdxT>(res, is);
-        case CUDA_R_16F: return deserialize_strided<half, IdxT>(res, is);
-        case CUDA_R_8I: return deserialize_strided<int8_t, IdxT>(res, is);
-        case CUDA_R_8U: return deserialize_strided<uint8_t, IdxT>(res, is);
+      switch (deserialize_scalar<hipDataType>(res, is)) {
+        case HIP_R_32F: return deserialize_strided<float, IdxT>(res, is);
+        case HIP_R_16F: return deserialize_strided<half, IdxT>(res, is);
+        case HIP_R_8I: return deserialize_strided<int8_t, IdxT>(res, is);
+        case HIP_R_8U: return deserialize_strided<uint8_t, IdxT>(res, is);
         default: break;
       }
     case kSerializeVPQDataset:
-      switch (deserialize_scalar<cudaDataType_t>(res, is)) {
-        case CUDA_R_32F: return deserialize_vpq<float, IdxT>(res, is);
-        case CUDA_R_16F: return deserialize_vpq<half, IdxT>(res, is);
+      switch (deserialize_scalar<hipDataType>(res, is)) {
+        case HIP_R_32F: return deserialize_vpq<float, IdxT>(res, is);
+        case HIP_R_16F: return deserialize_vpq<half, IdxT>(res, is);
         default: break;
       }
     default: break;

@@ -24,7 +24,7 @@
  */
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/solver/detail/lap_kernels.cuh>
 #include <raft/solver/linear_assignment_types.hpp>

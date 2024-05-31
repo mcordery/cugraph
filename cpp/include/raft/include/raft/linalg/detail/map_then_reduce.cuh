@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -20,7 +21,7 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/vectorized.cuh>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace linalg {
@@ -31,7 +32,7 @@ struct sum_tag {};
 template <typename InType, typename OutType, int TPB>
 __device__ void reduce(OutType* out, const InType acc, sum_tag)
 {
-  typedef cub::BlockReduce<InType, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<InType, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   OutType tmp = BlockReduce(temp_storage).Sum(acc);
   if (threadIdx.x == 0) { raft::myAtomicAdd(out, tmp); }
@@ -40,7 +41,7 @@ __device__ void reduce(OutType* out, const InType acc, sum_tag)
 template <typename InType, typename OutType, int TPB, typename ReduceLambda>
 __device__ void reduce(OutType* out, const InType acc, ReduceLambda op)
 {
-  typedef cub::BlockReduce<InType, TPB> BlockReduce;
+  typedef hipcub::BlockReduce<InType, TPB> BlockReduce;
   __shared__ typename BlockReduce::TempStorage temp_storage;
   OutType tmp = BlockReduce(temp_storage).Reduce(acc, op);
   if (threadIdx.x == 0) { raft::myAtomicReduce(out, tmp, op); }
@@ -83,7 +84,7 @@ void mapThenReduceImpl(OutType* out,
                        OutType neutral,
                        MapOp map,
                        ReduceLambda op,
-                       cudaStream_t stream,
+                       hipStream_t stream,
                        const InType* in,
                        Args... args)
 {
@@ -91,7 +92,7 @@ void mapThenReduceImpl(OutType* out,
   const int nblks = raft::ceildiv(len, IdxType(TPB));
   mapThenReduceKernel<InType, OutType, IdxType, MapOp, ReduceLambda, TPB, Args...>
     <<<nblks, TPB, 0, stream>>>(out, len, neutral, map, op, in, args...);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 };  // end namespace detail

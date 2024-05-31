@@ -21,7 +21,7 @@
 #include "ball_cover/registers.cuh"
 #include "haversine_distance.cuh"
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance.cuh>
@@ -359,7 +359,7 @@ void perform_rbc_eps_nn_query(
   value_idx* vd)
 {
   // initialize output
-  RAFT_CUDA_TRY(cudaMemsetAsync(
+  RAFT_CUDA_TRY(hipMemsetAsync(
     adj, 0, index.m * n_query_pts * sizeof(bool), resource::get_cuda_stream(handle)));
 
   resource::sync_stream(handle);

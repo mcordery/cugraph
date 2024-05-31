@@ -18,7 +18,7 @@
 #include <raft/core/cublas_macros.hpp>
 //#include <raft/core/nvtx.hpp>
 #include <raft/core/resource/cublaslt_handle.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/cache.hpp>
@@ -34,53 +34,53 @@ namespace raft::linalg::detail {
 
 /** Get the cublas compute type for the combination of input types. */
 template <typename S, typename A, typename B, typename C>
-auto get_matmul_type() -> cublasComputeType_t
+auto get_matmul_type() -> hipblasComputeType_t
 {
   static_assert(std::is_same_v<S, float> && std::is_same_v<A, float> && std::is_same_v<B, float> &&
                   std::is_same_v<C, float>,
                 "Unsupported combination of input types. Consult cublas API for supported types.");
-  return CUBLAS_COMPUTE_32F;
+  return HIPBLAS_COMPUTE_32F;
 }
 
 template <>
-inline auto get_matmul_type<float, float, float, float>() -> cublasComputeType_t
+inline auto get_matmul_type<float, float, float, float>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32F;
+  return HIPBLAS_COMPUTE_32F;
 }
 template <>
-inline auto get_matmul_type<float, half, half, float>() -> cublasComputeType_t
+inline auto get_matmul_type<float, half, half, float>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32F;
+  return HIPBLAS_COMPUTE_32F;
 }
 template <>
-inline auto get_matmul_type<float, int8_t, int8_t, float>() -> cublasComputeType_t
+inline auto get_matmul_type<float, int8_t, int8_t, float>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32F;
+  return HIPBLAS_COMPUTE_32F;
 }
 template <>
-inline auto get_matmul_type<float, half, half, half>() -> cublasComputeType_t
+inline auto get_matmul_type<float, half, half, half>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32F;
+  return HIPBLAS_COMPUTE_32F;
 }
 template <>
-inline auto get_matmul_type<half, half, half, half>() -> cublasComputeType_t
+inline auto get_matmul_type<half, half, half, half>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_16F;
+  return HIPBLAS_COMPUTE_16F;
 }
 template <>
-inline auto get_matmul_type<int32_t, int8_t, int8_t, int32_t>() -> cublasComputeType_t
+inline auto get_matmul_type<int32_t, int8_t, int8_t, int32_t>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32I;
+  return HIPBLAS_COMPUTE_32I;
 }
 template <>
-inline auto get_matmul_type<float, int8_t, int8_t, int8_t>() -> cublasComputeType_t
+inline auto get_matmul_type<float, int8_t, int8_t, int8_t>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_32I;
+  return HIPBLAS_COMPUTE_32I;
 }
 template <>
-inline auto get_matmul_type<double, double, double, double>() -> cublasComputeType_t
+inline auto get_matmul_type<double, double, double, double>() -> hipblasComputeType_t
 {
-  return CUBLAS_COMPUTE_64F;
+  return HIPBLAS_COMPUTE_64F;
 }
 
 /** Unique representation of a matrix multiplication (assuming fixed types). */
@@ -111,7 +111,7 @@ struct matmul_key_hash {
 /** Descriptor for a column-major cublasLt matrix. */
 struct cublastlt_matrix_layout {
   cublasLtMatrixLayout_t res{nullptr};
-  inline cublastlt_matrix_layout(cudaDataType dtype, uint64_t rows, uint64_t cols, uint64_t ld)
+  inline cublastlt_matrix_layout(hipDataType dtype, uint64_t rows, uint64_t cols, uint64_t ld)
   {
     RAFT_CUBLAS_TRY(cublasLtMatrixLayoutCreate(&res, dtype, rows, cols, ld));
   }
@@ -140,7 +140,7 @@ struct cublastlt_matrix_layout {
 /** Descriptor for a cublasLt matmul function. */
 struct cublastlt_matmul_desc {
   cublasLtMatmulDesc_t res{nullptr};
-  inline cublastlt_matmul_desc(cublasComputeType_t compute_type, cudaDataType scale_type)
+  inline cublastlt_matmul_desc(hipblasComputeType_t compute_type, hipDataType scale_type)
   {
     RAFT_CUBLAS_TRY(cublasLtMatmulDescCreate(&res, compute_type, scale_type));
   }
@@ -162,11 +162,11 @@ struct cublastlt_matmul_desc {
   {
     auto desc = cublastlt_matmul_desc{get_matmul_type<S, A, B, C>(), get_cuda_data_type<S>()};
     if constexpr (DevicePointerMode) {
-      const cublasPointerMode_t mode = CUBLAS_POINTER_MODE_DEVICE;
+      const hipblasPointerMode_t mode = HIPBLAS_POINTER_MODE_DEVICE;
       RAFT_CUBLAS_TRY(cublasLtMatmulDescSetAttribute(
         desc, CUBLASLT_MATMUL_DESC_POINTER_MODE, &mode, sizeof(mode)));
     }
-    const cublasOperation_t trans_op = CUBLAS_OP_T;
+    const hipblasOperation_t trans_op = HIPBLAS_OP_T;
     if (transpose_a) {
       RAFT_CUBLAS_TRY(cublasLtMatmulDescSetAttribute(
         desc, CUBLASLT_MATMUL_DESC_TRANSA, &trans_op, sizeof(trans_op)));
@@ -223,9 +223,9 @@ struct matmul_cache {
 };
 
 /**
- * Compatibility version of the cublasLt matmul wrapper: It takes the cudaStream_t argument
+ * Compatibility version of the cublasLt matmul wrapper: It takes the hipStream_t argument
  * explicitly rather than through the raft::resources. This function is used by other legacy
- * functions, which take the cudaStream_t argument explicitly; by using `legacy_matmul`, such
+ * functions, which take the hipStream_t argument explicitly; by using `legacy_matmul`, such
  * functions do not need to duplicate the raft resources handle to set the explicit stream before
  * passing it to `matmul` (thus avoid the extra overheads associated with that).
  *
@@ -246,7 +246,7 @@ template <bool DevicePointerMode = false, typename S, typename A, typename B, ty
                                   const S* beta,
                                   C* c_ptr,
                                   uint64_t ldc,
-                                  cudaStream_t stream)
+                                  hipStream_t stream)
 {
 //  common::nvtx::range<common::nvtx::domain::raft> batch_scope(
 //    "linalg::matmul(m = %d, n = %d, k = %d)", m, n, k);

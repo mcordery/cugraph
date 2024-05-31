@@ -21,7 +21,7 @@
 #include "detail/divide.cuh"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/input_validation.hpp>
 
@@ -41,7 +41,7 @@ namespace linalg {
  * @{
  */
 template <typename InT, typename OutT = InT, typename IdxType = int>
-void divideScalar(OutT* out, const InT* in, InT scalar, IdxType len, cudaStream_t stream)
+void divideScalar(OutT* out, const InT* in, InT scalar, IdxType len, hipStream_t stream)
 {
   detail::divideScalar(out, in, scalar, len, stream);
 }

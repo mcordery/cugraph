@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023, NVIDIA CORPORATION.
  *
@@ -118,8 +119,8 @@ struct SM_runtime {
 // https://github.com/NVIDIA/cub/issues/545
 inline SM_runtime kernel_virtual_arch(void* kernel)
 {
-  cudaFuncAttributes attributes;
-  RAFT_CUDA_TRY(cudaFuncGetAttributes(&attributes, kernel));
+  hipFuncAttributes attributes;
+  RAFT_CUDA_TRY(hipFuncGetAttributes(&attributes, kernel));
 
   return SM_runtime(10 * attributes.ptxVersion);
 }

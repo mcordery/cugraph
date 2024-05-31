@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
@@ -130,7 +131,7 @@ void haversine_knn(value_idx* out_inds,
                    size_t n_index_rows,
                    size_t n_query_rows,
                    int k,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   // ensure kernel does not breach shared memory limits
   constexpr int kWarpQ = sizeof(value_t) > 4 ? 512 : 1024;

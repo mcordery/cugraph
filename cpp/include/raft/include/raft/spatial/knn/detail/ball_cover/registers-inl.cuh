@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
@@ -21,7 +22,7 @@
 #include "common.cuh"
 #include "registers_types.cuh"  // DistFunc
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/neighbors/detail/faiss_select/key_value_block_select.cuh>
 #include <raft/util/cuda_utils.cuh>
@@ -1386,10 +1387,10 @@ void rbc_eps_pass(raft::resources const& handle,
   if (vd != nullptr) {
     value_idx sum = thrust::reduce(resource::get_thrust_policy(handle), vd, vd + n_query_rows);
     // copy sum to last element
-    RAFT_CUDA_TRY(cudaMemcpyAsync(vd + n_query_rows,
+    RAFT_CUDA_TRY(hipMemcpyAsync(vd + n_query_rows,
                                   &sum,
                                   sizeof(value_idx),
-                                  cudaMemcpyHostToDevice,
+                                  hipMemcpyHostToDevice,
                                   resource::get_cuda_stream(handle)));
   }
 
@@ -1593,10 +1594,10 @@ void rbc_eps_pass(raft::resources const& handle,
 
   if (vd != nullptr && (max_k != nullptr || adj_ja == nullptr)) {
     // copy sum to last element
-    RAFT_CUDA_TRY(cudaMemcpyAsync(vd + n_query_rows,
+    RAFT_CUDA_TRY(hipMemcpyAsync(vd + n_query_rows,
                                   adj_ia + n_query_rows,
                                   sizeof(value_idx),
-                                  cudaMemcpyDeviceToDevice,
+                                  hipMemcpyDeviceToDevice,
                                   resource::get_cuda_stream(handle)));
   }
 

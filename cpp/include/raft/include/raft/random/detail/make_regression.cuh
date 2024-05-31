@@ -60,7 +60,7 @@ static void _make_low_rank_matrix(raft::resources const& handle,
                                   IdxT effective_rank,
                                   DataT tail_strength,
                                   raft::random::RngState& r,
-                                  cudaStream_t stream)
+                                  hipStream_t stream)
 {
   IdxT n = std::min(n_rows, n_cols);
 
@@ -78,9 +78,9 @@ static void _make_low_rank_matrix(raft::resources const& handle,
   rmm::device_uvector<DataT> singular_vec(n, stream);
   _singular_profile_kernel<<<raft::ceildiv<IdxT>(n, 256), 256, 0, stream>>>(
     singular_vec.data(), n, tail_strength, effective_rank);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
   rmm::device_uvector<DataT> singular_mat(n * n, stream);
-  RAFT_CUDA_TRY(cudaMemsetAsync(singular_mat.data(), 0, n * n * sizeof(DataT), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(singular_mat.data(), 0, n * n * sizeof(DataT), stream));
 
   raft::matrix::set_diagonal(handle,
                              make_device_vector_view<const DataT, IdxT>(singular_vec.data(), n),
@@ -150,7 +150,7 @@ void make_regression_caller(raft::resources const& handle,
                             IdxT n_rows,
                             IdxT n_cols,
                             IdxT n_informative,
-                            cudaStream_t stream,
+                            hipStream_t stream,
                             DataT* coef                      = nullptr,
                             IdxT n_targets                   = (IdxT)1,
                             DataT bias                       = (DataT)0.0,
@@ -206,7 +206,7 @@ void make_regression_caller(raft::resources const& handle,
   // Generate a ground truth model with only n_informative features
   uniform(r, _coef, n_informative * n_targets, (DataT)1.0, (DataT)100.0, stream);
   if (coef && n_informative != n_cols) {
-    RAFT_CUDA_TRY(cudaMemsetAsync(_coef + n_informative * n_targets,
+    RAFT_CUDA_TRY(hipMemsetAsync(_coef + n_informative * n_targets,
                                   0,
                                   (n_cols - n_informative) * n_targets * sizeof(DataT),
                                   stream));
@@ -261,7 +261,7 @@ void make_regression_caller(raft::resources const& handle,
     IdxT nblks_rows = raft::ceildiv<IdxT>(n_rows, Nthreads);
     _gather2d_kernel<<<nblks_rows, Nthreads, 0, stream>>>(
       values, _values, perms_samples.data(), n_rows, n_targets);
-    RAFT_CUDA_TRY(cudaPeekAtLastError());
+    RAFT_CUDA_TRY(hipPeekAtLastError());
 
     // Shuffle the features from tmp_out to out
     raft::random::permute<DataT, IdxT, IdxT>(
@@ -272,7 +272,7 @@ void make_regression_caller(raft::resources const& handle,
       IdxT nblks_cols = raft::ceildiv<IdxT>(n_cols, Nthreads);
       _gather2d_kernel<<<nblks_cols, Nthreads, 0, stream>>>(
         coef, _coef, perms_features.data(), n_cols, n_targets);
-      RAFT_CUDA_TRY(cudaPeekAtLastError());
+      RAFT_CUDA_TRY(hipPeekAtLastError());
     }
   }
 }

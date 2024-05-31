@@ -46,7 +46,7 @@ void ternaryOp(out_t* out,
                const math_t* in3,
                IdxType len,
                Lambda op,
-               cudaStream_t stream)
+               hipStream_t stream)
 {
   return detail::map<false>(stream, out, len, op, in1, in2, in3);
 }

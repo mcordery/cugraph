@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/sparse/coo.hpp>
@@ -29,11 +29,11 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
-#include <cusparse_v2.h>
+#include <hipsparse.h>
 #include <stdio.h>
 
 #include <algorithm>
@@ -59,20 +59,20 @@ void coo_to_csr(raft::resources const& handle,
   auto cusparseHandle = resource::get_cusparse_handle(handle);
   rmm::device_uvector<int> dstRows(nnz, stream);
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(dstRows.data(), srcRows, sizeof(int) * nnz, cudaMemcpyDeviceToDevice, stream));
+    hipMemcpyAsync(dstRows.data(), srcRows, sizeof(int) * nnz, hipMemcpyDeviceToDevice, stream));
   RAFT_CUDA_TRY(
-    cudaMemcpyAsync(dstCols, srcCols, sizeof(int) * nnz, cudaMemcpyDeviceToDevice, stream));
+    hipMemcpyAsync(dstCols, srcCols, sizeof(int) * nnz, hipMemcpyDeviceToDevice, stream));
   auto buffSize = raft::sparse::detail::cusparsecoosort_bufferSizeExt(
     cusparseHandle, m, m, nnz, srcRows, srcCols, stream);
   rmm::device_uvector<char> pBuffer(buffSize, stream);
   rmm::device_uvector<int> P(nnz, stream);
-  RAFT_CUSPARSE_TRY(cusparseCreateIdentityPermutation(cusparseHandle, nnz, P.data()));
+  RAFT_CUSPARSE_TRY(hipsparseCreateIdentityPermutation(cusparseHandle, nnz, P.data()));
   raft::sparse::detail::cusparsecoosortByRow(
     cusparseHandle, m, m, nnz, dstRows.data(), dstCols, P.data(), pBuffer.data(), stream);
   raft::sparse::detail::cusparsegthr(cusparseHandle, nnz, srcVals, dstVals, P.data(), stream);
   raft::sparse::detail::cusparsecoo2csr(
     cusparseHandle, dstRows.data(), nnz, m, dst_offsets, stream);
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
 }
 
 /**
@@ -85,11 +85,11 @@ void coo_to_csr(raft::resources const& handle,
  * @param stream: cuda stream to use
  */
 template <typename T>
-void sorted_coo_to_csr(const T* rows, int nnz, T* row_ind, int m, cudaStream_t stream)
+void sorted_coo_to_csr(const T* rows, int nnz, T* row_ind, int m, hipStream_t stream)
 {
   rmm::device_uvector<T> row_counts(m, stream);
 
-  RAFT_CUDA_TRY(cudaMemsetAsync(row_counts.data(), 0, m * sizeof(T), stream));
+  RAFT_CUDA_TRY(hipMemsetAsync(row_counts.data(), 0, m * sizeof(T), stream));
 
   linalg::coo_degree(rows, nnz, row_counts.data(), stream);
 

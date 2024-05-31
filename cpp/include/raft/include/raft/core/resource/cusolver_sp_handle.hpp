@@ -16,11 +16,11 @@
 #pragma once
 
 #include <raft/core/cusolver_macros.hpp>
-#include <raft/core/resource/cuda_stream.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/resource_types.hpp>
 #include <raft/core/resources.hpp>
 
-#include <cusolverSp.h>
+#include <hipsolver.h>
 
 namespace raft::resource {
 
@@ -72,7 +72,7 @@ class cusolver_sp_resource_factory : public resource_factory {
 inline cusolverSpHandle_t get_cusolver_sp_handle(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUSOLVER_SP_HANDLE)) {
-    cudaStream_t stream = get_cuda_stream(res);
+    hipStream_t stream = get_cuda_stream(res);
     res.add_resource_factory(std::make_shared<cusolver_sp_resource_factory>(stream));
   }
   return *res.get_resource<cusolverSpHandle_t>(resource_type::CUSOLVER_SP_HANDLE);

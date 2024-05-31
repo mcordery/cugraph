@@ -21,7 +21,7 @@
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/device_atomics.cuh>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <stdio.h>
 
@@ -55,13 +55,13 @@ RAFT_KERNEL coo_degree_kernel(const T* rows, int nnz, T* results)
  * @param stream: cuda stream to use
  */
 template <int TPB_X = 64, typename T = int>
-void coo_degree(const T* rows, int nnz, T* results, cudaStream_t stream)
+void coo_degree(const T* rows, int nnz, T* results, hipStream_t stream)
 {
   dim3 grid_rc(raft::ceildiv(nnz, TPB_X), 1, 1);
   dim3 blk_rc(TPB_X, 1, 1);
 
   coo_degree_kernel<TPB_X><<<grid_rc, blk_rc, 0, stream>>>(rows, nnz, results);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <int TPB_X = 64, typename T>
@@ -92,7 +92,7 @@ RAFT_KERNEL coo_degree_scalar_kernel(
  */
 template <int TPB_X = 64, typename T>
 void coo_degree_scalar(
-  const int* rows, const T* vals, int nnz, T scalar, int* results, cudaStream_t stream = 0)
+  const int* rows, const T* vals, int nnz, T scalar, int* results, hipStream_t stream = 0)
 {
   dim3 grid_rc(raft::ceildiv(nnz, TPB_X), 1, 1);
   dim3 blk_rc(TPB_X, 1, 1);
@@ -111,7 +111,7 @@ void coo_degree_scalar(
  * @param stream: cuda stream to use
  */
 template <int TPB_X = 64, typename T>
-void coo_degree_nz(const int* rows, const T* vals, int nnz, int* results, cudaStream_t stream)
+void coo_degree_nz(const int* rows, const T* vals, int nnz, int* results, hipStream_t stream)
 {
   dim3 grid_rc(raft::ceildiv(nnz, TPB_X), 1, 1);
   dim3 blk_rc(TPB_X, 1, 1);

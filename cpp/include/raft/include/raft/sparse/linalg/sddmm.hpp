@@ -72,10 +72,10 @@ void sddmm(raft::resources const& handle,
   detail::sddmm(
     handle, descrA, descrB, descrC, op_A, op_B, alpha.data_handle(), beta.data_handle());
 
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(descrA));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroyDnMat(descrB));
-  RAFT_CUSPARSE_TRY_NO_THROW(cusparseDestroySpMat(descrC));
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(descrA));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroyDnMat(descrB));
+  RAFT_CUSPARSE_TRY_NO_THROW(hipsparseDestroySpMat(descrC));
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 }  // end namespace linalg

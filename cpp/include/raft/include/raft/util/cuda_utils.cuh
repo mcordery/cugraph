@@ -21,7 +21,7 @@
 #include <raft/core/operators.hpp>
 
 #include <cuda_bf16.h>
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #include <math_constants.h>
 
 #include <stdint.h>
@@ -664,8 +664,8 @@ DI auto dp4a(unsigned int a, unsigned int b, unsigned int c) -> unsigned int
  * @param n_int_streams number of internal streams
  * @param idx the index for which to query the stream
  */
-inline cudaStream_t select_stream(cudaStream_t user_stream,
-                                  cudaStream_t* int_streams,
+inline hipStream_t select_stream(hipStream_t user_stream,
+                                  hipStream_t* int_streams,
                                   int n_int_streams,
                                   int idx)
 {

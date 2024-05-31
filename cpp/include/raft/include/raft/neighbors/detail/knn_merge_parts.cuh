@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION.
  *
@@ -107,7 +108,7 @@ inline void knn_merge_parts_impl(const value_t* inK,
                                  size_t n_samples,
                                  int n_parts,
                                  int k,
-                                 cudaStream_t stream,
+                                 hipStream_t stream,
                                  value_idx* translations)
 {
   auto grid = dim3(n_samples);
@@ -120,7 +121,7 @@ inline void knn_merge_parts_impl(const value_t* inK,
   knn_merge_parts_kernel<value_idx, value_t, warp_q, thread_q, n_threads>
     <<<grid, block, 0, stream>>>(
       inK, inV, outK, outV, n_samples, n_parts, kInit, vInit, k, translations);
-  RAFT_CUDA_TRY(cudaPeekAtLastError());
+  RAFT_CUDA_TRY(hipPeekAtLastError());
 }
 
 /**
@@ -145,7 +146,7 @@ inline void knn_merge_parts(const value_t* inK,
                             size_t n_samples,
                             int n_parts,
                             int k,
-                            cudaStream_t stream,
+                            hipStream_t stream,
                             value_idx* translations)
 {
   if (k == 1)
