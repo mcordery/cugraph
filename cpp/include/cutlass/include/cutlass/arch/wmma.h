@@ -91,7 +91,7 @@ struct CutlassToWmmaDataType<cutlass::half_t> {
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ >= 11)
 template<>
 struct CutlassToWmmaDataType<cutlass::bfloat16_t> {
-  using Type = __nv_bfloat16;
+  using Type = hip_bfloat16;
 };
 #endif
 
@@ -173,7 +173,7 @@ struct WmmaToCutlassDataType<__half> {
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ >= 11)
 template<>
-struct WmmaToCutlassDataType<__nv_bfloat16> {
+struct WmmaToCutlassDataType<hip_bfloat16> {
   using Type = cutlass::bfloat16_t;
 };
 #endif
