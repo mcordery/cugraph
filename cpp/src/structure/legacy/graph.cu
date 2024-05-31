@@ -89,7 +89,7 @@ void GraphCOOView<VT, ET, WT>::degree(ET* degree, DegreeDirection direction) con
   //        (e.g. if you have a CSC and you want in-degree (x=1) then pass
   //        the offsets/indices and request an out-degree (x=2))
   //
-  cudaStream_t stream{nullptr};
+  hipStream_t stream{nullptr};
 
   if (direction != DegreeDirection::IN) {
     if ((GraphViewBase<VT, ET, WT>::handle != nullptr) &&

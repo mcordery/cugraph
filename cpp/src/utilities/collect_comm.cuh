@@ -161,7 +161,7 @@ collect_values_for_keys(raft::handle_t const& handle,
 template <typename KVStoreViewType, typename KeyToGPUIdOp>
 std::tuple<rmm::device_uvector<typename KVStoreViewType::key_type>,
            decltype(allocate_dataframe_buffer<typename KVStoreViewType::value_type>(
-             0, cudaStream_t{nullptr}))>
+             0, hipStream_t{nullptr}))>
 collect_values_for_unique_keys(
   raft::handle_t const& handle,
   KVStoreViewType kv_store_view,
@@ -202,7 +202,7 @@ template <typename vertex_t, typename ValueIterator>
 std::tuple<
   rmm::device_uvector<vertex_t>,
   decltype(allocate_dataframe_buffer<typename thrust::iterator_traits<ValueIterator>::value_type>(
-    0, cudaStream_t{nullptr}))>
+    0, hipStream_t{nullptr}))>
 collect_values_for_unique_int_vertices(raft::handle_t const& handle,
                                        rmm::device_uvector<vertex_t>&& collect_unique_int_vertices,
                                        ValueIterator local_value_first,
@@ -266,7 +266,7 @@ collect_values_for_unique_int_vertices(raft::handle_t const& handle,
 
 template <typename VertexIterator, typename ValueIterator>
 decltype(allocate_dataframe_buffer<typename thrust::iterator_traits<ValueIterator>::value_type>(
-  0, cudaStream_t{nullptr}))
+  0, hipStream_t{nullptr}))
 collect_values_for_int_vertices(
   raft::handle_t const& handle,
   VertexIterator collect_vertex_first,

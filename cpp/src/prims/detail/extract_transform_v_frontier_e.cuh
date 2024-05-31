@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
@@ -37,7 +38,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -169,7 +170,7 @@ __global__ static void extract_transform_v_frontier_e_hypersparse_or_low_degree(
     warp_local_degree_inclusive_sums[extract_transform_v_frontier_e_kernel_block_size];
   __shared__ edge_t warp_key_local_edge_offsets[extract_transform_v_frontier_e_kernel_block_size];
 
-  using WarpScan = cub::WarpScan<edge_t, raft::warp_size()>;
+  using WarpScan = hipcub::WarpScan<edge_t, raft::warp_size()>;
   __shared__ typename WarpScan::TempStorage temp_storage;
 
   auto indices = edge_partition.indices();
@@ -715,7 +716,7 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
                           d_offsets.begin());
       std::vector<vertex_t> h_offsets(d_offsets.size());
       raft::update_host(h_offsets.data(), d_offsets.data(), d_offsets.size(), handle.get_stream());
-      RAFT_CUDA_TRY(cudaStreamSynchronize(handle.get_stream()));
+      RAFT_CUDA_TRY(hipStreamSynchronize(handle.get_stream()));
       h_offsets.push_back(edge_partition_frontier_size);
       // FIXME: we may further improve performance by 1) concurrently running kernels on different
       // segments; 2) individually tuning block sizes for different segments; and 3) adding one

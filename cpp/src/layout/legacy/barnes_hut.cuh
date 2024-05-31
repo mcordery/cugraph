@@ -184,14 +184,14 @@ void barnes_hut(raft::handle_t const& handle,
   //
   // Set cache levels for faster algorithm execution
   //---------------------------------------------------
-  cudaFuncSetCacheConfig(BoundingBoxKernel, cudaFuncCachePreferShared);
-  cudaFuncSetCacheConfig(TreeBuildingKernel, cudaFuncCachePreferL1);
-  cudaFuncSetCacheConfig(ClearKernel1, cudaFuncCachePreferL1);
-  cudaFuncSetCacheConfig(ClearKernel2, cudaFuncCachePreferL1);
-  cudaFuncSetCacheConfig(SummarizationKernel, cudaFuncCachePreferShared);
-  cudaFuncSetCacheConfig(SortKernel, cudaFuncCachePreferL1);
-  cudaFuncSetCacheConfig(RepulsionKernel, cudaFuncCachePreferL1);
-  cudaFuncSetCacheConfig(apply_forces_bh, cudaFuncCachePreferL1);
+  hipFuncSetCacheConfig(BoundingBoxKernel, hipFuncCachePreferShared);
+  hipFuncSetCacheConfig(TreeBuildingKernel, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(ClearKernel1, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(ClearKernel2, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(SummarizationKernel, hipFuncCachePreferShared);
+  hipFuncSetCacheConfig(SortKernel, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(RepulsionKernel, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(apply_forces_bh, hipFuncCachePreferL1);
 
   if (callback) {
     callback->setup<float>(nnodes + 1, 2);

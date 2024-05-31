@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2018-2024, NVIDIA CORPORATION.  All rights reserved.
  *
@@ -37,8 +38,8 @@
 #include <thrust/transform.h>
 #include <thrust/transform_reduce.h>
 
-#include <cuda.h>
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime.h>
 
 namespace cugraph {
 namespace detail {
@@ -394,7 +395,7 @@ __attribute__((visibility("hidden"))) __global__ void offsets_to_indices_kernel(
 template <typename offsets_t, typename index_t>
 void offsets_to_indices(const offsets_t* offsets, index_t v, index_t* indices)
 {
-  cudaStream_t stream{nullptr};
+  hipStream_t stream{nullptr};
   index_t nthreads = min(v, (index_t)CUDA_MAX_KERNEL_THREADS);
   index_t nblocks  = min((v + nthreads - 1) / nthreads, (index_t)CUDA_MAX_BLOCKS);
   offsets_to_indices_kernel<<<nblocks, nthreads, 0, stream>>>(offsets, v, indices);

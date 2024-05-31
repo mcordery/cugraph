@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
@@ -84,7 +85,7 @@ void apply_attraction(const vertex_t* restrict row,
                       bool lin_log_mode,
                       const float edge_weight_influence,
                       const float coef,
-                      cudaStream_t stream)
+                      hipStream_t stream)
 {
   // 0 edge graph.
   if (!e) return;
@@ -166,7 +167,7 @@ void apply_gravity(const float* restrict x_pos,
                    bool strong_gravity_mode,
                    const float scaling_ratio,
                    const vertex_t n,
-                   cudaStream_t stream)
+                   hipStream_t stream)
 {
   dim3 nthreads, nblocks;
   nthreads.x = min(n, CUDA_MAX_KERNEL_THREADS);
@@ -220,7 +221,7 @@ void compute_local_speed(const float* restrict repel_x,
                          float* restrict swinging,
                          float* restrict traction,
                          const vertex_t n,
-                         cudaStream_t stream)
+                         hipStream_t stream)
 {
   dim3 nthreads, nblocks;
   nthreads.x = min(n, CUDA_MAX_KERNEL_THREADS);
@@ -309,7 +310,7 @@ void apply_forces(float* restrict x_pos,
                   const float* restrict swinging,
                   const float speed,
                   const vertex_t n,
-                  cudaStream_t stream)
+                  hipStream_t stream)
 {
   dim3 nthreads, nblocks;
   nthreads.x = min(n, CUDA_MAX_KERNEL_THREADS);

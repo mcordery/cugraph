@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
@@ -39,7 +40,7 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <cuda/functional>
 #include <thrust/distance.h>
 #include <thrust/execution_policy.h>
@@ -381,7 +382,7 @@ __global__ static void per_v_transform_reduce_e_mid_degree(
     static_cast<size_t>(major_range_first - edge_partition.major_range_first());
   auto idx = static_cast<size_t>(tid / raft::warp_size());
 
-  using WarpReduce = cub::WarpReduce<e_op_result_t>;
+  using WarpReduce = hipcub::WarpReduce<e_op_result_t>;
   [[maybe_unused]] __shared__ typename WarpReduce::TempStorage
     temp_storage[per_v_transform_reduce_e_kernel_block_size /
                  raft::warp_size()];  // relevant only if update_major == true
@@ -494,7 +495,7 @@ __global__ static void per_v_transform_reduce_e_high_degree(
     static_cast<size_t>(major_range_first - edge_partition.major_range_first());
   auto idx = static_cast<size_t>(blockIdx.x);
 
-  using BlockReduce = cub::BlockReduce<e_op_result_t, per_v_transform_reduce_e_kernel_block_size>;
+  using BlockReduce = hipcub::BlockReduce<e_op_result_t, per_v_transform_reduce_e_kernel_block_size>;
   [[maybe_unused]] __shared__
     typename BlockReduce::TempStorage temp_storage;  // relevant only if update_major == true
 

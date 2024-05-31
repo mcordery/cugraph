@@ -51,7 +51,7 @@ struct is_bitwise_comparable<hipco::pair<int32_t, float>> : std::true_type {};
 namespace cugraph {
 namespace detail {
 
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct key_aggregated_edge_op_t {
   weight_t total_edge_weight{};
@@ -79,7 +79,7 @@ struct key_aggregated_edge_op_t {
   }
 };
 
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct reduce_op_t {
   using type                          = thrust::tuple<vertex_t, weight_t>;
@@ -99,7 +99,7 @@ struct reduce_op_t {
   }
 };
 
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct count_updown_moves_op_t {
   bool up_down{};
@@ -120,7 +120,7 @@ struct count_updown_moves_op_t {
              : false;
   }
 };
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct cluster_update_op_t {
   bool up_down{};
@@ -135,7 +135,7 @@ struct cluster_update_op_t {
   }
 };
 
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct return_edge_weight_t {
   __device__ auto operator()(
@@ -145,7 +145,7 @@ struct return_edge_weight_t {
   }
 };
 
-// FIXME: a workaround for cudaErrorInvalidDeviceFunction error when device lambda is used
+// FIXME: a workaround for hipErrorInvalidDeviceFunction error when device lambda is used
 template <typename vertex_t, typename weight_t>
 struct return_one_t {
   __device__ auto operator()(

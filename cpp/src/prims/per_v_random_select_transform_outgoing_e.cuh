@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -32,7 +33,7 @@
 #include <cugraph-ops/graph/sampling.hpp>
 #endif
 
-#include <cub/cub.cuh>
+#include <hipcub/hipcub.hpp>
 #include <cuda/atomic>
 #include <cuda/functional>
 //#include <cuda/algorithm>
@@ -344,7 +345,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_mid_local_degree(
 
   auto idx = static_cast<size_t>(tid / raft::warp_size());
 
-  using WarpScan = cub::WarpScan<edge_t, raft::warp_size()>;
+  using WarpScan = hipcub::WarpScan<edge_t, raft::warp_size()>;
   __shared__ typename WarpScan::TempStorage temp_storage;
 
   while (idx < frontier_indices.size()) {
@@ -395,7 +396,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_high_local_degree(
 
   auto idx = static_cast<size_t>(blockIdx.x);
 
-  using BlockScan = cub::BlockScan<edge_t, per_v_random_select_transform_outgoing_e_block_size>;
+  using BlockScan = hipcub::BlockScan<edge_t, per_v_random_select_transform_outgoing_e_block_size>;
   __shared__ typename BlockScan::TempStorage temp_storage;
 
   __shared__ edge_t sum;
@@ -764,7 +765,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
 
         // sort the (sample neighbor index, sample index) pairs (key: sample neighbor index)
 
-        cub::DeviceSegmentedSort::SortPairs(
+        hipcub::DeviceSegmentedSort::SortPairs(
           static_cast<void*>(nullptr),
           tmp_storage_bytes,
           retry_segment_indices ? (*retry_sample_nbr_indices).data()
@@ -785,7 +786,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
         if (tmp_storage_bytes > d_tmp_storage.size()) {
           d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
         }
-        cub::DeviceSegmentedSort::SortPairs(
+        hipcub::DeviceSegmentedSort::SortPairs(
           d_tmp_storage.data(),
           tmp_storage_bytes,
           retry_segment_indices ? (*retry_sample_nbr_indices).data()
@@ -879,7 +880,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
 
       // sort the segment-sorted (sample index, sample neighbor index) pairs (key: sample index)
 
-      cub::DeviceSegmentedSort::SortPairs(
+      hipcub::DeviceSegmentedSort::SortPairs(
         static_cast<void*>(nullptr),
         tmp_storage_bytes,
         segment_sorted_tmp_sample_indices.data(),
@@ -899,7 +900,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
       if (tmp_storage_bytes > d_tmp_storage.size()) {
         d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
       }
-      cub::DeviceSegmentedSort::SortPairs(
+      hipcub::DeviceSegmentedSort::SortPairs(
         d_tmp_storage.data(),
         tmp_storage_bytes,
         segment_sorted_tmp_sample_indices.data(),
