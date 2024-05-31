@@ -21,11 +21,11 @@
 #include <raft/core/resource/cuda_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 
-#include <cuco/static_map.cuh>
+#include <hipco/static_map.cuh>
 #include <thrust/copy.h>
 #include <thrust/iterator/counting_iterator.h>
 
-// this is needed by cuco as key, value must be bitwise comparable.
+// this is needed by hipco as key, value must be bitwise comparable.
 // compilers don't declare float/double as bitwise comparable
 // but that is too strict
 // for example, the following is true (or 0):
@@ -43,11 +43,11 @@ namespace detail {
 template <typename value_idx, typename value_t, int tpb>
 class hash_strategy : public coo_spmv_strategy<value_idx, value_t, tpb> {
  public:
-  using insert_type = typename cuco::legacy::
+  using insert_type = typename hipco::experimental::
     static_map<value_idx, value_t, cuda::thread_scope_block>::device_mutable_view;
   using smem_type = typename insert_type::slot_type*;
   using find_type =
-    typename cuco::legacy::static_map<value_idx, value_t, cuda::thread_scope_block>::device_view;
+    typename hipco::experimental::static_map<value_idx, value_t, cuda::thread_scope_block>::device_view;
 
   hash_strategy(const distances_config_t<value_idx, value_t>& config_,
                 float capacity_threshold_ = 0.5,
@@ -236,19 +236,19 @@ class hash_strategy : public coo_spmv_strategy<value_idx, value_t, tpb> {
     return insert_type::make_from_uninitialized_slots(cooperative_groups::this_thread_block(),
                                                       cache,
                                                       cache_size,
-                                                      cuco::empty_key{value_idx{-1}},
-                                                      cuco::empty_value{value_t{0}});
+                                                      hipco::empty_key{value_idx{-1}},
+                                                      hipco::empty_value{value_t{0}});
   }
 
   __device__ inline void insert(insert_type cache, const value_idx& key, const value_t& value)
   {
-    auto success = cache.insert(cuco::pair<value_idx, value_t>(key, value));
+    auto success = cache.insert(hipco::pair<value_idx, value_t>(key, value));
   }
 
   __device__ inline find_type init_find(smem_type cache, const value_idx& cache_size)
   {
     return find_type(
-      cache, cache_size, cuco::empty_key{value_idx{-1}}, cuco::empty_value{value_t{0}});
+      cache, cache_size, hipco::empty_key{value_idx{-1}}, hipco::empty_value{value_t{0}});
   }
 
   __device__ inline value_t find(find_type cache, const value_idx& key)

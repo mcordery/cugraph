@@ -51,7 +51,7 @@
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
 
-#include <cuco/hash_functions.cuh>
+#include <hipco/hash_functions.cuh>
 
 #include <gtest/gtest.h>
 

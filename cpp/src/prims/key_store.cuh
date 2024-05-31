@@ -25,7 +25,7 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/sort.h>
 
-#include <cuco/static_set.cuh>
+#include <hipco/static_set.cuh>
 
 #include <algorithm>
 #include <memory>
@@ -36,7 +36,7 @@ namespace cugraph {
 
 namespace detail {
 
-using cuco_storage_type = cuco::storage<1>;  ///< cuco window storage type
+using hipco_storage_type = hipco::storage<1>;  ///< hipco window storage type
 
 template <typename KeyIterator>
 struct key_binary_search_contains_op_t {
@@ -72,37 +72,37 @@ struct key_binary_search_store_device_view_t {
 };
 
 template <typename ViewType>
-struct key_cuco_store_contains_device_view_t {
+struct key_hipco_store_contains_device_view_t {
   using key_type                   = typename ViewType::key_type;
-  using cuco_store_device_ref_type = typename ViewType::cuco_set_type::ref_type<cuco::contains_tag>;
+  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::ref_type<hipco::contains_tag>;
 
   static_assert(!ViewType::binary_search);
 
-  __host__ key_cuco_store_contains_device_view_t(ViewType view)
-    : cuco_store_device_ref(view.cuco_store_contains_device_ref())
+  __host__ key_hipco_store_contains_device_view_t(ViewType view)
+    : hipco_store_device_ref(view.hipco_store_contains_device_ref())
   {
   }
 
-  __device__ bool contains(key_type key) const { return cuco_store_device_ref.contains(key); }
+  __device__ bool contains(key_type key) const { return hipco_store_device_ref.contains(key); }
 
-  cuco_store_device_ref_type cuco_store_device_ref{};
+  hipco_store_device_ref_type hipco_store_device_ref{};
 };
 
 template <typename ViewType>
-struct key_cuco_store_insert_device_view_t {
+struct key_hipco_store_insert_device_view_t {
   using key_type                   = typename ViewType::key_type;
-  using cuco_store_device_ref_type = typename ViewType::cuco_set_type::ref_type<cuco::insert_tag>;
+  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::ref_type<hipco::insert_tag>;
 
   static_assert(!ViewType::binary_search);
 
-  __host__ key_cuco_store_insert_device_view_t(ViewType view)
-    : cuco_store_device_ref(view.cuco_store_insert_device_ref())
+  __host__ key_hipco_store_insert_device_view_t(ViewType view)
+    : hipco_store_device_ref(view.hipco_store_insert_device_ref())
   {
   }
 
-  __device__ void insert(key_type key) { cuco_store_device_ref.insert(key); }
+  __device__ void insert(key_type key) { hipco_store_device_ref.insert(key); }
 
-  cuco_store_device_ref_type cuco_store_device_ref{};
+  hipco_store_device_ref_type hipco_store_device_ref{};
 };
 
 template <typename KeyIterator>
@@ -142,23 +142,23 @@ class key_binary_search_store_view_t {
 };
 
 template <typename key_t>
-class key_cuco_store_view_t {
+class key_hipco_store_view_t {
  public:
   using key_type = key_t;
 
   static constexpr bool binary_search = false;
 
-  using cuco_set_type =
-    cuco::static_set<key_t,
-                     cuco::extent<std::size_t>,
+  using hipco_set_type =
+    hipco::static_set<key_t,
+                     hipco::extent<std::size_t>,
                      cuda::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     cuco::linear_probing<1,  // CG size
-                                          cuco::murmurhash3_32<key_t>>,
+                     hipco::linear_probing<1,  // CG size
+                                          hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
-                     cuco_storage_type>;
+                     hipco_storage_type>;
 
-  key_cuco_store_view_t(cuco_set_type const* store) : cuco_store_(store) {}
+  key_hipco_store_view_t(hipco_set_type const* store) : hipco_store_(store) {}
 
   template <typename QueryKeyIterator, typename ResultValueIterator>
   void contains(QueryKeyIterator key_first,
@@ -166,17 +166,17 @@ class key_cuco_store_view_t {
                 ResultValueIterator value_first,
                 rmm::cuda_stream_view stream) const
   {
-    cuco_store_->contains(key_first, key_last, value_first, stream);
+    hipco_store_->contains(key_first, key_last, value_first, stream);
   }
 
-  auto cuco_store_contains_device_ref() const { return cuco_store_->ref(cuco::contains); }
+  auto hipco_store_contains_device_ref() const { return hipco_store_->ref(hipco::contains); }
 
-  auto cuco_store_insert_device_ref() const { return cuco_store_->ref(cuco::insert); }
+  auto hipco_store_insert_device_ref() const { return hipco_store_->ref(hipco::insert); }
 
-  key_t invalid_key() const { return cuco_store_->get_empty_key_sentinel(); }
+  key_t invalid_key() const { return hipco_store_->get_empty_key_sentinel(); }
 
  private:
-  cuco_set_type const* cuco_store_{};
+  hipco_set_type const* hipco_store_{};
 };
 
 template <typename key_t>
@@ -235,23 +235,23 @@ class key_binary_search_store_t {
 };
 
 template <typename key_t>
-class key_cuco_store_t {
+class key_hipco_store_t {
  public:
   using key_type = key_t;
 
-  using cuco_set_type =
-    cuco::static_set<key_t,
-                     cuco::extent<std::size_t>,
+  using hipco_set_type =
+    hipco::static_set<key_t,
+                     hipco::extent<std::size_t>,
                      cuda::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     cuco::linear_probing<1,  // CG size
-                                          cuco::murmurhash3_32<key_t>>,
+                     hipco::linear_probing<1,  // CG size
+                                          hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
-                     cuco_storage_type>;
+                     hipco_storage_type>;
 
-  key_cuco_store_t(rmm::cuda_stream_view stream) {}
+  key_hipco_store_t(rmm::cuda_stream_view stream) {}
 
-  key_cuco_store_t(size_t capacity, key_t invalid_key, rmm::cuda_stream_view stream)
+  key_hipco_store_t(size_t capacity, key_t invalid_key, rmm::cuda_stream_view stream)
   {
     allocate(capacity, invalid_key, stream);
     capacity_ = capacity;
@@ -259,7 +259,7 @@ class key_cuco_store_t {
   }
 
   template <typename KeyIterator>
-  key_cuco_store_t(KeyIterator key_first,
+  key_hipco_store_t(KeyIterator key_first,
                    KeyIterator key_last,
                    key_t invalid_key,
                    rmm::cuda_stream_view stream)
@@ -278,7 +278,7 @@ class key_cuco_store_t {
     auto num_keys = static_cast<size_t>(thrust::distance(key_first, key_last));
     if (num_keys == 0) return;
 
-    size_ += cuco_store_->insert(key_first, key_last, stream.value());
+    size_ += hipco_store_->insert(key_first, key_last, stream.value());
   }
 
   template <typename KeyIterator, typename StencilIterator, typename PredOp>
@@ -291,13 +291,13 @@ class key_cuco_store_t {
     auto num_keys = static_cast<size_t>(thrust::distance(key_first, key_last));
     if (num_keys == 0) return;
 
-    size_ += cuco_store_->insert_if(key_first, key_last, stencil_first, pred_op, stream.value());
+    size_ += hipco_store_->insert_if(key_first, key_last, stencil_first, pred_op, stream.value());
   }
 
   auto release(rmm::cuda_stream_view stream)
   {
     rmm::device_uvector<key_t> keys(size(), stream);
-    auto last = cuco_store_->retrieve_all(keys.begin(), stream.value());
+    auto last = hipco_store_->retrieve_all(keys.begin(), stream.value());
     keys.resize(thrust::distance(keys.begin(), last), stream);
     keys.shrink_to_fit(stream);
     allocate(0, invalid_key(), stream);
@@ -306,9 +306,9 @@ class key_cuco_store_t {
     return keys;
   }
 
-  cuco_set_type const* cuco_store_ptr() const { return cuco_store_.get(); }
+  hipco_set_type const* hipco_store_ptr() const { return hipco_store_.get(); }
 
-  key_t invalid_key() const { return cuco_store_->empty_key_sentinel(); }
+  key_t invalid_key() const { return hipco_store_->empty_key_sentinel(); }
 
   size_t size() const { return size_; }
 
@@ -318,28 +318,28 @@ class key_cuco_store_t {
   void allocate(size_t num_keys, key_t invalid_key, rmm::cuda_stream_view stream)
   {
     double constexpr load_factor = 0.7;
-    auto cuco_size               = std::max(
+    auto hipco_size               = std::max(
       static_cast<size_t>(static_cast<double>(num_keys) / load_factor),
-      static_cast<size_t>(num_keys) + 1);  // cuco::static_map requires at least one empty slot
+      static_cast<size_t>(num_keys) + 1);  // hipco::static_map requires at least one empty slot
 
     auto stream_adapter = rmm::mr::make_stream_allocator_adaptor(
       rmm::mr::polymorphic_allocator<std::byte>(rmm::mr::get_current_device_resource()), stream);
-    cuco_store_ =
-      std::make_unique<cuco_set_type>(cuco_size,
-                                      cuco::empty_key<key_t>{invalid_key},
+    hipco_store_ =
+      std::make_unique<hipco_set_type>(hipco_size,
+                                      hipco::empty_key<key_t>{invalid_key},
                                       thrust::equal_to<key_t>{},
-                                      cuco::linear_probing<1,  // CG size
-                                                           cuco::murmurhash3_32<key_t>>{},
-                                      cuco::thread_scope_device,
-                                      cuco_storage_type{},
+                                      hipco::linear_probing<1,  // CG size
+                                                           hipco::murmurhash3_32<key_t>>{},
+                                      hipco::thread_scope_device,
+                                      hipco_storage_type{},
                                       stream_adapter,
                                       stream.value());
   }
 
-  std::unique_ptr<cuco_set_type> cuco_store_{nullptr};
+  std::unique_ptr<hipco_set_type> hipco_store_{nullptr};
 
   size_t capacity_{0};
-  size_t size_{0};  // caching as cuco_store_->size() is expensive (this scans the entire slots to
+  size_t size_{0};  // caching as hipco_store_->size() is expensive (this scans the entire slots to
                     // handle user inserts through a device reference
 };
 
@@ -438,7 +438,7 @@ class key_store_t {
       return detail::key_binary_search_store_view_t(store_.store_key_first(),
                                                     store_.store_key_last());
     } else {
-      return detail::key_cuco_store_view_t<key_t>(store_.cuco_store_ptr());
+      return detail::key_hipco_store_view_t<key_t>(store_.hipco_store_ptr());
     }
   }
 
@@ -455,7 +455,7 @@ class key_store_t {
  private:
   std::conditional_t<use_binary_search,
                      detail::key_binary_search_store_t<key_t>,
-                     detail::key_cuco_store_t<key_t>>
+                     detail::key_hipco_store_t<key_t>>
     store_;
 };
 

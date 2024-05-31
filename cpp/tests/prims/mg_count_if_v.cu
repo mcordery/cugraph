@@ -36,7 +36,7 @@
 #include <thrust/count.h>
 #include <thrust/iterator/counting_iterator.h>
 
-#include <cuco/hash_functions.cuh>
+#include <hipco/hash_functions.cuh>
 
 #include <gtest/gtest.h>
 
@@ -48,7 +48,7 @@ struct test_predicate {
   test_predicate(int mod_count) : mod(mod_count) {}
   __device__ bool operator()(vertex_t, const vertex_t& val)
   {
-    cuco::detail::MurmurHash3_32<vertex_t> hash_func{};
+    hipco::detail::MurmurHash3_32<vertex_t> hash_func{};
     return (0 == (hash_func(val) % mod));
   }
 };

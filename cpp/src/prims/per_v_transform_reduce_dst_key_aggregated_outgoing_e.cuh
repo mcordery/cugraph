@@ -610,7 +610,7 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
     std::unique_ptr<
       kv_store_t<vertex_t,
                  edge_src_value_t,
-                 true /* use binary search as we can't set empty value sentinel for cuco */>>
+                 true /* use binary search as we can't set empty value sentinel for hipco */>>
       multi_gpu_major_value_map_ptr{
         nullptr};  // relevant only when GraphViewType::is_multi_gpu &&
                    // edge_src_value_input.keys().has_value() == true (in this case,
@@ -959,7 +959,7 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
         : thrust::nullopt;
     std::conditional_t<KVStoreViewType::binary_search,
                        detail::kv_binary_search_store_device_view_t<KVStoreViewType>,
-                       detail::kv_cuco_store_find_device_view_t<KVStoreViewType>>
+                       detail::kv_hipco_store_find_device_view_t<KVStoreViewType>>
       dst_key_value_map_device_view(
         GraphViewType::is_multi_gpu ? multi_gpu_minor_key_value_map_ptr->view() : kv_store_view);
     if constexpr (!std::is_same_v<edge_value_t, thrust::nullopt_t>) {

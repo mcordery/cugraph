@@ -126,7 +126,7 @@ struct check_destination_index_t {
 
 template <typename vertex_t, typename tag_t, typename key_t, typename weight_t, bool multi_gpu>
 struct e_op_t {
-  detail::kv_cuco_store_find_device_view_t<detail::kv_cuco_store_view_t<key_t, weight_t const*>>
+  detail::kv_hipco_store_find_device_view_t<detail::kv_hipco_store_view_t<key_t, weight_t const*>>
     key_to_dist_map{};
   tag_t num_origins{};
   weight_t cutoff{};
@@ -159,7 +159,7 @@ template <typename vertex_t, typename edge_t, typename tag_t, typename key_t>
 struct insert_nbr_key_t {
   raft::device_span<edge_t const> offsets{};
   raft::device_span<vertex_t const> indices{};
-  detail::key_cuco_store_insert_device_view_t<detail::key_cuco_store_view_t<key_t>> key_set{};
+  detail::key_hipco_store_insert_device_view_t<detail::key_hipco_store_view_t<key_t>> key_set{};
   aggregate_vi_t<vertex_t, tag_t, key_t> aggregator{};
 
   __device__ void operator()(thrust::tuple<vertex_t, tag_t> vi)
@@ -177,7 +177,7 @@ struct insert_nbr_key_t {
 template <typename key_t, typename weight_t>
 struct keep_t {
   weight_t old_near_far_threshold{};
-  detail::key_cuco_store_contains_device_view_t<detail::key_cuco_store_view_t<key_t>> key_set{};
+  detail::key_hipco_store_contains_device_view_t<detail::key_hipco_store_view_t<key_t>> key_set{};
 
   __device__ bool operator()(thrust::tuple<key_t, weight_t> pair) const
   {
@@ -189,7 +189,7 @@ struct keep_t {
 template <typename key_t, typename weight_t>
 struct is_no_smaller_than_threshold_t {
   weight_t threshold{};
-  detail::kv_cuco_store_find_device_view_t<detail::kv_cuco_store_view_t<key_t, weight_t const*>>
+  detail::kv_hipco_store_find_device_view_t<detail::kv_hipco_store_view_t<key_t, weight_t const*>>
     key_to_dist_map{};
 
   __device__ bool operator()(key_t key) const { return key_to_dist_map.find(key) >= threshold; }
@@ -356,7 +356,7 @@ kv_store_t<key_t, weight_t, false /* use_binary_search */> filter_key_to_dist_ma
                      insert_nbr_key_t<vertex_t, edge_t, tag_t, key_t>{
                        offsets,
                        indices,
-                       detail::key_cuco_store_insert_device_view_t(key_set.view()),
+                       detail::key_hipco_store_insert_device_view_t(key_set.view()),
                        aggregate_vi_t<vertex_t, tag_t, key_t>{static_cast<tag_t>(num_origins)}});
 
     for (size_t i = 0; i < far_buffers.size(); ++i) {
@@ -369,7 +369,7 @@ kv_store_t<key_t, weight_t, false /* use_binary_search */> filter_key_to_dist_ma
                        insert_nbr_key_t<vertex_t, edge_t, tag_t, key_t>{
                          offsets,
                          indices,
-                         detail::key_cuco_store_insert_device_view_t(key_set.view()),
+                         detail::key_hipco_store_insert_device_view_t(key_set.view()),
                          aggregate_vi_t<vertex_t, tag_t, key_t>{static_cast<tag_t>(num_origins)}});
     }
 
@@ -381,7 +381,7 @@ kv_store_t<key_t, weight_t, false /* use_binary_search */> filter_key_to_dist_ma
       old_kv_pair_first + old_key_buffer.size(),
       keep_flags.begin(),
       keep_t<key_t, weight_t>{old_near_far_threshold,
-                              detail::key_cuco_store_contains_device_view_t(key_set.view())});
+                              detail::key_hipco_store_contains_device_view_t(key_set.view())});
 
     keep_count = thrust::count_if(
       handle.get_thrust_policy(), keep_flags.begin(), keep_flags.end(), thrust::identity<bool>{});
@@ -635,7 +635,7 @@ rmm::device_uvector<weight_t> od_shortest_distances(
       // to key_t anyways for post processing
 
       auto e_op = e_op_t<vertex_t, od_idx_t, key_t, weight_t, GraphViewType::is_multi_gpu>{
-        detail::kv_cuco_store_find_device_view_t(key_to_dist_map.view()),
+        detail::kv_hipco_store_find_device_view_t(key_to_dist_map.view()),
         static_cast<od_idx_t>(origins.size()),
         cutoff,
         invalid_distance};
@@ -930,7 +930,7 @@ rmm::device_uvector<weight_t> od_shortest_distances(
                     tmp_buffer.end(),
                     raft::device_span<key_t*>(d_buffer_ptrs.data(), d_buffer_ptrs.size()),
                     [key_to_dist_map =
-                       detail::kv_cuco_store_find_device_view_t(key_to_dist_map.view()),
+                       detail::kv_hipco_store_find_device_view_t(key_to_dist_map.view()),
                      split_thresholds = raft::device_span<weight_t const>(
                        d_split_thresholds.data(), d_split_thresholds.size()),
                      invalid_threshold] __device__(auto key) {
@@ -969,7 +969,7 @@ rmm::device_uvector<weight_t> od_shortest_distances(
                 new_near_q_keys.begin() + old_size,
                 is_no_smaller_than_threshold_t<key_t, weight_t>{
                   invalid_threshold,
-                  detail::kv_cuco_store_find_device_view_t(key_to_dist_map.view())});
+                  detail::kv_hipco_store_find_device_view_t(key_to_dist_map.view())});
               new_near_q_keys.resize(thrust::distance(new_near_q_keys.begin(), last),
                                      handle.get_stream());
             } else {

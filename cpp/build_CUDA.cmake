@@ -351,7 +351,7 @@ target_link_libraries(cugraph
 #        $<TARGET_NAME_IF_EXISTS:cugraph-ops::cugraph-ops++>
 #    PRIVATE
 #        ${COMPILED_RAFT_LIB}
-#        cuco::cuco
+#        hipco::hipco
     )
 endif()
 

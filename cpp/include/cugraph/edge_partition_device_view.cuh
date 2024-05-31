@@ -47,7 +47,7 @@ __device__ thrust::optional<vertex_t> major_hypersparse_idx_from_major_nocheck_i
   raft::device_span<vertex_t const> dcs_nzd_vertices, vertex_t major)
 {
   // we can avoid binary search (and potentially improve performance) if we add an auxiliary array
-  // or cuco::static_map (at the expense of additional memory)
+  // or hipco::static_map (at the expense of additional memory)
   auto it =
     thrust::lower_bound(thrust::seq, dcs_nzd_vertices.begin(), dcs_nzd_vertices.end(), major);
   return it != dcs_nzd_vertices.end()

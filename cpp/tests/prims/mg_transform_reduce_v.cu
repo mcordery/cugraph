@@ -41,7 +41,7 @@
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/tuple.h>
 
-#include <cuco/hash_functions.cuh>
+#include <hipco/hash_functions.cuh>
 
 #include <gtest/gtest.h>
 
@@ -53,7 +53,7 @@ struct v_op_t {
 
   __device__ auto operator()(vertex_t, vertex_t val) const
   {
-    cuco::detail::MurmurHash3_32<vertex_t> hash_func{};
+    hipco::detail::MurmurHash3_32<vertex_t> hash_func{};
     return cugraph::test::detail::make_property_value<property_t>(hash_func(val) % mod);
   }
 };

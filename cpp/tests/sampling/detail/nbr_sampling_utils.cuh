@@ -48,7 +48,7 @@
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
 
-#include <cuco/hash_functions.cuh>
+#include <hipco/hash_functions.cuh>
 
 #include <algorithm>
 #include <functional>

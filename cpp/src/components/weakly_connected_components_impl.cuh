@@ -540,7 +540,7 @@ void weakly_connected_components_impl(raft::handle_t const& handle,
                               handle, level_graph_view, vertex_frontier.bucket(bucket_idx_cur)))
                           : edge_count;
 
-      // FIXME: if we use cuco::static_map (no duplicates, ideally we need static_set), edge_buffer
+      // FIXME: if we use hipco::static_map (no duplicates, ideally we need static_set), edge_buffer
       // size cannot exceed (# roots)^2 and we can avoid additional sort & unique (but resizing the
       // buffer may be more expensive).
       auto old_num_edge_inserts = num_edge_inserts.value(handle.get_stream());
@@ -608,7 +608,7 @@ void weakly_connected_components_impl(raft::handle_t const& handle,
         conflict_bucket.clear();
       }
 
-      // maintain the list of sorted unique edges (we can avoid this if we use cuco::static_map(no
+      // maintain the list of sorted unique edges (we can avoid this if we use hipco::static_map(no
       // duplicates, ideally we need static_set)).
       auto new_num_edge_inserts = num_edge_inserts.value(handle.get_stream());
       if (new_num_edge_inserts > old_num_edge_inserts) {
