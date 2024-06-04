@@ -31,16 +31,16 @@ class cusolver_sp_resource : public resource {
  public:
   cusolver_sp_resource(rmm::cuda_stream_view stream)
   {
-    RAFT_CUSOLVER_TRY_NO_THROW(cusolverSpCreate(&cusolver_res));
-    RAFT_CUSOLVER_TRY_NO_THROW(cusolverSpSetStream(cusolver_res, stream));
+    RAFT_CUSOLVER_TRY_NO_THROW(hipsolverSpCreate(&cusolver_res));
+    RAFT_CUSOLVER_TRY_NO_THROW(hipsolverSpSetStream(cusolver_res, stream));
   }
 
   void* get_resource() override { return &cusolver_res; }
 
-  ~cusolver_sp_resource() override { RAFT_CUSOLVER_TRY_NO_THROW(cusolverSpDestroy(cusolver_res)); }
+  ~cusolver_sp_resource() override { RAFT_CUSOLVER_TRY_NO_THROW(hipsolverSpDestroy(cusolver_res)); }
 
  private:
-  cusolverSpHandle_t cusolver_res;
+  hipsolverSpHandle_t cusolver_res;
 };
 
 /**
@@ -69,13 +69,13 @@ class cusolver_sp_resource_factory : public resource_factory {
  * @param[in] res the raft resources object
  * @return cusolver sp handle
  */
-inline cusolverSpHandle_t get_cusolver_sp_handle(resources const& res)
+inline hipsolverSpHandle_t get_cusolver_sp_handle(resources const& res)
 {
   if (!res.has_resource_factory(resource_type::CUSOLVER_SP_HANDLE)) {
     hipStream_t stream = get_cuda_stream(res);
     res.add_resource_factory(std::make_shared<cusolver_sp_resource_factory>(stream));
   }
-  return *res.get_resource<cusolverSpHandle_t>(resource_type::CUSOLVER_SP_HANDLE);
+  return *res.get_resource<hipsolverSpHandle_t>(resource_type::CUSOLVER_SP_HANDLE);
 };
 
 /**

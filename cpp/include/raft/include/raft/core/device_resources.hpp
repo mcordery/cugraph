@@ -114,7 +114,7 @@ class device_resources : public resources {
     return resource::get_cusolver_dn_handle(*this);
   }
 
-  cusolverSpHandle_t get_cusolver_sp_handle() const
+  hipsolverSpHandle_t get_cusolver_sp_handle() const
   {
     return resource::get_cusolver_sp_handle(*this);
   }

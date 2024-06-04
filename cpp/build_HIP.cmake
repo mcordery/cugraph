@@ -21,7 +21,7 @@ message(STATUS "Configuring build for ${PROJECT_NAME}")
 # Find HIP
 #
 
-find_package(hip REQUIRED)
+find_package(hip REQUIRED "/opt/rocm/lib/cmake/hip" )
 if (hip_FOUND)
     message(STATUS "hip_VERSION ${hip_VERSION}")
 
@@ -34,68 +34,104 @@ else()
 endif()
 
 #
-# Find ROCM rocblas
+# Find hipcub
 #
 
-find_package(rocblas REQUIRED)
-if (rocblas_FOUND)
-    message(STATUS "rocblas_VERSION ${rocblas_VERSION}")
+find_package(hipcub REQUIRED "/opt/rocm/lib/cmake/hipcub")
+if (hipcub_FOUND)
+    message(STATUS "hipcub_VERSION ${hipcub_VERSION}")
 
-    if( rocblas_VERSION VERSION_LESS 4.1)
-        message(FATAL_ERROR "rocblas version must be at least 4.1")
+    if( hipcub_VERSION VERSION_LESS 3.1)
+        message(FATAL_ERROR "hipcub version must be at least 3.1")
     endif()
-    message(STATUS "rocblas found: ${rocblas_VERSION}")
+    message(STATUS "hipcub found: ${hipcub_VERSION}")
 else()
-    message(FATAL_ERROR "rocblas not found")
+    message(FATAL_ERROR "hipcub not found")
+endif()
+
+
+#
+# Find rocthrust
+#
+
+find_package(rocthrust REQUIRED "/opt/rocm/lib/cmake/rocthrust")
+if (rocthrust_FOUND)
+    message(STATUS "rocthrust_VERSION ${rocthrust_VERSION}")
+
+    if( rocthrust_VERSION VERSION_LESS 3.0)
+        message(FATAL_ERROR "rocthrust version must be at least 3.0")
+    endif()
+    message(STATUS "rocthrust found: ${rocthrust_VERSION}")
+else()
+    message(FATAL_ERROR "rocthrust not found")
+endif()
+
+
+
+#
+# Find ROCM hipblas
+#
+
+find_package(hipblas REQUIRED "/opt/rocm/lib/cmake/hipblas")
+if (hipblas_FOUND)
+    message(STATUS "hipblas_VERSION ${hipblas_VERSION}")
+
+    if( hipblas_VERSION VERSION_LESS 2.1)
+        message(FATAL_ERROR "hipblas version must be at least 2.1")
+    endif()
+    message(STATUS "hipblas found: ${hipblas_VERSION}")
+else()
+    message(FATAL_ERROR "hipblas not found")
 endif()
 
 #
-# Find ROCM rocsparse
+# Find ROCM hipsparse
 #
 
-find_package(rocsparse REQUIRED)
-if (rocsparse_FOUND)
-    message(STATUS "rocsparse_VERSION ${rocsparse_VERSION}")
+find_package(hipsparse REQUIRED "/opt/rocm/lib/cmake/hipsparse" ) 
+if (hipsparse_FOUND)
+    message(STATUS "hipsparse_VERSION ${hipsparse_VERSION}")
 
-    if( rocsparse_VERSION VERSION_LESS 3.1)
-        message(FATAL_ERROR "rocsparse version must be at least 3.1")
+    if( hipsparse_VERSION VERSION_LESS 3.0)
+        message(FATAL_ERROR "hipsparse version must be at least 3.0")
     endif()
-    message(STATUS "rocsparse found: ${rocsparse_VERSION}")
+    message(STATUS "hipsparse found: ${hipsparse_VERSION}")
 else()
-    message(FATAL_ERROR "rocsparse not found")
+    message(FATAL_ERROR "hipsparse not found")
 endif()
 
 #
-# Find ROCM rocrand
+# Find ROCM hiprand
 #
 
-find_package(rocrand REQUIRED)
-if (rocrand_FOUND)
-    message(STATUS "rocrand_VERSION ${rocrand_VERSION}")
+find_package(hiprand REQUIRED "/opt/rocm/lib/cmake/hiprand" )
+if (hiprand_FOUND)
+    message(STATUS "hiprand_VERSION ${hiprand_VERSION}")
 
-    if( rocrand_VERSION VERSION_LESS 3.0)
-        message(FATAL_ERROR "rocrand version must be at least 3.0")
+    if( hiprand_VERSION VERSION_LESS 2.10)
+        message(FATAL_ERROR "hiprand version must be at least 2.10")
     endif()
-    message(STATUS "rocrand found: ${rocrand_VERSION}")
+    message(STATUS "hiprand found: ${hiprand_VERSION}")
 else()
-    message(FATAL_ERROR "rocrand not found")
+    message(FATAL_ERROR "hiprand not found")
 endif()
 
 #
-# Find ROCM rocsolver
+# Find ROCM hipsolver
 #
 
-find_package(rocsolver REQUIRED)
-if (rocsolver_FOUND)
-    message(STATUS "rocsolver_VERSION ${rocsolver_VERSION}")
+find_package(hipsolver REQUIRED "/opt/rocm/lib/cmake/hipsolver")
+if (hipsolver_FOUND)
+    message(STATUS "hipsolver_VERSION ${hipsolver_VERSION}")
 
-    if( rocsolver_VERSION VERSION_LESS 3.25)
-        message(FATAL_ERROR "rocsolver version must be at least 3.25")
+    if( hipsolver_VERSION VERSION_LESS 2.1)
+        message(FATAL_ERROR "hipsolver version must be at least 2.1")
     endif()
-    message(STATUS "rocsolver found: ${rocsolver_VERSION}")
+    message(STATUS "hipsolver found: ${hipsolver_VERSION}")
 else()
-    message(FATAL_ERROR "rocsolver not found")
+    message(FATAL_ERROR "hipsolver not found")
 endif()
+
 
 
 
@@ -138,12 +174,11 @@ set(ROCGRAPH_CXX_FLAGS "")
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
-set(ROCGRAPH_HIP_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND ROCGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
-endif(CMAKE_COMPILER_IS_GNUCXX)
+endif()
 
 
 message("-- Building for GPU_ARCHS = ${CMAKE_HIP_ARCHITECTURES}")
@@ -156,33 +191,43 @@ list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY  )
 
 
 
-list(APPEND ROCGRAPH_HIP_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
-list(APPEND ROCGRAPH_HIP_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
-list(APPEND ROCGRAPH_HIP_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
-list(APPEND ROCGRAPH_HIP_FLAGS -Xfatbin=-compress-all)
+#list(APPEND ROCGRAPH_HIP_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
+#list(APPEND ROCGRAPH_HIP_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -Xptxas=--disable-warnings)
+#list(APPEND ROCGRAPH_HIP_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
+#list(APPEND ROCGRAPH_HIP_FLAGS -Xfatbin=-compress-all)
 
-#list(APPEND ROCGRAPH_HIP_FLAGS -I/usr/local/cuda/include )
-list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
-list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
-list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
-list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
- list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
- list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
- list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
- list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+list(APPEND ROCGRAPH_CXX_FLAGS "-Wno-unused-result")
 
-list(APPEND ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
-list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/thrust )
-list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/ )
-list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/cub/cub/ )
-list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
- list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
- list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
- list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
- list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
- list(APPEND ROCGRAPH_CXX_FLAGS -I/usr/local/cuda/include )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hip_INCLUDE_DIRS}")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipcub_INCLUDE_DIRS}/hipcub")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${rocthrust_INCLUDE_DIRS}/rocthrust")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipblas_INCLUDE_DIRS}/hipblas")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsparse_INCLUDE_DIRS}/hipsparse")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hiprand_INCLUDE_DIRS}/hiprand")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsolver_INCLUDE_DIRS}/hipsolver")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/" )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include" )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include" )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include" )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include" )
+
+
+#list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
+#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
+#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
+#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
+#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
+
+# #list(APPEND ROCGRAPH_HIP_FLAGS -I/usr/local/cuda/include )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I/opt/rocm-6.1.0/include/thrust )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I/opt/rocm-6.1.0/include/cub )
+# #list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
+# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
 
 
 
@@ -347,6 +392,7 @@ set(ROCGRAPH_SOURCES
 
 add_library(rocgraph ${ROCGRAPH_SOURCES})
 
+target_compile_features(rocgraph PRIVATE cxx_std_17)
 
     set_target_properties(rocgraph
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
@@ -368,15 +414,15 @@ add_library(rocgraph ${ROCGRAPH_SOURCES})
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(rocgraph PUBLIC HIP_API_PER_THREAD_DEFAULT_STREAM)
 
-#file(WRITE "${ROCGRAPH_BINARY_DIR}/fatbin.ld"
-#[=[
-#SECTIONS
-#{
-#  .nvFatBinSegment : { *(.nvFatBinSegment) }
-#  .nv_fatbin : { *(.nv_fatbin) }
-#}
-#]=])
-#target_link_options(rocgraph PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
+##file(WRITE "${ROCGRAPH_BINARY_DIR}/fatbin.ld"
+##[=[
+##SECTIONS
+##{
+##  .nvFatBinSegment : { *(.nvFatBinSegment) }
+##  .nv_fatbin : { *(.nv_fatbin) }
+##}
+##]=])
+##target_link_options(rocgraph PRIVATE "${ROCGRAPH_BINARY_DIR}/fatbin.ld")
 
 add_library(rocgraph::rocgraph ALIAS rocgraph)
 
@@ -397,12 +443,10 @@ target_include_directories(rocgraph
 
 target_link_libraries(rocgraph
     PUBLIC
-        hip::toolkit
-        roc::rocblas
-        roc::rocsparse
-        roc::rocrand
-        roc::rocsolver
-        $<BUILD_LOCAL_INTERFACE:ROCM::toolkit>
+        hipblas
+        hipsparse
+        hiprand
+        hipsolver
 
     )
 

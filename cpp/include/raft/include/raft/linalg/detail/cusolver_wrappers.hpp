@@ -1229,7 +1229,7 @@ inline hipsolverStatus_t cusolverDnormqr_bufferSize(  // NOLINT
  */
 template <typename T>
 hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,
@@ -1244,7 +1244,7 @@ hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
 
 template <>
 inline hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,
@@ -1273,7 +1273,7 @@ inline hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
 
 template <>
 inline hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,
@@ -1302,7 +1302,7 @@ inline hipsolverStatus_t cusolverSpcsrqrBufferInfoBatched(  // NOLINT
 
 template <typename T>
 hipsolverStatus_t cusolverSpcsrqrsvBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,
@@ -1319,7 +1319,7 @@ hipsolverStatus_t cusolverSpcsrqrsvBatched(  // NOLINT
 
 template <>
 inline hipsolverStatus_t cusolverSpcsrqrsvBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,
@@ -1341,7 +1341,7 @@ inline hipsolverStatus_t cusolverSpcsrqrsvBatched(  // NOLINT
 
 template <>
 inline hipsolverStatus_t cusolverSpcsrqrsvBatched(  // NOLINT
-  cusolverSpHandle_t handle,
+  hipsolverSpHandle_t handle,
   int m,
   int n,
   int nnzA,

@@ -62,7 +62,7 @@ struct pointer_residency_count<Type, Types...> {
     hipPointerAttribute_t attr;
     RAFT_CUDA_TRY(hipPointerGetAttributes(&attr, ptr));
     switch (attr.type) {
-      case cudaMemoryTypeUnregistered: return std::make_tuple(on_device, on_host + 1);
+      case hipMemoryTypeUnregistered: return std::make_tuple(on_device, on_host + 1);
       case hipMemoryTypeHost:
         return std::make_tuple(on_device + int(attr.devicePointer == ptr), on_host + 1);
       case hipMemoryTypeDevice: return std::make_tuple(on_device + 1, on_host);

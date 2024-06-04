@@ -1,9 +1,8 @@
 cmake ..  \
-    -DCMAKE_C_COMPILER=/usr/bin/gcc-13 \
-    -DCMAKE_CXX_COMPILER=/usr/bin/g++-13 \
-    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.5/bin/nvcc \
+    -DCMAKE_C_COMPILER=hipcc \
+    -DCMAKE_CXX_COMPILER=hipcc \
     -DUSE_CUGRAPH_OPS=OFF \
     -DBUILD_CUGRAPH_MG_TESTS=OFF \
     -DBUILD_CUGRAPH_MTMG_TESTS=OFF \
-    -DUSE_CUDA=ON
+    -DUSE_HIP=ON
 
