@@ -1,3 +1,8 @@
+# Dependencies
+* [CCCL tag v2.2.0](https://github.com/NVIDIA/cccl/tree/v2.2.0)
+* OS level google test package. On ubuntu that will be `apt install libgtest-dev`.
+
+
 To build with cmake first configure the build
 
 ```zsh

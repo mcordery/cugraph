@@ -23,6 +23,20 @@ endif()
 
 
 if( USE_CUDA )
+
+message(STATUS "--- INCLUDE ../rapids_config.cmake")
+    # set(rapids-cmake-version 24.06)
+    # set(rapids-cmake-dir /home/lg/amd/moonwatcher/cugraph/cpp/include/rapids-cmake)
+    # list(APPEND CMAKE_MODULE_PATH "${rapids-cmake-dir}")
+
+    # include(../rapids_config.cmake)
+    # include(rapids-cmake)
+    # include(rapids-cpm)
+    # include(rapids-cuda)
+    # include(rapids-export)
+    # include(rapids-find)
+    # rapids_cuda_init_architectures(CUGRAPH)
+
     project(CUGRAPH  LANGUAGES C CXX CUDA)
     include(${CMAKE_CURRENT_SOURCE_DIR}/build_CUDA.cmake)
 endif()
