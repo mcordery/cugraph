@@ -24,7 +24,7 @@
 #include <hip/hip_runtime_api.h>
 
 #define CUDART_VERSION 0
-
+#undef CUDART_VERSION // needs to be undefined or it causes problems finding hipsparseStatus_t types
 // types
 using cudaError_t = hipError_t;
 using cudaEvent_t = hipEvent_t;

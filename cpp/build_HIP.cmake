@@ -17,18 +17,28 @@
 
 message(STATUS "Configuring build for ${PROJECT_NAME}")
 
+# Get ROCm CMake Helpers onto your CMake Module Path
+if (NOT DEFINED ROCM_PATH )
+if (NOT DEFINED ENV{ROCM_PATH} )
+set(ROCM_PATH "/opt/rocm" CACHE PATH "ROCm path")
+else()
+set(ROCM_PATH $ENV{ROCM_PATH} CACHE PATH "ROCm path")
+endif()
+endif()
+set(CMAKE_MODULE_PATH "${ROCM_PATH}/lib/cmake" ${CMAKE_MODULE_PATH})
+
 #
 # Find HIP
 #
 
-find_package(hip REQUIRED "/opt/rocm/lib/cmake/hip" )
-if (hip_FOUND)
-    message(STATUS "hip_VERSION ${hip_VERSION}")
+find_package(HIP REQUIRED )
+if (HIP_FOUND)
+    message(STATUS "HIP_VERSION ${HIP_VERSION}")
 
-    if( hip_VERSION VERSION_LESS 6.0)  
+    if( HIP_VERSION VERSION_LESS 6.0)  
         message(FATAL_ERROR "HIP compiler version must be at least 6.0")
     endif()   
-    message(STATUS "HIP Toolkit found: ${hip_VERSION}")
+    message(STATUS "HIP Toolkit found: ${HIP_VERSION}")
 else()
     message(FATAL_ERROR "HIP Toolkit not found")
 endif()
@@ -37,7 +47,7 @@ endif()
 # Find hipcub
 #
 
-find_package(hipcub REQUIRED "/opt/rocm/lib/cmake/hipcub")
+find_package(hipcub REQUIRED )
 if (hipcub_FOUND)
     message(STATUS "hipcub_VERSION ${hipcub_VERSION}")
 
@@ -49,12 +59,29 @@ else()
     message(FATAL_ERROR "hipcub not found")
 endif()
 
+#
+# Find rocprim
+#
+
+find_package(rocprim REQUIRED )
+if (rocprim_FOUND)
+    message(STATUS "rocprim_VERSION ${rocprim_VERSION}")
+
+    if( rocprim_VERSION VERSION_LESS 3.1)
+        message(FATAL_ERROR "rocprim version must be at least 3.1")
+    endif()
+    message(STATUS "rocprim found: ${rocprim_VERSION}")
+else()
+    message(FATAL_ERROR "rocprim not found")
+endif()
+
+
 
 #
 # Find rocthrust
 #
 
-find_package(rocthrust REQUIRED "/opt/rocm/lib/cmake/rocthrust")
+find_package(rocthrust REQUIRED)
 if (rocthrust_FOUND)
     message(STATUS "rocthrust_VERSION ${rocthrust_VERSION}")
 
@@ -72,7 +99,7 @@ endif()
 # Find ROCM hipblas
 #
 
-find_package(hipblas REQUIRED "/opt/rocm/lib/cmake/hipblas")
+find_package(hipblas REQUIRED )
 if (hipblas_FOUND)
     message(STATUS "hipblas_VERSION ${hipblas_VERSION}")
 
@@ -88,7 +115,7 @@ endif()
 # Find ROCM hipsparse
 #
 
-find_package(hipsparse REQUIRED "/opt/rocm/lib/cmake/hipsparse" ) 
+find_package(hipsparse REQUIRED  ) 
 if (hipsparse_FOUND)
     message(STATUS "hipsparse_VERSION ${hipsparse_VERSION}")
 
@@ -104,7 +131,7 @@ endif()
 # Find ROCM hiprand
 #
 
-find_package(hiprand REQUIRED "/opt/rocm/lib/cmake/hiprand" )
+find_package(hiprand REQUIRED )
 if (hiprand_FOUND)
     message(STATUS "hiprand_VERSION ${hiprand_VERSION}")
 
@@ -120,7 +147,7 @@ endif()
 # Find ROCM hipsolver
 #
 
-find_package(hipsolver REQUIRED "/opt/rocm/lib/cmake/hipsolver")
+find_package(hipsolver REQUIRED )
 if (hipsolver_FOUND)
     message(STATUS "hipsolver_VERSION ${hipsolver_VERSION}")
 
@@ -168,13 +195,11 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 ################################################################################
 # - compiler options -----------------------------------------------------------
 
-set(ROCGRAPH_C_FLAGS "")
-set(ROCGRAPH_CXX_FLAGS "")
-
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBHIPCXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_CXX_FLAGS -x hip -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP -DTHRUST_DISABLE_ABI_NAMESPACE -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+#set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP  -Drocgraph_EXPORTS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND ROCGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
@@ -184,11 +209,7 @@ endif()
 message("-- Building for GPU_ARCHS = ${CMAKE_HIP_ARCHITECTURES}")
 
 
-list(APPEND ROCGRAPH_C_FLAGS -DFMT_HEADER_ONLY )
-list(APPEND ROCGRAPH_CXX_FLAGS  -DFMT_HEADER_ONLY )
-#list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY -DTHRUST_IGNORE_CUB_VERSION_CHECK )
-list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY  )
-
+list(APPEND ROCGRAPH_CXX_FLAGS  "-DFMT_HEADER_ONLY" )
 
 
 #list(APPEND ROCGRAPH_HIP_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
@@ -196,11 +217,14 @@ list(APPEND ROCGRAPH_HIP_FLAGS -DFMT_HEADER_ONLY  )
 #list(APPEND ROCGRAPH_HIP_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
 #list(APPEND ROCGRAPH_HIP_FLAGS -Xfatbin=-compress-all)
 
-list(APPEND ROCGRAPH_CXX_FLAGS "-Wno-unused-result")
 
-list(APPEND ROCGRAPH_CXX_FLAGS "-I${hip_INCLUDE_DIRS}")
+list(APPEND ROCGRAPH_CXX_FLAGS "-Wno-unused-result")
+#list(APPEND ROCGRAPH_CXX_FLAGS "-I/usr/include")
+
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${HIP_INCLUDE_DIRS}")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${rocthrust_INCLUDE_DIRS}/thrust")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipcub_INCLUDE_DIRS}/hipcub")
-list(APPEND ROCGRAPH_CXX_FLAGS "-I${rocthrust_INCLUDE_DIRS}/rocthrust")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${rocprim_INCLUDE_DIRS}/rocprim")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipblas_INCLUDE_DIRS}/hipblas")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsparse_INCLUDE_DIRS}/hipsparse")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hiprand_INCLUDE_DIRS}/hiprand")
@@ -211,24 +235,7 @@ list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/inc
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include" )
 
-
-#list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
-#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
-#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
-#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
-#list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
-
-# #list(APPEND ROCGRAPH_HIP_FLAGS -I/usr/local/cuda/include )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I/opt/rocm-6.1.0/include/thrust )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I/opt/rocm-6.1.0/include/cub )
-# #list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cccl/libcudacxx/include )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
-# list(APPEND ROCGRAPH_HIP_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
-
+#list(APPEND ROCGRAPH_CXX_FLAGS "-I/usr/local/cuda/include" )  # needed for hipco to find <nv/target>
 
 
 # Option to enable line info in HIP device compilation to allow introspection when profiling /
@@ -392,13 +399,11 @@ set(ROCGRAPH_SOURCES
 
 add_library(rocgraph ${ROCGRAPH_SOURCES})
 
-target_compile_features(rocgraph PRIVATE cxx_std_17)
-
     set_target_properties(rocgraph
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
                 # set target compile options
-                CXX_STANDARD                        17
+                CXX_STANDARD                       17
                 CXX_STANDARD_REQUIRED               ON
                 ROCM_STANDARD                       17
                 ROCM_STANDARD_REQUIRED              ON
@@ -506,9 +511,9 @@ set_target_properties(rocgraph_c
     PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                INSTALL_RPATH                       "\$ORIGIN"
                # set target compile options
-               CXX_STANDARD                        17
+               CXX_STANDARD                        20
                CXX_STANDARD_REQUIRED               ON
-               HIP_STANDARD                       17
+               HIP_STANDARD                       20
                HIP_STANDARD_REQUIRED              ON
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON

@@ -23,8 +23,9 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <cuda/atomic>
-#include <cuda/functional>
+//#include <cuda/atomic> assuming a language extension
+//#include <cuda/functional> 
+#include <atomic>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -199,12 +200,12 @@ void multi_partition(ValueIterator value_first,
     value_last,
     thrust::make_zip_iterator(
       thrust::make_tuple(group_ids.begin(), intra_partition_offsets.begin())),
-    cuda::proclaim_return_type<thrust::tuple<int, size_t>>(
+    proclaim_return_type<thrust::tuple<int, size_t>>(
       [value_to_group_id_op, group_first, counts = counts.data()] __device__(auto value) {
         auto group_id = value_to_group_id_op(value);
-        cuda::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+	std::atomic_ref<size_t> counter(counts[group_id - group_first]);
         return thrust::make_tuple(group_id,
-                                  counter.fetch_add(size_t{1}, cuda::std::memory_order_relaxed));
+                                  counter.fetch_add(size_t{1}, std::memory_order_relaxed));
       }));
 
   rmm::device_uvector<size_t> displacements(num_groups, stream_view);
@@ -254,12 +255,12 @@ void multi_partition(KeyIterator key_first,
     key_last,
     thrust::make_zip_iterator(
       thrust::make_tuple(group_ids.begin(), intra_partition_offsets.begin())),
-    cuda::proclaim_return_type<thrust::tuple<int, size_t>>(
+    proclaim_return_type<thrust::tuple<int, size_t>>(
       [key_to_group_id_op, group_first, counts = counts.data()] __device__(auto key) {
         auto group_id = key_to_group_id_op(key);
-        cuda::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+        std::atomic_ref<size_t> counter(counts[group_id - group_first]);
         return thrust::make_tuple(group_id,
-                                  counter.fetch_add(size_t{1}, cuda::std::memory_order_relaxed));
+                                  counter.fetch_add(size_t{1}, std::memory_order_relaxed));
       }));
 
   rmm::device_uvector<size_t> displacements(num_groups, stream_view);
@@ -766,7 +767,7 @@ rmm::device_uvector<size_t> groupby_and_count(ValueIterator tx_value_first /* [I
                              stream_view);
 
   auto group_id_first = thrust::make_transform_iterator(
-    tx_value_first, cuda::proclaim_return_type<int>([value_to_group_id_op] __device__(auto value) {
+    tx_value_first, proclaim_return_type<int>([value_to_group_id_op] __device__(auto value) {
       return value_to_group_id_op(value);
     }));
   rmm::device_uvector<int> d_tx_dst_ranks(num_groups, stream_view);
@@ -801,7 +802,7 @@ rmm::device_uvector<size_t> groupby_and_count(VertexIterator tx_key_first /* [IN
                              stream_view);
 
   auto group_id_first = thrust::make_transform_iterator(
-    tx_key_first, cuda::proclaim_return_type<int>([key_to_group_id_op] __device__(auto key) {
+    tx_key_first, proclaim_return_type<int>([key_to_group_id_op] __device__(auto key) {
       return key_to_group_id_op(key);
     }));
   rmm::device_uvector<int> d_tx_dst_ranks(num_groups, stream_view);
