@@ -32,7 +32,7 @@
 
 #include <raft/random/rng_device.cuh>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/distance.h>
 #include <thrust/execution_policy.h>
@@ -215,7 +215,7 @@ refine_clustering(
                                 : detail::edge_minor_property_view_t<vertex_t, vertex_t const*>(
                                     louvain_assignment_of_vertices.data(), vertex_t{0}),
     *edge_weight_view,
-    cuda::proclaim_return_type<weight_t>(
+    hip::proclaim_return_type<weight_t>(
       [] __device__(auto src, auto dst, auto src_cluster, auto dst_cluster, auto wt) {
         weight_t weighted_cut_contribution{0};
 
@@ -246,7 +246,7 @@ refine_clustering(
                     wcut_deg_and_cluster_vol_triple_begin,
                     wcut_deg_and_cluster_vol_triple_end,
                     singleton_and_connected_flags.begin(),
-                    cuda::proclaim_return_type<uint8_t>([resolution, total_edge_weight] __device__(
+                    hip::proclaim_return_type<uint8_t>([resolution, total_edge_weight] __device__(
                                                           auto wcut_wdeg_and_louvain_volume) {
                       auto wcut           = thrust::get<0>(wcut_wdeg_and_louvain_volume);
                       auto wdeg           = thrust::get<1>(wcut_wdeg_and_louvain_volume);
@@ -720,7 +720,7 @@ refine_clustering(
       vertices_in_mis.begin(),
       vertices_in_mis.end(),
       dst_vertices.begin(),
-      cuda::proclaim_return_type<vertex_t>(
+      hip::proclaim_return_type<vertex_t>(
         [dst_first = thrust::get<1>(gain_and_dst_first.get_iterator_tuple()),
          v_first   = graph_view.local_vertex_partition_range_first()] __device__(vertex_t v) {
           auto dst = *(dst_first + v - v_first);

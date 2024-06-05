@@ -32,7 +32,7 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -183,7 +183,7 @@ void update_edge_major_property(raft::handle_t const& handle,
                        handle.get_stream());
           auto bool_first = thrust::make_transform_iterator(
             (*edge_partition_keys)[i].begin(),
-            cuda::proclaim_return_type<bool>(
+            hip::proclaim_return_type<bool>(
               [rx_value_first,
                v_first = graph_view.vertex_partition_range_first(
                  major_range_vertex_partition_id)] __device__(auto v) {
@@ -205,7 +205,7 @@ void update_edge_major_property(raft::handle_t const& handle,
 
           auto v_offset_first = thrust::make_transform_iterator(
             (*edge_partition_keys)[i].begin(),
-            cuda::proclaim_return_type<vertex_t>(
+            hip::proclaim_return_type<vertex_t>(
               [v_first = graph_view.vertex_partition_range_first(
                  major_range_vertex_partition_id)] __device__(auto v) { return v - v_first; }));
           thrust::gather(handle.get_thrust_policy(),
@@ -317,7 +317,7 @@ void update_edge_major_property(raft::handle_t const& handle,
         if constexpr (packed_bool) {
           auto bool_first = thrust::make_transform_iterator(
             vertex_first,
-            cuda::proclaim_return_type<bool>([vertex_property_input_first,
+            hip::proclaim_return_type<bool>([vertex_property_input_first,
                                               vertex_partition] __device__(auto v) {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
@@ -331,7 +331,7 @@ void update_edge_major_property(raft::handle_t const& handle,
         } else {
           auto map_first = thrust::make_transform_iterator(
             vertex_first,
-            cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+            hip::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
               return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
             }));
           // FIXME: this gather (and temporary buffer) is unnecessary if NCCL directly takes a
@@ -399,7 +399,7 @@ void update_edge_major_property(raft::handle_t const& handle,
         } else {
           auto map_first = thrust::make_transform_iterator(
             rx_vertices.begin(),
-            cuda::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
+            hip::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
               return edge_partition.major_offset_from_major_nocheck(v);
             }));
           // FIXME: this scatter is unnecessary if NCCL directly takes a permutation iterator (and
@@ -602,7 +602,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
 
                 auto bool_first = thrust::make_transform_iterator(
                   (*edge_partition_keys).begin() + key_offsets[j],
-                  cuda::proclaim_return_type<bool>(
+                  hip::proclaim_return_type<bool>(
                     [rx_value_first,
                      v_first = graph_view.vertex_partition_range_first(
                        minor_range_vertex_partition_id)] __device__(auto v) {
@@ -621,7 +621,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
                   std::get<std::vector<size_t>>(key_offsets_or_rx_displacements);
                 auto bool_first = thrust::make_transform_iterator(
                   thrust::make_counting_iterator(vertex_t{0}),
-                  cuda::proclaim_return_type<bool>([rx_value_first] __device__(vertex_t v_offset) {
+                  hip::proclaim_return_type<bool>([rx_value_first] __device__(vertex_t v_offset) {
                     return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
                                              packed_bool_mask(v_offset));
                   }));
@@ -640,7 +640,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
 
               auto v_offset_first = thrust::make_transform_iterator(
                 (*edge_partition_keys).begin() + key_offsets[j],
-                cuda::proclaim_return_type<vertex_t>(
+                hip::proclaim_return_type<vertex_t>(
                   [v_first = graph_view.vertex_partition_range_first(
                      minor_range_vertex_partition_id)] __device__(auto v) { return v - v_first; }));
               thrust::gather(handle.get_thrust_policy(),
@@ -730,7 +730,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
         if constexpr (packed_bool) {
           auto bool_first = thrust::make_transform_iterator(
             vertex_first,
-            cuda::proclaim_return_type<bool>([vertex_property_input_first,
+            hip::proclaim_return_type<bool>([vertex_property_input_first,
                                               vertex_partition] __device__(auto v) {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
@@ -744,7 +744,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
         } else {
           auto map_first = thrust::make_transform_iterator(
             vertex_first,
-            cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+            hip::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
               return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
             }));
           // FIXME: this gather (and temporary buffer) is unnecessary if NCCL directly takes a
@@ -814,7 +814,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
         } else {
           auto map_first = thrust::make_transform_iterator(
             rx_vertices.begin(),
-            cuda::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
+            hip::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
               return edge_partition.minor_offset_from_minor_nocheck(v);
             }));
           // FIXME: this scatter is unnecessary if NCCL directly takes a permutation iterator (and

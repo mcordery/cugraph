@@ -34,9 +34,9 @@
 #endif
 
 #include <hipcub/hipcub.hpp>
-#include <cuda/atomic>
-#include <cuda/functional>
-//#include <cuda/algorithm>
+#include <hip/atomic>
+#include <hip/functional>
+//#include <hip/algorithm>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/iterator/constant_iterator.h>
@@ -457,7 +457,7 @@ compute_valid_local_nbr_count_inclusive_sums(
   offsets.set_element_to_zero_async(0, handle.get_stream());
   auto size_first = thrust::make_transform_iterator(
     edge_partition_local_degrees.begin(),
-    cuda::proclaim_return_type<size_t>([] __device__(edge_t local_degree) {
+    hip::proclaim_return_type<size_t>([] __device__(edge_t local_degree) {
       return static_cast<size_t>((local_degree + packed_bools_per_word() - 1) /
                                  packed_bools_per_word());
     }));
@@ -893,7 +893,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
                                         multiplier_t<size_t>{high_partition_over_sampling_K}),
         thrust::make_transform_iterator(
           thrust::make_counting_iterator(size_t{0}),
-          cuda::proclaim_return_type<size_t>(
+          hip::proclaim_return_type<size_t>(
             [high_partition_over_sampling_K, unique_counts = unique_counts.data()] __device__(
               size_t i) { return i * high_partition_over_sampling_K + unique_counts[i]; })),
         handle.get_stream());
@@ -913,7 +913,7 @@ rmm::device_uvector<edge_t> get_sampling_index_without_replacement(
                                         multiplier_t<size_t>{high_partition_over_sampling_K}),
         thrust::make_transform_iterator(
           thrust::make_counting_iterator(size_t{0}),
-          cuda::proclaim_return_type<size_t>(
+          hip::proclaim_return_type<size_t>(
             [high_partition_over_sampling_K, unique_counts = unique_counts.data()] __device__(
               size_t i) { return i * high_partition_over_sampling_K + unique_counts[i]; })),
         handle.get_stream());

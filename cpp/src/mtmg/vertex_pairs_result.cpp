@@ -139,7 +139,7 @@ std::
       v1.begin(),
       v1.end(),
       thrust::make_zip_iterator(v1.begin(), v2.begin(), result.begin()),
-      cuda::proclaim_return_type<int>(
+      hip::proclaim_return_type<int>(
         [local_v = raft::device_span<vertex_t const>{local_vertices.data(), local_vertices.size()},
          gpu     = raft::device_span<int const>{vertex_gpu_ids.data(),
                                                 vertex_gpu_ids.size()}] __device__(auto v1) {

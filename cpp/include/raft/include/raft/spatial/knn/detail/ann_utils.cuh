@@ -27,7 +27,7 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cuda_fp16.hpp>
+#include <hip_fp16.hpp>
 
 #include <memory>
 #include <optional>

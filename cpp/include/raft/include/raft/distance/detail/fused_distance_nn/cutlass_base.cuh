@@ -33,7 +33,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/semaphore>
+#include <hip/semaphore>
 
 #include <cutlass/cutlass.h>
 #include <cutlass/gemm/device/gemm.h>

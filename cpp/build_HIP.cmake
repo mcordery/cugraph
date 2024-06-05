@@ -17,6 +17,9 @@
 
 message(STATUS "Configuring build for ${PROJECT_NAME}")
 
+message(STATUS "CSD ${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/lib/cmake/libhipcxx")
+
+
 if(NOT (DEFINED CMAKE_HIP_ARCHITECTURES))
     set(CMAKE_HIP_ARCHITECTURES "gfx90a;gfx908;gfx940;gfx941;gfx942")
 endif()
@@ -168,7 +171,8 @@ endif()
 # Find libhipcxx
 #
 
-find_package(libhipcxx REQUIRED CONFIG PATHS "/home/mcordery/libhipcxx/install/lib/cmake/libhipcxx" )
+find_package(libhipcxx REQUIRED CONFIG PATHS ${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/lib/cmake/libhipcxx )
+
 if (libhipcxx_FOUND)
     message(STATUS "libhipcxx_VERSION ${libhipcxx_VERSION}")
 
@@ -235,9 +239,8 @@ list(APPEND ROCGRAPH_CXX_FLAGS  "-DFMT_HEADER_ONLY" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-Wno-unused-result")
 #list(APPEND ROCGRAPH_CXX_FLAGS "-I/usr/include")
 
-
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${HIP_INCLUDE_DIRS}")
-list(APPEND ROCGRAPH_CXX_FLAGS "-I/home/mcordery/libhipcxx/install/include" ) # for hipco
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/include" ) # for hipco
 
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipblas_INCLUDE_DIRS}/hipblas")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsparse_INCLUDE_DIRS}/hipsparse")
@@ -416,9 +419,9 @@ add_library(rocgraph ${ROCGRAPH_SOURCES})
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
                 # set target compile options
-                CXX_STANDARD                       20
+                CXX_STANDARD                       17
                 CXX_STANDARD_REQUIRED               ON
-                ROCM_STANDARD                       20
+                ROCM_STANDARD                       17
                 ROCM_STANDARD_REQUIRED              ON
                 POSITION_INDEPENDENT_CODE           ON
                 INTERFACE_POSITION_INDEPENDENT_CODE ON

@@ -27,7 +27,7 @@
 #include <cugraph/graph_view.hpp>
 #include <cugraph/utilities/host_scalar_comm.hpp>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/count.h>
 #include <thrust/distance.h>
 #include <thrust/iterator/counting_iterator.h>
@@ -83,7 +83,7 @@ rmm::device_uvector<vertex_t> maximal_independent_moves(
                        out_degrees.begin(),
                        out_degrees.end(),
                        ranks.begin(),
-                       cuda::proclaim_return_type<vertex_t>(
+                       hip::proclaim_return_type<vertex_t>(
                          [] __device__(auto) { return std::numeric_limits<vertex_t>::lowest(); }),
                        [] __device__(auto deg) { return deg == 0; });
 

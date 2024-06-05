@@ -92,7 +92,7 @@ rmm::device_uvector<vertex_t> compute_prefix_sum(raft::handle_t const& handle,
 
   auto count_first = thrust::make_transform_iterator(
     thrust::make_counting_iterator(size_t{0}),
-    cuda::proclaim_return_type<vertex_t>(
+    hip::proclaim_return_type<vertex_t>(
       [query_vertices,
        num_edges       = sorted_vertices.size(),
        sorted_vertices = sorted_vertices.begin()] __device__(size_t idx) {

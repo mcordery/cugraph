@@ -19,7 +19,7 @@
 #include <cugraph/graph_functions.hpp>
 #include <cugraph/utilities/shuffle_comm.cuh>
 
-#include <cuda/functional>
+#include <hip/functional>
 
 namespace cugraph {
 namespace detail {
@@ -66,7 +66,7 @@ rmm::device_uvector<value_t> collect_local_vertex_values_from_ext_vertex_value_p
 
   auto vertex_iterator = thrust::make_transform_iterator(
     d_vertices.begin(),
-    cuda::proclaim_return_type<vertex_t>(
+    hip::proclaim_return_type<vertex_t>(
       [local_vertex_first] __device__(vertex_t v) { return v - local_vertex_first; }));
 
   d_local_values.resize(local_vertex_last - local_vertex_first, handle.get_stream());

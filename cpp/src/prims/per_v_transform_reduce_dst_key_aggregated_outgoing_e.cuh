@@ -371,7 +371,7 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
           major_sparse_range_size + *(edge_partition.dcs_nzd_vertex_count()), handle.get_stream());
         auto major_first = thrust::make_transform_iterator(
           thrust::make_counting_iterator(vertex_t{0}),
-          cuda::proclaim_return_type<vertex_t>(
+          hip::proclaim_return_type<vertex_t>(
             [major_sparse_range_size,
              major_range_first = edge_partition.major_range_first(),
              dcs_nzd_vertices  = *(edge_partition.dcs_nzd_vertices())] __device__(vertex_t i) {

@@ -56,7 +56,7 @@
 
 #pragma once
 
-#include <cuda/semaphore>
+#include <hip/semaphore>
 
 #include <cutlass/array.h>
 #include <cutlass/cutlass.h>

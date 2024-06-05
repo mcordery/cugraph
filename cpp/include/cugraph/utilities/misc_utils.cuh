@@ -21,8 +21,8 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/atomic>
-#include <cuda/functional>
+#include <hip/atomic>
+#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/gather.h>
 #include <thrust/iterator/counting_iterator.h>
@@ -46,7 +46,7 @@ std::tuple<std::vector<vertex_t>, std::vector<offset_t>> compute_offset_aligned_
 {
   auto search_offset_first = thrust::make_transform_iterator(
     thrust::make_counting_iterator(size_t{1}),
-    cuda::proclaim_return_type<size_t>(
+    hip::proclaim_return_type<size_t>(
       [approx_element_chunk_size] __device__(auto i) { return i * approx_element_chunk_size; }));
   auto num_chunks = (num_elements + approx_element_chunk_size - 1) / approx_element_chunk_size;
 

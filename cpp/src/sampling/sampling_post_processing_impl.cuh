@@ -28,7 +28,7 @@
 #include <rmm/device_uvector.hpp>
 
 #include <hipcub/hipcub.hpp>
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -436,7 +436,7 @@ compute_min_hop_for_unique_label_vertex_pairs(
 
       auto triplet_first = thrust::make_transform_iterator(
         tmp_indices.begin(),
-        cuda::proclaim_return_type<thrust::tuple<label_index_t, vertex_t, int32_t>>(
+        hip::proclaim_return_type<thrust::tuple<label_index_t, vertex_t, int32_t>>(
           [edgelist_label_offsets = *edgelist_label_offsets,
            edgelist_vertices,
            edgelist_hops = *edgelist_hops] __device__(size_t i) {
@@ -494,7 +494,7 @@ compute_min_hop_for_unique_label_vertex_pairs(
 
       auto input_pair_first = thrust::make_transform_iterator(
         thrust::make_counting_iterator(size_t{0}),
-        cuda::proclaim_return_type<thrust::tuple<label_index_t, vertex_t>>(
+        hip::proclaim_return_type<thrust::tuple<label_index_t, vertex_t>>(
           [edgelist_label_offsets = *edgelist_label_offsets,
            edgelist_vertices      = raft::device_span<vertex_t const>(
              segment_sorted_vertices.data(), segment_sorted_vertices.size())] __device__(size_t i) {
@@ -559,7 +559,7 @@ compute_min_hop_for_unique_label_vertex_pairs(
                                                          handle.get_stream());
       auto input_pair_first = thrust::make_transform_iterator(
         thrust::make_counting_iterator(size_t{0}),
-        cuda::proclaim_return_type<thrust::tuple<label_index_t, vertex_t>>(
+        hip::proclaim_return_type<thrust::tuple<label_index_t, vertex_t>>(
           [seed_vertex_label_offsets = *seed_vertex_label_offsets,
            seed_vertices             = raft::device_span<vertex_t const>(
              segment_sorted_vertices.data(), segment_sorted_vertices.size())] __device__(size_t i) {
@@ -1792,7 +1792,7 @@ renumber_and_compress_sampled_edgelist(
                                                       (*compressed_hops).begin());
           auto value_pair_first = thrust::make_transform_iterator(
             thrust::make_counting_iterator(size_t{0}),
-            cuda::proclaim_return_type<thrust::tuple<label_index_t, int32_t>>(
+            hip::proclaim_return_type<thrust::tuple<label_index_t, int32_t>>(
               [num_hops] __device__(size_t i) {
                 return thrust::make_tuple(static_cast<label_index_t>(i / num_hops),
                                           static_cast<int32_t>(i % num_hops));
@@ -2223,7 +2223,7 @@ renumber_and_sort_sampled_edgelist(
       thrust::make_counting_iterator(size_t{0}),
       thrust::make_counting_iterator(num_labels * num_hops),
       (*edgelist_label_hop_offsets).begin(),
-      cuda::proclaim_return_type<size_t>(
+      hip::proclaim_return_type<size_t>(
         [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
          edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
                                            (*edgelist_hops).data(), (*edgelist_hops).size())
@@ -2349,7 +2349,7 @@ sort_sampled_edgelist(raft::handle_t const& handle,
       thrust::make_counting_iterator(size_t{0}),
       thrust::make_counting_iterator(num_labels * num_hops),
       (*edgelist_label_hop_offsets).begin(),
-      cuda::proclaim_return_type<size_t>(
+      hip::proclaim_return_type<size_t>(
         [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
          edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
                                            (*edgelist_hops).data(), (*edgelist_hops).size())

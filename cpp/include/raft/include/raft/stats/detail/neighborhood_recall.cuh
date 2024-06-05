@@ -27,7 +27,7 @@
 #include <raft/core/resources.hpp>
 
 #include <hipcub/hipcub.hpp>
-#include <cuda/atomic>
+#include <hip/atomic>
 
 #include <cstddef>
 #include <optional>

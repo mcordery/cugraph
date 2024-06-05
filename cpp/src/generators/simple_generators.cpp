@@ -21,7 +21,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/copy.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
@@ -266,7 +266,7 @@ generate_complete_graph_edgelist(
 
     auto transform_iter = thrust::make_transform_iterator(
       thrust::make_counting_iterator<size_t>(0),
-      cuda::proclaim_return_type<thrust::tuple<vertex_t, vertex_t>>(
+      hip::proclaim_return_type<thrust::tuple<vertex_t, vertex_t>>(
         [base_vertex_id, num_vertices, invalid_vertex] __device__(size_t index) {
           size_t graph_index = index / (num_vertices * num_vertices);
           size_t local_index = index % (num_vertices * num_vertices);

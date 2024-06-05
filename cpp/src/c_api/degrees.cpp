@@ -124,7 +124,7 @@ struct degrees_functor : public cugraph::c_api::abstract_functor {
 
         auto vertices_iter = thrust::make_transform_iterator(
           vertex_ids.begin(),
-          cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+          hip::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
             return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
           }));
 

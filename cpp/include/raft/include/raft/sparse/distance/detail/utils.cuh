@@ -21,7 +21,7 @@
 #include <raft/distance/distance_types.hpp>
 
 #include <hipcub/hipcub.hpp>
-#include <cuda_pipeline.h>
+#include <hip_pipeline.h>
 
 namespace raft {
 namespace sparse {

@@ -20,7 +20,7 @@
 #include <raft/core/math.hpp>
 #include <raft/core/operators.hpp>
 
-#include <cuda_bf16.h>
+#include <hip_bf16.h>
 #include <hip/hip_fp16.h>
 #include <math_constants.h>
 

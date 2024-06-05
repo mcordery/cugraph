@@ -38,7 +38,7 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/count.h>
 #include <thrust/extrema.h>
@@ -134,7 +134,7 @@ rmm::device_uvector<edge_t> compute_major_degrees(
                       thrust::make_counting_iterator(vertex_t{0}),
                       thrust::make_counting_iterator(major_hypersparse_first - major_range_first),
                       local_degrees.begin(),
-                      cuda::proclaim_return_type<edge_t>([offsets, masks] __device__(auto i) {
+                      hip::proclaim_return_type<edge_t>([offsets, masks] __device__(auto i) {
                         auto local_degree = offsets[i + 1] - offsets[i];
                         if (masks) {
                           local_degree = static_cast<edge_t>(

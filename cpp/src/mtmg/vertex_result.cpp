@@ -108,7 +108,7 @@ rmm::device_uvector<result_t> vertex_result_view_t<result_t>::gather(
 
   auto iter = thrust::make_transform_iterator(
     local_vertices.begin(),
-    cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+    hip::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
       return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
     }));
 
