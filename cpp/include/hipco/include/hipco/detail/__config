@@ -33,7 +33,7 @@
 
  #pragma once
 
- #include <nv/target>
+ #include <nv/target.h>
 
  #ifdef __HIP_PLATFORM_AMD__
  #include <hipcub/hipcub.hpp>

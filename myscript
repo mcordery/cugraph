@@ -1,4 +1,7 @@
+
+
 cmake ..  \
+    -DCMAKE_CXX_COMPILER=/opt/rocm-6.1.2/bin/hipcc \
     -DUSE_CUGRAPH_OPS=OFF \
     -DBUILD_CUGRAPH_MG_TESTS=OFF \
     -DBUILD_CUGRAPH_MTMG_TESTS=OFF \
