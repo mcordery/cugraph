@@ -164,6 +164,22 @@ else()
     message(FATAL_ERROR "hipsolver not found")
 endif()
 
+#
+# Find libhipcxx
+#
+
+find_package(libhipcxx REQUIRED CONFIG PATHS "/home/mcordery/libhipcxx/install/lib/cmake/libhipcxx" )
+if (libhipcxx_FOUND)
+    message(STATUS "libhipcxx_VERSION ${libhipcxx_VERSION}")
+
+    if( libhipcxx_VERSION VERSION_LESS 1.9)
+        message(FATAL_ERROR "libhipcxx version must be at least 1.9")
+    endif()
+    message(STATUS "libhipcxx found: ${libhipcxx_VERSION}")
+else()
+    message(FATAL_ERROR "libhipcxx not found")
+endif()
+
 
 
 
@@ -203,7 +219,7 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS -x hip -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL  -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_CXX_FLAGS -x hip -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 
 set(THRUST_HOST_SYSTEM THRUST_HOST_SYSTEM_CPP) 
 set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_HIP) 
@@ -219,17 +235,21 @@ list(APPEND ROCGRAPH_CXX_FLAGS  "-DFMT_HEADER_ONLY" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-Wno-unused-result")
 #list(APPEND ROCGRAPH_CXX_FLAGS "-I/usr/include")
 
+
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${HIP_INCLUDE_DIRS}")
+list(APPEND ROCGRAPH_CXX_FLAGS "-I/home/mcordery/libhipcxx/install/include" ) # for hipco
+
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipblas_INCLUDE_DIRS}/hipblas")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsparse_INCLUDE_DIRS}/hipsparse")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${hipsolver_INCLUDE_DIRS}/hipsolver")
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/" )
-list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include" )
+list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include" )
+
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include" )
 list(APPEND ROCGRAPH_CXX_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/include/hipco/include" )
-list(APPEND ROCGRAPH_CXX_FLAGS "-I${HIP_INCLUDE_DIRS}/thrust/system/hip/detail" ) // for #include <nv/target.h> in __config in hipco
+#list(APPEND ROCGRAPH_CXX_FLAGS "-I/home/mcordery/libhipcxx/install/include/hip/std" ) # for hipco
 
 # Option to enable line info in HIP device compilation to allow introspection when profiling /
 # memchecking
@@ -445,6 +465,7 @@ target_link_libraries(rocgraph
         hipsparse
         hiprand
         hipsolver
+        libhipcxx::libhipcxx
     )
 
 ################################################################################
