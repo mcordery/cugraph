@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#include <cuda_fp16.hpp>
+#include <hip_fp16.hpp>
 
 #include <hip/library_types.h>
 

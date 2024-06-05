@@ -26,7 +26,7 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/functional>
+#include <hip/functional>
 #include <thrust/execution_policy.h>
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
@@ -114,7 +114,7 @@ class vector_t {
       buffer_.data(),
       buffer_.data() + buffer_.size(),
       value_type{0},
-      cuda::proclaim_return_type<value_type>([] __device__(auto left, auto right) {
+      hip::proclaim_return_type<value_type>([] __device__(auto left, auto right) {
         auto abs_left  = left > 0 ? left : -left;
         auto abs_right = right > 0 ? right : -right;
         return abs_left + abs_right;

@@ -49,7 +49,7 @@
 
 
 #if defined(__CUDACC_RTC__)
-#include <cuda/std/cmath>
+#include <hip/std/cmath>
 #else
 #include <cmath>
 #endif

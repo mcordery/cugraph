@@ -35,8 +35,8 @@
 #pragma once
 
 #if defined(__CUDACC_RTC__)
-#include <cuda/std/cassert>
-#include <cuda/std/cstdint>
+#include <hip/std/cassert>
+#include <hip/std/cstdint>
 #else
 #include <assert.h>
 #include <stdint.h>

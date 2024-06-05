@@ -63,8 +63,8 @@ reduction
 #pragma once
 
 #if defined(__CUDACC_RTC__)
-#include <cuda/std/cassert>
-#include <cuda/std/utility>
+#include <hip/std/cassert>
+#include <hip/std/utility>
 #else
 #include <assert.h>
 

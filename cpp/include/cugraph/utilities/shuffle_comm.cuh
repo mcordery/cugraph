@@ -25,7 +25,6 @@
 
 #include <hip/atomic> 
 #include <hip/functional> 
-#include <atomic>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>

@@ -409,7 +409,7 @@ set(ROCGRAPH_SOURCES
       src/community/triangle_count_mg.cpp
       src/traversal/k_hop_nbrs_sg.cpp
       src/traversal/k_hop_nbrs_mg.cpp
-      src/mtmg/vertex_result.cpp
+     src/mtmg/vertex_result.cpp
 )
 
 

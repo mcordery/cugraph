@@ -24,7 +24,7 @@
 #include <raft/util/cache.hpp>
 #include <raft/util/cuda_data_type.hpp>
 
-#include <cuda_fp16.hpp>
+#include <hip_fp16.hpp>
 
 #include <cublasLt.h>
 

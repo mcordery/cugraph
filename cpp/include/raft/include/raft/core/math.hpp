@@ -23,7 +23,7 @@
 #include <type_traits>
 
 #if defined(_RAFT_HAS_CUDA)
-//#include <cuda_bf16.h>
+//#include <hip_bf16.h>
 #include <hip/hip_bfloat16.h>
 #endif
 

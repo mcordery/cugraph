@@ -32,7 +32,7 @@
 #pragma once
 
 #if defined(__CUDACC_RTC__)
-#include <cuda/std/cstdint>
+#include <hip/std/cstdint>
 #else
 #include <cstdint>
 #include <cmath>

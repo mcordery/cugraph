@@ -33,7 +33,7 @@
 #include <hip/hip_complex.h>
 
 #if defined(__CUDACC_RTC__)
-#include <cuda/std/cstdint>
+#include <hip/std/cstdint>
 #else
 #include <cstdint>
 #endif
