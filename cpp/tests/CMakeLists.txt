@@ -18,6 +18,9 @@ enable_testing()
 
 ###################################################################################################
 # - set a path to the dataset for testing ----------------------------------------------------------------------
+# I am leaving the name RAPIDS_DATASET_ROOT_DIR for now but this no longer has anything to do with rapids-cmake.
+# It is simply the base path where tests are looking for their input using the get_rapids_dataset_root_dir function
+# in misc_utulities.hpp
 if(RAPIDS_DATASET_ROOT_DIR)
     message(STATUS "setting default RAPIDS_DATASET_ROOT_DIR to: ${RAPIDS_DATASET_ROOT_DIR}")
     string(CONCAT CMAKE_C_FLAGS ${CMAKE_C_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
