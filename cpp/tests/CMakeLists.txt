@@ -17,7 +17,7 @@
 enable_testing()
 
 ###################################################################################################
-# - set rapids dataset path ----------------------------------------------------------------------
+# - set a path to the dataset for testing ----------------------------------------------------------------------
 if(RAPIDS_DATASET_ROOT_DIR)
     message(STATUS "setting default RAPIDS_DATASET_ROOT_DIR to: ${RAPIDS_DATASET_ROOT_DIR}")
     string(CONCAT CMAKE_C_FLAGS ${CMAKE_C_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
@@ -720,14 +720,6 @@ ConfigureCTest(CAPI_TRIANGLE_COUNT_TEST c_api/triangle_count_test.c)
 ConfigureCTest(CAPI_LOUVAIN_TEST c_api/louvain_test.c)
 ConfigureCTest(CAPI_LEIDEN_TEST c_api/leiden_test.c)
 ConfigureCTest(CAPI_ECG_TEST c_api/ecg_test.c)
-#############################################################################
-# Skipping due to CUDA 12.2 failure that traces back to RAFT                #
-# TODO: Uncomment this once the issue is fixed.                             #
-#                                                                           #
-# xref: https://github.com/rapidsai/cugraph/issues/4173                     #
-# xref: https://github.com/rapidsai/raft/issues/2186                        #
-#############################################################################
-# ConfigureCTest(CAPI_LEGACY_SPECTRAL_TEST c_api/legacy_spectral_test.c)
 ConfigureCTest(CAPI_LEGACY_ECG_TEST c_api/legacy_ecg_test.c)
 ConfigureCTest(CAPI_CORE_NUMBER_TEST c_api/core_number_test.c)
 ConfigureCTest(CAPI_SIMILARITY_TEST c_api/similarity_test.c)
