@@ -16,9 +16,6 @@
 #=============================================================================
 enable_testing()
 
-# include(rapids-test)
-# rapids_test_init()
-
 ###################################################################################################
 # - set rapids dataset path ----------------------------------------------------------------------
 if(RAPIDS_DATASET_ROOT_DIR)
@@ -171,14 +168,10 @@ function(ConfigureTest CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    # rapids_test_add(
-    #     NAME ${CMAKE_TEST_NAME}
-    #     COMMAND ${CMAKE_TEST_NAME}
-    #     GPUS ${_CUGRAPH_TEST_GPUS}
-    #     PERCENT ${_CUGRAPH_TEST_PERCENT}
-    #     INSTALL_COMPONENT_SET testing
-    # )
-    # set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH")
+    add_test(   
+        NAME ${CMAKE_TEST_NAME}
+        COMMAND ${CMAKE_TEST_NAME}
+    )
 endfunction()
 
 function(ConfigureTestMG CMAKE_TEST_NAME)
@@ -197,21 +190,10 @@ function(ConfigureTestMG CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    # rapids_test_add(
-    #     NAME ${CMAKE_TEST_NAME}
-    #     COMMAND ${MPIEXEC_EXECUTABLE}
-    #          "--noprefix"
-    #          ${MPIEXEC_NUMPROC_FLAG}
-    #          ${GPU_COUNT}
-    #          ${MPIEXEC_PREFLAGS}
-    #          ${CMAKE_TEST_NAME}
-    #          ${MPIEXEC_POSTFLAGS}
-    #     GPUS ${GPU_COUNT}
-    #     PERCENT 100
-    #     INSTALL_COMPONENT_SET testing_mg
-    # )
-    # set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_MG")
-
+    add_test(   
+        NAME ${CMAKE_TEST_NAME}
+        COMMAND ${CMAKE_TEST_NAME}
+    )
 endfunction()
 
 function(ConfigureCTest CMAKE_TEST_NAME)
@@ -243,15 +225,10 @@ function(ConfigureCTest CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    # rapids_test_add(
-    #     NAME ${CMAKE_TEST_NAME}
-    #     COMMAND ${CMAKE_TEST_NAME}
-    #     GPUS ${_CUGRAPH_TEST_GPUS}
-    #     PERCENT ${_CUGRAPH_TEST_PERCENT}
-    #     INSTALL_COMPONENT_SET testing_c
-    # )
-    # set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_C")
-
+    add_test(   
+        NAME ${CMAKE_TEST_NAME}
+        COMMAND ${CMAKE_TEST_NAME}
+    )
 endfunction()
 
 function(ConfigureCTestMG CMAKE_TEST_NAME)
@@ -271,22 +248,10 @@ function(ConfigureCTestMG CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    # rapids_test_add(
-    #     NAME ${CMAKE_TEST_NAME}
-    #     COMMAND ${MPIEXEC_EXECUTABLE}
-    #          "--noprefix"
-    #          ${MPIEXEC_NUMPROC_FLAG}
-    #          ${GPU_COUNT}
-    #          ${MPIEXEC_PREFLAGS}
-    #          ${CMAKE_TEST_NAME}
-    #          ${MPIEXEC_POSTFLAGS}
-    #     GPUS ${GPU_COUNT}
-    #     PERCENT 100
-    #     INSTALL_COMPONENT_SET testing_mg
-    # )
-    # set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_C_MG")
-
-
+    add_test(   
+        NAME ${CMAKE_TEST_NAME}
+        COMMAND ${CMAKE_TEST_NAME}
+    )
 endfunction()
 
 ###################################################################################################
@@ -489,11 +454,6 @@ ConfigureTest(TRIANGLE_COUNT_TEST community/triangle_count_test.cpp)
 ###################################################################################################
 # - K-hop Neighbors tests -------------------------------------------------------------------------
 ConfigureTest(K_HOP_NBRS_TEST traversal/k_hop_nbrs_test.cpp)
-
-
-###################################################################################################
-# - install tests ---------------------------------------------------------------------------------
-# rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing DESTINATION bin/gtests/libcugraph)
 
 
 ###################################################################################################
@@ -735,9 +695,6 @@ if(BUILD_CUGRAPH_MG_TESTS)
     ConfigureCTestMG(MG_CAPI_DEGREES c_api/mg_degrees_test.c)
     ConfigureCTestMG(MG_CAPI_EGONET_TEST c_api/mg_egonet_test.c)
     ConfigureCTestMG(MG_CAPI_TWO_HOP_NEIGHBORS_TEST c_api/mg_two_hop_neighbors_test.c)
-
-    rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing_mg DESTINATION bin/gtests/libcugraph_mg)
-
 endif()
 
 ###################################################################################################
@@ -828,5 +785,3 @@ if (BUILD_CUGRAPH_MTMG_TESTS)
                              )
     endif(BUILD_CUGRAPH_MG_TESTS)
 endif(BUILD_CUGRAPH_MTMG_TESTS)
-
-# rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing_c DESTINATION bin/gtests/libcugraph_c)
