@@ -276,9 +276,9 @@ __global__ static void multi_partition_copy(
     if (threadIdx.x == (blockDim.x - 1)) {
       for (int32_t i = 0; i < num_partitions; ++i) {
         auto increment = static_cast<size_t>(tmp_intra_block_offsets[i] + tmp_counts[i]);
-        cuda::atomic_ref<size_t, cuda::thread_scope_device> atomic_counter(partition_counters[i]);
+        hip::atomic_ref<size_t, hip::thread_scope_device> atomic_counter(partition_counters[i]);
         block_start_offsets[i] =
-          atomic_counter.fetch_add(increment, cuda::std::memory_order_relaxed);
+          atomic_counter.fetch_add(increment, hip::std::memory_order_relaxed);
       }
     }
     __syncthreads();

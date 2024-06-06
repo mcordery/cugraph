@@ -157,7 +157,7 @@ __device__ void __augment(vertex_t* d_row_assignments,
 
 // Kernel for reducing the rows by subtracting row minimum from each row element.
 //  FIXME:  Once cuda 10.2 is the standard should replace passing infinity
-//          here with using cuda::std::numeric_limits<weight_t>::max()
+//          here with using hip::std::numeric_limits<weight_t>::max()
 template <typename vertex_t, typename weight_t>
 RAFT_KERNEL kernel_rowReduction(
   weight_t const* d_costs, weight_t* d_row_duals, int SP, vertex_t N, weight_t infinity)
@@ -179,7 +179,7 @@ RAFT_KERNEL kernel_rowReduction(
 
 // Kernel for reducing the column by subtracting column minimum from each column element.
 //  FIXME:  Once cuda 10.2 is the standard should replace passing infinity
-//          here with using cuda::std::numeric_limits<weight_t>::max()
+//          here with using hip::std::numeric_limits<weight_t>::max()
 template <typename vertex_t, typename weight_t>
 RAFT_KERNEL kernel_columnReduction(weight_t const* d_costs,
                                    weight_t const* d_row_duals,
@@ -438,7 +438,7 @@ RAFT_KERNEL kernel_augmentation(vertex_t* d_row_assignments,
 
 // Kernel for updating the dual values in Step 5.
 //  FIXME:  Once cuda 10.2 is the standard should replace passing infinity
-//          here with using cuda::std::numeric_limits<weight_t>::max()
+//          here with using hip::std::numeric_limits<weight_t>::max()
 template <typename vertex_t, typename weight_t>
 RAFT_KERNEL kernel_dualUpdate_1(weight_t* d_sp_min,
                                 weight_t const* d_col_slacks,
@@ -466,7 +466,7 @@ RAFT_KERNEL kernel_dualUpdate_1(weight_t* d_sp_min,
 
 // Kernel for updating the dual values in Step 5.
 //  FIXME:  Once cuda 10.2 is the standard should replace passing infinity
-//          here with using cuda::std::numeric_limits<weight_t>::max()
+//          here with using hip::std::numeric_limits<weight_t>::max()
 template <typename vertex_t, typename weight_t>
 RAFT_KERNEL kernel_dualUpdate_2(weight_t const* d_sp_min,
                                 weight_t* d_row_duals,

@@ -101,11 +101,11 @@ struct kv_hipco_insert_and_increment_t {
     auto pair             = thrust::make_tuple(*(key_first + i), size_t{0} /* dummy */);
     auto [iter, inserted] = device_ref.insert_and_find(pair);
     if (inserted) {
-      cuda::atomic_ref<size_t, cuda::thread_scope_device> atomic_counter(*counter);
-      auto idx = atomic_counter.fetch_add(size_t{1}, cuda::std::memory_order_relaxed);
-      cuda::atomic_ref<typename RefType::mapped_type, cuda::thread_scope_device> ref(
+      hip::atomic_ref<size_t, hip::thread_scope_device> atomic_counter(*counter);
+      auto idx = atomic_counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed);
+      hip::atomic_ref<typename RefType::mapped_type, hip::thread_scope_device> ref(
         (*iter).second);
-      ref.store(idx, cuda::std::memory_order_relaxed);
+      ref.store(idx, hip::std::memory_order_relaxed);
       return idx;
     } else {
       return invalid_idx;
@@ -129,11 +129,11 @@ struct kv_hipco_insert_if_and_increment_t {
     auto pair             = thrust::make_tuple(*(key_first + i), size_t{0} /* dummy */);
     auto [iter, inserted] = device_ref.insert_and_find(pair);
     if (inserted) {
-      cuda::atomic_ref<size_t, cuda::thread_scope_device> atomic_counter(*counter);
-      auto idx = atomic_counter.fetch_add(size_t{1}, cuda::std::memory_order_relaxed);
-      cuda::atomic_ref<typename RefType::mapped_type, cuda::thread_scope_device> ref(
+      hip::atomic_ref<size_t, hip::thread_scope_device> atomic_counter(*counter);
+      auto idx = atomic_counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed);
+      hip::atomic_ref<typename RefType::mapped_type, hip::thread_scope_device> ref(
         (*iter).second);
-      ref.store(idx, cuda::std::memory_order_relaxed);
+      ref.store(idx, hip::std::memory_order_relaxed);
       return idx;
     } else {
       return invalid_idx;
@@ -149,9 +149,9 @@ struct kv_hipco_insert_and_assign_t {
   {
     auto [iter, inserted] = device_ref.insert_and_find(pair);
     if (!inserted) {
-      cuda::atomic_ref<typename RefType::mapped_type, cuda::thread_scope_device> ref(
+      hip::atomic_ref<typename RefType::mapped_type, hip::thread_scope_device> ref(
         (*iter).second);
-      ref.store(thrust::get<1>(pair), cuda::std::memory_order_relaxed);
+      ref.store(thrust::get<1>(pair), hip::std::memory_order_relaxed);
     }
   }
 };
@@ -309,7 +309,7 @@ class kv_hipco_store_view_t {
     hipco::static_map<key_t,
                      std::conditional_t<std::is_arithmetic_v<value_type>, value_type, size_t>,
                      hipco::extent<std::size_t>,
-                     cuda::thread_scope_device,
+                     hip::thread_scope_device,
                      thrust::equal_to<key_t>,
                      hipco::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
@@ -505,7 +505,7 @@ class kv_hipco_store_t {
     hipco::static_map<key_t,
                      std::conditional_t<std::is_arithmetic_v<value_t>, value_t, size_t>,
                      hipco::extent<std::size_t>,
-                     cuda::thread_scope_device,
+                     hip::thread_scope_device,
                      thrust::equal_to<key_t>,
                      hipco::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
@@ -571,7 +571,7 @@ class kv_hipco_store_t {
       size_ += hipco_store_->insert(pair_first, pair_first + num_keys, stream.value());
     } else {
       auto old_store_value_size = size_optional_dataframe_buffer<value_t>(store_values_);
-      // FIXME: we can use cuda::atomic instead but currently on a system with x86 + GPU, this
+      // FIXME: we can use hip::atomic instead but currently on a system with x86 + GPU, this
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);
@@ -616,7 +616,7 @@ class kv_hipco_store_t {
         pair_first, pair_first + num_keys, stencil_first, pred_op, stream.value());
     } else {
       auto old_store_value_size = size_optional_dataframe_buffer<value_t>(store_values_);
-      // FIXME: we can use cuda::atomic instead but currently on a system with x86 + GPU, this
+      // FIXME: we can use hip::atomic instead but currently on a system with x86 + GPU, this
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);
@@ -675,7 +675,7 @@ class kv_hipco_store_t {
       size_ += num_keys;
     } else {
       auto old_store_value_size = size_optional_dataframe_buffer<value_t>(store_values_);
-      // FIXME: we can use cuda::atomic instead but currently on a system with x86 + GPU, this
+      // FIXME: we can use hip::atomic instead but currently on a system with x86 + GPU, this
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);

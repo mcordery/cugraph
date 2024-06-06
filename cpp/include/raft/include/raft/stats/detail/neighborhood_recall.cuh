@@ -83,7 +83,7 @@ RAFT_KERNEL neighborhood_recall(
 
   // Reduce across all rows for global score
   if (lane_idx == 0) {
-    cuda::atomic_ref<ScalarType, cuda::thread_scope_device> device_recall_score{
+    hip::atomic_ref<ScalarType, hip::thread_scope_device> device_recall_score{
       *recall_score.data_handle()};
     std::size_t const total_count = indices.extent(0) * indices.extent(1);
     device_recall_score.fetch_add(row_recall_score / total_count);

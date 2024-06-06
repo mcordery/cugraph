@@ -212,7 +212,7 @@ auto to_thrust_iterator_tuple(Iterator iter)
 }
 
 // a temporary function to emulate thrust::tuple_cat (not supported) using std::tuple_cat (should
-// retire once thrust::tuple is replaced with cuda::std::tuple)
+// retire once thrust::tuple is replaced with hip::std::tuple)
 template <typename... TupleTypes>
 auto thrust_tuple_cat(TupleTypes... tups)
 {

@@ -86,7 +86,7 @@ template <typename T>
 int countUnique(const T* arr, int size, T& minLabel, T& maxLabel, hipStream_t stream)
 {
   auto ptr         = thrust::device_pointer_cast(arr);
-  auto minmax      = thrust::minmax_element(thrust::cuda::par.on(stream), ptr, ptr + size);
+  auto minmax      = thrust::minmax_element(thrust::hip::par.on(stream), ptr, ptr + size);
   minLabel         = *minmax.first;
   maxLabel         = *minmax.second;
   auto totalLabels = int(maxLabel - minLabel + 1);

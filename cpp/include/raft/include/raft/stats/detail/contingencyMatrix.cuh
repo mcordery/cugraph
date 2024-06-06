@@ -192,7 +192,7 @@ void getInputClassCardinality(
 {
   thrust::device_ptr<const T> dTrueLabel = thrust::device_pointer_cast(groundTruth);
   auto min_max =
-    thrust::minmax_element(thrust::cuda::par.on(stream), dTrueLabel, dTrueLabel + nSamples);
+    thrust::minmax_element(thrust::hip::par.on(stream), dTrueLabel, dTrueLabel + nSamples);
   minLabel = *min_max.first;
   maxLabel = *min_max.second;
 }

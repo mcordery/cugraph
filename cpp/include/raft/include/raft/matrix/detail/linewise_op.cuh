@@ -101,7 +101,7 @@ struct Linewise {
   {
     constexpr IdxType warpPad = (AlignWarp::Value - 1) * VecElems;
     constexpr auto index      = std::index_sequence_for<Vecs...>();
-    // todo(lsugy): switch to cuda::std::tuple from libcudacxx if we add it as a required
+    // todo(lsugy): switch to hip::std::tuple from libcudacxx if we add it as a required
     // dependency. Note that thrust::tuple is limited to 10 elements.
     thrust::tuple<Vecs...> args;
     Vec v, w;

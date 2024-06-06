@@ -78,8 +78,8 @@ math_t r2_score(math_t* y, math_t* y_hat, int n, hipStream_t stream)
   thrust::device_ptr<math_t> d_sse  = thrust::device_pointer_cast(sse_arr.data());
   thrust::device_ptr<math_t> d_ssto = thrust::device_pointer_cast(ssto_arr.data());
 
-  math_t sse  = thrust::reduce(thrust::cuda::par.on(stream), d_sse, d_sse + n);
-  math_t ssto = thrust::reduce(thrust::cuda::par.on(stream), d_ssto, d_ssto + n);
+  math_t sse  = thrust::reduce(thrust::hip::par.on(stream), d_sse, d_sse + n);
+  math_t ssto = thrust::reduce(thrust::hip::par.on(stream), d_ssto, d_ssto + n);
 
   return 1.0 - sse / ssto;
 }
@@ -106,7 +106,7 @@ float accuracy_score(const math_t* predictions,
   raft::linalg::eltwiseSub(diffs_array.data(), predictions, ref_predictions, n, stream);
   RAFT_CUDA_TRY(hipGetLastError());
   correctly_predicted =
-    thrust::count(thrust::cuda::par.on(stream), diffs_array.data(), diffs_array.data() + n, 0);
+    thrust::count(thrust::hip::par.on(stream), diffs_array.data(), diffs_array.data() + n, 0);
 
   float accuracy = correctly_predicted * 1.0f / n;
   return accuracy;

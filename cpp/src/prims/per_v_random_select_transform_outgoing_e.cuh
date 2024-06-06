@@ -130,8 +130,8 @@ struct convert_pair_to_quadruplet_t {
             thrust::seq, displacement_first, displacement_first + minor_comm_size, nbr_idx))) -
         1;
       local_nbr_idx -= *(displacement_first + minor_comm_rank);
-      cuda::atomic_ref<size_t, cuda::thread_scope_device> counter(tx_counts[minor_comm_rank]);
-      intra_partition_offset = counter.fetch_add(size_t{1}, cuda::std::memory_order_relaxed);
+      hip::atomic_ref<size_t, hip::thread_scope_device> counter(tx_counts[minor_comm_rank]);
+      intra_partition_offset = counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed);
     }
     return thrust::make_tuple(minor_comm_rank, intra_partition_offset, local_nbr_idx, key_idx);
   }
@@ -304,8 +304,8 @@ struct count_t {
 
   __device__ size_t operator()(size_t key_idx) const
   {
-    cuda::atomic_ref<int32_t, cuda::thread_scope_device> counter(sample_counts[key_idx]);
-    return counter.fetch_add(int32_t{1}, cuda::std::memory_order_relaxed);
+    hip::atomic_ref<int32_t, hip::thread_scope_device> counter(sample_counts[key_idx]);
+    return counter.fetch_add(int32_t{1}, hip::std::memory_order_relaxed);
   }
 };
 
@@ -372,7 +372,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_mid_local_degree(
           ? static_cast<edge_t>(count_set_bits(
               edge_partition_e_mask.value_first(),
               edge_offset + packed_bools_per_word() * j,
-              cuda::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
+              hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
           : edge_t{0};
       WarpScan(temp_storage).InclusiveSum(inc, inc);
       inclusive_sums[start_offset + j] = sum + inc;
@@ -427,7 +427,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_high_local_degree(
           ? static_cast<edge_t>(count_set_bits(
               edge_partition_e_mask.value_first(),
               edge_offset + packed_bools_per_word() * j,
-              cuda::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
+              hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
           : edge_t{0};
       BlockScan(temp_storage).InclusiveSum(inc, inc);
       inclusive_sums[start_offset + j] = sum + inc;
@@ -534,7 +534,7 @@ compute_valid_local_nbr_count_inclusive_sums(
         sum += count_set_bits(
           edge_partition_e_mask.value_first(),
           edge_offset + packed_bools_per_word() * j,
-          cuda::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j));
+          hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j));
         inclusive_sums[start_offset + j] = sum;
       }
     });

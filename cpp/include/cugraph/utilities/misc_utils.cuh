@@ -126,8 +126,8 @@ rmm::device_uvector<idx_t> expand_sparse_offsets(raft::device_span<offset_t cons
       [results =
          raft::device_span<idx_t>(results.data(), results.size())] __device__(offset_t offset) {
         if (offset < static_cast<offset_t>(results.size())) {
-          cuda::atomic_ref<idx_t, cuda::thread_scope_device> atomic_counter(results[offset]);
-          atomic_counter.fetch_add(idx_t{1}, cuda::std::memory_order_relaxed);
+          hip::atomic_ref<idx_t, hip::thread_scope_device> atomic_counter(results[offset]);
+          atomic_counter.fetch_add(idx_t{1}, hip::std::memory_order_relaxed);
         }
       });
     thrust::inclusive_scan(

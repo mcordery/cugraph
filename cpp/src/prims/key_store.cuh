@@ -151,7 +151,7 @@ class key_hipco_store_view_t {
   using hipco_set_type =
     hipco::static_set<key_t,
                      hipco::extent<std::size_t>,
-                     cuda::thread_scope_device,
+                     hip::thread_scope_device,
                      thrust::equal_to<key_t>,
                      hipco::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
@@ -242,7 +242,7 @@ class key_hipco_store_t {
   using hipco_set_type =
     hipco::static_set<key_t,
                      hipco::extent<std::size_t>,
-                     cuda::thread_scope_device,
+                     hip::thread_scope_device,
                      thrust::equal_to<key_t>,
                      hipco::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,

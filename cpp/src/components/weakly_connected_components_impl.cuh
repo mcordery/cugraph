@@ -223,7 +223,7 @@ struct v_op_t {
   vertex_type* level_components{};
   decltype(thrust::make_zip_iterator(thrust::make_tuple(
     static_cast<vertex_type*>(nullptr), static_cast<vertex_type*>(nullptr)))) edge_buffer_first{};
-  // FIXME: we can use cuda::atomic instead but currently on a system with x86 + GPU, this requires
+  // FIXME: we can use hip::atomic instead but currently on a system with x86 + GPU, this requires
   // placing the atomic variable on managed memory and this adds additional complication.
   size_t* num_edge_inserts{};
   size_t bucket_idx_next{};
@@ -237,9 +237,9 @@ struct v_op_t {
     auto tag = thrust::get<1>(tagged_v);
     auto v_offset =
       vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(thrust::get<0>(tagged_v));
-    cuda::atomic_ref<vertex_type> v_component(*(level_components + v_offset));
+    hip::atomic_ref<vertex_type> v_component(*(level_components + v_offset));
     auto old     = invalid_component_id<vertex_type>::value;
-    bool success = v_component.compare_exchange_strong(old, tag, cuda::std::memory_order_relaxed);
+    bool success = v_component.compare_exchange_strong(old, tag, hip::std::memory_order_relaxed);
     if (!success && (old != tag)) {  // conflict
       return thrust::make_tuple(thrust::optional<size_t>{bucket_idx_conflict},
                                 thrust::optional<std::byte>{std::byte{0}} /* dummy */);
@@ -477,7 +477,7 @@ void weakly_connected_components_impl(raft::handle_t const& handle,
 
     auto edge_buffer =
       allocate_dataframe_buffer<thrust::tuple<vertex_t, vertex_t>>(0, handle.get_stream());
-    // FIXME: we can use cuda::atomic instead but currently on a system with x86 + GPU, this
+    // FIXME: we can use hip::atomic instead but currently on a system with x86 + GPU, this
     // requires placing the atomic variable on managed memory and this adds additional complication.
     rmm::device_scalar<size_t> num_edge_inserts(size_t{0}, handle.get_stream());
 

@@ -44,10 +44,10 @@ template <typename value_idx, typename value_t, int tpb>
 class hash_strategy : public coo_spmv_strategy<value_idx, value_t, tpb> {
  public:
   using insert_type = typename hipco::experimental::
-    static_map<value_idx, value_t, cuda::thread_scope_block>::device_mutable_view;
+    static_map<value_idx, value_t, hip::thread_scope_block>::device_mutable_view;
   using smem_type = typename insert_type::slot_type*;
   using find_type =
-    typename hipco::experimental::static_map<value_idx, value_t, cuda::thread_scope_block>::device_view;
+    typename hipco::experimental::static_map<value_idx, value_t, hip::thread_scope_block>::device_view;
 
   hash_strategy(const distances_config_t<value_idx, value_t>& config_,
                 float capacity_threshold_ = 0.5,

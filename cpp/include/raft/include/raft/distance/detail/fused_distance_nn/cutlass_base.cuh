@@ -49,7 +49,7 @@ namespace distance {
 namespace detail {
 
 template <typename IdxT>
-RAFT_KERNEL initBinMutexKernel(cuda::binary_semaphore<cuda::thread_scope_device>* mut, IdxT m)
+RAFT_KERNEL initBinMutexKernel(hip::binary_semaphore<hip::thread_scope_device>* mut, IdxT m)
 {
   auto tid = IdxT(blockIdx.x) * blockDim.x + threadIdx.x;
 
@@ -97,7 +97,7 @@ void cutlassFusedDistanceNN(const DataT* x,
     KVPReduceOpT>;
   constexpr int batch_count = 1;
 
-  rmm::device_uvector<cuda::binary_semaphore<cuda::thread_scope_device>> bin_mutex(m, stream);
+  rmm::device_uvector<hip::binary_semaphore<hip::thread_scope_device>> bin_mutex(m, stream);
 
   int blks_ = (m / 256) + 1;
 

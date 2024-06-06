@@ -123,7 +123,7 @@ class FusedDistanceNNEpilogueElementwise {
     KVPReduceOpT_ pair_redop_;
     ReduceOpT_ red_op_;
     int* mutexes_;
-    cuda::binary_semaphore<cuda::thread_scope_device>* bin_mutex_;
+    hip::binary_semaphore<hip::thread_scope_device>* bin_mutex_;
     using CGReduceT = CGReduceOp_;
     //
     // Methods
@@ -134,7 +134,7 @@ class FusedDistanceNNEpilogueElementwise {
            ReduceOpT_ red_op,
            KVPReduceOpT_ pair_redop,
            int* mutexes,
-           cuda::binary_semaphore<cuda::thread_scope_device>* bin_mutex)
+           hip::binary_semaphore<hip::thread_scope_device>* bin_mutex)
       : cg_reduce_op(cg_reduce_op),
         dist_op_(dist_op),
         pair_redop_(pair_redop),

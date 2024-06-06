@@ -96,7 +96,7 @@ template <typename BufferKeyOutputIterator,
 __device__ void warp_push_buffer_elements(
   BufferKeyOutputIterator buffer_key_output_first,
   BufferValueOutputIterator buffer_value_output_first,
-  cuda::atomic_ref<size_t, cuda::thread_scope_device>& buffer_idx,
+  hip::atomic_ref<size_t, hip::thread_scope_device>& buffer_idx,
   int lane_id,
   e_op_result_t e_op_result)
 {
@@ -105,7 +105,7 @@ __device__ void warp_push_buffer_elements(
     size_t warp_buffer_start_idx{};
     if (lane_id == 0) {
       auto increment        = __popc(ballot);
-      warp_buffer_start_idx = buffer_idx.fetch_add(increment, cuda::std::memory_order_relaxed);
+      warp_buffer_start_idx = buffer_idx.fetch_add(increment, hip::std::memory_order_relaxed);
     }
     warp_buffer_start_idx = __shfl_sync(raft::warp_full_mask(), warp_buffer_start_idx, int{0});
     if (e_op_result) {
@@ -164,7 +164,7 @@ __global__ static void extract_transform_v_frontier_e_hypersparse_or_low_degree(
   }
   auto idx = static_cast<size_t>(tid);
 
-  cuda::atomic_ref<size_t, cuda::thread_scope_device> buffer_idx(*buffer_idx_ptr);
+  hip::atomic_ref<size_t, hip::thread_scope_device> buffer_idx(*buffer_idx_ptr);
 
   __shared__ edge_t
     warp_local_degree_inclusive_sums[extract_transform_v_frontier_e_kernel_block_size];
@@ -331,7 +331,7 @@ __global__ static void extract_transform_v_frontier_e_mid_degree(
   auto const lane_id = tid % raft::warp_size();
   auto idx           = static_cast<size_t>(tid / raft::warp_size());
 
-  cuda::atomic_ref<size_t, cuda::thread_scope_device> buffer_idx(*buffer_idx_ptr);
+  hip::atomic_ref<size_t, hip::thread_scope_device> buffer_idx(*buffer_idx_ptr);
 
   while (idx < static_cast<size_t>(thrust::distance(key_first, key_last))) {
     auto key = *(key_first + idx);
@@ -430,7 +430,7 @@ __global__ static void extract_transform_v_frontier_e_high_degree(
   auto const lane_id = threadIdx.x % raft::warp_size();
   auto idx           = static_cast<size_t>(blockIdx.x);
 
-  cuda::atomic_ref<size_t, cuda::thread_scope_device> buffer_idx(*buffer_idx_ptr);
+  hip::atomic_ref<size_t, hip::thread_scope_device> buffer_idx(*buffer_idx_ptr);
 
   while (idx < static_cast<size_t>(thrust::distance(key_first, key_last))) {
     auto key = *(key_first + idx);

@@ -1655,9 +1655,9 @@ renumber_and_compress_sampled_edgelist(
             }
             if (label_start_offset < label_end_offset) {
               min_vertices[l_idx * num_hops] =
-                cuda::std::min(min_vertices[l_idx * num_hops], seed_vertices[label_start_offset]);
+                hip::std::min(min_vertices[l_idx * num_hops], seed_vertices[label_start_offset]);
               max_vertices[l_idx * num_hops] =
-                cuda::std::max(max_vertices[l_idx * num_hops], seed_vertices[label_end_offset - 1]);
+                hip::std::max(max_vertices[l_idx * num_hops], seed_vertices[label_end_offset - 1]);
             }
           });
       }
@@ -1897,7 +1897,7 @@ renumber_and_compress_sampled_edgelist(
           }
         }
 
-        return cuda::std::max(num_vertices_from_edgelist, num_vertices_from_seed_vertices);
+        return hip::std::max(num_vertices_from_edgelist, num_vertices_from_seed_vertices);
       });
 
     std::optional<rmm::device_uvector<vertex_t>> minor_vertex_counts{std::nullopt};
@@ -1926,10 +1926,10 @@ renumber_and_compress_sampled_edgelist(
                            size_t end_offset = compressed_offsets[nzd_v_idx + 1];
                            auto l_idx        = thrust::get<0>(triplet);
                            auto h            = thrust::get<1>(triplet);
-                           cuda::atomic_ref<vertex_t, cuda::thread_scope_device> minor_vertex_count(
+                           hip::atomic_ref<vertex_t, hip::thread_scope_device> minor_vertex_count(
                              minor_vertex_counts[l_idx * num_hops + h]);
                            minor_vertex_count.fetch_max(edgelist_minors[end_offset - 1] + 1,
-                                                        cuda::std::memory_order_relaxed);
+                                                        hip::std::memory_order_relaxed);
                          });
       } else {
         auto pair_first = thrust::make_zip_iterator((*compressed_hops).begin(),
@@ -1947,10 +1947,10 @@ renumber_and_compress_sampled_edgelist(
                            auto nzd_v_idx    = thrust::get<1>(pair);
                            size_t end_offset = compressed_offsets[nzd_v_idx + 1];
                            auto h            = thrust::get<0>(pair);
-                           cuda::atomic_ref<vertex_t, cuda::thread_scope_device> minor_vertex_count(
+                           hip::atomic_ref<vertex_t, hip::thread_scope_device> minor_vertex_count(
                              minor_vertex_counts[h]);
                            minor_vertex_count.fetch_max(edgelist_minors[end_offset - 1] + 1,
-                                                        cuda::std::memory_order_relaxed);
+                                                        hip::std::memory_order_relaxed);
                          });
       }
     }
@@ -1974,8 +1974,8 @@ renumber_and_compress_sampled_edgelist(
         if (num_hops > 1) {
           if (compress_per_hop) {
             for (size_t j = (i - (i % num_hops)); j < i; ++j) {
-              vertex_count = cuda::std::max(vertex_count, major_vertex_counts[j]);
-              vertex_count = cuda::std::max(vertex_count, (*minor_vertex_counts)[j]);
+              vertex_count = hip::std::max(vertex_count, major_vertex_counts[j]);
+              vertex_count = hip::std::max(vertex_count, (*minor_vertex_counts)[j]);
             }
           } else {
             if (i % num_hops != 0) { vertex_count -= major_vertex_counts[i - 1]; }

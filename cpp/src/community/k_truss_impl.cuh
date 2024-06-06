@@ -76,8 +76,8 @@ struct unroll_edge {
       assert(*itr == pair);
       idx = thrust::distance(transposed_valid_edge_first, itr);
     }
-    cuda::atomic_ref<edge_t, cuda::thread_scope_device> atomic_counter(num_triangles[idx]);
-    auto r = atomic_counter.fetch_sub(edge_t{1}, cuda::std::memory_order_relaxed);
+    hip::atomic_ref<edge_t, hip::thread_scope_device> atomic_counter(num_triangles[idx]);
+    auto r = atomic_counter.fetch_sub(edge_t{1}, hip::std::memory_order_relaxed);
   }
 };
 
@@ -357,8 +357,8 @@ void unroll_p_r_or_q_r_edges(raft::handle_t const& handle,
       if (itr != invalid_last) { assert(*itr == transposed_invalid_edge); }
       auto dist = thrust::distance(invalid_first, itr) + num_valid_edges;
 
-      cuda::atomic_ref<edge_t, cuda::thread_scope_device> atomic_counter(num_triangles[dist]);
-      auto r = atomic_counter.fetch_sub(edge_t{1}, cuda::std::memory_order_relaxed);
+      hip::atomic_ref<edge_t, hip::thread_scope_device> atomic_counter(num_triangles[dist]);
+      auto r = atomic_counter.fetch_sub(edge_t{1}, hip::std::memory_order_relaxed);
     });
 
   thrust::for_each(

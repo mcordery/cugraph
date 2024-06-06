@@ -73,8 +73,8 @@ struct update_edges_p_r_q_r_num_triangles {
       assert(*itr_p_r_p_q == p_r_pair);
       idx = thrust::distance(edge_first, itr_p_r_p_q);
     }
-    cuda::atomic_ref<edge_t, cuda::thread_scope_device> atomic_counter(num_triangles[idx]);
-    auto r = atomic_counter.fetch_add(edge_t{1}, cuda::std::memory_order_relaxed);
+    hip::atomic_ref<edge_t, hip::thread_scope_device> atomic_counter(num_triangles[idx]);
+    auto r = atomic_counter.fetch_add(edge_t{1}, hip::std::memory_order_relaxed);
   }
 };
 

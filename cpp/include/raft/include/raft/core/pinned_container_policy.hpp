@@ -39,7 +39,7 @@ struct pinned_container {
   using value_type = T;
   using allocator_type =
     thrust::mr::stateless_resource_allocator<value_type,
-                                             thrust::cuda::universal_host_pinned_memory_resource>;
+                                             thrust::hip::universal_host_pinned_memory_resource>;
 
  private:
   using underlying_container_type = thrust::host_vector<value_type, allocator_type>;
