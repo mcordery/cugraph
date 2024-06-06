@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <common/nvtx.hpp>
+//#include <common/nvtx.hpp>
 
-#include <raft/common/nvtx.hpp>
+//#include <raft/common/nvtx.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
@@ -311,9 +311,9 @@ void lstsqEig(raft::resources const& handle,
   multAbDone.record(multAbStream);
 
   // Q S Q* <- covA
-  raft::common::nvtx::push_range("raft::linalg::eigDC");
+//  raft::common::nvtx::push_range("raft::linalg::eigDC");
   raft::linalg::eigDC(handle, covA, n_cols, n_cols, Q, S, mainStream);
-  raft::common::nvtx::pop_range();
+//  raft::common::nvtx::pop_range();
 
   // QS  <- Q invS
   raft::linalg::matrixVectorOp(

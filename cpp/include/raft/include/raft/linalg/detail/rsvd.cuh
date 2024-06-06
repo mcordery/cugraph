@@ -52,8 +52,8 @@ void randomized_svd(const raft::resources& handle,
                     bool gen_U,
                     bool gen_V)
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "raft::linalg::randomized_svd(%d, %d, %d)", n_rows, n_cols, k);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "raft::linalg::randomized_svd(%d, %d, %d)", n_rows, n_cols, k);
 
   RAFT_EXPECTS(k < std::min(n_rows, n_cols), "k must be < min(n_rows, n_cols)");
   RAFT_EXPECTS((k + p) < std::min(n_rows, n_cols), "k + p must be < min(n_rows, n_cols)");

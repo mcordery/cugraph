@@ -22,7 +22,7 @@
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/mdarray.hpp>
 #include <raft/core/mdspan_types.hpp>
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/resource/cuda_stream.hpp>
 #include <raft/core/serialize.hpp>
 #include <raft/neighbors/cagra_types.hpp>

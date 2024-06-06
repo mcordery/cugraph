@@ -22,7 +22,7 @@
 
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/nvtx.hpp>
+//#include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/linalg/map.cuh>
@@ -247,8 +247,8 @@ void select_k(raft::resources const& handle,
               SelectAlgo algo   = SelectAlgo::kAuto,
               const IdxT* len_i = nullptr)
 {
-  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-    "matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
+//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+//    "matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
 
   if (algo == SelectAlgo::kAuto) { algo = choose_select_k_algorithm(batch_size, len, k); }
 

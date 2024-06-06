@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#include <rmm/detail/nvtx/ranges.hpp>
+//#include <rmm/detail/nvtx/ranges.hpp>
 
 #include <cuda/memory_resource>
 

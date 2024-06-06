@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <nvtx3/nvtx3.hpp>
+//#include <nvtx3/nvtx3.hpp>
 
 namespace rmm {
 /**
@@ -39,7 +39,7 @@ struct librmm_domain {
  * }
  * ```
  */
-using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
+//using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
 
 }  // namespace rmm
 
@@ -58,4 +58,4 @@ using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
  * }
  * ```
  */
-#define RMM_FUNC_RANGE() NVTX3_FUNC_RANGE_IN(rmm::librmm_domain)
+#define RMM_FUNC_RANGE() () // NVTX3_FUNC_RANGE_IN(rmm::librmm_domain)

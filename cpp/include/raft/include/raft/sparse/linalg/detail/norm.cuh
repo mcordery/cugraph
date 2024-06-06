@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/common/nvtx.hpp>
+//#include <raft/common/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/linalg/norm_types.hpp>
 #include <raft/sparse/detail/cusparse_wrappers.h>

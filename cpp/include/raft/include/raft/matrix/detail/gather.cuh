@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <raft/common/nvtx.hpp>
+//#include <raft/common/nvtx.hpp>
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_mdarray.hpp>
@@ -355,7 +355,7 @@ void gather_buff(host_matrix_view<const T, MatIdxT> dataset,
                  MatIdxT offset,
                  pinned_matrix_view<T, MatIdxT> buff)
 {
-  raft::common::nvtx::range<common::nvtx::domain::raft> fun_scope("gather_host_buff");
+//  raft::common::nvtx::range<common::nvtx::domain::raft> fun_scope("gather_host_buff");
   IdxT batch_size = std::min<IdxT>(buff.extent(0), indices.extent(0) - offset);
 
 #pragma omp for
@@ -373,7 +373,7 @@ void gather(raft::resources const& res,
             device_vector_view<const IdxT, MatIdxT> indices,
             raft::device_matrix_view<T, MatIdxT> output)
 {
-  raft::common::nvtx::range<common::nvtx::domain::raft> fun_scope("gather");
+//  raft::common::nvtx::range<common::nvtx::domain::raft> fun_scope("gather");
   IdxT n_dim        = output.extent(1);
   IdxT n_train      = output.extent(0);
   auto indices_host = raft::make_host_vector<IdxT, MatIdxT>(n_train);
