@@ -193,6 +193,24 @@ void multi_partition(ValueIterator value_first,
   rmm::device_uvector<int> group_ids(num_values, stream_view);
   rmm::device_uvector<size_t> intra_partition_offsets(num_values, stream_view);
   thrust::fill(rmm::exec_policy(stream_view), counts.begin(), counts.end(), size_t{0});
+
+#ifndef USE_LIBHIPCXX_PRT
+  auto foo = [value_to_group_id_op, group_first, counts = counts.data()] __device__(auto value) {
+        auto group_id = value_to_group_id_op(value);
+	hip::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+        return thrust::make_tuple(group_id,
+                                  counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed));
+      };
+
+   thrust::transform(
+    rmm::exec_policy(stream_view),
+    value_first,
+    value_last,
+    thrust::make_zip_iterator(
+      thrust::make_tuple(group_ids.begin(), intra_partition_offsets.begin())),
+    foo);   
+#else  
+
   thrust::transform(
     rmm::exec_policy(stream_view),
     value_first,
@@ -202,10 +220,11 @@ void multi_partition(ValueIterator value_first,
     hip::proclaim_return_type<thrust::tuple<int, size_t>>(
       [value_to_group_id_op, group_first, counts = counts.data()] __device__(auto value) {
         auto group_id = value_to_group_id_op(value);
-	std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+	hip::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
         return thrust::make_tuple(group_id,
-                                  counter.fetch_add(size_t{1}, std::memory_order_relaxed));
+                                  counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed));
       }));
+#endif
 
   rmm::device_uvector<size_t> displacements(num_groups, stream_view);
   thrust::exclusive_scan(
@@ -248,6 +267,25 @@ void multi_partition(KeyIterator key_first,
   rmm::device_uvector<int> group_ids(num_keys, stream_view);
   rmm::device_uvector<size_t> intra_partition_offsets(num_keys, stream_view);
   thrust::fill(rmm::exec_policy(stream_view), counts.begin(), counts.end(), size_t{0});
+
+#ifndef USE_LIBHIPCXX_PRT
+
+    auto foo = [key_to_group_id_op, group_first, counts = counts.data()] __device__(auto key) {
+        auto group_id = key_to_group_id_op(key);
+        hip::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+        return thrust::make_tuple(group_id,
+                                  counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed));
+      };
+
+  thrust::transform(
+    rmm::exec_policy(stream_view),
+    key_first,
+    key_last,
+    thrust::make_zip_iterator(
+      thrust::make_tuple(group_ids.begin(), intra_partition_offsets.begin())),
+      foo );
+#else      
+
   thrust::transform(
     rmm::exec_policy(stream_view),
     key_first,
@@ -257,10 +295,11 @@ void multi_partition(KeyIterator key_first,
     hip::proclaim_return_type<thrust::tuple<int, size_t>>(
       [key_to_group_id_op, group_first, counts = counts.data()] __device__(auto key) {
         auto group_id = key_to_group_id_op(key);
-        std::atomic_ref<size_t> counter(counts[group_id - group_first]);
+        hip::std::atomic_ref<size_t> counter(counts[group_id - group_first]);
         return thrust::make_tuple(group_id,
-                                  counter.fetch_add(size_t{1}, std::memory_order_relaxed));
+                                  counter.fetch_add(size_t{1}, hip::std::memory_order_relaxed));
       }));
+#endif
 
   rmm::device_uvector<size_t> displacements(num_groups, stream_view);
   thrust::exclusive_scan(
@@ -765,10 +804,19 @@ rmm::device_uvector<size_t> groupby_and_count(ValueIterator tx_value_first /* [I
                              mem_frugal_threshold,
                              stream_view);
 
-  auto group_id_first = thrust::make_transform_iterator(
-    tx_value_first, hip::proclaim_return_type<int>([value_to_group_id_op] __device__(auto value) {
-      return value_to_group_id_op(value);
-    }));
+#ifndef USE_LIBHIPCXX_PRT
+
+    auto foo = [value_to_group_id_op] __device__(auto value) {
+      return value_to_group_id_op(value);};
+
+  auto group_id_first = thrust::make_transform_iterator( tx_value_first, foo);
+#else
+ auto group_id_first = thrust::make_transform_iterator( tx_value_first, 
+   hip::proclaim_return_type<int>([value_to_group_id_op] __device__(auto value) {
+      return value_to_group_id_op(value);})
+   );
+#endif
+
   rmm::device_uvector<int> d_tx_dst_ranks(num_groups, stream_view);
   rmm::device_uvector<size_t> d_tx_value_counts(d_tx_dst_ranks.size(), stream_view);
   auto rank_count_pair_first = thrust::make_zip_iterator(
@@ -800,10 +848,20 @@ rmm::device_uvector<size_t> groupby_and_count(VertexIterator tx_key_first /* [IN
                              mem_frugal_threshold,
                              stream_view);
 
-  auto group_id_first = thrust::make_transform_iterator(
-    tx_key_first, proclaim_return_type<int>([key_to_group_id_op] __device__(auto key) {
+#ifndef USE_LIBHIPCXX_PRT
+
+    auto foo = [key_to_group_id_op] __device__(auto key) {
       return key_to_group_id_op(key);
-    }));
+    };
+
+    auto group_id_first = thrust::make_transform_iterator(tx_key_first,foo );
+#else
+
+ auto group_id_first = thrust::make_transform_iterator(
+   tx_key_first, hip::proclaim_return_type<int>([key_to_group_id_op] __device__(auto key) {
+     return key_to_group_id_op(key);
+   }));
+#endif
   rmm::device_uvector<int> d_tx_dst_ranks(num_groups, stream_view);
   rmm::device_uvector<size_t> d_tx_value_counts(d_tx_dst_ranks.size(), stream_view);
   auto rank_count_pair_first = thrust::make_zip_iterator(
