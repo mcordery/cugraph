@@ -17,8 +17,9 @@
 
 message(STATUS "Configuring build for ${PROJECT_NAME}")
 
-message(STATUS "CSD ${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/lib/cmake/libhipcxx")
-
+set(CMAKE_PREFIX_PATH /opt/rocm/lib/cmake)
+enable_language(HIP)
+include_directories(${HIP_INCLUDE_DIRS})
 
 #if(NOT (DEFINED CMAKE_HIP_ARCHITECTURES))
 #    set(CMAKE_HIP_ARCHITECTURES "gfx940;gfx941;gfx942")
@@ -223,7 +224,7 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS  -x hip -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 set(ROCGRAPH_HIP_FLAGS "")
 
 set(THRUST_HOST_SYSTEM THRUST_HOST_SYSTEM_CPP) 
@@ -235,28 +236,31 @@ endif()
 
 #message("-- Building for GPU_ARCHS = ${CMAKE_HIP_ARCHITECTURES}")
 
-list(APPEND ROCGRAPH_CXX_FLAGS --offload-arch=gfx940) # need to specify this because I'm building on a machine without an amd card and libhipcxx needs to know for the timers
+list(APPEND ROCGRAPH_CXX_FLAGS --offload-arch=gfx942) # need to specify this because I'm building on a machine without an amd card and libhipcxx needs to know for the timers
 list(APPEND ROCGRAPH_CXX_FLAGS  -DFMT_HEADER_ONLY -DUSE_LIBHIPCXX_PRT )
 
 #list(APPEND ROCGRAPH_CXX_FLAGS "-stdlib=libc++") # need to specify this because I'm building on a machine without an amd card and libhipcxx needs to know for the timers
 
-
+message(STATUS "HID ${HIP_INCLUDE_DIRS}")
 
 list(APPEND ROCGRAPH_CXX_FLAGS -Wno-unused-result)
 
 list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS})
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/include ) # for hipco
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/rocprim)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipcub)
 
-list(APPEND ROCGRAPH_CXX_FLAGS -I${hipblas_INCLUDE_DIRS}/hipblas)
-list(APPEND ROCGRAPH_CXX_FLAGS -I${hipsparse_INCLUDE_DIRS}/hipsparse)
-list(APPEND ROCGRAPH_CXX_FLAGS -I${hipsolver_INCLUDE_DIRS}/hipsolver)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipblas)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipsparse)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hiprand)
+list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipsolver)
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/rmm/ )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/spdlog/include )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include )
-
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/hipco/include )
+
 #list(APPEND ROCGRAPH_CXX_FLAGS "-I/home/mcordery/libhipcxx/install/include/hip/std" ) # for hipco
 
 # Option to enable line info in HIP device compilation to allow introspection when profiling /
@@ -424,16 +428,16 @@ add_library(rocgraph ${ROCGRAPH_SOURCES})
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
                 # set target compile options
-                CXX_STANDARD                       20
+                CXX_STANDARD                       23
                 CXX_STANDARD_REQUIRED               ON
                 CXX_EXTENSIONS                     ON
-                HIP_STANDARD                       20
+                HIP_STANDARD                       23
                 HIP_STANDARD_REQUIRED              ON
                 HIP_EXTENSIONS                     ON
                 POSITION_INDEPENDENT_CODE           ON
                 INTERFACE_POSITION_INDEPENDENT_CODE ON
     )
-    target_compile_options(rocgraph
+    target_compile_options(rocgraph 
                 PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
                         "$<$<COMPILE_LANGUAGE:HIP>:${ROCGRAPH_HIP_FLAGS}>"
     )
@@ -462,7 +466,6 @@ target_include_directories(rocgraph
         "${CMAKE_CURRENT_SOURCE_DIR}/../thirdparty"
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
     PUBLIC
-        "${HIPToolkit_INCLUDE_DIRS}"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<INSTALL_INTERFACE:include>"
 )
@@ -471,6 +474,7 @@ target_include_directories(rocgraph
 
 target_link_libraries(rocgraph
     PUBLIC
+        hip::device
         hipblas
         hipsparse
         hiprand

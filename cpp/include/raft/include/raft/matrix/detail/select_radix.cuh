@@ -34,10 +34,10 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cub/block/block_load.cuh>
-#include <cub/block/block_scan.cuh>
-#include <cub/block/block_store.cuh>
-#include <cub/block/radix_rank_sort_operations.cuh>
+#include <hipcub/block/block_load.cuh>
+#include <hipcub/block/block_scan.cuh>
+#include <hipcub/block/block_store.cuh>
+#include <hipcub/block/radix_rank_sort_operations.cuh>
 
 namespace raft::matrix::detail::select::radix {
 namespace impl {

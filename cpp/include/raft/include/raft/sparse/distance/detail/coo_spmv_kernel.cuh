@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <cub/block/block_load.cuh>
-#include <cub/block/block_radix_sort.cuh>
-#include <cub/block/block_store.cuh>
+#include <hipcub/block/block_load.cuh>
+#include <hipcub/block/block_radix_sort.cuh>
+#include <hipcub/block/block_store.cuh>
 #include <hipcub/hipcub.hpp>
 
 namespace raft {
