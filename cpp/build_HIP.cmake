@@ -302,11 +302,11 @@ set(ROCGRAPH_SOURCES
       src/detail/collect_local_vertex_values.cpp
       src/detail/groupby_and_count.cpp
       src/detail/collect_comm_wrapper.cpp
-      src/sampling/random_walks_mg.cpp
-      src/community/detail/common_methods_mg.cpp
-      src/community/detail/common_methods_sg.cpp
-      src/community/detail/refine_sg.cpp
-      src/community/detail/refine_mg.cpp
+      #src/sampling/random_walks_mg.cpp
+      #src/community/detail/common_methods_mg.cpp
+      #src/community/detail/common_methods_sg.cpp
+      #src/community/detail/refine_sg.cpp
+      #src/community/detail/refine_mg.cpp
       src/community/edge_triangle_count_sg.cpp
       src/community/detail/maximal_independent_moves_sg.cpp
       src/community/detail/maximal_independent_moves_mg.cpp
@@ -424,14 +424,16 @@ set(ROCGRAPH_SOURCES
 
 add_library(rocgraph ${ROCGRAPH_SOURCES})
 
+    # With ROCM 6.1.2 currently, do NO change C++ std to anything higher than 17 if you have #include <chrono> in a source/header file
+
     set_target_properties(rocgraph
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
                 # set target compile options
-                CXX_STANDARD                       23
+                CXX_STANDARD                       17
                 CXX_STANDARD_REQUIRED               ON
                 CXX_EXTENSIONS                     ON
-                HIP_STANDARD                       23
+                HIP_STANDARD                       17
                 HIP_STANDARD_REQUIRED              ON
                 HIP_EXTENSIONS                     ON
                 POSITION_INDEPENDENT_CODE           ON

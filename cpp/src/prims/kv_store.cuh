@@ -35,6 +35,7 @@
 #include <thrust/remove.h>
 #include <thrust/sort.h>
 #include <thrust/unique.h>
+#include <thrust/sequence.h>
 
 #include <hipco/static_map.cuh>
 
@@ -52,7 +53,7 @@ namespace cugraph {
 
 namespace detail {
 
-using hipco_storage_type = hipco::storage<1>;  ///< hipco window storage type
+using hipco_storage_type = hipco::experimental::storage<1>;  ///< hipco window storage type
 
 template <typename KeyIterator, typename ValueIterator>
 struct kv_binary_search_find_op_t {
@@ -192,7 +193,7 @@ template <typename ViewType>
 struct kv_hipco_store_find_device_view_t {
   using key_type                   = typename ViewType::key_type;
   using value_type                 = typename ViewType::value_type;
-  using hipco_store_device_ref_type = typename ViewType::hipco_map_type::ref_type<hipco::find_tag>;
+  using hipco_store_device_ref_type = typename ViewType::hipco_map_type::template ref_type<hipco::experimental::find_tag>;
 
   static_assert(!ViewType::binary_search);
 
@@ -306,12 +307,12 @@ class kv_hipco_store_view_t {
   static constexpr bool binary_search = false;
 
   using hipco_map_type =
-    hipco::static_map<key_t,
+    hipco::experimental::static_map<key_t,
                      std::conditional_t<std::is_arithmetic_v<value_type>, value_type, size_t>,
-                     hipco::extent<std::size_t>,
+                     hipco::experimental::extent<std::size_t>,
                      hip::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     hipco::linear_probing<1,  // CG size
+                     hipco::experimental::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
                      hipco_storage_type>;
@@ -362,7 +363,7 @@ class kv_hipco_store_view_t {
     hipco_store_->contains(key_first, key_last, value_first, stream.value());
   }
 
-  auto hipco_store_find_device_ref() const { return hipco_store_->ref(hipco::find); }
+  auto hipco_store_find_device_ref() const { return hipco_store_->ref(hipco::experimental::find); }
 
   template <typename type = value_type>
   std::enable_if_t<!std::is_arithmetic_v<type>, ValueIterator> store_value_first() const
@@ -502,12 +503,12 @@ class kv_hipco_store_t {
                          value_buffer_type&>;
 
   using hipco_map_type =
-    hipco::static_map<key_t,
+    hipco::experimental::static_map<key_t,
                      std::conditional_t<std::is_arithmetic_v<value_t>, value_t, size_t>,
-                     hipco::extent<std::size_t>,
+                     hipco::experimental::extent<std::size_t>,
                      hip::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     hipco::linear_probing<1,  // CG size
+                     hipco::experimental::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
                      hipco_storage_type>;
@@ -575,7 +576,7 @@ class kv_hipco_store_t {
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);
-      auto mutable_device_ref = hipco_store_->ref(hipco::insert_and_find);
+      auto mutable_device_ref = hipco_store_->ref(hipco::experimental::insert_and_find);
       rmm::device_uvector<size_t> store_value_offsets(num_keys, stream);
       thrust::tabulate(
         rmm::exec_policy(stream),
@@ -620,7 +621,7 @@ class kv_hipco_store_t {
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);
-      auto mutable_device_ref = hipco_store_->ref(hipco::insert_and_find);
+      auto mutable_device_ref = hipco_store_->ref(hipco::experimental::insert_and_find);
       rmm::device_uvector<size_t> store_value_offsets(num_keys, stream);
       thrust::tabulate(
         rmm::exec_policy(stream),
@@ -664,7 +665,7 @@ class kv_hipco_store_t {
       auto pair_first = thrust::make_zip_iterator(thrust::make_tuple(key_first, value_first));
       // FIXME: a temporary solution till insert_and_assign is added to
       // hipco::static_map
-      auto mutable_device_ref = hipco_store_->ref(hipco::insert_and_find);
+      auto mutable_device_ref = hipco_store_->ref(hipco::experimental::insert_and_find);
       thrust::for_each(
         rmm::exec_policy(stream),
         pair_first,
@@ -679,7 +680,7 @@ class kv_hipco_store_t {
       // requires placing the atomic variable on managed memory and this adds additional
       // complication.
       rmm::device_scalar<size_t> counter(old_store_value_size, stream);
-      auto mutable_device_ref = hipco_store_->ref(hipco::insert_and_find);
+      auto mutable_device_ref = hipco_store_->ref(hipco::experimental::insert_and_find);
       rmm::device_uvector<size_t> store_value_offsets(num_keys, stream);
       thrust::tabulate(
         rmm::exec_policy(stream),
@@ -738,7 +739,7 @@ class kv_hipco_store_t {
         [key_first,
          value_first,
          store_value_first = get_optional_dataframe_buffer_begin<value_t>(store_values_),
-         device_ref        = hipco_store_->ref(hipco::find)] __device__(auto kv_idx) {
+         device_ref        = hipco_store_->ref(hipco::experimental::find)] __device__(auto kv_idx) {
           size_t store_value_offset{};
           auto found = device_ref.find(*(key_first + kv_idx));
           assert(found != device_ref.end());
@@ -826,9 +827,9 @@ class kv_hipco_store_t {
                                         hipco::empty_key<key_t>{invalid_key},
                                         hipco::empty_value<value_t>{invalid_value},
                                         thrust::equal_to<key_t>{},
-                                        hipco::linear_probing<1,  // CG size
+                                        hipco::experimental::linear_probing<1,  // CG size
                                                              hipco::murmurhash3_32<key_t>>{},
-                                        hipco::thread_scope_device,
+                                        hip::thread_scope_device,
                                         hipco_storage_type{},
                                         stream_adapter,
                                         stream.value());
@@ -838,9 +839,9 @@ class kv_hipco_store_t {
         hipco::empty_key<key_t>{invalid_key},
         hipco::empty_value<size_t>{std::numeric_limits<size_t>::max()},
         thrust::equal_to<key_t>{},
-        hipco::linear_probing<1,  // CG size
+        hipco::experimental::linear_probing<1,  // CG size
                              hipco::murmurhash3_32<key_t>>{},
-        hipco::thread_scope_device,
+        hip::thread_scope_device,
         hipco_storage_type{},
         stream_adapter,
         stream.value());

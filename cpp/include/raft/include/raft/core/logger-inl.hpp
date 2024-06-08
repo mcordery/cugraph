@@ -15,6 +15,7 @@
  */
 #pragma once
 
+#ifdef USE_SPDLOG
 #include "logger-macros.hpp"
 
 #include <stdarg.h>
@@ -150,4 +151,7 @@ RAFT_INLINE_CONDITIONAL void logger::flush() { pimpl->spdlogger->flush(); }
 
 RAFT_INLINE_CONDITIONAL logger::~logger() {}
 
+
 };  // namespace raft
+
+#endif
