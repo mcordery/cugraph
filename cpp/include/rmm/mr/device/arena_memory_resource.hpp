@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020-2022, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +15,14 @@
  */
 #pragma once
 
+#include <rmm/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
 #include <rmm/mr/device/detail/arena.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <rmm/cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 #include <spdlog/common.h>
 
@@ -110,21 +110,6 @@ class arena_memory_resource final : public device_memory_resource {
   arena_memory_resource(arena_memory_resource&&) noexcept            = delete;
   arena_memory_resource& operator=(arena_memory_resource&&) noexcept = delete;
 
-  /**
-   * @brief Queries whether the resource supports use of non-null CUDA streams for
-   * allocation/deallocation.
-   *
-   * @returns bool true.
-   */
-  bool supports_streams() const noexcept override { return true; }
-
-  /**
-   * @brief Query whether the resource supports the get_mem_info API.
-   *
-   * @return bool false.
-   */
-  bool supports_get_mem_info() const noexcept override { return false; }
-
  private:
   using global_arena = rmm::mr::detail::arena::global_arena<Upstream>;
   using arena        = rmm::mr::detail::arena::arena<Upstream>;
@@ -146,7 +131,7 @@ class arena_memory_resource final : public device_memory_resource {
 #ifdef RMM_ARENA_USE_SIZE_CLASSES
     bytes = rmm::mr::detail::arena::align_to_size_class(bytes);
 #else
-    bytes = rmm::detail::align_up(bytes, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
+    bytes = rmm::align_up(bytes, rmm::CUDA_ALLOCATION_ALIGNMENT);
 #endif
     auto& arena = get_arena(stream);
 
@@ -173,7 +158,7 @@ class arena_memory_resource final : public device_memory_resource {
    */
   void defragment()
   {
-    RMM_CUDA_TRY(cudaDeviceSynchronize());
+    RMM_CUDA_TRY(hipDeviceSynchronize());
     for (auto& thread_arena : thread_arenas_) {
       thread_arena.second->clean();
     }
@@ -196,7 +181,7 @@ class arena_memory_resource final : public device_memory_resource {
 #ifdef RMM_ARENA_USE_SIZE_CLASSES
     bytes = rmm::mr::detail::arena::align_to_size_class(bytes);
 #else
-    bytes = rmm::detail::align_up(bytes, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
+    bytes = rmm::align_up(bytes, rmm::CUDA_ALLOCATION_ALIGNMENT);
 #endif
     auto& arena = get_arena(stream);
 
@@ -236,7 +221,26 @@ class arena_memory_resource final : public device_memory_resource {
       }
     }
 
-    if (!global_arena_.deallocate(ptr, bytes)) { RMM_FAIL("allocation not found"); }
+    if (!global_arena_.deallocate(ptr, bytes)) {
+      // It's possible to use per thread default streams along with another pool of streams.
+      // This means that it's possible for an allocation to move from a thread or stream arena
+      // back into the global arena during a defragmentation and then move down into another arena
+      // type. For instance, thread arena -> global arena -> stream arena. If this happens and
+      // there was an allocation from it while it was a thread arena, we now have to check to
+      // see if the allocation is part of a stream arena, and vice versa.
+      // Only do this in exceptional cases to not affect performance and have to check all
+      // arenas all the time.
+      if (use_per_thread_arena(stream)) {
+        for (auto& stream_arena : stream_arenas_) {
+          if (stream_arena.second.deallocate(ptr, bytes)) { return; }
+        }
+      } else {
+        for (auto const& thread_arena : thread_arenas_) {
+          if (thread_arena.second->deallocate(ptr, bytes)) { return; }
+        }
+      }
+      RMM_FAIL("allocation not found");
+    }
   }
 
   /**
@@ -294,18 +298,6 @@ class arena_memory_resource final : public device_memory_resource {
   }
 
   /**
-   * @brief Get free and available memory for memory resource.
-   *
-   * @param stream to execute on.
-   * @return std::pair containing free_size and total_size of memory.
-   */
-  std::pair<std::size_t, std::size_t> do_get_mem_info(
-    [[maybe_unused]] cuda_stream_view stream) const override
-  {
-    return std::make_pair(0, 0);
-  }
-
-  /**
    * Dump memory to log.
    *
    * @param bytes the number of bytes requested for allocation
@@ -338,7 +330,7 @@ class arena_memory_resource final : public device_memory_resource {
   std::map<std::thread::id, std::shared_ptr<arena>> thread_arenas_;
   /// Arenas for non-default streams, one per stream.
   /// Implementation note: for small sizes, map is more efficient than unordered_map.
-  std::map<cudaStream_t, arena> stream_arenas_;
+  std::map<hipStream_t, arena> stream_arenas_;
   /// If true, dump memory information to log on allocation failure.
   bool dump_log_on_failure_{};
   /// The logger for memory dump.

@@ -54,6 +54,7 @@
 #include <thrust/transform.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
+#include <thrust/sequence.h>
 
 #include <algorithm>
 #include <cstdint>

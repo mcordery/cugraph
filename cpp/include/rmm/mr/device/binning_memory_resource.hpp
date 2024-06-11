@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +15,12 @@
  */
 #pragma once
 
-#include <rmm/detail/aligned.hpp>
+#include <rmm/aligned.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 #include <rmm/mr/device/fixed_size_memory_resource.hpp>
+#include <rmm/resource_ref.hpp>
 
-#include <rmm/cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 #include <algorithm>
 #include <cassert>
@@ -100,24 +100,15 @@ class binning_memory_resource final : public device_memory_resource {
   binning_memory_resource& operator=(binning_memory_resource&&)      = delete;
 
   /**
-   * @brief Query whether the resource supports use of non-null streams for
-   * allocation/deallocation.
-   *
-   * @returns true
+   * @briefreturn{rmm::device_async_resource_ref to the upstream resource}
    */
-  [[nodiscard]] bool supports_streams() const noexcept override { return true; }
+  [[nodiscard]] rmm::device_async_resource_ref get_upstream_resource() const noexcept
+  {
+    return upstream_mr_;
+  }
 
   /**
-   * @brief Query whether the resource supports the get_mem_info API.
-   *
-   * @return false
-   */
-  [[nodiscard]] bool supports_get_mem_info() const noexcept override { return false; }
-
-  /**
-   * @brief Get the upstream memory_resource object.
-   *
-   * @return UpstreamResource* the upstream memory resource.
+   * @briefreturn{Upstream* to the upstream memory resource}
    */
   [[nodiscard]] Upstream* get_upstream() const noexcept { return upstream_mr_; }
 
@@ -139,8 +130,7 @@ class binning_memory_resource final : public device_memory_resource {
    */
   void add_bin(std::size_t allocation_size, device_memory_resource* bin_resource = nullptr)
   {
-    allocation_size =
-      rmm::detail::align_up(allocation_size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
+    allocation_size = rmm::align_up(allocation_size, rmm::CUDA_ALLOCATION_ALIGNMENT);
 
     if (nullptr != bin_resource) {
       resource_bins_.insert({allocation_size, bin_resource});
@@ -159,13 +149,13 @@ class binning_memory_resource final : public device_memory_resource {
    * Chooses a memory_resource that allocates the smallest blocks at least as large as `bytes`.
    *
    * @param bytes Requested allocation size in bytes
-   * @return rmm::mr::device_memory_resource& memory_resource that can allocate the requested size.
+   * @return Get the resource reference for the requested size.
    */
-  device_memory_resource* get_resource(std::size_t bytes)
+  rmm::device_async_resource_ref get_resource_ref(std::size_t bytes)
   {
     auto iter = resource_bins_.lower_bound(bytes);
-    return (iter != resource_bins_.cend()) ? iter->second
-                                           : static_cast<device_memory_resource*>(get_upstream());
+    return (iter != resource_bins_.cend()) ? rmm::device_async_resource_ref{iter->second}
+                                           : get_upstream_resource();
   }
 
   /**
@@ -180,13 +170,11 @@ class binning_memory_resource final : public device_memory_resource {
   void* do_allocate(std::size_t bytes, cuda_stream_view stream) override
   {
     if (bytes <= 0) { return nullptr; }
-    return get_resource(bytes)->allocate(bytes, stream);
+    return get_resource_ref(bytes).allocate_async(bytes, stream);
   }
 
   /**
    * @brief Deallocate memory pointed to by \p p.
-   *
-   * @throws nothing
    *
    * @param ptr Pointer to be deallocated
    * @param bytes The size in bytes of the allocation. This must be equal to the
@@ -195,22 +183,7 @@ class binning_memory_resource final : public device_memory_resource {
    */
   void do_deallocate(void* ptr, std::size_t bytes, cuda_stream_view stream) override
   {
-    auto res = get_resource(bytes);
-    if (res != nullptr) { res->deallocate(ptr, bytes, stream); }
-  }
-
-  /**
-   * @brief Get free and available memory for memory resource
-   *
-   * @throws std::runtime_error if we could not get free / total memory
-   *
-   * @param stream the stream being executed on
-   * @return std::pair with available and free memory for resource
-   */
-  [[nodiscard]] std::pair<std::size_t, std::size_t> do_get_mem_info(
-    [[maybe_unused]] cuda_stream_view stream) const override
-  {
-    return std::make_pair(0, 0);
+    get_resource_ref(bytes).deallocate_async(ptr, bytes, stream);
   }
 
   Upstream* upstream_mr_;  // The upstream memory_resource from which to allocate blocks.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, NVIDIA CORPORATION.
+ * Copyright (c) 2019-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/device_uvector.hpp>
-#include <rmm/mr/device/device_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
+#include <rmm/resource_ref.hpp>
 
 #include <type_traits>
 
@@ -85,16 +85,15 @@ class device_scalar {
    *
    * @note This device_scalar is only safe to access in kernels and copies on the specified CUDA
    * stream, or on another stream only if a dependency is enforced (e.g. using
-   * `cudaStreamWaitEvent()`).
+   * `hipStreamWaitEvent()`).
    *
    * @throws rmm::bad_alloc if allocating the device memory fails.
    *
    * @param stream Stream on which to perform asynchronous allocation.
    * @param mr Optional, resource with which to allocate.
    */
-  explicit device_scalar(
-    cuda_stream_view stream,
-    rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
+  explicit device_scalar(cuda_stream_view stream,
+                         device_async_resource_ref mr = mr::get_current_device_resource())
     : _storage{1, stream, mr}
   {
   }
@@ -106,7 +105,7 @@ class device_scalar {
    *
    * @note This device_scalar is only safe to access in kernels and copies on the specified CUDA
    * stream, or on another stream only if a dependency is enforced (e.g. using
-   * `cudaStreamWaitEvent()`).
+   * `hipStreamWaitEvent()`).
    *
    * @throws rmm::bad_alloc if allocating the device memory for `initial_value` fails.
    * @throws rmm::cuda_error if copying `initial_value` to device memory fails.
@@ -115,10 +114,9 @@ class device_scalar {
    * @param stream Optional, stream on which to perform allocation and copy.
    * @param mr Optional, resource with which to allocate.
    */
-  explicit device_scalar(
-    value_type const& initial_value,
-    cuda_stream_view stream,
-    rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
+  explicit device_scalar(value_type const& initial_value,
+                         cuda_stream_view stream,
+                         device_async_resource_ref mr = mr::get_current_device_resource())
     : _storage{1, stream, mr}
   {
     set_value_async(initial_value, stream);
@@ -138,7 +136,7 @@ class device_scalar {
    */
   device_scalar(device_scalar const& other,
                 cuda_stream_view stream,
-                rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
+                device_async_resource_ref mr = mr::get_current_device_resource())
     : _storage{other._storage, stream, mr}
   {
   }
@@ -150,7 +148,7 @@ class device_scalar {
    *
    * @note If the stream specified to this function is different from the stream specified
    * to the constructor, then an appropriate dependency must be inserted between the streams
-   * (e.g. using `cudaStreamWaitEvent()` or `cudaStreamSynchronize()`) before calling this function,
+   * (e.g. using `hipStreamWaitEvent()` or `hipStreamSynchronize()`) before calling this function,
    * otherwise there may be a race condition.
    *
    * @throws rmm::cuda_error If the copy fails.
@@ -167,12 +165,12 @@ class device_scalar {
   /**
    * @brief Sets the value of the `device_scalar` to the value of `v`.
    *
-   * This specialization for fundamental types is optimized to use `cudaMemsetAsync` when
+   * This specialization for fundamental types is optimized to use `hipMemsetAsync` when
    * `v` is zero.
    *
    * @note If the stream specified to this function is different from the stream specified
    * to the constructor, then appropriate dependencies must be inserted between the streams
-   * (e.g. using `cudaStreamWaitEvent()` or `cudaStreamSynchronize()`) before and after calling
+   * (e.g. using `hipStreamWaitEvent()` or `hipStreamSynchronize()`) before and after calling
    * this function, otherwise there may be a race condition.
    *
    * This function does not synchronize `stream` before returning. Therefore, the object
@@ -191,7 +189,7 @@ class device_scalar {
    * // Copies 42 to device storage on `stream`. Does _not_ synchronize
    * vec.set_value_async(v, stream);
    * ...
-   * cudaStreamSynchronize(stream);
+   * hipStreamSynchronize(stream);
    * // Synchronization is required before `v` can be modified
    * v = 13;
    * \endcode
@@ -215,7 +213,7 @@ class device_scalar {
    *
    * @note If the stream specified to this function is different from the stream specified
    * to the constructor, then appropriate dependencies must be inserted between the streams
-   * (e.g. using `cudaStreamWaitEvent()` or `cudaStreamSynchronize()`) before and after calling
+   * (e.g. using `hipStreamWaitEvent()` or `hipStreamSynchronize()`) before and after calling
    * this function, otherwise there may be a race condition.
    *
    * This function does not synchronize `stream` before returning.
@@ -234,7 +232,7 @@ class device_scalar {
    *
    * @note If the returned device pointer is used on a CUDA stream different from the stream
    * specified to the constructor, then appropriate dependencies must be inserted between the
-   * streams (e.g. using `cudaStreamWaitEvent()` or `cudaStreamSynchronize()`), otherwise there may
+   * streams (e.g. using `hipStreamWaitEvent()` or `hipStreamSynchronize()`), otherwise there may
    * be a race condition.
    *
    * @return Pointer to underlying device memory
@@ -246,7 +244,7 @@ class device_scalar {
    *
    * @note If the returned device pointer is used on a CUDA stream different from the stream
    * specified to the constructor, then appropriate dependencies must be inserted between the
-   * streams (e.g. using `cudaStreamWaitEvent()` or `cudaStreamSynchronize()`), otherwise there may
+   * streams (e.g. using `hipStreamWaitEvent()` or `hipStreamSynchronize()`), otherwise there may
    * be a race condition.
    *
    * @return Const pointer to underlying device memory

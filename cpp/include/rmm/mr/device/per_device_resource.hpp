@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@
  *
  * To fetch and modify the resource for the current CUDA device, `get_current_device_resource()` and
  * `set_current_device_resource()` will automatically use the current CUDA device id from
- * `cudaGetDevice()`.
+ * `hipGetDevice()`.
  *
  * Creating a device_memory_resource for each device requires care to set the current device
  * before creating each resource, and to maintain the lifetime of the resources as long as they
@@ -64,8 +64,18 @@
  * @code{.cpp}
  * std::vector<unique_ptr<pool_memory_resource>> per_device_pools;
  * for(int i = 0; i < N; ++i) {
- *   cudaSetDevice(i);
+ *   hipSetDevice(i);
  *   per_device_pools.push_back(std::make_unique<pool_memory_resource>());
+ *   set_per_device_resource(cuda_device_id{i}, &per_device_pools.back());
+ * }
+ * @endcode
+ * @code{.cpp}
+ * using pool_mr = rmm::mr::pool_memory_resource<rmm::mr::cuda_memory_resource>;
+ * std::vector<unique_ptr<pool_mr>> per_device_pools;
+ * for(int i = 0; i < N; ++i) {
+ *   hipSetDevice(i);
+ *   // Note: for brevity, omitting creation of upstream and computing initial_size
+ *   per_device_pools.push_back(std::make_unique<pool_mr>(upstream, initial_size));
  *   set_per_device_resource(cuda_device_id{i}, &per_device_pools.back());
  * }
  * @endcode
@@ -119,7 +129,7 @@ RMM_EXPORT inline auto& get_map()
  * Returns a pointer to the `device_memory_resource` for the specified device. The initial
  * resource is a `cuda_memory_resource`.
  *
- * `id.value()` must be in the range `[0, cudaGetDeviceCount())`, otherwise behavior is undefined.
+ * `id.value()` must be in the range `[0, hipGetDeviceCount())`, otherwise behavior is undefined.
  *
  * This function is thread-safe with respect to concurrent calls to `set_per_device_resource`,
  * `get_per_device_resource`, `get_current_device_resource`, and `set_current_device_resource`.
@@ -127,7 +137,7 @@ RMM_EXPORT inline auto& get_map()
  * execution is undefined.
  *
  * @note The returned `device_memory_resource` should only be used when CUDA device `id` is the
- * current device  (e.g. set using `cudaSetDevice()`). The behavior of a device_memory_resource is
+ * current device  (e.g. set using `hipSetDevice()`). The behavior of a device_memory_resource is
  * undefined if used while the active CUDA device is a different device from the one that was active
  * when the device_memory_resource was created.
  *
@@ -150,7 +160,7 @@ inline device_memory_resource* get_per_device_resource(cuda_device_id device_id)
  * If `new_mr` is not `nullptr`, sets the memory resource pointer for the device specified by `id`
  * to `new_mr`. Otherwise, resets `id`s resource to the initial `cuda_memory_resource`.
  *
- * `id.value()` must be in the range `[0, cudaGetDeviceCount())`, otherwise behavior is undefined.
+ * `id.value()` must be in the range `[0, hipGetDeviceCount())`, otherwise behavior is undefined.
  *
  * The object pointed to by `new_mr` must outlive the last use of the resource, otherwise behavior
  * is undefined. It is the caller's responsibility to maintain the lifetime of the resource
@@ -162,7 +172,7 @@ inline device_memory_resource* get_per_device_resource(cuda_device_id device_id)
  * execution is undefined.
  *
  * @note The resource passed in `new_mr` must have been created when device `id` was the current
- * CUDA device (e.g. set using `cudaSetDevice()`). The behavior of a device_memory_resource is
+ * CUDA device (e.g. set using `hipSetDevice()`). The behavior of a device_memory_resource is
  * undefined if used while the active CUDA device is a different device from the one that was active
  * when the device_memory_resource was created.
  *
@@ -189,7 +199,7 @@ inline device_memory_resource* set_per_device_resource(cuda_device_id device_id,
  * Returns a pointer to the resource set for the current device. The initial resource is a
  * `cuda_memory_resource`.
  *
- * The "current device" is the device returned by `cudaGetDevice`.
+ * The "current device" is the device returned by `hipGetDevice`.
  *
  * This function is thread-safe with respect to concurrent calls to `set_per_device_resource`,
  * `get_per_device_resource`, `get_current_device_resource`, and `set_current_device_resource`.
@@ -197,7 +207,7 @@ inline device_memory_resource* set_per_device_resource(cuda_device_id device_id,
  * execution is undefined.
  *
  * @note The returned `device_memory_resource` should only be used with the current CUDA device.
- * Changing the current device (e.g. using `cudaSetDevice()`) and then using the returned resource
+ * Changing the current device (e.g. using `hipSetDevice()`) and then using the returned resource
  * can result in undefined behavior. The behavior of a device_memory_resource is undefined if used
  * while the active CUDA device is a different device from the one that was active when the
  * device_memory_resource was created.
@@ -215,7 +225,7 @@ inline device_memory_resource* get_current_device_resource()
  * If `new_mr` is not `nullptr`, sets the resource pointer for the current device to
  * `new_mr`. Otherwise, resets the resource to the initial `cuda_memory_resource`.
  *
- * The "current device" is the device returned by `cudaGetDevice`.
+ * The "current device" is the device returned by `hipGetDevice`.
  *
  * The object pointed to by `new_mr` must outlive the last use of the resource, otherwise behavior
  * is undefined. It is the caller's responsibility to maintain the lifetime of the resource

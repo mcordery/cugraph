@@ -224,7 +224,7 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass  -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 set(ROCGRAPH_HIP_FLAGS "")
 
 set(THRUST_HOST_SYSTEM THRUST_HOST_SYSTEM_CPP) 
@@ -310,32 +310,32 @@ set(ROCGRAPH_SOURCES
       src/community/edge_triangle_count_sg.cpp
       src/community/detail/maximal_independent_moves_sg.cpp
       src/community/detail/maximal_independent_moves_mg.cpp
-      src/detail/utility_wrappers.cpp
-      src/structure/graph_view_mg.cpp
+      #2src/detail/utility_wrappers.cpp
+      #src/structure/graph_view_mg.cpp
       src/structure/remove_self_loops.cpp
       src/structure/remove_multi_edges.cpp
       src/utilities/path_retrieval.cpp
-      src/structure/legacy/graph.cpp
-      src/linear_assignment/legacy/hungarian.cpp
-      src/link_prediction/jaccard_sg.cpp
-      src/link_prediction/sorensen_sg.cpp
-      src/link_prediction/overlap_sg.cpp
-      src/link_prediction/jaccard_mg.cpp
-      src/link_prediction/sorensen_mg.cpp
-      src/link_prediction/overlap_mg.cpp
-      src/layout/legacy/force_atlas2.cpp
-      src/converters/legacy/COOtoCSR.cpp
-      src/community/legacy/spectral_clustering.cpp
-      src/community/louvain_sg.cpp
-      src/community/louvain_mg.cpp
-      src/community/leiden_sg.cpp
-      src/community/leiden_mg.cpp
-      src/community/ecg_sg.cpp
-      src/community/ecg_mg.cpp
-      src/community/legacy/louvain.cpp
-      src/community/legacy/ecg.cpp
-      src/community/egonet_sg.cpp
-      src/community/egonet_mg.cpp
+      #src/structure/legacy/graph.cpp
+      #src/linear_assignment/legacy/hungarian.cpp
+      #src/link_prediction/jaccard_sg.cpp
+      #src/link_prediction/sorensen_sg.cpp
+      #src/link_prediction/overlap_sg.cpp
+      #src/link_prediction/jaccard_mg.cpp
+      #src/link_prediction/sorensen_mg.cpp
+      #src/link_prediction/overlap_mg.cpp
+      #src/layout/legacy/force_atlas2.cpp
+      #src/converters/legacy/COOtoCSR.cpp
+      #src/community/legacy/spectral_clustering.cpp
+      #src/community/louvain_sg.cpp
+      #src/community/louvain_mg.cpp
+      #src/community/leiden_sg.cpp
+      #src/community/leiden_mg.cpp
+      #src/community/ecg_sg.cpp
+      #src/community/ecg_mg.cpp
+      #src/community/legacy/louvain.cpp
+      #src/community/legacy/ecg.cpp
+      #src/community/egonet_sg.cpp
+      #src/community/egonet_mg.cpp
       src/community/k_truss_sg.cpp
       src/sampling/random_walks.cpp
       src/sampling/random_walks_sg.cpp

@@ -20,8 +20,10 @@
 #include <rmm/detail/error.hpp>
 #include <rmm/detail/exec_check_disable.hpp>
 #include <rmm/device_buffer.hpp>
-#include <rmm/mr/device/device_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
+#include <rmm/resource_ref.hpp>
+
+#include <cuda/memory_resource>
 
 #include <cstddef>
 #include <vector>
@@ -121,10 +123,9 @@ class device_uvector {
    * @param stream The stream on which to perform the allocation
    * @param mr The resource used to allocate the device storage
    */
-  explicit device_uvector(
-    std::size_t size,
-    cuda_stream_view stream,
-    rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
+  explicit device_uvector(std::size_t size,
+                          cuda_stream_view stream,
+                          device_async_resource_ref mr = mr::get_current_device_resource())
     : _storage{elements_to_bytes(size), stream, mr}
   {
   }
@@ -138,10 +139,9 @@ class device_uvector {
    * @param stream The stream on which to perform the copy
    * @param mr The resource used to allocate device memory for the new vector
    */
-  explicit device_uvector(
-    device_uvector const& other,
-    cuda_stream_view stream,
-    rmm::mr::device_memory_resource* mr = rmm::mr::get_current_device_resource())
+  explicit device_uvector(device_uvector const& other,
+                          cuda_stream_view stream,
+                          device_async_resource_ref mr = mr::get_current_device_resource())
     : _storage{other._storage, stream, mr}
   {
   }
@@ -177,7 +177,7 @@ class device_uvector {
   /**
    * @brief Performs an asynchronous copy of `v` to the specified element in device memory.
    *
-   * This specialization for fundamental types is optimized to use `cudaMemsetAsync` when
+   * This specialization for fundamental types is optimized to use `hipMemsetAsync` when
    * `host_value` is zero.
    *
    * This function does not synchronize stream `s` before returning. Therefore, the object
@@ -199,7 +199,7 @@ class device_uvector {
    * // Copies 42 to element 0 on `stream`. Does _not_ synchronize
    * vec.set_element_async(0, v, stream);
    * ...
-   * cudaStreamSynchronize(stream);
+   * hipStreamSynchronize(stream);
    * // Synchronization is required before `v` can be modified
    * v = 13;
    * \endcode
@@ -219,7 +219,7 @@ class device_uvector {
 
     if constexpr (std::is_same<value_type, bool>::value) {
       RMM_CUDA_TRY(
-        cudaMemsetAsync(element_ptr(element_index), value, sizeof(value), stream.value()));
+        hipMemsetAsync(element_ptr(element_index), value, sizeof(value), stream.value()));
       return;
     }
 
@@ -230,8 +230,8 @@ class device_uvector {
       }
     }
 
-    RMM_CUDA_TRY(cudaMemcpyAsync(
-      element_ptr(element_index), &value, sizeof(value), cudaMemcpyDefault, stream.value()));
+    RMM_CUDA_TRY(hipMemcpyAsync(
+      element_ptr(element_index), &value, sizeof(value), hipMemcpyDefault, stream.value()));
   }
 
   // We delete the r-value reference overload to prevent asynchronously copying from a literal or
@@ -265,7 +265,7 @@ class device_uvector {
     RMM_EXPECTS(
       element_index < size(), "Attempt to access out of bounds element.", rmm::out_of_range);
     RMM_CUDA_TRY(
-      cudaMemsetAsync(element_ptr(element_index), 0, sizeof(value_type), stream.value()));
+      hipMemsetAsync(element_ptr(element_index), 0, sizeof(value_type), stream.value()));
   }
 
   /**
@@ -320,8 +320,8 @@ class device_uvector {
     RMM_EXPECTS(
       element_index < size(), "Attempt to access out of bounds element.", rmm::out_of_range);
     value_type value;
-    RMM_CUDA_TRY(cudaMemcpyAsync(
-      &value, element_ptr(element_index), sizeof(value), cudaMemcpyDefault, stream.value()));
+    RMM_CUDA_TRY(hipMemcpyAsync(
+      &value, element_ptr(element_index), sizeof(value), hipMemcpyDefault, stream.value()));
     stream.synchronize();
     return value;
   }
@@ -524,9 +524,10 @@ class device_uvector {
   [[nodiscard]] bool is_empty() const noexcept { return size() == 0; }
 
   /**
-   * @briefreturn{Pointer to underlying resource used to allocate and deallocate the device storage}
+   * @briefreturn{The resource used to allocate and deallocate the device
+   * storage}
    */
-  [[nodiscard]] mr::device_memory_resource* memory_resource() const noexcept
+  [[nodiscard]] rmm::device_async_resource_ref memory_resource() const noexcept
   {
     return _storage.memory_resource();
   }

@@ -1,0 +1,92 @@
+//===----------------------------------------------------------------------===//
+//
+// Part of libcu++, the C++ Standard Library for your entire system,
+// under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+// SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES.
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef _CUDA_STREAM_REF
+#define _CUDA_STREAM_REF
+
+// clang-format off
+
+#include <raft/util/cuda_rt_essentials.hpp>
+namespace cuda {
+class stream_ref {
+
+private:
+  hipStream_t __stream{0};
+
+public:
+    using value_type = hipStream_t;
+
+  constexpr stream_ref(value_type __stream_) noexcept
+      : __stream{__stream_}
+  {}
+
+  /// Disallow construction from an `int`, e.g., `0`.
+  stream_ref(int) = delete;
+
+  /// Disallow construction from `nullptr`.
+  stream_ref(std::nullptr_t) = delete;
+
+  [[nodiscard]] friend constexpr bool operator==(const stream_ref& __lhs, const stream_ref& __rhs) noexcept
+  {
+    return __lhs.__stream == __rhs.__stream;
+  }
+  [[nodiscard]] friend constexpr bool operator!=(const stream_ref& __lhs, const stream_ref& __rhs) noexcept
+  {
+    return __lhs.__stream != __rhs.__stream;
+  }
+
+ /// Returns the wrapped `hipStream_t` handle.
+  [[nodiscard]] constexpr value_type get() const noexcept { return __stream; }
+
+
+  void wait() const
+  {
+    const auto __result = ::hipStreamQuery(get());
+    switch (__result)
+    {
+      case ::hipSuccess:
+        return;
+      default:
+        ::hipGetLastError(); // Clear CUDA error state
+#ifndef _LIBCUDACXX_NO_EXCEPTIONS
+       // throw cuda::cuda_error{__result, "Failed to synchronize stream."};
+#else
+        // _LIBCUDACXX_UNREACHABLE;
+#endif
+    }
+  }
+  
+  [[nodiscard]] bool ready() const
+  {
+    const auto __result = ::hipStreamQuery(get());
+    switch (__result)
+    {
+      case ::hipSuccess:
+        return true;
+      case ::hipErrorNotReady:
+        return false;
+      default:
+        ::hipGetLastError(); // Clear CUDA error state
+#ifndef _LIBCUDACXX_NO_EXCEPTIONS
+        //throw raft::cuda_error{__result, ""};
+#else
+        // _LIBCUDACXX_UNREACHABLE;
+#endif
+        return false;
+    }
+  }
+
+}; // end of class
+
+
+}  // cuda
+
+
+#endif

@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2020-2021, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +62,7 @@ class stack_trace {
   friend std::ostream& operator<<(std::ostream& os, const stack_trace& trace)
   {
 #if defined(RMM_ENABLE_STACK_TRACES)
-    std::unique_ptr<char*, decltype(&std::free)> strings(
+    std::unique_ptr<char*, decltype(&::free)> strings(
       backtrace_symbols(trace.stack_ptrs.data(), static_cast<int>(trace.stack_ptrs.size())),
       &::free);
 
@@ -78,8 +77,8 @@ class stack_trace {
         if (dladdr(trace.stack_ptrs[i], &info) != 0) {
           int status = -1;  // Demangle the name. This can occasionally fail
 
-          std::unique_ptr<char, decltype(&std::free)> demangled(
-            abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status), &std::free);
+          std::unique_ptr<char, decltype(&::free)> demangled(
+            abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status), &::free);
           // If it fails, fallback to the dli_name.
           if (status == 0 or (info.dli_sname != nullptr)) {
             auto const* name = status == 0 ? demangled.get() : info.dli_sname;

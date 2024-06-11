@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2020-2023, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +15,13 @@
  */
 #pragma once
 
+#include <rmm/aligned.hpp>
 #include <rmm/cuda_device.hpp>
-#include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/logger.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <rmm/cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 #include <fmt/core.h>
 
@@ -181,8 +180,8 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
   std::mutex& get_mutex() { return mtx_; }
 
   struct stream_event_pair {
-    cudaStream_t stream;
-    cudaEvent_t event;
+    hipStream_t stream;
+    hipEvent_t event;
 
     bool operator<(stream_event_pair const& rhs) const { return event < rhs.event; }
   };
@@ -208,7 +207,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
 
     auto stream_event = get_event(stream);
 
-    size = rmm::detail::align_up(size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
+    size = rmm::align_up(size, rmm::CUDA_ALLOCATION_ALIGNMENT);
     RMM_EXPECTS(size <= this->underlying().get_maximum_allocation_size(),
                 "Maximum allocation size exceeded",
                 rmm::out_of_memory);
@@ -227,8 +226,6 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
   /**
    * @brief Deallocate memory pointed to by `p`.
    *
-   * @throws nothing
-   *
    * @param p Pointer to be deallocated
    * @param size The size in bytes of the allocation to deallocate
    * @param stream The stream in which to order this deallocation
@@ -242,13 +239,13 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     lock_guard lock(mtx_);
     auto stream_event = get_event(stream);
 
-    size             = rmm::detail::align_up(size, rmm::detail::CUDA_ALLOCATION_ALIGNMENT);
+    size             = rmm::align_up(size, rmm::CUDA_ALLOCATION_ALIGNMENT);
     auto const block = this->underlying().free_block(ptr, size);
 
-    // TODO: cudaEventRecord has significant overhead on deallocations. For the non-PTDS case
+    // TODO: hipEventRecord has significant overhead on deallocations. For the non-PTDS case
     // we may be able to delay recording the event in some situations. But using events rather than
     // streams allows stealing from deleted streams.
-    RMM_ASSERT_CUDA_SUCCESS(cudaEventRecord(stream_event.event, stream.value()));
+    RMM_ASSERT_CUDA_SUCCESS(hipEventRecord(stream_event.event, stream.value()));
 
     stream_free_blocks_[stream_event].insert(block);
 
@@ -274,13 +271,13 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
       // the CUDA runtime and thread_local destructors (can) run below
       // main: it is undefined behaviour to call into the CUDA
       // runtime below main.
-      thread_local std::vector<cudaEvent_t> events_tls(rmm::get_num_cuda_devices());
+      thread_local std::vector<hipEvent_t> events_tls(rmm::get_num_cuda_devices());
       auto event = [device_id = this->device_id_]() {
         auto& e = events_tls[device_id.value()];
         if (!e) {
           // These events are deliberately not destructed and therefore live until
           // program exit.
-          RMM_ASSERT_CUDA_SUCCESS(cudaEventCreateWithFlags(&e, cudaEventDisableTiming));
+          RMM_ASSERT_CUDA_SUCCESS(hipEventCreateWithFlags(&e, hipEventDisableTiming));
         }
         return e;
       }();
@@ -298,7 +295,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     return (iter != stream_events_.end()) ? iter->second : [&]() {
       stream_event_pair stream_event{stream_to_store};
       RMM_ASSERT_CUDA_SUCCESS(
-        cudaEventCreateWithFlags(&stream_event.event, cudaEventDisableTiming));
+        hipEventCreateWithFlags(&stream_event.event, hipEventDisableTiming));
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       stream_events_[stream_to_store] = stream_event;
       return stream_event;
@@ -399,7 +396,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
         if (block.is_valid()) {
           // Since we found a block associated with a different stream, we have to insert a wait
           // on the stream's associated event into the allocating stream.
-          RMM_CUDA_TRY(cudaStreamWaitEvent(stream_event.stream, other_event, 0));
+          RMM_CUDA_TRY(hipStreamWaitEvent(stream_event.stream, other_event, 0));
           return allocate_and_insert_remainder(block, size, other_blocks);
         }
       }
@@ -429,12 +426,12 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
 
   void merge_lists(stream_event_pair stream_event,
                    free_list& blocks,
-                   cudaEvent_t other_event,
+                   hipEvent_t other_event,
                    free_list&& other_blocks)
   {
     // Since we found a block associated with a different stream, we have to insert a wait
     // on the stream's associated event into the allocating stream.
-    RMM_CUDA_TRY(cudaStreamWaitEvent(stream_event.stream, other_event, 0));
+    RMM_CUDA_TRY(hipStreamWaitEvent(stream_event.stream, other_event, 0));
 
     // Merge the two free lists
     blocks.insert(std::move(other_blocks));
@@ -450,8 +447,8 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     lock_guard lock(mtx_);
 
     for (auto s_e : stream_events_) {
-      RMM_ASSERT_CUDA_SUCCESS(cudaEventSynchronize(s_e.second.event));
-      RMM_ASSERT_CUDA_SUCCESS(cudaEventDestroy(s_e.second.event));
+      RMM_ASSERT_CUDA_SUCCESS(hipEventSynchronize(s_e.second.event));
+      RMM_ASSERT_CUDA_SUCCESS(hipEventDestroy(s_e.second.event));
     }
 
     stream_events_.clear();
@@ -486,7 +483,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
   std::map<stream_event_pair, free_list> stream_free_blocks_;
 
   // bidirectional mapping between non-default streams and events
-  std::unordered_map<cudaStream_t, stream_event_pair> stream_events_;
+  std::unordered_map<hipStream_t, stream_event_pair> stream_events_;
 
   std::mutex mtx_;  // mutex for thread-safe access
 

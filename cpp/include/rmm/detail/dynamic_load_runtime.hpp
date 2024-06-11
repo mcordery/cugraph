@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2022, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +17,12 @@
 
 #include <rmm/cuda_device.hpp>
 
-#include <rmm/cuda_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 #include <dlfcn.h>
 
 #include <memory>
 #include <optional>
-
-#if HIP_VERSION >= 50100000  // CUDA 11.2 introduced cudaMallocAsync, ROCm 5.1.0 introduced hipMallocAsync
-#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
-#    define RMM_CUDA_MALLOC_ASYNC_SUPPORT
-#  else
-#    if CUDART_VERSION >= 11020
-#      define RMM_CUDA_MALLOC_ASYNC_SUPPORT
-#    endif
-#  endif
-#endif
 
 namespace rmm::detail {
 
@@ -48,18 +37,6 @@ struct dynamic_load_runtime {
   {
     auto close_cudart = [](void* handle) { ::dlclose(handle); };
     auto open_cudart  = []() {
-      #if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
-      {
-        ::dlerror();
-        void* ptr = dlopen("libamdhip64.so", RTLD_LAZY);
-
-        if (ptr != nullptr) { return ptr; }
-
-        RMM_FAIL("Unable to dlopen libamdhip64");
-      }
-      return static_cast<void*>(nullptr);
-      //: below is dead code, we aim to not do line changes, only additions
-      #endif
       ::dlerror();
       const int major = CUDART_VERSION / 1000;
 
@@ -85,7 +62,7 @@ struct dynamic_load_runtime {
   }
 
   template <typename... Args>
-  using function_sig = std::add_pointer_t<cudaError_t(Args...)>;
+  using function_sig = std::add_pointer_t<hipError_t(Args...)>;
 
   template <typename signature>
   static std::optional<signature> function(const char* func_name)
@@ -102,7 +79,7 @@ struct dynamic_load_runtime {
 // clang-format off
 #define RMM_CUDART_API_WRAPPER(name, signature)                               \
   template <typename... Args>                                                 \
-  static cudaError_t name(Args... args)                                       \
+  static hipError_t name(Args... args)                                       \
   {                                                                           \
     _Pragma("GCC diagnostic push")                                            \
     _Pragma("GCC diagnostic ignored \"-Waddress\"")                           \
@@ -115,27 +92,15 @@ struct dynamic_load_runtime {
 #else
 #define RMM_CUDART_API_WRAPPER(name, signature)                                \
   template <typename... Args>                                                  \
-  static cudaError_t name(Args... args)                                        \
+  static hipError_t name(Args... args)                                        \
   {                                                                            \
     static const auto func = dynamic_load_runtime::function<signature>(#name); \
     if (func) { return (*func)(args...); }                                     \
     RMM_FAIL("Failed to find #name function in libcudart.so");                 \
   }
-#  if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
-#    undef RMM_CUDART_API_WRAPPER
-#    define STR(x)   #x
-#    define RMM_CUDART_API_WRAPPER(name, signature)                                \
-  template <typename... Args>                                                      \
-  static cudaError_t name(Args... args)                                            \
-  {                                                                                \
-    static const auto func = dynamic_load_runtime::function<signature>(STR(name)); \
-    if (func) { return (*func)(args...); }                                         \
-    RMM_FAIL("Failed to find " STR(name) " function in libamdhip64.so");           \
-  }
-#  endif
 #endif
 
-#ifdef RMM_CUDA_MALLOC_ASYNC_SUPPORT
+#if CUDART_VERSION >= 11020  // 11.2 introduced hipMallocAsync
 /**
  * @brief Bind to the stream-ordered memory allocator functions
  * at runtime.
@@ -146,57 +111,47 @@ struct dynamic_load_runtime {
 struct async_alloc {
   static bool is_supported()
   {
-#if defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)
-#  if defined(RMM_STATIC_CUDART)
-    static bool runtime_supports_pool = (HIP_VERSION >= 50100000);
-#  else
-    static bool runtime_supports_pool =
-      dynamic_load_runtime::function<dynamic_load_runtime::function_sig<void*, cudaStream_t>>(
-        "hipFreeAsync")
-        .has_value();
-#  endif
-#else
 #if defined(RMM_STATIC_CUDART)
     static bool runtime_supports_pool = (CUDART_VERSION >= 11020);
 #else
     static bool runtime_supports_pool =
-      dynamic_load_runtime::function<dynamic_load_runtime::function_sig<void*, cudaStream_t>>(
-        "cudaFreeAsync")
+      dynamic_load_runtime::function<dynamic_load_runtime::function_sig<void*, hipStream_t>>(
+        "hipFreeAsync")
         .has_value();
 #endif
-#endif
+
     static auto driver_supports_pool{[] {
       int cuda_pool_supported{};
-      auto result = cudaDeviceGetAttribute(&cuda_pool_supported,
-                                           cudaDevAttrMemoryPoolsSupported,
+      auto result = hipDeviceGetAttribute(&cuda_pool_supported,
+                                           hipDeviceAttributeMemoryPoolsSupported,
                                            rmm::get_current_cuda_device().value());
-      return result == cudaSuccess and cuda_pool_supported == 1;
+      return result == hipSuccess and cuda_pool_supported == 1;
     }()};
     return runtime_supports_pool and driver_supports_pool;
   }
 
   /**
-   * @brief Check whether the specified `cudaMemAllocationHandleType` is supported on the present
+   * @brief Check whether the specified `hipMemAllocationHandleType` is supported on the present
    * CUDA driver/runtime version.
    *
    * @note This query was introduced in CUDA 11.3 so on CUDA 11.2 this function will only return
-   * true for `cudaMemHandleTypeNone`.
+   * true for `hipMemHandleTypeNone`.
    *
    * @param handle_type An IPC export handle type to check for support.
    * @return true if supported
    * @return false if unsupported
    */
-  static bool is_export_handle_type_supported(cudaMemAllocationHandleType handle_type)
+  static bool is_export_handle_type_supported(hipMemAllocationHandleType handle_type)
   {
     int supported_handle_types_bitmask{};
 #if CUDART_VERSION >= 11030  // 11.3 introduced cudaDevAttrMemoryPoolSupportedHandleTypes
-    if (cudaMemHandleTypeNone != handle_type) {
-      auto const result = cudaDeviceGetAttribute(&supported_handle_types_bitmask,
+    if (hipMemHandleTypeNone != handle_type) {
+      auto const result = hipDeviceGetAttribute(&supported_handle_types_bitmask,
                                                  cudaDevAttrMemoryPoolSupportedHandleTypes,
                                                  rmm::get_current_cuda_device().value());
 
-      // Don't throw on cudaErrorInvalidValue
-      auto const unsupported_runtime = (result == cudaErrorInvalidValue);
+      // Don't throw on hipErrorInvalidValue
+      auto const unsupported_runtime = (result == hipErrorInvalidValue);
       if (unsupported_runtime) return false;
       // throw any other error that may have occurred
       RMM_CUDA_TRY(result);
@@ -209,23 +164,23 @@ struct async_alloc {
   template <typename... Args>
   using cudart_sig = dynamic_load_runtime::function_sig<Args...>;
 
-  using cudaMemPoolCreate_sig = cudart_sig<cudaMemPool_t*, const cudaMemPoolProps*>;
-  RMM_CUDART_API_WRAPPER(cudaMemPoolCreate, cudaMemPoolCreate_sig);
+  using cudaMemPoolCreate_sig = cudart_sig<hipMemPool_t*, const hipMemPoolProps*>;
+  RMM_CUDART_API_WRAPPER(hipMemPoolCreate, cudaMemPoolCreate_sig);
 
-  using cudaMemPoolSetAttribute_sig = cudart_sig<cudaMemPool_t, cudaMemPoolAttr, void*>;
-  RMM_CUDART_API_WRAPPER(cudaMemPoolSetAttribute, cudaMemPoolSetAttribute_sig);
+  using cudaMemPoolSetAttribute_sig = cudart_sig<hipMemPool_t, hipMemPoolAttr, void*>;
+  RMM_CUDART_API_WRAPPER(hipMemPoolSetAttribute, cudaMemPoolSetAttribute_sig);
 
-  using cudaMemPoolDestroy_sig = cudart_sig<cudaMemPool_t>;
-  RMM_CUDART_API_WRAPPER(cudaMemPoolDestroy, cudaMemPoolDestroy_sig);
+  using cudaMemPoolDestroy_sig = cudart_sig<hipMemPool_t>;
+  RMM_CUDART_API_WRAPPER(hipMemPoolDestroy, cudaMemPoolDestroy_sig);
 
-  using cudaMallocFromPoolAsync_sig = cudart_sig<void**, size_t, cudaMemPool_t, cudaStream_t>;
-  RMM_CUDART_API_WRAPPER(cudaMallocFromPoolAsync, cudaMallocFromPoolAsync_sig);
+  using cudaMallocFromPoolAsync_sig = cudart_sig<void**, size_t, hipMemPool_t, hipStream_t>;
+  RMM_CUDART_API_WRAPPER(hipMallocFromPoolAsync, cudaMallocFromPoolAsync_sig);
 
-  using cudaFreeAsync_sig = cudart_sig<void*, cudaStream_t>;
-  RMM_CUDART_API_WRAPPER(cudaFreeAsync, cudaFreeAsync_sig);
+  using cudaFreeAsync_sig = cudart_sig<void*, hipStream_t>;
+  RMM_CUDART_API_WRAPPER(hipFreeAsync, cudaFreeAsync_sig);
 
-  using cudaDeviceGetDefaultMemPool_sig = cudart_sig<cudaMemPool_t*, int>;
-  RMM_CUDART_API_WRAPPER(cudaDeviceGetDefaultMemPool, cudaDeviceGetDefaultMemPool_sig);
+  using cudaDeviceGetDefaultMemPool_sig = cudart_sig<hipMemPool_t*, int>;
+  RMM_CUDART_API_WRAPPER(hipDeviceGetDefaultMemPool, cudaDeviceGetDefaultMemPool_sig);
 };
 #endif
 

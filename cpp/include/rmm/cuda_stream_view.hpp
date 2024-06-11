@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2020-2021, NVIDIA CORPORATION.
- * Modifications Copyright (C) 2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +18,8 @@
 
 #include <rmm/detail/error.hpp>
 
-#include <rmm/cuda_runtime_api.h>
+#include "cuda/stream_ref"
+#include <hip/hip_runtime_api.h>
 
 #include <atomic>
 #include <cstddef>
@@ -53,25 +53,39 @@ class cuda_stream_view {
   constexpr cuda_stream_view(std::nullptr_t) = delete;  //< Prevent cast from nullptr
 
   /**
-   * @brief Constructor from a cudaStream_t
+   * @brief Constructor from a hipStream_t
    *
    * @param stream The underlying stream for this view
    */
-  constexpr cuda_stream_view(cudaStream_t stream) noexcept : stream_{stream} {}
+  constexpr cuda_stream_view(hipStream_t stream) noexcept : stream_{stream} {}
+
+  /**
+   * @brief Implicit conversion from stream_ref.
+   *
+   * @param stream The underlying stream for this view
+   */
+  constexpr cuda_stream_view(cuda::stream_ref stream) noexcept : stream_{stream.get()} {}
 
   /**
    * @brief Get the wrapped stream.
    *
-   * @return cudaStream_t The underlying stream referenced by this cuda_stream_view
+   * @return hipStream_t The underlying stream referenced by this cuda_stream_view
    */
-  [[nodiscard]] constexpr cudaStream_t value() const noexcept { return stream_; }
+  [[nodiscard]] constexpr hipStream_t value() const noexcept { return stream_; }
 
   /**
-   * @brief Implicit conversion to cudaStream_t.
+   * @brief Implicit conversion to hipStream_t.
    *
-   * @return cudaStream_t The underlying stream referenced by this cuda_stream_view
+   * @return hipStream_t The underlying stream referenced by this cuda_stream_view
    */
-  constexpr operator cudaStream_t() const noexcept { return value(); }
+  constexpr operator hipStream_t() const noexcept { return value(); }
+
+  /**
+   * @brief Implicit conversion to stream_ref.
+   *
+   * @return stream_ref The underlying stream referenced by this cuda_stream_view
+   */
+  constexpr operator cuda::stream_ref() const noexcept { return value(); }
 
   /**
    * @briefreturn{true if the wrapped stream is the CUDA per-thread default stream}
@@ -86,24 +100,24 @@ class cuda_stream_view {
   /**
    * @brief Synchronize the viewed CUDA stream.
    *
-   * Calls `cudaStreamSynchronize()`.
+   * Calls `hipStreamSynchronize()`.
    *
    * @throw rmm::cuda_error if stream synchronization fails
    */
-  void synchronize() const { RMM_CUDA_TRY(cudaStreamSynchronize(stream_)); }
+  void synchronize() const { RMM_CUDA_TRY(hipStreamSynchronize(stream_)); }
 
   /**
    * @brief Synchronize the viewed CUDA stream. Does not throw if there is an error.
    *
-   * Calls `cudaStreamSynchronize()` and asserts if there is an error.
+   * Calls `hipStreamSynchronize()` and asserts if there is an error.
    */
   void synchronize_no_throw() const noexcept
   {
-    RMM_ASSERT_CUDA_SUCCESS(cudaStreamSynchronize(stream_));
+    RMM_ASSERT_CUDA_SUCCESS(hipStreamSynchronize(stream_));
   }
 
  private:
-  cudaStream_t stream_{};
+  hipStream_t stream_{};
 };
 
 /**
@@ -115,15 +129,15 @@ static constexpr cuda_stream_view cuda_stream_default{};
  * @brief Static cuda_stream_view of cudaStreamLegacy, for convenience
  */
 
-static const cuda_stream_view cuda_stream_legacy{
-  cudaStreamLegacy  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
-};
+//static const cuda_stream_view cuda_stream_legacy{
+//  hipStreamDefault  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+//};
 
 /**
- * @brief Static cuda_stream_view of cudaStreamPerThread, for convenience
+ * @brief Static cuda_stream_view of hipStreamPerThread, for convenience
  */
 static const cuda_stream_view cuda_stream_per_thread{
-  cudaStreamPerThread  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+  hipStreamPerThread  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 };
 
 // Need to avoid putting is_per_thread_default and is_default into the group twice.
@@ -143,7 +157,7 @@ static const cuda_stream_view cuda_stream_per_thread{
 #ifdef CUDA_API_PER_THREAD_DEFAULT_STREAM
   return value() == cuda_stream_legacy;
 #else
-  return value() == cuda_stream_legacy || value() == nullptr;
+  return value() == hipStreamDefault || value() == nullptr;
 #endif
 }
 

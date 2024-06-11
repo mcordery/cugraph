@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 #pragma once
 
+#include <rmm/aligned.hpp>
 #include <rmm/cuda_stream_view.hpp>
-#include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
+#include <rmm/resource_ref.hpp>
 
 #include <cstddef>
 #include <mutex>
@@ -65,12 +66,12 @@ class aligned_resource_adaptor final : public device_memory_resource {
    * are aligned.
    */
   explicit aligned_resource_adaptor(Upstream* upstream,
-                                    std::size_t alignment = rmm::detail::CUDA_ALLOCATION_ALIGNMENT,
+                                    std::size_t alignment = rmm::CUDA_ALLOCATION_ALIGNMENT,
                                     std::size_t alignment_threshold = default_alignment_threshold)
     : upstream_{upstream}, alignment_{alignment}, alignment_threshold_{alignment_threshold}
   {
     RMM_EXPECTS(nullptr != upstream, "Unexpected null upstream resource pointer.");
-    RMM_EXPECTS(rmm::detail::is_supported_alignment(alignment),
+    RMM_EXPECTS(rmm::is_supported_alignment(alignment),
                 "Allocation alignment is not a power of 2.");
   }
 
@@ -82,29 +83,17 @@ class aligned_resource_adaptor final : public device_memory_resource {
   aligned_resource_adaptor& operator=(aligned_resource_adaptor&&)      = delete;
 
   /**
-   * @brief Get the upstream memory resource.
-   *
-   * @return Upstream* pointer to a memory resource object.
+   * @briefreturn{rmm::device_async_resource_ref to the upstream resource}
    */
-  Upstream* get_upstream() const noexcept { return upstream_; }
-
-  /**
-   * @copydoc rmm::mr::device_memory_resource::supports_streams()
-   */
-  [[nodiscard]] bool supports_streams() const noexcept override
+  [[nodiscard]] rmm::device_async_resource_ref get_upstream_resource() const noexcept
   {
-    return upstream_->supports_streams();
+    return upstream_;
   }
 
   /**
-   * @brief Query whether the resource supports the get_mem_info API.
-   *
-   * @return bool true if the upstream resource supports get_mem_info, false otherwise.
+   * @briefreturn{Upstream* to the upstream memory resource}
    */
-  [[nodiscard]] bool supports_get_mem_info() const noexcept override
-  {
-    return upstream_->supports_get_mem_info();
-  }
+  [[nodiscard]] Upstream* get_upstream() const noexcept { return upstream_; }
 
   /**
    * @brief The default alignment used by the adaptor.
@@ -127,14 +116,14 @@ class aligned_resource_adaptor final : public device_memory_resource {
    */
   void* do_allocate(std::size_t bytes, cuda_stream_view stream) override
   {
-    if (alignment_ == rmm::detail::CUDA_ALLOCATION_ALIGNMENT || bytes < alignment_threshold_) {
+    if (alignment_ == rmm::CUDA_ALLOCATION_ALIGNMENT || bytes < alignment_threshold_) {
       return upstream_->allocate(bytes, stream);
     }
     auto const size = upstream_allocation_size(bytes);
     void* pointer   = upstream_->allocate(size, stream);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     auto const address         = reinterpret_cast<std::size_t>(pointer);
-    auto const aligned_address = rmm::detail::align_up(address, alignment_);
+    auto const aligned_address = rmm::align_up(address, alignment_);
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,performance-no-int-to-ptr)
     void* aligned_pointer = reinterpret_cast<void*>(aligned_address);
     if (pointer != aligned_pointer) {
@@ -153,7 +142,7 @@ class aligned_resource_adaptor final : public device_memory_resource {
    */
   void do_deallocate(void* ptr, std::size_t bytes, cuda_stream_view stream) override
   {
-    if (alignment_ == rmm::detail::CUDA_ALLOCATION_ALIGNMENT || bytes < alignment_threshold_) {
+    if (alignment_ == rmm::CUDA_ALLOCATION_ALIGNMENT || bytes < alignment_threshold_) {
       upstream_->deallocate(ptr, bytes, stream);
     } else {
       {
@@ -179,24 +168,9 @@ class aligned_resource_adaptor final : public device_memory_resource {
   {
     if (this == &other) { return true; }
     auto cast = dynamic_cast<aligned_resource_adaptor<Upstream> const*>(&other);
-    return cast != nullptr && upstream_->is_equal(*cast->get_upstream()) &&
+    if (cast == nullptr) { return false; }
+    return get_upstream_resource() == cast->get_upstream_resource() &&
            alignment_ == cast->alignment_ && alignment_threshold_ == cast->alignment_threshold_;
-  }
-
-  /**
-   * @brief Get free and available memory from upstream resource.
-   *
-   * The free size may not be fully allocatable because of alignment requirements.
-   *
-   * @throws rmm::cuda_error if unable to retrieve memory info.
-   *
-   * @param stream Stream on which to get the mem info.
-   * @return std::pair containing free_size and total_size of memory
-   */
-  [[nodiscard]] std::pair<std::size_t, std::size_t> do_get_mem_info(
-    cuda_stream_view stream) const override
-  {
-    return upstream_->get_mem_info(stream);
   }
 
   /**
@@ -208,8 +182,8 @@ class aligned_resource_adaptor final : public device_memory_resource {
    */
   std::size_t upstream_allocation_size(std::size_t bytes) const
   {
-    auto const aligned_size = rmm::detail::align_up(bytes, alignment_);
-    return aligned_size + alignment_ - rmm::detail::CUDA_ALLOCATION_ALIGNMENT;
+    auto const aligned_size = rmm::align_up(bytes, alignment_);
+    return aligned_size + alignment_ - rmm::CUDA_ALLOCATION_ALIGNMENT;
   }
 
   Upstream* upstream_;  ///< The upstream resource used for satisfying allocation requests

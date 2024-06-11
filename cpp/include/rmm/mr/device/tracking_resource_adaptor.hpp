@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <rmm/detail/stack_trace.hpp>
 #include <rmm/logger.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
+#include <rmm/resource_ref.hpp>
 
 #include <fmt/core.h>
 
@@ -52,11 +53,10 @@ namespace rmm::mr {
 template <typename Upstream>
 class tracking_resource_adaptor final : public device_memory_resource {
  public:
-  // can be a std::shared_mutex once C++17 is adopted
   using read_lock_t =
-    std::shared_lock<std::shared_timed_mutex>;  ///< Type of lock used to synchronize read access
+    std::shared_lock<std::shared_mutex>;  ///< Type of lock used to synchronize read access
   using write_lock_t =
-    std::unique_lock<std::shared_timed_mutex>;  ///< Type of lock used to synchronize write access
+    std::unique_lock<std::shared_mutex>;  ///< Type of lock used to synchronize write access
   /**
    * @brief Information stored about an allocation. Includes the size
    * and a stack trace if the `tracking_resource_adaptor` was initialized
@@ -106,27 +106,17 @@ class tracking_resource_adaptor final : public device_memory_resource {
     default;  ///< @default_move_assignment{tracking_resource_adaptor}
 
   /**
-   * @briefreturn{Pointer to the upstream resource}
+   * @briefreturn{rmm::device_async_resource_ref to the upstream resource}
    */
-  Upstream* get_upstream() const noexcept { return upstream_; }
-
-  /**
-   * @brief Checks whether the upstream resource supports streams.
-   *
-   * @return true The upstream resource supports streams
-   * @return false The upstream resource does not support streams.
-   */
-  bool supports_streams() const noexcept override { return upstream_->supports_streams(); }
-
-  /**
-   * @brief Query whether the resource supports the get_mem_info API.
-   *
-   * @return bool true if the upstream resource supports get_mem_info, false otherwise.
-   */
-  bool supports_get_mem_info() const noexcept override
+  [[nodiscard]] rmm::device_async_resource_ref get_upstream_resource() const noexcept
   {
-    return upstream_->supports_get_mem_info();
+    return upstream_;
   }
+
+  /**
+   * @briefreturn{Upstream* to the upstream memory resource}
+   */
+  [[nodiscard]] Upstream* get_upstream() const noexcept { return upstream_; }
 
   /**
    * @brief Get the outstanding allocations map
@@ -273,27 +263,14 @@ class tracking_resource_adaptor final : public device_memory_resource {
   {
     if (this == &other) { return true; }
     auto cast = dynamic_cast<tracking_resource_adaptor<Upstream> const*>(&other);
-    return cast != nullptr ? upstream_->is_equal(*cast->get_upstream())
-                           : upstream_->is_equal(other);
-  }
-
-  /**
-   * @brief Get free and available memory from upstream resource.
-   *
-   * @throws rmm::cuda_error if unable to retrieve memory info.
-   *
-   * @param stream Stream on which to get the mem info.
-   * @return std::pair contaiing free_size and total_size of memory
-   */
-  std::pair<std::size_t, std::size_t> do_get_mem_info(cuda_stream_view stream) const override
-  {
-    return upstream_->get_mem_info(stream);
+    if (cast == nullptr) { return upstream_->is_equal(other); }
+    return get_upstream_resource() == cast->get_upstream_resource();
   }
 
   bool capture_stacks_;                           // whether or not to capture call stacks
   std::map<void*, allocation_info> allocations_;  // map of active allocations
   std::atomic<std::size_t> allocated_bytes_;      // number of bytes currently allocated
-  std::shared_timed_mutex mutable mtx_;           // mutex for thread safe access to allocations_
+  std::shared_mutex mutable mtx_;                 // mutex for thread safe access to allocations_
   Upstream* upstream_;  // the upstream resource used for satisfying allocation requests
 };
 
