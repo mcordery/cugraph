@@ -29,8 +29,8 @@
 #include <rmm/exec_policy.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cub/device/device_radix_sort.cuh>
-#include <cub/device/device_run_length_encode.cuh>
+#include <hipcub/device/device_radix_sort.hpp>
+#include <hipcub/device/device_run_length_encode.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
 #include <thrust/fill.h>

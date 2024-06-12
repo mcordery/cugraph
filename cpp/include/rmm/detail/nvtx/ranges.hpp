@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*
+
 #pragma once
 
-#include <nvtx3/nvtx3.hpp>
+//#include <nvtx3/nvtx3.hpp>
 
 namespace rmm {
 /**
  * @brief Tag type for librmm's NVTX domain.
  */
-struct librmm_domain {
-  static constexpr char const* name{"librmm"};  ///< Name of the librmm domain
-};
+//struct librmm_domain {
+//  static constexpr char const* name{"librmm"};  ///< Name of the librmm domain
+//};
 
 /**
  * @brief Alias for an NVTX range in the librmm domain.
@@ -39,7 +39,7 @@ struct librmm_domain {
  * }
  * ```
  */
-using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
+//using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
 
 }  // namespace rmm
 
@@ -58,5 +58,5 @@ using scoped_range = ::nvtx3::scoped_range_in<librmm_domain>;
  * }
  * ```
  */
-#define RMM_FUNC_RANGE() NVTX3_FUNC_RANGE_IN(rmm::librmm_domain)
-*/
+//#define RMM_FUNC_RANGE() NVTX3_FUNC_RANGE_IN(rmm::librmm_domain)
+#define RMM_FUNC_RANGE() {}

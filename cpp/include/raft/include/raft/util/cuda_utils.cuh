@@ -20,9 +20,8 @@
 #include <raft/core/math.hpp>
 #include <raft/core/operators.hpp>
 
-#include <hip_bf16.h>
 #include <hip/hip_fp16.h>
-#include <math_constants.h>
+#include <hip/hip_math_constants.h>
 
 #include <stdint.h>
 
@@ -279,12 +278,12 @@ template <>
 template <typename T>
 RAFT_DEVICE_INLINE_FUNCTION typename std::enable_if_t<std::is_same_v<T, float>, float> myInf()
 {
-  return CUDART_INF_F;
+  return HIP_INF_F;
 }
 template <typename T>
 RAFT_DEVICE_INLINE_FUNCTION typename std::enable_if_t<std::is_same_v<T, double>, double> myInf()
 {
-  return CUDART_INF;
+  return HIP_INF;
 }
 // Half/Bfloat constants only defined after CUDA 12.2
 #if __CUDACC_VER_MAJOR__ < 12 || (__CUDACC_VER_MAJOR__ == 12 && __CUDACC_VER_MINOR__ < 2)
@@ -300,7 +299,7 @@ RAFT_DEVICE_INLINE_FUNCTION typename std::enable_if_t<std::is_same_v<T, __half>,
 #endif
 }
 template <typename T>
-RAFT_DEVICE_INLINE_FUNCTION typename std::enable_if_t<std::is_same_v<T, nv_bfloat16>, nv_bfloat16>
+RAFT_DEVICE_INLINE_FUNCTION typename std::enable_if_t<std::is_same_v<T, hip_bfloat16>, hip_bfloat16>
 myInf()
 {
 #if (__CUDA_ARCH__ >= 800)

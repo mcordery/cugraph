@@ -173,7 +173,6 @@ endif()
 #
 
 find_package(libhipcxx REQUIRED CONFIG PATHS ${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/lib/cmake/libhipcxx )
-
 if (libhipcxx_FOUND)
     message(STATUS "libhipcxx_VERSION ${libhipcxx_VERSION}")
 
@@ -184,8 +183,6 @@ if (libhipcxx_FOUND)
 else()
     message(FATAL_ERROR "libhipcxx not found")
 endif()
-
-
 
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
@@ -224,7 +221,8 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 #
 # NB check the flags here
 #
-set(ROCGRAPH_CXX_FLAGS -DCUTLASS_NAMESPACE=raft_cutlass -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
+
+set(ROCGRAPH_CXX_FLAGS -DNO_CUGRAPH_OPS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 set(ROCGRAPH_HIP_FLAGS "")
 
 set(THRUST_HOST_SYSTEM THRUST_HOST_SYSTEM_CPP) 
@@ -246,7 +244,9 @@ message(STATUS "HID ${HIP_INCLUDE_DIRS}")
 list(APPEND ROCGRAPH_CXX_FLAGS -Wno-unused-result)
 
 list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS})
+
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/libhipcxx/install/include ) # for hipco
+
 list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/rocprim)
 list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipcub)
 
@@ -260,8 +260,10 @@ list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/fmt/include
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/raft/include )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/cutlass/include )
 list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/include/hipco/include )
+list(APPEND ROCGRAPH_CXX_FLAGS  -cxx-isystem ${CMAKE_CURRENT_SOURCE_DIR}/include )
+list(APPEND ROCGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/src/ )
 
-#list(APPEND ROCGRAPH_CXX_FLAGS "-I/home/mcordery/libhipcxx/install/include/hip/std" ) # for hipco
+
 
 # Option to enable line info in HIP device compilation to allow introspection when profiling /
 # memchecking
@@ -302,7 +304,7 @@ set(ROCGRAPH_SOURCES
       src/detail/collect_local_vertex_values.cpp
       src/detail/groupby_and_count.cpp
       src/detail/collect_comm_wrapper.cpp
-      #src/sampling/random_walks_mg.cpp
+      src/sampling/random_walks_mg.cpp      
       #src/community/detail/common_methods_mg.cpp
       #src/community/detail/common_methods_sg.cpp
       #src/community/detail/refine_sg.cpp
@@ -310,13 +312,13 @@ set(ROCGRAPH_SOURCES
       src/community/edge_triangle_count_sg.cpp
       src/community/detail/maximal_independent_moves_sg.cpp
       src/community/detail/maximal_independent_moves_mg.cpp
-      #2src/detail/utility_wrappers.cpp
+      src/detail/utility_wrappers.cpp
       #src/structure/graph_view_mg.cpp
       src/structure/remove_self_loops.cpp
       src/structure/remove_multi_edges.cpp
       src/utilities/path_retrieval.cpp
-      #src/structure/legacy/graph.cpp
-      #src/linear_assignment/legacy/hungarian.cpp
+      src/structure/legacy/graph.cpp
+      src/linear_assignment/legacy/hungarian.cpp
       #src/link_prediction/jaccard_sg.cpp
       #src/link_prediction/sorensen_sg.cpp
       #src/link_prediction/overlap_sg.cpp
@@ -324,20 +326,20 @@ set(ROCGRAPH_SOURCES
       #src/link_prediction/sorensen_mg.cpp
       #src/link_prediction/overlap_mg.cpp
       #src/layout/legacy/force_atlas2.cpp
-      #src/converters/legacy/COOtoCSR.cpp
+      src/converters/legacy/COOtoCSR.cpp
       #src/community/legacy/spectral_clustering.cpp
-      #src/community/louvain_sg.cpp
-      #src/community/louvain_mg.cpp
-      #src/community/leiden_sg.cpp
-      #src/community/leiden_mg.cpp
-      #src/community/ecg_sg.cpp
-      #src/community/ecg_mg.cpp
-      #src/community/legacy/louvain.cpp
-      #src/community/legacy/ecg.cpp
-      #src/community/egonet_sg.cpp
-      #src/community/egonet_mg.cpp
-      src/community/k_truss_sg.cpp
-      src/sampling/random_walks.cpp
+      src/community/louvain_sg.cpp
+      src/community/louvain_mg.cpp
+      src/community/leiden_sg.cpp
+      src/community/leiden_mg.cpp
+      src/community/ecg_sg.cpp
+      src/community/ecg_mg.cpp
+      src/community/legacy/louvain.cpp
+      src/community/legacy/ecg.cpp
+      src/community/egonet_sg.cpp
+      src/community/egonet_mg.cpp
+      #src/community/k_truss_sg.cpp
+      #src/sampling/random_walks.cpp
       src/sampling/random_walks_sg.cpp
       src/sampling/detail/prepare_next_frontier_sg.cpp
       src/sampling/detail/prepare_next_frontier_mg.cpp
@@ -349,21 +351,21 @@ set(ROCGRAPH_SOURCES
       src/sampling/detail/shuffle_and_organize_output_mg.cpp
       src/sampling/uniform_neighbor_sampling_mg.cpp
       src/sampling/uniform_neighbor_sampling_sg.cpp
-      src/sampling/renumber_sampled_edgelist_sg.cpp
-      src/sampling/sampling_post_processing_sg.cpp
-      src/cores/core_number_sg.cpp
-      src/cores/core_number_mg.cpp
+      #src/sampling/renumber_sampled_edgelist_sg.cpp
+      #src/sampling/sampling_post_processing_sg.cpp
+      #src/cores/core_number_sg.cpp
+      #src/cores/core_number_mg.cpp
       src/cores/k_core_sg.cpp
       src/cores/k_core_mg.cpp
       src/components/legacy/connectivity.cpp
       src/generators/generate_rmat_edgelist.cpp
       src/generators/generate_bipartite_rmat_edgelist.cpp
-      src/generators/generator_tools.cpp
+      #src/generators/generator_tools.cpp
       src/generators/simple_generators.cpp
       src/generators/erdos_renyi_generator.cpp
       src/structure/graph_sg.cpp
       src/structure/graph_mg.cpp
-      src/structure/graph_view_sg.cpp
+      #src/structure/graph_view_sg.cpp
       src/structure/decompress_to_edgelist_sg.cpp
       src/structure/decompress_to_edgelist_mg.cpp
       src/structure/symmetrize_graph_sg.cpp
@@ -376,36 +378,36 @@ set(ROCGRAPH_SOURCES
       src/structure/coarsen_graph_mg.cpp
       src/structure/graph_weight_utils_mg.cpp
       src/structure/graph_weight_utils_sg.cpp
-      src/structure/renumber_edgelist_sg.cpp
-      src/structure/renumber_edgelist_mg.cpp
-      src/structure/renumber_utils_sg.cpp
-      src/structure/renumber_utils_mg.cpp
-      src/structure/relabel_sg.cpp
-      src/structure/relabel_mg.cpp
-      src/structure/induced_subgraph_sg.cpp
-      src/structure/induced_subgraph_mg.cpp
+      #src/structure/renumber_edgelist_sg.cpp
+      #src/structure/renumber_edgelist_mg.cpp
+      #src/structure/renumber_utils_sg.cpp
+      #src/structure/renumber_utils_mg.cpp
+      #src/structure/relabel_sg.cpp
+      #src/structure/relabel_mg.cpp
+      #src/structure/induced_subgraph_sg.cpp
+      #src/structure/induced_subgraph_mg.cpp
       src/structure/select_random_vertices_sg.cpp
       src/structure/select_random_vertices_mg.cpp
       src/traversal/extract_bfs_paths_sg.cpp
       src/traversal/extract_bfs_paths_mg.cpp
-      src/traversal/bfs_sg.cpp
-      src/traversal/bfs_mg.cpp
-      src/traversal/sssp_sg.cpp
-      src/traversal/od_shortest_distances_sg.cpp
-      src/traversal/sssp_mg.cpp
+      #src/traversal/bfs_sg.cpp
+      #src/traversal/bfs_mg.cpp
+      #src/traversal/sssp_sg.cpp
+      #src/traversal/od_shortest_distances_sg.cpp
+      #src/traversal/sssp_mg.cpp
       src/link_analysis/hits_sg.cpp
       src/link_analysis/hits_mg.cpp
-      src/link_analysis/pagerank_sg.cpp
-      src/link_analysis/pagerank_mg.cpp
+      #src/link_analysis/pagerank_sg.cpp
+      #src/link_analysis/pagerank_mg.cpp
       src/centrality/katz_centrality_sg.cpp
       src/centrality/katz_centrality_mg.cpp
-      src/centrality/eigenvector_centrality_sg.cpp
-      src/centrality/eigenvector_centrality_mg.cpp
-      src/centrality/betweenness_centrality_sg.cpp
-      src/centrality/betweenness_centrality_mg.cpp
+      #src/centrality/eigenvector_centrality_sg.cpp
+      #src/centrality/eigenvector_centrality_mg.cpp
+      #src/centrality/betweenness_centrality_sg.cpp
+      #src/centrality/betweenness_centrality_mg.cpp
       src/tree/legacy/mst.cpp
-      src/components/weakly_connected_components_sg.cpp
-      src/components/weakly_connected_components_mg.cpp
+      #src/components/weakly_connected_components_sg.cpp
+      #src/components/weakly_connected_components_mg.cpp
       src/components/mis_sg.cpp
       src/components/mis_mg.cpp
       src/components/vertex_coloring_sg.cpp
@@ -414,10 +416,10 @@ set(ROCGRAPH_SOURCES
       src/structure/create_graph_from_edgelist_mg.cpp
       src/structure/symmetrize_edgelist_sg.cpp
       src/structure/symmetrize_edgelist_mg.cpp
-      src/community/triangle_count_sg.cpp
-      src/community/triangle_count_mg.cpp
-      src/traversal/k_hop_nbrs_sg.cpp
-      src/traversal/k_hop_nbrs_mg.cpp
+      #src/community/triangle_count_sg.cpp
+      #src/community/triangle_count_mg.cpp
+      #src/traversal/k_hop_nbrs_sg.cpp
+      #src/traversal/k_hop_nbrs_mg.cpp
      src/mtmg/vertex_result.cpp
 )
 
@@ -476,12 +478,13 @@ target_include_directories(rocgraph
 
 target_link_libraries(rocgraph
     PUBLIC
+        hip::host
         hip::device
         hipblas
         hipsparse
         hiprand
         hipsolver
-        libhipcxx::libhipcxx
+ #       libhipcxx::libhipcxx
     )
 
 ################################################################################

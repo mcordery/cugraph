@@ -20,8 +20,8 @@
 #include <rmm/detail/error.hpp>
 //#include <rmm/detail/nvtx/ranges.hpp>
 
-#include <cuda/memory_resource>
-#include <cuda/stream_ref>
+#include <hip/memory_resource>
+#include <hip/stream_ref>
 #include <hip/hip_runtime_api.h>
 
 #include <cstddef>
@@ -107,7 +107,7 @@ class pinned_host_memory_resource {
    * @param stream CUDA stream on which to perform the allocation (ignored).
    * @return Pointer to the newly allocated memory.
    */
-  static void* allocate_async(std::size_t bytes, [[maybe_unused]] cuda::stream_ref stream)
+  static void* allocate_async(std::size_t bytes, [[maybe_unused]] hip::stream_ref stream)
   {
     RMM_FUNC_RANGE();
 
@@ -131,7 +131,7 @@ class pinned_host_memory_resource {
    */
   static void* allocate_async(std::size_t bytes,
                               std::size_t alignment,
-                              [[maybe_unused]] cuda::stream_ref stream)
+                              [[maybe_unused]] hip::stream_ref stream)
   {
     RMM_FUNC_RANGE();
 
@@ -149,7 +149,7 @@ class pinned_host_memory_resource {
    */
   static void deallocate_async(void* ptr,
                                std::size_t bytes,
-                               [[maybe_unused]] cuda::stream_ref stream) noexcept
+                               [[maybe_unused]] hip::stream_ref stream) noexcept
   {
     RMM_FUNC_RANGE();
 
@@ -170,7 +170,7 @@ class pinned_host_memory_resource {
   static void deallocate_async(void* ptr,
                                std::size_t bytes,
                                std::size_t alignment,
-                               [[maybe_unused]] cuda::stream_ref stream) noexcept
+                               [[maybe_unused]] hip::stream_ref stream) noexcept
   {
     RMM_FUNC_RANGE();
 

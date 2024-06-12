@@ -14,7 +14,7 @@
 // clang-format off
 
 #include <raft/util/cuda_rt_essentials.hpp>
-namespace cuda {
+namespace hip {
 class stream_ref {
 
 private:

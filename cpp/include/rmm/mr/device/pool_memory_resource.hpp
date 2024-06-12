@@ -26,7 +26,7 @@
 #include <rmm/mr/device/device_memory_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cuda/std/type_traits>
+#include <hip/std/type_traits>
 #include <hip/hip_runtime_api.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
@@ -74,7 +74,7 @@ template <class PoolResource, class Upstream, class Property>
 struct maybe_remove_property<PoolResource,
                              Upstream,
                              Property,
-                             cuda::std::enable_if_t<!cuda::has_property<Upstream, Property>>> {
+                             hip::std::enable_if_t<!hip::has_property<Upstream, Property>>> {
 #if defined(__GNUC__) && !defined(__clang__)  // GCC warns about compatibility
                                               // issues with pre ISO C++ code
 #pragma GCC diagnostic push
@@ -104,10 +104,10 @@ struct maybe_remove_property<PoolResource,
 template <typename Upstream>
 class pool_memory_resource final
   : public detail::
-      maybe_remove_property<pool_memory_resource<Upstream>, Upstream, cuda::mr::device_accessible>,
+      maybe_remove_property<pool_memory_resource<Upstream>, Upstream, hip::mr::device_accessible>,
     public detail::stream_ordered_memory_resource<pool_memory_resource<Upstream>,
                                                   detail::coalescing_free_list>,
-    public cuda::forward_property<pool_memory_resource<Upstream>, Upstream> {
+    public hip::forward_property<pool_memory_resource<Upstream>, Upstream> {
  public:
   friend class detail::stream_ordered_memory_resource<pool_memory_resource<Upstream>,
                                                       detail::coalescing_free_list>;
@@ -159,11 +159,11 @@ class pool_memory_resource final
    * of the available memory from the upstream resource.
    */
   template <typename Upstream2                                               = Upstream,
-            cuda::std::enable_if_t<cuda::mr::async_resource<Upstream2>, int> = 0>
+            hip::std::enable_if_t<hip::mr::async_resource<Upstream2>, int> = 0>
   explicit pool_memory_resource(Upstream2& upstream_mr,
                                 std::size_t initial_pool_size,
                                 std::optional<std::size_t> maximum_pool_size = std::nullopt)
-    : pool_memory_resource(cuda::std::addressof(upstream_mr), initial_pool_size, maximum_pool_size)
+    : pool_memory_resource(hip::std::addressof(upstream_mr), initial_pool_size, maximum_pool_size)
   {
   }
 

@@ -33,6 +33,8 @@
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
 
+#include <hip/hip_runtime_api.h>
+
 namespace cugraph {
 namespace detail {
 

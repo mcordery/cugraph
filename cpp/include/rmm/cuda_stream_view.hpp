@@ -18,12 +18,15 @@
 
 #include <rmm/detail/error.hpp>
 
-#include "cuda/stream_ref"
+#include <hip/stream_ref>
 #include <hip/hip_runtime_api.h>
 
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+
+constexpr hipStream_t defaultStream = 0;
+
 
 namespace rmm {
 /**
@@ -64,7 +67,7 @@ class cuda_stream_view {
    *
    * @param stream The underlying stream for this view
    */
-  constexpr cuda_stream_view(cuda::stream_ref stream) noexcept : stream_{stream.get()} {}
+  constexpr cuda_stream_view(hip::stream_ref stream) noexcept : stream_{stream.get()} {}
 
   /**
    * @brief Get the wrapped stream.
@@ -85,7 +88,7 @@ class cuda_stream_view {
    *
    * @return stream_ref The underlying stream referenced by this cuda_stream_view
    */
-  constexpr operator cuda::stream_ref() const noexcept { return value(); }
+  constexpr operator hip::stream_ref() const noexcept { return value(); }
 
   /**
    * @briefreturn{true if the wrapped stream is the CUDA per-thread default stream}
@@ -129,9 +132,10 @@ static constexpr cuda_stream_view cuda_stream_default{};
  * @brief Static cuda_stream_view of cudaStreamLegacy, for convenience
  */
 
-//static const cuda_stream_view cuda_stream_legacy{
-//  hipStreamDefault  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
-//};
+static const cuda_stream_view cuda_stream_legacy{
+defaultStream
+	  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+};
 
 /**
  * @brief Static cuda_stream_view of hipStreamPerThread, for convenience
@@ -157,7 +161,7 @@ static const cuda_stream_view cuda_stream_per_thread{
 #ifdef CUDA_API_PER_THREAD_DEFAULT_STREAM
   return value() == cuda_stream_legacy;
 #else
-  return value() == hipStreamDefault || value() == nullptr;
+  return value() == cuda_stream_legacy || value() == nullptr;
 #endif
 }
 

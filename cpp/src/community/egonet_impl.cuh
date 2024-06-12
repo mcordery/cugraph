@@ -77,7 +77,7 @@ extract(raft::handle_t const& handle,
   auto user_stream_view = handle.get_stream();
 
   size_t num_sources = source_vertex.size();
-  [[maybe_unused]] std::vector<size_t> source_start{{0}};
+  [[maybe_unused]] std::vector<size_t> source_start{0};
 
   if constexpr (multi_gpu) {
     source_start =

@@ -289,7 +289,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     // at construction. For consistency, the same key is used for null stream free lists in
     // non-PTDS mode.
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast)
-    auto* const stream_to_store = stream.is_default() ? cudaStreamLegacy : stream.value();
+    auto* const stream_to_store = stream.is_default() ? defaultStream : stream.value();
 
     auto const iter = stream_events_.find(stream_to_store);
     return (iter != stream_events_.end()) ? iter->second : [&]() {

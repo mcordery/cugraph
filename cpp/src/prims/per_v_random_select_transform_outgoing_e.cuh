@@ -36,7 +36,7 @@
 #include <hipcub/hipcub.hpp>
 #include <hip/atomic>
 #include <hip/functional>
-//#include <hip/algorithm>
+#include <rocprim/functional.hpp>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/iterator/constant_iterator.h>
@@ -372,7 +372,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_mid_local_degree(
           ? static_cast<edge_t>(count_set_bits(
               edge_partition_e_mask.value_first(),
               edge_offset + packed_bools_per_word() * j,
-              hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
+              ::rocprim::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
           : edge_t{0};
       WarpScan(temp_storage).InclusiveSum(inc, inc);
       inclusive_sums[start_offset + j] = sum + inc;
@@ -427,7 +427,7 @@ __global__ static void compute_valid_local_nbr_inclusive_sums_high_local_degree(
           ? static_cast<edge_t>(count_set_bits(
               edge_partition_e_mask.value_first(),
               edge_offset + packed_bools_per_word() * j,
-              hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
+              ::rocprim::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j)))
           : edge_t{0};
       BlockScan(temp_storage).InclusiveSum(inc, inc);
       inclusive_sums[start_offset + j] = sum + inc;
@@ -534,7 +534,7 @@ compute_valid_local_nbr_count_inclusive_sums(
         sum += count_set_bits(
           edge_partition_e_mask.value_first(),
           edge_offset + packed_bools_per_word() * j,
-          hip::std::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j));
+          ::rocprim::min(packed_bools_per_word(), local_degree - packed_bools_per_word() * j));
         inclusive_sums[start_offset + j] = sum;
       }
     });

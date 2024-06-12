@@ -23,7 +23,7 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cuda/memory_resource>
+#include <hip/memory_resource>
 
 #include <cstddef>
 #include <vector>

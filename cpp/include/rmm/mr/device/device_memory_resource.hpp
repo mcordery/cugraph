@@ -17,9 +17,9 @@
 
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/aligned.hpp>
-//#include <rmm/detail/nvtx/ranges.hpp>
+#include <rmm/detail/nvtx/ranges.hpp>
 
-#include <cuda/memory_resource>
+#include <hip/memory_resource>
 
 #include <cstddef>
 #include <utility>
@@ -307,7 +307,7 @@ class device_memory_resource {
    *
    * This property declares that a `device_memory_resource` provides device accessible memory
    */
-  friend void get_property(device_memory_resource const&, cuda::mr::device_accessible) noexcept {}
+  friend void get_property(device_memory_resource const&, hip::mr::device_accessible) noexcept {}
 
  private:
   /**
@@ -356,6 +356,6 @@ class device_memory_resource {
     return this == &other;
   }
 };
-static_assert(cuda::mr::async_resource_with<device_memory_resource, cuda::mr::device_accessible>);
+static_assert(hip::mr::async_resource_with<device_memory_resource, hip::mr::device_accessible>);
 /** @} */  // end of group
 }  // namespace rmm::mr

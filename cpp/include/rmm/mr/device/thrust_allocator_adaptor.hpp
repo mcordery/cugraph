@@ -21,7 +21,7 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <cuda/memory_resource>
+#include <hip/memory_resource>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/device_ptr.h>
 #include <thrust/memory.h>
@@ -144,7 +144,7 @@ class thrust_allocator : public thrust::device_malloc_allocator<T> {
    *
    * This property declares that a `thrust_allocator` provides device accessible memory
    */
-  friend void get_property(thrust_allocator const&, cuda::mr::device_accessible) noexcept {}
+  friend void get_property(thrust_allocator const&, hip::mr::device_accessible) noexcept {}
 
  private:
   cuda_stream_view _stream{};

@@ -40,8 +40,8 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
 
-CUCO_DECLARE_BITWISE_COMPARABLE(float)
-CUCO_DECLARE_BITWISE_COMPARABLE(double)
+HIPCO_DECLARE_BITWISE_COMPARABLE(float)
+HIPCO_DECLARE_BITWISE_COMPARABLE(double)
 // FIXME: a temporary workaround for a compiler error, should be deleted once hipco gets patched.
 namespace hipco {
 template <>

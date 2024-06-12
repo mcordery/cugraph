@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "utilities/graph_utils.cuh"
 
 #include <cugraph/legacy/graph.hpp>
@@ -26,7 +25,11 @@
 #include <thrust/for_each.h>
 #include <thrust/iterator/counting_iterator.h>
 
+#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
+
+
 namespace {
+
 
 template <typename vertex_t, typename edge_t>
 void degree_from_offsets(vertex_t number_of_vertices,

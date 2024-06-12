@@ -58,6 +58,9 @@
 #include <utility>
 #include <vector>
 
+#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
+using namespace hip_extensions::hip_warp_primitives;
+
 namespace cugraph {
 
 namespace detail {

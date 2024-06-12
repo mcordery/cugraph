@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <rmm/hip_stream.hpp>
+#include <rmm/cuda_stream.hpp>
 #include <rmm/cuda_stream_view.hpp>
 #include <rmm/detail/error.hpp>
 

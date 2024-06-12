@@ -15,9 +15,9 @@
  */
 #pragma once
 
-//#include <rmm/detail/nvtx/ranges.hpp>
+#include <rmm/detail/nvtx/ranges.hpp>
 
-#include <cuda/memory_resource>
+#include <hip/memory_resource>
 
 #include <cstddef>
 #include <utility>

@@ -15,7 +15,7 @@
  */
 #pragma once
 
-#include <cuda/memory_resource>
+#include <hip/memory_resource>
 #include <cuda/std/type_traits>
 
 namespace rmm::mr {
