@@ -1,80 +1,61 @@
-## https://pre-commit.com/
+# Default set of hooks for hipGRAPH.
 #
-# Before first use: `pre-commit install`
-# To run: `pre-commit run --all-files`
-exclude: '^thirdparty'
+# Be careful about indentation in this file. It's YAML, and
+# YAML if very, very picky.
+
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+---
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-added-large-files
-      - id: debug-statements
-      - id: end-of-file-fixer
-      - id: mixed-line-ending
-      - id: trailing-whitespace
-  - repo: https://github.com/psf/black
-    rev: 22.10.0
-    hooks:
-      - id: black
-        language_version: python3
-        args: [--target-version=py39]
-        files: ^(python/.*|benchmarks/.*)$
-        exclude: ^python/nx-cugraph/
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args: ["--config=.flake8"]
-        files: python/.*$
-        types: [file]
-        types_or: [python] # TODO: Enable [python, cython]
-        additional_dependencies: ["flake8-force"]
-  - repo: https://github.com/asottile/yesqa
-    rev: v1.3.0
-    hooks:
-      - id: yesqa
-        additional_dependencies:
-          - flake8==6.0.0
-  - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v16.0.6
-    hooks:
-      - id: clang-format
-        types_or: [c, c++, cuda]
-        args: ["-fallback-style=none", "-style=file", "-i"]
-  - repo: https://github.com/rapidsai/dependency-file-generator
-    rev: v1.8.0
-    hooks:
-        - id: rapids-dependency-file-generator
-          args: ["--clean"]
-  - repo: https://github.com/rapidsai/pre-commit-hooks
-    rev: v0.0.3
-    hooks:
-      - id: verify-copyright
-        files: |
-          (?x)
-              [.](cmake|cpp|cu|cuh|h|hpp|sh|pxd|py|pyx)$|
-              CMakeLists[.]txt$|
-              CMakeLists_standalone[.]txt$|
-              [.]flake8[.]cython$|
-              meta[.]yaml$|
-              setup[.]cfg$
-  - repo: local
-    hooks:
-      - id: nx-cugraph-meta-data-update
-        name: nx-cugraph meta-data updater
-        entry: bash -c "PYTHONPATH=./python/nx-cugraph python ./python/nx-cugraph/_nx_cugraph/__init__.py"
-        files: ^python/nx-cugraph/
-        types: [python]
-        language: python
-        pass_filenames: false
-        additional_dependencies: ["networkx>=3.3"]
-  - repo: local
-    hooks:
-      - id: nx-cugraph-readme-update
-        name: nx-cugraph README updater
-        entry: bash -c "PYTHONPATH=./python/nx-cugraph python ./python/nx-cugraph/scripts/update_readme.py ./python/nx-cugraph/README.md"
-        files: ^python/nx-cugraph/
-        types_or: [python, markdown]
-        language: python
-        pass_filenames: false
-        additional_dependencies: ["networkx>=3.3"]
+ - repo: https://github.com/pre-commit/pre-commit-hooks
+   rev: v4.6.0
+   hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    # Too fiddly. So is yaml, but oh well.
+    # - id: check-yaml
+    - id: check-added-large-files
+      args: ['--maxkb=6000']
+    - id: check-merge-conflict
+    - id: mixed-line-ending
+      args: ['--fix=auto']
+    - id: no-commit-to-branch
+      args: ['--branch', 'develop', '--branch', 'main']
+
+ - repo: https://github.com/pre-commit/mirrors-clang-format
+   rev: v18.1.5
+   hooks:
+    - id: clang-format
+      types_or: [c++, c, cuda]
+
+# https://github.com/cheshirekow/cmake-format-precommit is
+# missing a dep. on pyYAML
+ - repo: https://github.com/Kr4is/cmake-format-precommit.git
+   rev: v0.6.14
+   hooks:
+    - id: cmake-format
+
+# The next two are for Python *formatting*. We could add
+# additional tools like mypy
+ - repo: https://github.com/psf/black
+   rev: 24.4.2
+   hooks:
+    - id: black
+
+ - repo: https://github.com/pycqa/isort
+   rev: 5.13.2
+   hooks:
+     - id: isort
+       args: ["--profile", "black", "--filter-files"]
+       name: isort (python)
+
+# Currently these produce too much noise to run by default.
+# This is left here as documentation for running try-repo.
+# That will point out the problems we need to fix:
+# pre-commit try-repo https://github.com/sbrunner/hooks copyright-required.
+
+# - repo: https://github.com/sbrunner/hooks
+#   rev: 1.0.0
+#   hooks:
+#    # Check that the copyright is present and up to date
+#    - id: copyright-required

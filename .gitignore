@@ -56,7 +56,7 @@ build/
 cpp/build/
 cpp/include/cugraph/ipc_generated/*.h
 cpp/thirdparty/googletest/
-
+.cache
 ## Eclipse IDE
 .project
 .cproject

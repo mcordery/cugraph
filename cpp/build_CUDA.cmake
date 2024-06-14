@@ -299,8 +299,8 @@ if( USE_CUDA )
                 CXX_STANDARD_REQUIRED               ON
                 CUDA_STANDARD                       17
                 CUDA_STANDARD_REQUIRED              ON
-                POSITION_INDEPENDENT_CODE           ON
-                INTERFACE_POSITION_INDEPENDENT_CODE ON
+                POSITION_INDEPENDENT_CODE           OFF
+                INTERFACE_POSITION_INDEPENDENT_CODE OFF
     )
     target_compile_options(cugraph
                 PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
@@ -415,8 +415,8 @@ set_target_properties(cugraph_c
                CXX_STANDARD_REQUIRED               ON
                CUDA_STANDARD                       17
                CUDA_STANDARD_REQUIRED              ON
-               POSITION_INDEPENDENT_CODE           ON
-               INTERFACE_POSITION_INDEPENDENT_CODE ON
+               POSITION_INDEPENDENT_CODE           OFF
+               INTERFACE_POSITION_INDEPENDENT_CODE OFF
 )
 
 target_compile_options(cugraph_c

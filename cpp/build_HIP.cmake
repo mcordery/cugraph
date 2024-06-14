@@ -207,6 +207,8 @@ endif()
 # - User Options  --------------------------------------------------------------
 
 option(BUILD_SHARED_LIBS "Build rocGraph shared libraries" ON)
+# see later after add_library() where we explicitly turn off flags for position independent code.
+
 option(BUILD_ROCGRAPH_MG_TESTS "Build rocGraph multigpu algorithm tests" OFF)
 option(CMAKE_HIP_LINEINFO "Enable the -lineinfo option for nvcc (useful for cuda-memcheck / profiler" OFF)
 option(BUILD_TESTS "Configure CMake to build tests" OFF)
@@ -220,7 +222,9 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 
 #
 # NB check the flags here
-#
+
+
+
 
 set(ROCGRAPH_CXX_FLAGS -DNO_CUGRAPH_OPS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE  -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
 set(ROCGRAPH_HIP_FLAGS "")
@@ -390,7 +394,7 @@ set(ROCGRAPH_SOURCES
       src/structure/select_random_vertices_mg.cpp
       src/traversal/extract_bfs_paths_sg.cpp
       src/traversal/extract_bfs_paths_mg.cpp
-      #src/traversal/bfs_sg.cpp
+      src/traversal/bfs_sg.cpp
       #src/traversal/bfs_mg.cpp
       #src/traversal/sssp_sg.cpp
       #src/traversal/od_shortest_distances_sg.cpp
@@ -426,8 +430,7 @@ set(ROCGRAPH_SOURCES
 
 add_library(rocgraph ${ROCGRAPH_SOURCES})
 
-    # With ROCM 6.1.2 currently, do NO change C++ std to anything higher than 17 if you have #include <chrono> in a source/header file
-
+    # 
     set_target_properties(rocgraph
         PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                 INSTALL_RPATH                       "\$ORIGIN"
@@ -438,8 +441,8 @@ add_library(rocgraph ${ROCGRAPH_SOURCES})
                 HIP_STANDARD                       17
                 HIP_STANDARD_REQUIRED              ON
                 HIP_EXTENSIONS                     ON
-                POSITION_INDEPENDENT_CODE           ON
-                INTERFACE_POSITION_INDEPENDENT_CODE ON
+                POSITION_INDEPENDENT_CODE           OFF  
+                INTERFACE_POSITION_INDEPENDENT_CODE OFF
     )
     target_compile_options(rocgraph 
                 PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
@@ -478,8 +481,8 @@ target_include_directories(rocgraph
 
 target_link_libraries(rocgraph
     PUBLIC
-        hip::host
-        hip::device
+       # hip::host
+       # hip::device
         hipblas
         hipsparse
         hiprand
@@ -548,8 +551,8 @@ set_target_properties(rocgraph_c
                CXX_STANDARD_REQUIRED               ON
                HIP_STANDARD                       20
                HIP_STANDARD_REQUIRED              ON
-               POSITION_INDEPENDENT_CODE           ON
-               INTERFACE_POSITION_INDEPENDENT_CODE ON
+               POSITION_INDEPENDENT_CODE           OFF
+               INTERFACE_POSITION_INDEPENDENT_CODE OFF
 )
 
 target_compile_options(rocgraph_c
