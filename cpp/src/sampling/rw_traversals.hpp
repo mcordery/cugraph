@@ -237,7 +237,7 @@ struct biased_selector_t {
         prev_col_indx = col_indx;
       }
       return thrust::optional{
-        thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
+       thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
     }
 
    private:

@@ -1,0 +1,111 @@
+/usr/lib/gcc/x86_64-linux-gnu/11/../../../../include/c++/11/bits/unique_ptr.h:962:34: error: no matching constructor for initialization of 'hipco::experimental::static_map<int, float, hipco::experimental::extent<unsigned long>, hip::std::__detail::thread_scope_device, thrust::equal_to<int>, hipco::experimental::linear_probing<1, hipco::detail::MurmurHash3_32<int>>, rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>>'
+  962 |     { return unique_ptr<_Tp>(new _Tp(std::forward<_Args>(__args)...)); }
+      |                                  ^   ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+      src/community/detail/common_methods_mg.cpp
+      src/community/detail/common_methods_sg.cpp
+      src/sampling/renumber_sampled_edgelist_sg.cpp
+      src/sampling/sampling_post_processing_sg.cpp
+      src/structure/renumber_edgelist_sg.cpp
+      src/structure/renumber_edgelist_mg.cpp
+      src/structure/renumber_utils_sg.cpp
+      src/structure/renumber_utils_mg.cpp
+      src/structure/relabel_sg.cpp
+      src/structure/relabel_mg.cpp
+     src/community/detail/refine_sg.cpp
+      src/community/detail/refine_mg.cpp
+
+
+
+...............................................................
+
+/home/mcordery/cugraph/cpp/src/prims/detail/prim_functors.cuh:66:12: error: no matching function for call to object of type 'const cugraph::cast_edge_op_bool_to_integer<cugraph::graph_view_t<int32_t, int32_t, true, true, void>, int, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::edge_dummy_property_view_t, (lambda at /home/mcordery/cugraph/cpp/src/structure/graph_view_impl.cuh:744:5), int>'
+   66 |     return e_op(key_or_src,
+
+   src/structure/graph_view_mg.cpp
+   src/link_prediction/jaccard_sg.cpp
+   src/link_prediction/sorensen_sg.cpp
+   src/link_prediction/overlap_sg.cpp
+   src/link_prediction/jaccard_mg.cpp
+   src/link_prediction/sorensen_mg.cpp
+   src/link_prediction/overlap_mg.cpp
+   src/structure/graph_view_sg.cpp
+   src/link_analysis/pagerank_sg.cpp
+   src/link_analysis/pagerank_mg.cpp
+   src/centrality/eigenvector_centrality_sg.cpp
+   src/centrality/eigenvector_centrality_mg.cpp
+   src/traversal/od_shortest_distances_sg.cpp
+    src/traversal/sssp_sg.cpp
+    src/traversal/od_shortest_distances_sg.cpp
+    src/traversal/sssp_mg.cpp
+
+   ...................................................................
+   In file included from /home/mcordery/cugraph/cpp/src/layout/legacy/force_atlas2.cpp:17:
+/home/mcordery/cugraph/cpp/src/layout/legacy/barnes_hut.cuh:189:3: error: no matching function for call to 'hipFuncSetCacheConfig'
+
+src/layout/legacy/force_atlas2.cpp
+
+...........................................................................
+/home/mcordery/cugraph/cpp/include/raft/include/raft/linalg/detail/cublas_wrappers.hpp:604:10: error: no matching function for call to 'hipblasSgetriBatched'
+  604 |   return hipblasSgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize);
+      |          ^~~~~~~~~~~~~~~~~~~~
+/opt/rocm/include/hipblas/hipblas.h:22478:32: note: candidate function not viable: no known conversion from 'const float *const *' to 'float *const *' for 3rd argument
+ 22480 | HIPBLAS_EXPORT hipblasStatus_t hipblasSgetriBatched(hipblasHandle_t handle,
+       |                                ^
+ 22481 |                                                     const int       n,
+ 22482 |                                                     float* const    A[],
+       |                                                     ~~~~~~~~~~~~~~~~~~~
+
+             src/community/legacy/spectral_clustering.cpp
+
+NB some later errors show up with CUDA intrinsics that seem to lack HIP equivalents, i.e.
+/home/mcordery/cugraph/cpp/include/raft/include/raft/util/device_loads_stores.cuh:43:13: error: use of undeclared identifier '__cvta_generic_to_shared'
+   43 |   auto s1 = __cvta_generic_to_shared(reinterpret_cast<uint8_t*>(addr));
+
+
+..........................................................................
+
+/home/mcordery/cugraph/cpp/src/community/k_truss_impl.cuh:496:25: error: no matching function for call to 'extract_transform_e'
+  496 |     auto [srcs, dsts] = extract_transform_e(handle,
+
+
+  src/community/k_truss_sg.cpp
+  src/community/triangle_count_sg.cpp
+  src/community/triangle_count_mg.cpp
+
+  ................................................................
+
+  /home/mcordery/cugraph/cpp/src/sampling/rw_traversals.hpp:239:14: error: no viable constructor or deduction guide for deduction of template arguments of 'optional'
+  239 |       return thrust::optional{
+
+
+    src/sampling/random_walks.cpp
+
+................................................................
+    /home/mcordery/cugraph/cpp/src/prims/detail/extract_transform_v_frontier_e.cuh:525:34: error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<int, int, thrust::nullopt_t, int, thrust::nullopt_t, cugraph::detail::transform_reduce_v_frontier_call_e_op_t<int, int, int, thrust::nullopt_t, int, thrust::nullopt_t, cugraph::(anonymous namespace)::e_op_t<int, int>>>'
+
+      src/cores/core_number_sg.cpp
+      src/cores/core_number_mg.cpp
+      src/traversal/bfs_sg.cpp
+      src/traversal/bfs_mg.cpp
+      src/centrality/betweenness_centrality_sg.cpp
+      src/centrality/betweenness_centrality_mg.cpp
+      src/components/weakly_connected_components_sg.cpp
+      src/components/weakly_connected_components_mg.cpp
+      src/traversal/k_hop_nbrs_sg.cpp
+      src/traversal/k_hop_nbrs_mg.cpp
+
+        
+
+
+........................................................
+
+/home/mcordery/cugraph/cpp/src/structure/induced_subgraph_impl.cuh:252:7: error: no matching function for call to 'extract_transform_v_frontier_outgoing_e'
+  252 |       extract_transform_v_frontier_outgoing_e(
+
+  src/structure/induced_subgraph_sg.cpp
+  src/structure/induced_subgraph_mg.cpp
+
+
+
+
