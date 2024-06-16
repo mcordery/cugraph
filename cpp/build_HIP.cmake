@@ -331,7 +331,7 @@ set(ROCGRAPH_SOURCES
       #src/link_prediction/overlap_mg.cpp
       #src/layout/legacy/force_atlas2.cpp
       src/converters/legacy/COOtoCSR.cpp
-      src/community/legacy/spectral_clustering.cpp
+      #src/community/legacy/spectral_clustering.cpp
       src/community/louvain_sg.cpp
       src/community/louvain_mg.cpp
       src/community/leiden_sg.cpp
