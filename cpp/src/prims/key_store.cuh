@@ -26,6 +26,10 @@
 #include <thrust/sort.h>
 
 #include <hipco/static_set.cuh>
+#include <hipco/storage.cuh>
+#include <hipco/operator.hpp>
+
+#include <hip/atomic>
 
 #include <algorithm>
 #include <memory>
@@ -36,7 +40,7 @@ namespace cugraph {
 
 namespace detail {
 
-using hipco_storage_type = hipco::storage<1>;  ///< hipco window storage type
+using hipco_storage_type = hipco::experimental::storage<1>;  ///< hipco window storage type
 
 template <typename KeyIterator>
 struct key_binary_search_contains_op_t {
@@ -74,7 +78,7 @@ struct key_binary_search_store_device_view_t {
 template <typename ViewType>
 struct key_hipco_store_contains_device_view_t {
   using key_type                   = typename ViewType::key_type;
-  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::ref_type<hipco::contains_tag>;
+  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::template ref_type<hipco::experimental::contains_tag>;
 
   static_assert(!ViewType::binary_search);
 
@@ -91,7 +95,7 @@ struct key_hipco_store_contains_device_view_t {
 template <typename ViewType>
 struct key_hipco_store_insert_device_view_t {
   using key_type                   = typename ViewType::key_type;
-  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::ref_type<hipco::insert_tag>;
+  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::template ref_type<hipco::experimental::insert_tag>;
 
   static_assert(!ViewType::binary_search);
 
@@ -149,11 +153,11 @@ class key_hipco_store_view_t {
   static constexpr bool binary_search = false;
 
   using hipco_set_type =
-    hipco::static_set<key_t,
-                     hipco::extent<std::size_t>,
+    hipco::experimental::static_set<key_t,
+                     hipco::experimental::extent<std::size_t>,
                      hip::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     hipco::linear_probing<1,  // CG size
+                     hipco::experimental::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
                      hipco_storage_type>;
@@ -169,9 +173,9 @@ class key_hipco_store_view_t {
     hipco_store_->contains(key_first, key_last, value_first, stream);
   }
 
-  auto hipco_store_contains_device_ref() const { return hipco_store_->ref(hipco::contains); }
+  auto hipco_store_contains_device_ref() const { return hipco_store_->ref(hipco::experimental::contains); }
 
-  auto hipco_store_insert_device_ref() const { return hipco_store_->ref(hipco::insert); }
+  auto hipco_store_insert_device_ref() const { return hipco_store_->ref(hipco::experimental::insert); }
 
   key_t invalid_key() const { return hipco_store_->get_empty_key_sentinel(); }
 
@@ -240,11 +244,11 @@ class key_hipco_store_t {
   using key_type = key_t;
 
   using hipco_set_type =
-    hipco::static_set<key_t,
-                     hipco::extent<std::size_t>,
+    hipco::experimental::static_set<key_t,
+                     hipco::experimental::extent<std::size_t>,
                      hip::thread_scope_device,
                      thrust::equal_to<key_t>,
-                     hipco::linear_probing<1,  // CG size
+                     hipco::experimental::linear_probing<1,  // CG size
                                           hipco::murmurhash3_32<key_t>>,
                      rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
                      hipco_storage_type>;
@@ -328,9 +332,9 @@ class key_hipco_store_t {
       std::make_unique<hipco_set_type>(hipco_size,
                                       hipco::empty_key<key_t>{invalid_key},
                                       thrust::equal_to<key_t>{},
-                                      hipco::linear_probing<1,  // CG size
+                                      hipco::experimental::linear_probing<1,  // CG size
                                                            hipco::murmurhash3_32<key_t>>{},
-                                      hipco::thread_scope_device,
+                                      hip::thread_scope_device,
                                       hipco_storage_type{},
                                       stream_adapter,
                                       stream.value());

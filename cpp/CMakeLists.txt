@@ -15,7 +15,7 @@
 # limitations under the License.
 #=============================================================================
 
-cmake_minimum_required(VERSION 3.26.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22.1 FATAL_ERROR)
 
 if( (NOT DEFINED USE_CUDA) AND (NOT DEFINED USE_HIP) )
     message(FATAL_ERROR, "Build architecture is not set by default. You must set either -DUSE_CUDA or -DUSE_HIP")

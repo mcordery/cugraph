@@ -13,7 +13,7 @@
 // clang-format off
 /*
     memory_resource synopsis
-namespace cuda {
+namespace hip {
 namespace mr {
 template <class Resource>
 concept resource = equality_comparable<Resource>

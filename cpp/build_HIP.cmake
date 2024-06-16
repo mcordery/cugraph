@@ -17,7 +17,7 @@
 
 message(STATUS "Configuring build for ${PROJECT_NAME}")
 
-set(CMAKE_PREFIX_PATH /opt/rocm/lib/cmake)
+set(CMAKE_PREFIX_PATH /opt/rocm/lib/cmake ${CMAKE_PREFIX_PATH})
 enable_language(HIP)
 include_directories(${HIP_INCLUDE_DIRS})
 
@@ -364,7 +364,7 @@ set(ROCGRAPH_SOURCES
       src/components/legacy/connectivity.cpp
       src/generators/generate_rmat_edgelist.cpp
       src/generators/generate_bipartite_rmat_edgelist.cpp
-      #src/generators/generator_tools.cpp
+      src/generators/generator_tools.cpp
       src/generators/simple_generators.cpp
       src/generators/erdos_renyi_generator.cpp
       src/structure/graph_sg.cpp
@@ -394,7 +394,7 @@ set(ROCGRAPH_SOURCES
       src/structure/select_random_vertices_mg.cpp
       src/traversal/extract_bfs_paths_sg.cpp
       src/traversal/extract_bfs_paths_mg.cpp
-      src/traversal/bfs_sg.cpp
+      #src/traversal/bfs_sg.cpp
       #src/traversal/bfs_mg.cpp
       #src/traversal/sssp_sg.cpp
       #src/traversal/od_shortest_distances_sg.cpp

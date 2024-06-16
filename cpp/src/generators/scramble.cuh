@@ -27,6 +27,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include <hip/hip_runtime.h>
+
 namespace cugraph {
 namespace detail {
 
@@ -63,9 +65,9 @@ __device__ vertex_t scramble(vertex_t value, size_t lgN)
   using uvertex_t = typename std::make_unsigned<vertex_t>::type;
 
   constexpr auto scramble_value0 = static_cast<uvertex_t>(
-    sizeof(vertex_t) == 8 ? 606610977102444280 : (sizeof(vertex_t) == 4 ? 282475248 : 0));
+    sizeof(vertex_t) == 8 ? 606610977102444280U : (sizeof(vertex_t) == 4 ? 282475248 : 0));
   constexpr auto scramble_value1 = static_cast<uvertex_t>(
-    sizeof(vertex_t) == 8 ? 11680327234415193037 : (sizeof(vertex_t) == 4 ? 2617694917 : 8620));
+    sizeof(vertex_t) == 8 ? 11680327234415193037U : (sizeof(vertex_t) == 4 ? 2617694917 : 8620));
 
   auto v = static_cast<uvertex_t>(value);
   v += scramble_value0 + scramble_value1;
