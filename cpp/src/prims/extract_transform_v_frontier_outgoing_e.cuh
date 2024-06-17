@@ -63,6 +63,7 @@ namespace cugraph {
  * @param do_expensive_check A flag to run expensive checks for input arguments (if set to `true`).
  * @return Dataframe buffer object storing extracted and accumulated valid @p e_op return values.
  */
+
 template <typename GraphViewType,
           typename VertexFrontierBucketType,
           typename EdgeSrcValueInputWrapper,
@@ -75,7 +76,7 @@ decltype(allocate_dataframe_buffer<
                                               typename EdgeSrcValueInputWrapper::value_type,
                                               typename EdgeDstValueInputWrapper::value_type,
                                               typename EdgeValueInputWrapper::value_type,
-                                              EdgeOp>::type::value_type>(size_t{0},
+                                              EdgeOp>::type::value_type>(std::size_t{0},
                                                                          rmm::cuda_stream_view{}))
 extract_transform_v_frontier_outgoing_e(raft::handle_t const& handle,
                                         GraphViewType const& graph_view,

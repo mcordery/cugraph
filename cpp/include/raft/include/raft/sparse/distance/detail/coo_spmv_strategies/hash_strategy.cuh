@@ -33,8 +33,8 @@
 // float a = 5;
 // float b = 5;
 // memcmp(&a, &b, sizeof(float));
-CUCO_DECLARE_BITWISE_COMPARABLE(float);
-CUCO_DECLARE_BITWISE_COMPARABLE(double);
+HIPCO_DECLARE_BITWISE_COMPARABLE(float);
+HIPCO_DECLARE_BITWISE_COMPARABLE(double);
 
 namespace raft {
 namespace sparse {

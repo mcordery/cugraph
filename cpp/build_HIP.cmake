@@ -309,7 +309,7 @@ set(ROCGRAPH_SOURCES
     src/linear_assignment/legacy/hungarian.cpp
     # src/link_prediction/jaccard_sg.cpp src/link_prediction/sorensen_sg.cpp src/link_prediction/overlap_sg.cpp
     # src/link_prediction/jaccard_mg.eB src/link_prediction/sorensen_mg.cpp src/link_prediction/overlap_mg.cpp
-    # src/layout/legacy/force_atlas2.cpp
+    src/layout/legacy/force_atlas2.cpp
     src/converters/legacy/COOtoCSR.cpp
     # src/community/legacy/spectral_clustering.cpp
     src/community/louvain_sg.cpp

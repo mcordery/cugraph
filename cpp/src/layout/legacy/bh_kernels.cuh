@@ -171,8 +171,8 @@ __global__ static __launch_bounds__(1024, 1) void ClearKernel1(int* restrict chi
   int k         = (FOUR_N & -32) + threadIdx.x + blockIdx.x * blockDim.x;
   if (k < FOUR_N) k += inc;
 
-// iterate over all cells assigned to thread
-#pragma unroll
+  // iterate over all cells assigned to thread
+  // HIPFIXME disabled #pragma unroll
   for (; k < FOUR_NNODES; k += inc)
     childd[k] = -1;
 }
@@ -311,8 +311,8 @@ __global__ static __launch_bounds__(1024, 1) void ClearKernel2(int* restrict sta
   int k            = (bottom & -32) + threadIdx.x + blockIdx.x * blockDim.x;
   if (k < bottom) k += inc;
 
-// iterate over all cells assigned to thread
-#pragma unroll
+  // iterate over all cells assigned to thread
+  // HIPFIXME disabled #pragma unroll
   for (; k < NNODES; k += inc) {
     massd[k]  = -1;
     startd[k] = -1;

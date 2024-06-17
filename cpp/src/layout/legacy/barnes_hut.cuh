@@ -186,14 +186,16 @@ void barnes_hut(raft::handle_t const& handle,
   //
   // Set cache levels for faster algorithm execution
   //---------------------------------------------------
-  hipFuncSetCacheConfig(BoundingBoxKernel, hipFuncCachePreferShared);
-  hipFuncSetCacheConfig(TreeBuildingKernel, hipFuncCachePreferL1);
-  hipFuncSetCacheConfig(ClearKernel1, hipFuncCachePreferL1);
-  hipFuncSetCacheConfig(ClearKernel2, hipFuncCachePreferL1);
-  hipFuncSetCacheConfig(SummarizationKernel, hipFuncCachePreferShared);
-  hipFuncSetCacheConfig(SortKernel, hipFuncCachePreferL1);
-  hipFuncSetCacheConfig(RepulsionKernel, hipFuncCachePreferL1);
-  hipFuncSetCacheConfig(apply_forces_bh, hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&BoundingBoxKernel),
+                        hipFuncCachePreferShared);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&TreeBuildingKernel), hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&ClearKernel1), hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&ClearKernel2), hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&SummarizationKernel),
+                        hipFuncCachePreferShared);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&SortKernel), hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&RepulsionKernel), hipFuncCachePreferL1);
+  hipFuncSetCacheConfig(reinterpret_cast<const void*>(&apply_forces_bh), hipFuncCachePreferL1);
 
   if (callback) {
     callback->setup<float>(nnodes + 1, 2);

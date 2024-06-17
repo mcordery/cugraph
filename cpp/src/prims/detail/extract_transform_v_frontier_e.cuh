@@ -522,12 +522,13 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
   using output_key_t   = OutputKeyT;
   using output_value_t = OutputValueT;
 
-  using e_op_result_t = typename edge_op_result_type<key_t,
-                                                     typename GraphViewType::vertex_type,
-                                                     typename EdgeSrcValueInputWrapper::value_type,
-                                                     typename EdgeDstValueInputWrapper::value_type,
-                                                     typename EdgeValueInputWrapper::value_type,
-                                                     EdgeOp>::type;
+  using e_op_result_t =
+    typename cugraph::detail::edge_op_result_type<key_t,
+                                                  typename GraphViewType::vertex_type,
+                                                  typename EdgeSrcValueInputWrapper::value_type,
+                                                  typename EdgeDstValueInputWrapper::value_type,
+                                                  typename EdgeValueInputWrapper::value_type,
+                                                  EdgeOp>::type;
 
   using edge_partition_src_input_device_view_t = std::conditional_t<
     std::is_same_v<typename EdgeSrcValueInputWrapper::value_type, thrust::nullopt_t>,
