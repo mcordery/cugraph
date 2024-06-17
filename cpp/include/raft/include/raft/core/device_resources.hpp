@@ -23,7 +23,6 @@
 #include <raft/core/resource/comms.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/core/resource/cuda_event.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
 #include <raft/core/resource/cusolver_sp_handle.hpp>
@@ -31,6 +30,7 @@
 #include <raft/core/resource/device_id.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/sub_comms.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
@@ -40,9 +40,7 @@
 #include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <hip/hip_runtime.h>
-
 #include <hipblas.h>
-#include <hipsolver.h>
 #include <hipsolver.h>
 #include <hipsparse.h>
 

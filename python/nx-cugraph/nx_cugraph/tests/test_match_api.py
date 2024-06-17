@@ -14,10 +14,9 @@ import importlib
 import inspect
 
 import networkx as nx
-from packaging.version import parse
-
 import nx_cugraph as nxcg
 from nx_cugraph.utils import networkx_algorithm
+from packaging.version import parse
 
 nxver = parse(nx.__version__)
 

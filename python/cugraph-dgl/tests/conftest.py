@@ -11,15 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-
 import dgl
+import pytest
 import torch
-
-from cugraph.testing.mg_utils import (
-    start_dask_client,
-    stop_dask_client,
-)
+from cugraph.testing.mg_utils import start_dask_client, stop_dask_client
 
 
 @pytest.fixture(scope="module")

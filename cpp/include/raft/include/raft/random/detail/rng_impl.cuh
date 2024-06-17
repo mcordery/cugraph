@@ -216,8 +216,7 @@ void logistic(
 }
 
 template <typename OutType, typename LenType = int>
-void exponential(
-  RngState& rng_state, OutType* ptr, LenType len, OutType lambda, hipStream_t stream)
+void exponential(RngState& rng_state, OutType* ptr, LenType len, OutType lambda, hipStream_t stream)
 {
   ExponentialDistParams<OutType> params;
   params.lambda = lambda;
@@ -386,20 +385,20 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   size_t workspace_size = 0;
   auto stream           = resource::get_cuda_stream(res);
   hipcub::DeviceMergeSort::SortPairs(nullptr,
-                                  workspace_size,
-                                  rnd_idx.data_handle(),
-                                  linear_idx.data_handle(),
-                                  rnd_idx.size(),
-                                  raft::less_op{},
-                                  stream);
+                                     workspace_size,
+                                     rnd_idx.data_handle(),
+                                     linear_idx.data_handle(),
+                                     rnd_idx.size(),
+                                     raft::less_op{},
+                                     stream);
   auto workspace = raft::make_device_vector<char, IdxT>(res, workspace_size);
   hipcub::DeviceMergeSort::SortPairs(workspace.data_handle(),
-                                  workspace_size,
-                                  rnd_idx.data_handle(),
-                                  linear_idx.data_handle(),
-                                  rnd_idx.size(),
-                                  raft::less_op{},
-                                  stream);
+                                     workspace_size,
+                                     rnd_idx.data_handle(),
+                                     linear_idx.data_handle(),
+                                     rnd_idx.size(),
+                                     raft::less_op{},
+                                     stream);
 
   if (rnd_idx.size() == static_cast<size_t>(N)) {
     // We shuffled the linear_idx array by sorting it according to rnd_idx.
@@ -416,14 +415,14 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   rmm::device_scalar<IdxT> num_selected(stream);
   size_t worksize2 = 0;
   hipcub::DeviceSelect::UniqueByKey(nullptr,
-                                 worksize2,
-                                 rnd_idx.data_handle(),
-                                 linear_idx.data_handle(),
-                                 keys_out.data_handle(),
-                                 values_out.data_handle(),
-                                 num_selected.data(),
-                                 rnd_idx.size(),
-                                 stream);
+                                    worksize2,
+                                    rnd_idx.data_handle(),
+                                    linear_idx.data_handle(),
+                                    keys_out.data_handle(),
+                                    values_out.data_handle(),
+                                    num_selected.data(),
+                                    rnd_idx.size(),
+                                    stream);
 
   if (worksize2 > workspace.size()) {
     workspace      = raft::make_device_vector<char, IdxT>(res, worksize2);
@@ -431,14 +430,14 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
   }
 
   hipcub::DeviceSelect::UniqueByKey(workspace.data_handle(),
-                                 workspace_size,
-                                 rnd_idx.data_handle(),
-                                 linear_idx.data_handle(),
-                                 keys_out.data_handle(),
-                                 values_out.data_handle(),
-                                 num_selected.data(),
-                                 rnd_idx.size(),
-                                 stream);
+                                    workspace_size,
+                                    rnd_idx.data_handle(),
+                                    linear_idx.data_handle(),
+                                    keys_out.data_handle(),
+                                    values_out.data_handle(),
+                                    num_selected.data(),
+                                    rnd_idx.size(),
+                                    stream);
 
   IdxT selected = num_selected.value(stream);
 
@@ -452,12 +451,12 @@ auto excess_subsample(raft::resources const& res, RngState& state, IdxT N, IdxT 
 
   // After duplicates are removed, we need to shuffle back to random order
   hipcub::DeviceMergeSort::SortPairs(workspace.data_handle(),
-                                  workspace_size,
-                                  values_out.data_handle(),
-                                  keys_out.data_handle(),
-                                  n_samples,
-                                  raft::less_op{},
-                                  stream);
+                                     workspace_size,
+                                     values_out.data_handle(),
+                                     keys_out.data_handle(),
+                                     n_samples,
+                                     raft::less_op{},
+                                     stream);
 
   values_out = raft::make_device_vector<IdxT, IdxT>(res, n_samples);
   raft::copy(values_out.data_handle(), keys_out.data_handle(), n_samples, stream);

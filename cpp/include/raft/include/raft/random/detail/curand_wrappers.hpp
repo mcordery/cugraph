@@ -24,10 +24,11 @@ namespace detail {
 // @todo: We probably want to scrape through and replace any consumers of
 // these wrappers with our RNG
 /** check for hiprand runtime API errors and assert accordingly */
-#define CURAND_CHECK(call)                                                                         \
-  do {                                                                                             \
-    hiprandStatus_t status = call;                                                                  \
-    ASSERT(status == HIPRAND_STATUS_SUCCESS, "FAIL: hiprand-call='%s'. Reason:%d\n", #call, status); \
+#define CURAND_CHECK(call)                                                                      \
+  do {                                                                                          \
+    hiprandStatus_t status = call;                                                              \
+    ASSERT(                                                                                     \
+      status == HIPRAND_STATUS_SUCCESS, "FAIL: hiprand-call='%s'. Reason:%d\n", #call, status); \
   } while (0)
 
 /**

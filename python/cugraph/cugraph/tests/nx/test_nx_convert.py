@@ -11,13 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-import pandas as pd
-import networkx as nx
-
 import cudf
+import networkx as nx
+import pandas as pd
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, utils
+
 import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
 
 
 def _compare_graphs(nxG, cuG, has_wt=True):

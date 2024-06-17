@@ -30,26 +30,24 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
       Default kernel-level TRMM definitions combine threadblock-scoped matrix multiply-add with
       the appropriate threadblock-scoped epilogue.
-  
+
       Note, CUTLASS epilogues universally target row-major outputs. Column-major outputs are
       accommodated by exchanging A and B operands and assuming transposed layouts.
 
-  
+
 */
 
 #pragma once
 
 #include "cutlass/blas3.h"
-
 #include "cutlass/complex.h"
-#include "cutlass/layout/matrix.h"
-
-#include "cutlass/gemm/kernel/trmm_universal.h"
 #include "cutlass/gemm/kernel/default_trmm.h"
 #include "cutlass/gemm/kernel/default_trmm_complex.h"
+#include "cutlass/gemm/kernel/trmm_universal.h"
+#include "cutlass/layout/matrix.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,58 +58,57 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA_,
-    /// Layout type for A matrix operand
-    typename LayoutA_,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB_,
-    /// Layout type for B matrix operand
-    typename LayoutB_,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Side Mode for the kernel
-    SideMode kSideMode,
-    /// Fill Mode for the triangular matrix
-    FillMode kFillMode,
-    /// Diag Type for the triangular matrix
-    DiagType kDiagType,
-    /// Element type for C and D matrix operands
-    typename ElementC_,
-    /// Layout type for C and D matrix operands
-    typename LayoutC_,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by TRMM
-    typename Operator,
-    ///
-    typename Enable = void
-    >
+  /// Element type for A matrix operand
+  typename ElementA_,
+  /// Layout type for A matrix operand
+  typename LayoutA_,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB_,
+  /// Layout type for B matrix operand
+  typename LayoutB_,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Side Mode for the kernel
+  SideMode kSideMode,
+  /// Fill Mode for the triangular matrix
+  FillMode kFillMode,
+  /// Diag Type for the triangular matrix
+  DiagType kDiagType,
+  /// Element type for C and D matrix operands
+  typename ElementC_,
+  /// Layout type for C and D matrix operands
+  typename LayoutC_,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by TRMM
+  typename Operator,
+  ///
+  typename Enable = void>
 struct DefaultTrmmUniversal;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,59 +117,59 @@ struct DefaultTrmmUniversal;
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Side Mode for the kernel
-    SideMode kSideMode,
-    /// Fill Mode for the triangular matrix
-    FillMode kFillMode,
-    /// Diag Type for the triangular matrix
-    DiagType kDiagType,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by TRMM
-    typename Operator>
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Side Mode for the kernel
+  SideMode kSideMode,
+  /// Fill Mode for the triangular matrix
+  FillMode kFillMode,
+  /// Diag Type for the triangular matrix
+  DiagType kDiagType,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by TRMM
+  typename Operator>
 struct DefaultTrmmUniversal<
   ElementA,
   LayoutA,
-  ComplexTransform::kNone,   // transform A
+  ComplexTransform::kNone,  // transform A
   kAlignmentA,
   ElementB,
   LayoutB,
-  ComplexTransform::kNone,   // transform B
+  ComplexTransform::kNone,  // transform B
   kAlignmentB,
   kSideMode,
   kFillMode,
@@ -190,43 +187,37 @@ struct DefaultTrmmUniversal<
   Stages,
   SplitKSerial,
   Operator,
-  typename std::enable_if< ! cutlass::is_complex<ElementAccumulator>::value>::type
-> {
+  typename std::enable_if<!cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultTrmmKernel = typename kernel::DefaultTrmm<ElementA,
+                                                         LayoutA,
+                                                         kAlignmentA,
+                                                         ElementB,
+                                                         LayoutB,
+                                                         kAlignmentB,
+                                                         kSideMode,
+                                                         kFillMode,
+                                                         kDiagType,
+                                                         ElementC,
+                                                         LayoutC,
+                                                         ElementAccumulator,
+                                                         OperatorClass,
+                                                         ArchTag,
+                                                         ThreadblockShape,
+                                                         WarpShape,
+                                                         InstructionShape,
+                                                         EpilogueOutputOp,
+                                                         ThreadblockSwizzle,
+                                                         Stages,
+                                                         SplitKSerial,
+                                                         Operator>::TrmmKernel;
 
-  using DefaultTrmmKernel = typename kernel::DefaultTrmm<
-    ElementA,
-    LayoutA,
-    kAlignmentA,
-    ElementB,
-    LayoutB,
-    kAlignmentB,
-    kSideMode,
-    kFillMode,
-    kDiagType,
-    ElementC,
-    LayoutC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    SplitKSerial,
-    Operator
-  >::TrmmKernel;
-
-    /// Define the kernel in terms of the default kernel
-  using TrmmKernel = kernel::TrmmUniversal<
-    typename DefaultTrmmKernel::Mma,
-    typename DefaultTrmmKernel::Epilogue, 
-    ThreadblockSwizzle,
-    kSideMode,
-    kFillMode,
-    kDiagType
-  >;
+  /// Define the kernel in terms of the default kernel
+  using TrmmKernel = kernel::TrmmUniversal<typename DefaultTrmmKernel::Mma,
+                                           typename DefaultTrmmKernel::Epilogue,
+                                           ThreadblockSwizzle,
+                                           kSideMode,
+                                           kFillMode,
+                                           kDiagType>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -236,56 +227,55 @@ struct DefaultTrmmUniversal<
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Side Mode for the kernel
-    SideMode kSideMode,
-    /// Fill Mode for the triangular matrix
-    FillMode kFillMode,
-    /// Diag Type for the triangular matrix
-    DiagType kDiagType,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by TRMM
-    typename Operator
-  >
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Side Mode for the kernel
+  SideMode kSideMode,
+  /// Fill Mode for the triangular matrix
+  FillMode kFillMode,
+  /// Diag Type for the triangular matrix
+  DiagType kDiagType,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by TRMM
+  typename Operator>
 struct DefaultTrmmUniversal<
   ElementA,
   LayoutA,
@@ -311,43 +301,37 @@ struct DefaultTrmmUniversal<
   Stages,
   SplitKSerial,
   Operator,
-  typename std::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type
-> {
-
-  using DefaultTrmmKernel = typename kernel::DefaultTrmmComplex<
-    ElementA,
-    LayoutA,
-    ElementB,
-    LayoutB,
-    kSideMode,
-    kFillMode,
-    kDiagType,
-    ElementC,
-    LayoutC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    TransformA,
-    TransformB,
-    Operator,
-    SplitKSerial
-  >::TrmmKernel;
+  typename std::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultTrmmKernel = typename kernel::DefaultTrmmComplex<ElementA,
+                                                                LayoutA,
+                                                                ElementB,
+                                                                LayoutB,
+                                                                kSideMode,
+                                                                kFillMode,
+                                                                kDiagType,
+                                                                ElementC,
+                                                                LayoutC,
+                                                                ElementAccumulator,
+                                                                OperatorClass,
+                                                                ArchTag,
+                                                                ThreadblockShape,
+                                                                WarpShape,
+                                                                InstructionShape,
+                                                                EpilogueOutputOp,
+                                                                ThreadblockSwizzle,
+                                                                Stages,
+                                                                TransformA,
+                                                                TransformB,
+                                                                Operator,
+                                                                SplitKSerial>::TrmmKernel;
 
   /// Define the kernel in terms of the default kernel
-  using TrmmKernel = kernel::TrmmUniversal<
-    typename DefaultTrmmKernel::Mma,
-    typename DefaultTrmmKernel::Epilogue, 
-    ThreadblockSwizzle,
-    kSideMode,
-    kFillMode,
-    kDiagType
-  >;
+  using TrmmKernel = kernel::TrmmUniversal<typename DefaultTrmmKernel::Mma,
+                                           typename DefaultTrmmKernel::Epilogue,
+                                           ThreadblockSwizzle,
+                                           kSideMode,
+                                           kFillMode,
+                                           kDiagType>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

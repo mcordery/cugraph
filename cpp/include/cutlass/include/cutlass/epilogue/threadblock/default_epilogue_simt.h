@@ -38,34 +38,28 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/gemm/gemm.h"
-
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/conversion_op.h"
 #include "cutlass/epilogue/thread/linear_combination.h"
 #include "cutlass/epilogue/thread/linear_combination_clamp.h"
-#include "cutlass/epilogue/thread/linear_combination_relu.h"
 #include "cutlass/epilogue/thread/linear_combination_gelu.h"
-#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
-#include "cutlass/epilogue/thread/conversion_op.h"
+#include "cutlass/epilogue/thread/linear_combination_relu.h"
+#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/reduction_op.h"
-
-#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
-
+#include "cutlass/epilogue/threadblock/default_thread_map_simt.h"
+#include "cutlass/epilogue/threadblock/epilogue.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h"
+#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
 #include "cutlass/epilogue/warp/fragment_iterator_simt.h"
 #include "cutlass/epilogue/warp/tile_iterator_simt.h"
-#include "cutlass/epilogue/threadblock/default_thread_map_simt.h"
-
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h"
-#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
-#include "cutlass/epilogue/threadblock/epilogue.h"
-
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,246 +70,205 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for SimtOps.
-template <
-  typename Shape_,
-  typename WarpMmaSimt_,
-  typename OutputOp_,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape_,
+          typename WarpMmaSimt_,
+          typename OutputOp_,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueSimt {
-
-  using Shape = Shape_;
-  using WarpMmaSimt = WarpMmaSimt_;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaSimt                   = WarpMmaSimt_;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  static const int kPartitionsK = Shape::kK / WarpMmaSimt::Shape::kK;
+  static const int kPartitionsK       = Shape::kK / WarpMmaSimt::Shape::kK;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaSimt::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaSimt::LayoutC;
   using ElementAccumulator = typename WarpMmaSimt::ElementC;
 
   //
   // Thread map
   //
 
-  using OutputTileThreadMap = typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<
-    Shape,
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::Policy,
-    kPartitionsK,
-    ElementOutput,
-    kElementsPerAccess
-  >::Type;
+  using OutputTileThreadMap =
+    typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<Shape,
+                                                                  typename WarpMmaSimt::Shape,
+                                                                  typename WarpMmaSimt::Policy,
+                                                                  kPartitionsK,
+                                                                  ElementOutput,
+                                                                  kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout
-  >;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    PredicatedTileIterator<OutputTileThreadMap, ElementOutput, ScatterD, PermuteDLayout>;
 
-  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using AccumulatorFragmentIterator =
+    cutlass::epilogue::warp::FragmentIteratorSimt<typename WarpMmaSimt::Shape,
+                                                  typename WarpMmaSimt::ThreadMma,
+                                                  layout::RowMajor,
+                                                  typename WarpMmaSimt::Policy>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    ElementAccumulator,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using WarpTileIterator =
+    cutlass::epilogue::warp::TileIteratorSimt<typename WarpMmaSimt::Shape,
+                                              typename WarpMmaSimt::ThreadMma,
+                                              ElementAccumulator,
+                                              layout::RowMajor,
+                                              typename WarpMmaSimt::Policy>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = typename WarpTileIterator::Padding;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaSimt,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaSimt,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for SimtOps.
-template <
-  typename Shape_,
-  typename WarpMmaSimt_,
-  typename OutputOp_,
-  int ElementsPerAccess
->
+template <typename Shape_, typename WarpMmaSimt_, typename OutputOp_, int ElementsPerAccess>
 struct DefaultEpilogueSimtStridedDgrad {
-
-  using Shape = Shape_;
-  using WarpMmaSimt = WarpMmaSimt_;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaSimt                   = WarpMmaSimt_;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  static const int kPartitionsK = Shape::kK / WarpMmaSimt::Shape::kK;
+  static const int kPartitionsK       = Shape::kK / WarpMmaSimt::Shape::kK;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaSimt::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaSimt::LayoutC;
   using ElementAccumulator = typename WarpMmaSimt::ElementC;
 
   //
   // Thread map
   //
 
-  using OutputTileThreadMap = typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<
-    Shape,
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::Policy,
-    kPartitionsK,
-    ElementOutput,
-    kElementsPerAccess
-  >::Type;
+  using OutputTileThreadMap =
+    typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<Shape,
+                                                                  typename WarpMmaSimt::Shape,
+                                                                  typename WarpMmaSimt::Policy,
+                                                                  kPartitionsK,
+                                                                  ElementOutput,
+                                                                  kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIteratorStridedDgrad<
-    OutputTileThreadMap,
-    ElementOutput
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIteratorStridedDgrad<OutputTileThreadMap,
+                                                                       ElementOutput>;
 
-  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using AccumulatorFragmentIterator =
+    cutlass::epilogue::warp::FragmentIteratorSimt<typename WarpMmaSimt::Shape,
+                                                  typename WarpMmaSimt::ThreadMma,
+                                                  layout::RowMajor,
+                                                  typename WarpMmaSimt::Policy>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    ElementAccumulator,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using WarpTileIterator =
+    cutlass::epilogue::warp::TileIteratorSimt<typename WarpMmaSimt::Shape,
+                                              typename WarpMmaSimt::ThreadMma,
+                                              ElementAccumulator,
+                                              layout::RowMajor,
+                                              typename WarpMmaSimt::Policy>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = typename WarpTileIterator::Padding;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaSimt,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaSimt,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for SimtOps.
-template <
-  int Rank,
-  typename Shape_,
-  typename WarpMmaSimt_,
-  typename OutputOp_,
-  int ElementsPerAccess
->
+template <int Rank,
+          typename Shape_,
+          typename WarpMmaSimt_,
+          typename OutputOp_,
+          int ElementsPerAccess>
 struct DefaultEpilogueSimtAffineRankN {
-
-  using Shape = Shape_;
-  using WarpMmaSimt = WarpMmaSimt_;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaSimt                   = WarpMmaSimt_;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  static const int kPartitionsK = Shape::kK / WarpMmaSimt::Shape::kK;
+  static const int kPartitionsK       = Shape::kK / WarpMmaSimt::Shape::kK;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaSimt::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaSimt::LayoutC;
   using ElementAccumulator = typename WarpMmaSimt::ElementC;
 
   //
   // Thread map
   //
 
-  using OutputTileThreadMap = typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<
-    Shape,
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::Policy,
-    kPartitionsK,
-    ElementOutput,
-    kElementsPerAccess
-  >::Type;
+  using OutputTileThreadMap =
+    typename cutlass::epilogue::threadblock::DefaultThreadMapSimt<Shape,
+                                                                  typename WarpMmaSimt::Shape,
+                                                                  typename WarpMmaSimt::Policy,
+                                                                  kPartitionsK,
+                                                                  ElementOutput,
+                                                                  kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIteratorAffineRankN<
-    OutputTileThreadMap,
-    ElementOutput,
-    Rank
-  >;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    PredicatedTileIteratorAffineRankN<OutputTileThreadMap, ElementOutput, Rank>;
 
-  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using AccumulatorFragmentIterator =
+    cutlass::epilogue::warp::FragmentIteratorSimt<typename WarpMmaSimt::Shape,
+                                                  typename WarpMmaSimt::ThreadMma,
+                                                  layout::RowMajor,
+                                                  typename WarpMmaSimt::Policy>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorSimt<
-    typename WarpMmaSimt::Shape,
-    typename WarpMmaSimt::ThreadMma,
-    ElementAccumulator,
-    layout::RowMajor,
-    typename WarpMmaSimt::Policy
-  >;
+  using WarpTileIterator =
+    cutlass::epilogue::warp::TileIteratorSimt<typename WarpMmaSimt::Shape,
+                                              typename WarpMmaSimt::ThreadMma,
+                                              ElementAccumulator,
+                                              layout::RowMajor,
+                                              typename WarpMmaSimt::Policy>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = typename WarpTileIterator::Padding;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaSimt,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaSimt,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

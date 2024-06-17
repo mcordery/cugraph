@@ -71,7 +71,6 @@ Macros:
 */
 
 #include <__config>
-
 #include <__pragma_push>
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
@@ -90,7 +89,7 @@ Macros:
 #define DECIMAL_DIG __DECIMAL_DIG__
 #endif
 
-#endif // __cplusplus
+#endif  // __cplusplus
 
 #include <__pragma_pop>
 

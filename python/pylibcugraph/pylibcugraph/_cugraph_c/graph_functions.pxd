@@ -14,26 +14,12 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-    bool_t,
-)
-
-from pylibcugraph._cugraph_c.similarity_algorithms cimport (
-    cugraph_similarity_result_t
-)
-
-
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
 from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph._cugraph_c.similarity_algorithms cimport cugraph_similarity_result_t
 
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t
-)
 
 cdef extern from "cugraph_c/graph_functions.h":
     #"""
@@ -44,16 +30,9 @@ cdef extern from "cugraph_c/graph_functions.h":
         pass
 
 
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
 
 
 cdef extern from "cugraph_c/graph_functions.h":

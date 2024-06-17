@@ -13,13 +13,12 @@
 # limitations under the License.
 
 import os
-from pathlib import Path
 import pickle
+from pathlib import Path
 
 import pytest
 
 from . import data
-
 
 ###############################################################################
 # fixtures
@@ -89,6 +88,7 @@ def handler_with_karate_edgelist_loaded(mg_handler):
 
 ###############################################################################
 # tests
+
 
 # FIXME: consolidate this with the SG version of this test.
 def test_get_graph_data_large_vertex_ids(

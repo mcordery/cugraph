@@ -121,7 +121,7 @@ void gemv(raft::resources const& handle,
           hipStream_t stream)
 {
   hipblasHandle_t hipblas.h = resource::get_cublas_handle(handle);
-  hipblasOperation_t op_a  = trans_a ? HIPBLAS_OP_T : HIPBLAS_OP_N;
+  hipblasOperation_t op_a   = trans_a ? HIPBLAS_OP_T : HIPBLAS_OP_N;
   RAFT_CUBLAS_TRY(
     cublasgemv(cublas_h, op_a, n_rows_a, n_cols_a, &alpha, A, lda, x, 1, &beta, y, 1, stream));
 }

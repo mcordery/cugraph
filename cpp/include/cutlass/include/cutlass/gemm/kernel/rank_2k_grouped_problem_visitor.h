@@ -111,10 +111,9 @@
     result in a grid of 2x4 tiles.
 
     This case can be handled by noting that the output resembles a square grid of 2x2 "macro tiles"
-    each of which contains 2 "true tiles." We can thus first map a threadblock ID to its "macro tile"
-    using the equations above, and then map it to the "true tile" within its "macro tile." In the example
-    of a 2x4 grid, this mapping would look as follows:
-        "Macro grid"           "True grid"
+    each of which contains 2 "true tiles." We can thus first map a threadblock ID to its "macro
+   tile" using the equations above, and then map it to the "true tile" within its "macro tile." In
+   the example of a 2x4 grid, this mapping would look as follows: "Macro grid"           "True grid"
        {0, 1}    -            0   1   -   -
        {2, 3}  {4, 5}         2   3   4   5
 
@@ -163,9 +162,8 @@
 
 #include "cutlass/blas3.h"
 #include "cutlass/gemm/gemm.h"
-#include "cutlass/matrix_coord.h"
-
 #include "cutlass/gemm/kernel/grouped_problem_visitor.h"
+#include "cutlass/matrix_coord.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -179,117 +177,92 @@ namespace detail {
 // Helpers for calculating offsets for Rank2K problem visitor. These helpers specifically pertain
 // to the conversion from "macro tiles" to "true tiles" in the description above.
 //
-template <
-  typename ThreadblockShape,
-  typename Enable = void
->
+template <typename ThreadblockShape, typename Enable = void>
 struct Rank2KGroupedProblemVisitorOffsetHelper;
 
 // Partial specialization for the case where threadblock shape M > threadblock shape N
-template <
-  typename ThreadblockShape
->
+template <typename ThreadblockShape>
 struct Rank2KGroupedProblemVisitorOffsetHelper<
-    ThreadblockShape,
-    typename platform::enable_if< (ThreadblockShape::kM > ThreadblockShape::kN) >::type
-> {
+  ThreadblockShape,
+  typename platform::enable_if<(ThreadblockShape::kM > ThreadblockShape::kN)>::type> {
   static_assert(ThreadblockShape::kM % ThreadblockShape::kN == 0,
-             "Rank2KGroupedProblemVisitor with threadblock shape M > threadblock shape N "
-             "requires that threadblock shape M be a multiple of threadblock shape N.");
+                "Rank2KGroupedProblemVisitor with threadblock shape M > threadblock shape N "
+                "requires that threadblock shape M be a multiple of threadblock shape N.");
 
   static int32_t const kThreadblockSkewRatio = ThreadblockShape::kM / ThreadblockShape::kN;
 
   CUTLASS_HOST_DEVICE
-  static int32_t min_dim(cutlass::gemm::GemmCoord grid) {
-    return grid.m();
-  }
+  static int32_t min_dim(cutlass::gemm::GemmCoord grid) { return grid.m(); }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id) {
-    return row;
-  }
+  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id) { return row; }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id) {
+  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id)
+  {
     return (col * kThreadblockSkewRatio) + (threadblock_id % kThreadblockSkewRatio);
   }
 };
 
 // Partial specialization for the case where threadblock shape M < threadblock shape N
-template <
-  typename ThreadblockShape
->
+template <typename ThreadblockShape>
 struct Rank2KGroupedProblemVisitorOffsetHelper<
-    ThreadblockShape,
-    typename platform::enable_if< (ThreadblockShape::kM < ThreadblockShape::kN) >::type
-> {
-
+  ThreadblockShape,
+  typename platform::enable_if<(ThreadblockShape::kM < ThreadblockShape::kN)>::type> {
   static_assert(ThreadblockShape::kN % ThreadblockShape::kM == 0,
-             "Rank2KGroupedProblemVisitor with threadblock shape M < threadblock shape N "
-             "requires that threadblock shape N be a multiple of threadblock shape M.");
+                "Rank2KGroupedProblemVisitor with threadblock shape M < threadblock shape N "
+                "requires that threadblock shape N be a multiple of threadblock shape M.");
 
   static int32_t const kThreadblockSkewRatio = ThreadblockShape::kN / ThreadblockShape::kM;
 
   CUTLASS_HOST_DEVICE
-  static int32_t min_dim(cutlass::gemm::GemmCoord grid) {
-    return grid.n();
-  }
+  static int32_t min_dim(cutlass::gemm::GemmCoord grid) { return grid.n(); }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id) {
+  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id)
+  {
     return (row * kThreadblockSkewRatio) + (threadblock_id % kThreadblockSkewRatio);
   }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id) {
-    return col;
-  }
+  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id) { return col; }
 };
 
 // Partial specialization for the case where threadblock shape M == threadblock shape N
 // In this case, macro tiles are equivalent to true tiles, so the conversions are
 // identity functions.
-template <
-  typename ThreadblockShape
->
+template <typename ThreadblockShape>
 struct Rank2KGroupedProblemVisitorOffsetHelper<
-    ThreadblockShape,
-    typename platform::enable_if< (ThreadblockShape::kM == ThreadblockShape::kN) >::type
-> {
-
+  ThreadblockShape,
+  typename platform::enable_if<(ThreadblockShape::kM == ThreadblockShape::kN)>::type> {
   static int32_t const kThreadblockSkewRatio = 1;
 
   CUTLASS_HOST_DEVICE
-  static int32_t min_dim(cutlass::gemm::GemmCoord grid) {
-    return grid.m();
-  }
+  static int32_t min_dim(cutlass::gemm::GemmCoord grid) { return grid.m(); }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id) {
-    return row;
-  }
+  static int32_t macro_row_to_row(int32_t row, int32_t threadblock_id) { return row; }
 
   CUTLASS_HOST_DEVICE
-  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id) {
-    return col;
-  }
+  static int32_t macro_col_to_col(int32_t col, int32_t threadblock_id) { return col; }
 };
 
-// Helper for correctly representing problem sizes in grouped kernels 
+// Helper for correctly representing problem sizes in grouped kernels
 template <typename ThreadblockShape>
 struct Rank2KGroupedProblemSizeHelper {
   using OffsetHelper = Rank2KGroupedProblemVisitorOffsetHelper<ThreadblockShape>;
 
   CUTLASS_HOST_DEVICE
-  static int32_t tile_count(const cutlass::gemm::GemmCoord& grid) {
+  static int32_t tile_count(const cutlass::gemm::GemmCoord& grid)
+  {
     // Return the number of tiles at or below the diagonal (or at and above
     // for mode kUpper). We do this by first calculating this value assuming
     // we have a square matrix of tiles of size `dim x dim` where `dim` is the
     // minimum among {grid.m(), grid.n()}. We then multiply the resulting value
     // by OffsetHelper::kThreadblockSkewRatio to account for cases in which there
     // are more tiles in one dimension than the other.
-    int32_t dim = OffsetHelper::min_dim(grid);
-    int32_t tiles_on_diagonal = dim;
+    int32_t dim                  = OffsetHelper::min_dim(grid);
+    int32_t tiles_on_diagonal    = dim;
     int32_t tiles_below_diagonal = ((dim * (dim - 1)) / 2);
     return (tiles_on_diagonal + tiles_below_diagonal) * OffsetHelper::kThreadblockSkewRatio;
   }
@@ -298,7 +271,7 @@ struct Rank2KGroupedProblemSizeHelper {
   static void possibly_transpose_problem(cutlass::gemm::GemmCoord& problem) {}
 };
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -309,48 +282,46 @@ template <typename ThreadblockShape,
           int PrefetchTileCount,
           int ThreadCount,
           cutlass::FillMode FillModeC>
-struct Rank2KGroupedProblemVisitor : public GroupedProblemVisitor<
-                                              detail::Rank2KGroupedProblemSizeHelper<ThreadblockShape>,
-                                              ThreadblockShape,
-                                              GroupScheduleMode_,
-                                              PrefetchTileCount,
-                                              ThreadCount> {
-
+struct Rank2KGroupedProblemVisitor
+  : public GroupedProblemVisitor<detail::Rank2KGroupedProblemSizeHelper<ThreadblockShape>,
+                                 ThreadblockShape,
+                                 GroupScheduleMode_,
+                                 PrefetchTileCount,
+                                 ThreadCount> {
   static cutlass::FillMode const kFillModeC = FillModeC;
 
   static_assert(kFillModeC == cutlass::FillMode::kLower || kFillModeC == cutlass::FillMode::kUpper,
-              "Default Rank2KGroupedProblemVisitor requires fill mode of kLower or kUpper.");
+                "Default Rank2KGroupedProblemVisitor requires fill mode of kLower or kUpper.");
 
   using ProblemSizeHelper = detail::Rank2KGroupedProblemSizeHelper<ThreadblockShape>;
-  using Base = GroupedProblemVisitor<ProblemSizeHelper,
-                                     ThreadblockShape,
-                                     GroupScheduleMode_,
-                                     PrefetchTileCount,
-                                     ThreadCount>;
-  using OffsetHelper = typename ProblemSizeHelper::OffsetHelper;
-  using Params = typename Base::Params;
-  using SharedStorage = typename Base::SharedStorage;
+  using Base              = GroupedProblemVisitor<ProblemSizeHelper,
+                                                  ThreadblockShape,
+                                                  GroupScheduleMode_,
+                                                  PrefetchTileCount,
+                                                  ThreadCount>;
+  using OffsetHelper      = typename ProblemSizeHelper::OffsetHelper;
+  using Params            = typename Base::Params;
+  using SharedStorage     = typename Base::SharedStorage;
 
   //
   // Methods
   //
   CUTLASS_DEVICE
-  Rank2KGroupedProblemVisitor(
-    Params const &params_,
-    SharedStorage &shared_storage_,
-    int32_t block_idx
-  ): Base(params_, shared_storage_, block_idx)
-  {}
+  Rank2KGroupedProblemVisitor(Params const& params_,
+                              SharedStorage& shared_storage_,
+                              int32_t block_idx)
+    : Base(params_, shared_storage_, block_idx)
+  {
+  }
 
   CUTLASS_DEVICE
-  cutlass::gemm::GemmCoord threadblock_offset(int32_t threadblock_id) const {
-    int32_t macro_id = threadblock_id / OffsetHelper::kThreadblockSkewRatio;
-    int32_t macro_row = ceil(cutlass::fast_sqrt((2*macro_id) + 2.25) - 0.5) - 1;
-    int32_t macro_col = macro_id - (((macro_row+1) * macro_row)/2);
+  cutlass::gemm::GemmCoord threadblock_offset(int32_t threadblock_id) const
+  {
+    int32_t macro_id  = threadblock_id / OffsetHelper::kThreadblockSkewRatio;
+    int32_t macro_row = ceil(cutlass::fast_sqrt((2 * macro_id) + 2.25) - 0.5) - 1;
+    int32_t macro_col = macro_id - (((macro_row + 1) * macro_row) / 2);
 
-    if (kFillModeC == cutlass::FillMode::kUpper) {
-      swap(macro_row, macro_col);
-    }
+    if (kFillModeC == cutlass::FillMode::kUpper) { swap(macro_row, macro_col); }
 
     int32_t row = OffsetHelper::macro_row_to_row(macro_row, threadblock_id);
     int32_t col = OffsetHelper::macro_col_to_col(macro_col, threadblock_id);
@@ -361,8 +332,8 @@ struct Rank2KGroupedProblemVisitor : public GroupedProblemVisitor<
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

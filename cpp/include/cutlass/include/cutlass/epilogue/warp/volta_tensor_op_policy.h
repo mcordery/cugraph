@@ -36,9 +36,9 @@
 
 #pragma once
 
-#include "cutlass/matrix_shape.h"
-#include "cutlass/layout/matrix.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_shape.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,44 +49,38 @@ namespace warp {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Policy details related to the epilogue
-template <
-  typename WarpShape,             ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename InterleavedTileShape,  ///< shape of indivisible instruction-level arrangement (concept: GemmShape)
-  typename ElementC,              ///< Accumulator layout
-  typename Layout                 ///< target shared memory layout
->
-struct VoltaTensorOpPolicy; 
+template <typename WarpShape,             ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename InterleavedTileShape,  ///< shape of indivisible instruction-level arrangement
+                                          ///< (concept: GemmShape)
+          typename ElementC,              ///< Accumulator layout
+          typename Layout                 ///< target shared memory layout
+          >
+struct VoltaTensorOpPolicy;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major
-template <
-  typename WarpShape_          ///< shape of warp-level GEMM (concept: GemmShape)
->
+template <typename WarpShape_  ///< shape of warp-level GEMM (concept: GemmShape)
+          >
 struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, half_t, layout::RowMajor> {
-
-  using WarpShape = WarpShape_;
+  using WarpShape            = WarpShape_;
   using InterleavedTileShape = gemm::GemmShape<32, 32, 4>;
-  using ElementC = half_t;
-  using Layout = layout::RowMajor;
+  using ElementC             = half_t;
+  using Layout               = layout::RowMajor;
 
   /// Shape of one warp-levelinstruction
   using InstructionShape = gemm::GemmShape<16, 16, 4>;
 
   /// Number of mma operations performed for one 32x32x4 interleaved tile
-  using MmaIterations = MatrixShape<
-    InterleavedTileShape::kM / InstructionShape::kM,
-    InterleavedTileShape::kN / InstructionShape::kN
-  >;
+  using MmaIterations = MatrixShape<InterleavedTileShape::kM / InstructionShape::kM,
+                                    InterleavedTileShape::kN / InstructionShape::kN>;
 
   /// Number of 32x32x4 interleaved tiles performed to cover the warp-level GEMM shape
-  using TileIterations = MatrixShape<
-    WarpShape::kM / InterleavedTileShape::kM,
-    WarpShape::kN / InterleavedTileShape::kN
-  >;
+  using TileIterations =
+    MatrixShape<WarpShape::kM / InterleavedTileShape::kM, WarpShape::kN / InterleavedTileShape::kN>;
 
   /// Number of accumulator elements owned by each thread per Mma
-  static int const kElementsPerMma = 8;
+  static int const kElementsPerMma   = 8;
   static int const kRowsPerIteration = 16;
 
   //
@@ -95,7 +89,7 @@ struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, half_t, layou
 
   /// Number of accumulator elements stored per memory instruction to shared memory
   static int const kElementsPerAccess = 4;
-  
+
   /// Number of accesses performed per interleaved tile
   static int const kAccessesPerInterleavedTile = 4;
 
@@ -110,46 +104,38 @@ struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, half_t, layou
   using AccessType = AlignedArray<ElementC, kElementsPerAccess>;
 
   /// This is the fragment size produced by one access of the iterator.
-  using Fragment = Array<
-    ElementC, 
-    kElementsPerAccess * kAccessesPerInterleavedTile * TileIterations::kColumn>;
+  using Fragment =
+    Array<ElementC, kElementsPerAccess * kAccessesPerInterleavedTile * TileIterations::kColumn>;
 
   /// This is the complete warp-level accumulator tile.
-  using AccumulatorTile = Array<
-    ElementC, 
-    TileIterations::kCount * MmaIterations::kCount * kElementsPerMma>;
+  using AccumulatorTile =
+    Array<ElementC, TileIterations::kCount * MmaIterations::kCount * kElementsPerMma>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major
-template <
-  typename WarpShape_          ///< shape of warp-level GEMM (concept: MatrixShape)
->
+template <typename WarpShape_  ///< shape of warp-level GEMM (concept: MatrixShape)
+          >
 struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, float, layout::RowMajor> {
-
-  using WarpShape = WarpShape_;
+  using WarpShape            = WarpShape_;
   using InterleavedTileShape = gemm::GemmShape<32, 32, 4>;
-  using ElementC = float;
-  using Layout = layout::RowMajor;
+  using ElementC             = float;
+  using Layout               = layout::RowMajor;
 
   /// Shape of one warp-levelinstruction
   using InstructionShape = gemm::GemmShape<16, 16, 4>;
 
   /// Number of mma operations performed for one 32x32x4 interleaved tile
-  using MmaIterations = MatrixShape<
-    InterleavedTileShape::kM / InstructionShape::kM,
-    InterleavedTileShape::kN / InstructionShape::kN
-  >;
+  using MmaIterations = MatrixShape<InterleavedTileShape::kM / InstructionShape::kM,
+                                    InterleavedTileShape::kN / InstructionShape::kN>;
 
   /// Number of 32x32x4 interleaved tiles performed to cover the warp-level GEMM shape
-  using TileIterations = MatrixShape<
-    WarpShape::kM / InterleavedTileShape::kM,
-    WarpShape::kN / InterleavedTileShape::kN
-  >;
+  using TileIterations =
+    MatrixShape<WarpShape::kM / InterleavedTileShape::kM, WarpShape::kN / InterleavedTileShape::kN>;
 
   /// Number of accumulator elements owned by each thread per Mma
-  static int const kElementsPerMma = 8;
+  static int const kElementsPerMma   = 8;
   static int const kRowsPerIteration = 16;
 
   //
@@ -158,7 +144,7 @@ struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, float, layout
 
   /// Number of accumulator elements stored per memory instruction to shared memory
   static int const kElementsPerAccess = 2;
-  
+
   /// Number of accesses performed per interleaved tile
   static int const kAccessesPerInterleavedTile = 8;
 
@@ -171,25 +157,23 @@ struct VoltaTensorOpPolicy<WarpShape_, gemm::GemmShape<32, 32, 4>, float, layout
   //
   // Derived types
   //
-  
+
   /// Array type for aligned memory accesses
   using AccessType = AlignedArray<ElementC, kElementsPerAccess>;
 
   /// This is the fragment size produced by one access of the iterator.
-  using Fragment = Array<
-    ElementC, 
-    kElementsPerAccess * kAccessesPerInterleavedTile * TileIterations::kColumn>;
+  using Fragment =
+    Array<ElementC, kElementsPerAccess * kAccessesPerInterleavedTile * TileIterations::kColumn>;
 
   /// This is the complete warp-level accumulator tile.
-  using AccumulatorTile = Array<
-    ElementC, 
-    TileIterations::kCount * MmaIterations::kCount * kElementsPerMma>;
+  using AccumulatorTile =
+    Array<ElementC, TileIterations::kCount * MmaIterations::kCount * kElementsPerMma>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

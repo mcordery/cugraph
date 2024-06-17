@@ -19,13 +19,15 @@
 from cugraph.components.connectivity cimport *
 from cugraph.structure.graph_primtypes cimport *
 from cugraph.structure.graph_utilities cimport *
-from cugraph.structure import utils_wrapper
-from cugraph.structure import graph_primtypes_wrapper
+
+from cugraph.structure import graph_primtypes_wrapper, utils_wrapper
+
 from libc.stdint cimport uintptr_t
-from cugraph.structure.symmetrize import symmetrize
-from cugraph.structure.graph_classes import Graph as type_Graph
+
 import cudf
 import numpy as np
+from cugraph.structure.graph_classes import Graph as type_Graph
+from cugraph.structure.symmetrize import symmetrize
 
 
 def strongly_connected_components(input_graph):

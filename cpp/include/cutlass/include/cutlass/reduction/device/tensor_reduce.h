@@ -34,15 +34,14 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/fast_math.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/numeric_conversion.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/device_kernel.h"
-
-#include "cutlass/reduction/device/tensor_reduce_affine_strided.h"
+#include "cutlass/fast_math.h"
+#include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
 #include "cutlass/reduction/device/tensor_reduce_affine_contiguous.h"
+#include "cutlass/reduction/device/tensor_reduce_affine_strided.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,33 +52,38 @@ namespace device {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Tensor reduction operator on specific CUTLASS layouts over exactly one index
-template <
-  typename ElementOutput_,
-  typename ElementSource_,
-  typename Layout_,
-  typename ReductionOp_,
-  int VectorLength_  = 1,
-  typename ElementCompute_ = ElementOutput_
->
+template <typename ElementOutput_,
+          typename ElementSource_,
+          typename Layout_,
+          typename ReductionOp_,
+          int VectorLength_        = 1,
+          typename ElementCompute_ = ElementOutput_>
 struct TensorReduction {
-
-  using ElementOutput = ElementOutput_;
-  using ElementSource = ElementSource_;
-  using Layout = Layout_;
-  using ReductionOp = ReductionOp_;
+  using ElementOutput            = ElementOutput_;
+  using ElementSource            = ElementSource_;
+  using Layout                   = Layout_;
+  using ReductionOp              = ReductionOp_;
   static int const kVectorLength = VectorLength_;
-  using ElementCompute = ElementCompute_;
+  using ElementCompute           = ElementCompute_;
 
   using TensorCoord = typename Layout::TensorCoord;
 
   /// Reduction operator
-  using ReductionDeviceStridedOperator = TensorReductionAffineStrided<
-    4, 3, ElementOutput, ElementSource, ReductionOp, kVectorLength, ElementCompute
-  >;
+  using ReductionDeviceStridedOperator = TensorReductionAffineStrided<4,
+                                                                      3,
+                                                                      ElementOutput,
+                                                                      ElementSource,
+                                                                      ReductionOp,
+                                                                      kVectorLength,
+                                                                      ElementCompute>;
 
-  using ReductionDeviceContiguousOperator = TensorReductionAffineContiguous<
-    4, 3, ElementOutput, ElementSource, ReductionOp, kVectorLength, ElementCompute
-  >;
+  using ReductionDeviceContiguousOperator = TensorReductionAffineContiguous<4,
+                                                                            3,
+                                                                            ElementOutput,
+                                                                            ElementSource,
+                                                                            ReductionOp,
+                                                                            kVectorLength,
+                                                                            ElementCompute>;
 
   //
   // Data members
@@ -94,171 +98,153 @@ struct TensorReduction {
   //
 
   ///
-  TensorReduction(
-    TensorCoord extent, 
-    int reduction_index_
-  ): 
-    reduction_index(reduction_index_) {
-
+  TensorReduction(TensorCoord extent, int reduction_index_) : reduction_index(reduction_index_)
+  {
     Coord<4> extent_affine;
 
     switch (reduction_index) {
-    case 0:
-      extent_affine[0] = extent[1];
-      extent_affine[1] = extent[2];
-      extent_affine[2] = extent[0];
-      extent_affine[3] = extent[3];
-      break;
-    case 1:
-      extent_affine[0] = extent[0];
-      extent_affine[1] = extent[2];
-      extent_affine[2] = extent[1];
-      extent_affine[3] = extent[3];
-      break;
-    case 2:
-      extent_affine[0] = extent[0];
-      extent_affine[1] = extent[1];
-      extent_affine[2] = extent[2];
-      extent_affine[3] = extent[3];
-      break;
-    case 3:
-      extent_affine[0] = extent[0];
-      extent_affine[1] = extent[1];
-      extent_affine[2] = extent[2];
-      extent_affine[3] = extent[3];
-      break;
-    default: break;
+      case 0:
+        extent_affine[0] = extent[1];
+        extent_affine[1] = extent[2];
+        extent_affine[2] = extent[0];
+        extent_affine[3] = extent[3];
+        break;
+      case 1:
+        extent_affine[0] = extent[0];
+        extent_affine[1] = extent[2];
+        extent_affine[2] = extent[1];
+        extent_affine[3] = extent[3];
+        break;
+      case 2:
+        extent_affine[0] = extent[0];
+        extent_affine[1] = extent[1];
+        extent_affine[2] = extent[2];
+        extent_affine[3] = extent[3];
+        break;
+      case 3:
+        extent_affine[0] = extent[0];
+        extent_affine[1] = extent[1];
+        extent_affine[2] = extent[2];
+        extent_affine[3] = extent[3];
+        break;
+      default: break;
     }
 
     if (reduction_index == 3) {
-      reduction_contiguous = ReductionDeviceContiguousOperator(extent_affine);  
-    }
-    else {
-      reduction_strided = ReductionDeviceStridedOperator(extent_affine);  
+      reduction_contiguous = ReductionDeviceContiguousOperator(extent_affine);
+    } else {
+      reduction_strided = ReductionDeviceStridedOperator(extent_affine);
     }
   }
 
   /// Simple check to verify the object is initialized correctly
-  bool good() const {
-    if (reduction_index == 3) {
-      return reduction_contiguous.good();
-    }
+  bool good() const
+  {
+    if (reduction_index == 3) { return reduction_contiguous.good(); }
     return reduction_strided.good();
   }
 
   /// Size of one workspace
-  int64_t workspace_stride() const {
+  int64_t workspace_stride() const
+  {
     if (reduction_index == 3) {
       return reduction_contiguous.workspace_stride();
-    }
-    else {
+    } else {
       return reduction_strided.workspace_stride();
     }
   }
 
   /// Returns the size (in bytes) of a temporary workspace needed for reduction across CTAs
-  int64_t workspace_size() const {
+  int64_t workspace_size() const
+  {
     if (reduction_index == 3) {
       return reduction_contiguous.workspace_size();
-    }
-    else {
+    } else {
       return reduction_strided.workspace_size();
     }
   }
 
   /// Helper to use overloaded function call operator
-  Status reduce(
-    TensorRef<ElementOutput, Layout> dst_ref,
-    TensorRef<ElementSource, Layout> src_ref,
-    void *device_workspace_ptr = nullptr,
-    ElementCompute reduction_identity = ElementCompute(),
-    ReductionOp reduction_op = ReductionOp(),
-    hipStream_t stream = nullptr) {
-
+  Status reduce(TensorRef<ElementOutput, Layout> dst_ref,
+                TensorRef<ElementSource, Layout> src_ref,
+                void* device_workspace_ptr        = nullptr,
+                ElementCompute reduction_identity = ElementCompute(),
+                ReductionOp reduction_op          = ReductionOp(),
+                hipStream_t stream                = nullptr)
+  {
     int64_t src_stride[3];
     int64_t dst_stride[3];
 
     switch (reduction_index) {
-    case 0:
-      src_stride[0] = src_ref.stride()[1];
-      src_stride[1] = src_ref.stride()[0];
-      src_stride[2] = src_ref.stride()[2];
-      dst_stride[0] = dst_ref.stride()[1];
-      dst_stride[1] = dst_ref.stride()[0];
-      break;
-    case 1:
-      src_stride[0] = src_ref.stride()[2];
-      src_stride[1] = src_ref.stride()[0];
-      src_stride[2] = src_ref.stride()[1];
-      dst_stride[0] = dst_ref.stride()[2];
-      dst_stride[1] = dst_ref.stride()[0];
-      break;
-    case 2:
-      src_stride[0] = src_ref.stride()[2];
-      src_stride[1] = src_ref.stride()[1];
-      src_stride[2] = src_ref.stride()[0];
-      dst_stride[0] = dst_ref.stride()[2];
-      dst_stride[1] = dst_ref.stride()[1];
-      break;
-    case 3:
-      src_stride[0] = src_ref.stride()[2];
-      src_stride[1] = src_ref.stride()[1];
-      src_stride[2] = src_ref.stride()[0];
+      case 0:
+        src_stride[0] = src_ref.stride()[1];
+        src_stride[1] = src_ref.stride()[0];
+        src_stride[2] = src_ref.stride()[2];
+        dst_stride[0] = dst_ref.stride()[1];
+        dst_stride[1] = dst_ref.stride()[0];
+        break;
+      case 1:
+        src_stride[0] = src_ref.stride()[2];
+        src_stride[1] = src_ref.stride()[0];
+        src_stride[2] = src_ref.stride()[1];
+        dst_stride[0] = dst_ref.stride()[2];
+        dst_stride[1] = dst_ref.stride()[0];
+        break;
+      case 2:
+        src_stride[0] = src_ref.stride()[2];
+        src_stride[1] = src_ref.stride()[1];
+        src_stride[2] = src_ref.stride()[0];
+        dst_stride[0] = dst_ref.stride()[2];
+        dst_stride[1] = dst_ref.stride()[1];
+        break;
+      case 3:
+        src_stride[0] = src_ref.stride()[2];
+        src_stride[1] = src_ref.stride()[1];
+        src_stride[2] = src_ref.stride()[0];
 
-      dst_stride[0] = dst_ref.stride()[2];
-      dst_stride[1] = dst_ref.stride()[1];
-      dst_stride[2] = dst_ref.stride()[0];
+        dst_stride[0] = dst_ref.stride()[2];
+        dst_stride[1] = dst_ref.stride()[1];
+        dst_stride[2] = dst_ref.stride()[0];
 
-    default: break;
+      default: break;
     }
 
     if (reduction_index == 3) {
-      return reduction_contiguous(
-        dst_ref.data(),
-        dst_stride, 
-        src_ref.data(), 
-        src_stride, 
-        device_workspace_ptr, 
-        reduction_identity,
-        reduction_op, 
-        stream);
-    }
-    else {
-      return reduction_strided(
-        dst_ref.data(),
-        dst_stride, 
-        src_ref.data(), 
-        src_stride, 
-        device_workspace_ptr, 
-        reduction_identity,
-        reduction_op, 
-        stream);
+      return reduction_contiguous(dst_ref.data(),
+                                  dst_stride,
+                                  src_ref.data(),
+                                  src_stride,
+                                  device_workspace_ptr,
+                                  reduction_identity,
+                                  reduction_op,
+                                  stream);
+    } else {
+      return reduction_strided(dst_ref.data(),
+                               dst_stride,
+                               src_ref.data(),
+                               src_stride,
+                               device_workspace_ptr,
+                               reduction_identity,
+                               reduction_op,
+                               stream);
     }
   }
 
-  Status operator()(
-    TensorRef<ElementOutput, Layout> dst_ref,
-    TensorRef<ElementSource, Layout> src_ref,
-    void *device_workspace_ptr = nullptr,
-    ElementCompute reduction_identity = ElementCompute(),
-    ReductionOp reduction_op = ReductionOp(),
-    hipStream_t stream = nullptr) {
-
-    return reduce(
-      dst_ref, 
-      src_ref, 
-      device_workspace_ptr, 
-      reduction_identity,
-      reduction_op, 
-      stream);
+  Status operator()(TensorRef<ElementOutput, Layout> dst_ref,
+                    TensorRef<ElementSource, Layout> src_ref,
+                    void* device_workspace_ptr        = nullptr,
+                    ElementCompute reduction_identity = ElementCompute(),
+                    ReductionOp reduction_op          = ReductionOp(),
+                    hipStream_t stream                = nullptr)
+  {
+    return reduce(dst_ref, src_ref, device_workspace_ptr, reduction_identity, reduction_op, stream);
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace device
-} // namespace reduction
-} // namespace cutlass
+}  // namespace device
+}  // namespace reduction
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-

@@ -14,14 +14,11 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
 from pylibcugraph._cugraph_c.resource_handle cimport (
+    byte_t,
     cugraph_resource_handle_t,
     data_type_id_t,
-    byte_t,
 )
 
 

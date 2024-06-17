@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import networkx as nx
-
 import nx_cugraph as nxcg
 
 from .digraph import DiGraph

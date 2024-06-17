@@ -12,27 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph_service_client.remote_graph_utils import import_optional, MissingModule
+import asyncio
+import pickle
+import threading
+from collections.abc import Sequence
+from functools import wraps
 
 import numpy as np
-
-from functools import wraps
-from collections.abc import Sequence
-import pickle
 import ucp
-import asyncio
-import threading
-
-
-from cugraph_service_client import defaults
+from cugraph_service_client import defaults, extension_return_dtype_map
+from cugraph_service_client.cugraph_service_thrift import create_client
 from cugraph_service_client.remote_graph import RemoteGraph
-from cugraph_service_client import extension_return_dtype_map
+from cugraph_service_client.remote_graph_utils import MissingModule, import_optional
 from cugraph_service_client.types import (
-    ValueWrapper,
     GraphVertexEdgeID,
     UniformNeighborSampleResult,
+    ValueWrapper,
 )
-from cugraph_service_client.cugraph_service_thrift import create_client
 
 cp = import_optional("cupy")
 cudf = import_optional("cudf")
@@ -688,7 +684,6 @@ class CugraphServiceClient:
         graph_id=defaults.graph_id,
         names=None,
     ):
-
         """
         Reads csv_file_name and applies it as vertex data to the graph
         identified as graph_id (or the default graph if not specified).
@@ -1369,7 +1364,6 @@ class CugraphServiceClient:
 
     @__server_connection
     def _get_graph_type(self, graph_id=defaults.graph_id):
-
         """
         Test/debug API for returning a string repr of the graph_id instance.
         """

@@ -11,13 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-import pandas as pd
-import numpy as np
-
-import dask_cudf
 import cudf
 import cupy as cp
+import dask_cudf
+import numpy as np
+import pandas as pd
+import pytest
 from cugraph.gnn.dgl_extensions.dgl_uniform_sampler import DGLUniformSampler
 
 

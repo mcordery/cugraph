@@ -32,7 +32,7 @@
     \brief This defines a "fragment" iterator for visiting the fragments of an accumulator tile
       that participate in one warp-level store operation.
 
-      Typically, the accumulator tile is the largest single block of register-backed storage 
+      Typically, the accumulator tile is the largest single block of register-backed storage
       within the kernel. Storing it to memory is best accomplished by partitioning it into
       smaller tiles and storing these sequentially.
 
@@ -45,10 +45,9 @@
 
 #if !(defined(__clang__) && defined(__CUDA__))
 
-#include "cutlass/wmma_array.h"
-#include "cutlass/layout/matrix.h"
-
 #include "cutlass/epilogue/warp/wmma_tensor_op_policy.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/wmma_array.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,33 +57,36 @@ namespace warp {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// 
-template <
-  typename WarpShape,         ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape,     ///< matrix multiply operation shape (concept: gemm::GemmShape)
-  typename OperatorElementC,  ///< matrix multiply operation data type (concept: data type)
-  typename OperatorFragmentC, ///< matrix multiply operation fragment (concept: nvcuda::cuda::fragment)
-  typename Layout             ///< target shared memory layout
->
+///
+template <typename WarpShape,      ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape,  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          typename OperatorElementC,   ///< matrix multiply operation data type (concept: data type)
+          typename OperatorFragmentC,  ///< matrix multiply operation fragment (concept:
+                                       ///< nvcuda::cuda::fragment)
+          typename Layout              ///< target shared memory layout
+          >
 class FragmentIteratorWmmaTensorOp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major shared memory
-template <
-  typename WarpShape_,         ///< shape of the warp-level GEMM tile
-  typename OperatorShape_,     ///< matrix multiply operation shape (concept: gemm::GemmShape)
-  typename OperatorElementC_,  ///< matrix multiply operation data type (concept: data type)
-  typename OperatorFragmentC_  ///< matrix multiply operation fragment (concept: nvcuda::cuda::fragment)
->
-class FragmentIteratorWmmaTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, OperatorFragmentC_, layout::RowMajor> {
-public:
-
-  using WarpShape = WarpShape_;
-  using OperatorShape = OperatorShape_;
-  using OperatorElementC = OperatorElementC_;
+template <typename WarpShape_,      ///< shape of the warp-level GEMM tile
+          typename OperatorShape_,  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          typename OperatorElementC_,  ///< matrix multiply operation data type (concept: data type)
+          typename OperatorFragmentC_  ///< matrix multiply operation fragment (concept:
+                                       ///< nvcuda::cuda::fragment)
+          >
+class FragmentIteratorWmmaTensorOp<WarpShape_,
+                                   OperatorShape_,
+                                   OperatorElementC_,
+                                   OperatorFragmentC_,
+                                   layout::RowMajor> {
+ public:
+  using WarpShape         = WarpShape_;
+  using OperatorShape     = OperatorShape_;
+  using OperatorElementC  = OperatorElementC_;
   using OperatorFragmentC = OperatorFragmentC_;
-  using Layout = layout::RowMajor;
+  using Layout            = layout::RowMajor;
 
   using Policy = WmmaTensorOpPolicy<WarpShape, OperatorShape, Layout>;
 
@@ -96,54 +98,53 @@ public:
 
   using OutputAccumulatorTile = AccumulatorTile;
 
-private:
-
+ private:
   /// Internal access type
   using AccessType = WmmaFragmentArray<OperatorFragmentC, Policy::kWmmaFragmentsPerAccess>;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Accumulator tile
-  AccessType const *accumulators_;
+  AccessType const* accumulators_;
 
   /// Internal index
   int index_;
 
-public:
-
+ public:
   /// Constructs an iterator
   CUTLASS_HOST_DEVICE
-  FragmentIteratorWmmaTensorOp(AccumulatorTile const &accum): 
-    accumulators_(reinterpret_cast<AccessType const *>(&accum)), 
-    index_(0) { 
+  FragmentIteratorWmmaTensorOp(AccumulatorTile const& accum)
+    : accumulators_(reinterpret_cast<AccessType const*>(&accum)), index_(0)
+  {
   }
 
   /// Increments
   CUTLASS_HOST_DEVICE
-  FragmentIteratorWmmaTensorOp &operator++() {
+  FragmentIteratorWmmaTensorOp& operator++()
+  {
     ++index_;
     return *this;
   }
 
   /// Decrements
   CUTLASS_HOST_DEVICE
-  FragmentIteratorWmmaTensorOp &operator--() {
+  FragmentIteratorWmmaTensorOp& operator--()
+  {
     --index_;
     return *this;
   }
 
   /// Loads a fragment from the referenced part of the accumulator tile
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, int index_offset = 0) const {
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+  void load(Fragment& frag, int index_offset = 0) const
+  {
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
-    for(int n=0; n < Policy::OperatorCount::kColumn; n++) {
-      
+    for (int n = 0; n < Policy::OperatorCount::kColumn; n++) {
       int accumulator_access_offset = index_ * Policy::OperatorCount::kColumn + n;
 
       frag_ptr[n] = accumulators_[accumulator_access_offset];
@@ -151,14 +152,12 @@ public:
   }
 };
 
-
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #else
-#error (defined(__clang__) && defined(__CUDA__))
-#endif // !defined(__clang__)
-
+#error(defined(__clang__) && defined(__CUDA__))
+#endif  // !defined(__clang__)

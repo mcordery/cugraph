@@ -48,83 +48,74 @@ namespace warp {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    ///< Size of the Gemm problem (concept: GemmShape)
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Data type of A elements
-    typename ElementA_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA_,
-    /// Data type of B elements
-    typename ElementB_,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB_,
-    /// Element type of C matrix
-    typename ElementC_,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC_,
-    /// Operator describing the tensor operation
-    typename Operator_ = arch::OpMultiplyAdd,
-    /// Number of partitions along K dimension
-    int PartitionsK = 1
->
+  ///< Size of the Gemm problem (concept: GemmShape)
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Data type of A elements
+  typename ElementA_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA_,
+  /// Data type of B elements
+  typename ElementB_,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB_,
+  /// Element type of C matrix
+  typename ElementC_,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC_,
+  /// Operator describing the tensor operation
+  typename Operator_ = arch::OpMultiplyAdd,
+  /// Number of partitions along K dimension
+  int PartitionsK = 1>
 struct DefaultMmaTensorOpWmma;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for m-by-n-by-kgroup
 template <
-    ///< Shape of one matrix production operation (concept: GemmShape)
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Data type of A elements
-    typename ElementA,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Data type of B elements
-    typename ElementB,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Element type of C matrix
-    typename ElementC,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Operator describing the tensor operation
-    typename Operator_,
-    /// Number of partitions along K dimension
-    int PartitionsK>
+  ///< Shape of one matrix production operation (concept: GemmShape)
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Data type of A elements
+  typename ElementA,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Data type of B elements
+  typename ElementB,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Element type of C matrix
+  typename ElementC,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Operator describing the tensor operation
+  typename Operator_,
+  /// Number of partitions along K dimension
+  int PartitionsK>
 struct DefaultMmaTensorOpWmma {
   using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Wmma<
-          InstructionShape_, 
-          ElementA,
-          LayoutA, 
-          ElementB,
-          LayoutB, 
-          ElementC,
-          LayoutC, 
-          Operator_>,
-      cutlass::MatrixShape<1, 1> >;
+    cutlass::arch::
+      Wmma<InstructionShape_, ElementA, LayoutA, ElementB, LayoutB, ElementC, LayoutC, Operator_>,
+    cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaTensorOpWmma<
-        WarpShape_,
-        ElementA, 
-        LayoutA, 
-        ElementB, 
-        LayoutB,
-        ElementC, 
-        LayoutC, 
-        Policy, 
-        PartitionsK>;
+  using Type = cutlass::gemm::warp::MmaTensorOpWmma<WarpShape_,
+                                                    ElementA,
+                                                    LayoutA,
+                                                    ElementB,
+                                                    LayoutB,
+                                                    ElementC,
+                                                    LayoutC,
+                                                    Policy,
+                                                    PartitionsK>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 #endif

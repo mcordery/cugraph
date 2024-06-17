@@ -15,30 +15,34 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
+from pylibcugraph._cugraph_c.algorithms cimport (
+    cugraph_sample_result_get_destinations,  # deprecated
 )
 from pylibcugraph._cugraph_c.algorithms cimport (
-    cugraph_sample_result_t,
+    cugraph_sample_result_get_hop,  # deprecated
+)
+from pylibcugraph._cugraph_c.algorithms cimport (
+    cugraph_sample_result_get_offsets,  # deprecated
+)
+from pylibcugraph._cugraph_c.algorithms cimport (
+    cugraph_sample_result_get_sources,  # deprecated
+)
+from pylibcugraph._cugraph_c.algorithms cimport (
+    cugraph_sample_result_free,
+    cugraph_sample_result_get_edge_id,
+    cugraph_sample_result_get_edge_type,
+    cugraph_sample_result_get_edge_weight,
+    cugraph_sample_result_get_label_hop_offsets,
     cugraph_sample_result_get_major_offsets,
     cugraph_sample_result_get_majors,
     cugraph_sample_result_get_minors,
-    cugraph_sample_result_get_label_hop_offsets,
-    cugraph_sample_result_get_sources, # deprecated
-    cugraph_sample_result_get_destinations, # deprecated
-    cugraph_sample_result_get_edge_weight,
-    cugraph_sample_result_get_edge_id,
-    cugraph_sample_result_get_edge_type,
-    cugraph_sample_result_get_hop, # deprecated
-    cugraph_sample_result_get_start_labels,
-    cugraph_sample_result_get_offsets, # deprecated
     cugraph_sample_result_get_renumber_map,
     cugraph_sample_result_get_renumber_map_offsets,
-    cugraph_sample_result_free,
+    cugraph_sample_result_get_start_labels,
+    cugraph_sample_result_t,
 )
-from pylibcugraph.utils cimport (
-    create_cupy_array_view_for_device_ptr,
-)
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
+from pylibcugraph.utils cimport create_cupy_array_view_for_device_ptr
 
 
 cdef class SamplingResult:

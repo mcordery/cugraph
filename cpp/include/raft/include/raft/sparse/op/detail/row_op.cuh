@@ -21,10 +21,10 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 #include <stdio.h>
 

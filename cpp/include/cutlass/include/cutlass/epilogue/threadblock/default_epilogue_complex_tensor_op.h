@@ -38,31 +38,25 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/gemm/gemm.h"
-
-#include "cutlass/epilogue/thread/linear_combination.h"
-#include "cutlass/epilogue/thread/linear_combination_relu.h"
-#include "cutlass/epilogue/thread/linear_combination_gelu.h"
-#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
-#include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/thread/conversion_op.h"
+#include "cutlass/epilogue/thread/linear_combination.h"
+#include "cutlass/epilogue/thread/linear_combination_gelu.h"
+#include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
+#include "cutlass/epilogue/thread/linear_combination_relu.h"
+#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/reduction_op.h"
-
-#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
-
+#include "cutlass/epilogue/threadblock/default_thread_map_tensor_op.h"
+#include "cutlass/epilogue/threadblock/epilogue.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
+#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
 #include "cutlass/epilogue/warp/fragment_iterator_complex_tensor_op.h"
 #include "cutlass/epilogue/warp/fragment_iterator_gaussian_complex_tensor_op.h"
 #include "cutlass/epilogue/warp/tile_iterator_tensor_op.h"
-#include "cutlass/epilogue/threadblock/default_thread_map_tensor_op.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
-#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
-
-#include "cutlass/epilogue/threadblock/epilogue.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +68,7 @@ namespace threadblock {
 /// Specialization and defines sensible defaults for epilogues for complex*complex case
 //  4 real-valued mma operations (Complex)
 //  A = (ar + j ai), B (br +j bi), D = AB
-//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br) 
+//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
   /// Epilouge Shape
@@ -87,21 +81,19 @@ template <
   typename OutputOp_,
   /// Elements accessed by inner-most loop of AccumulatorFragmentIterator::load()
   int ElementsPerAccess,
-  /// Multiply-add operator 
-  /// Selects between (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex) 
-  typename Operator_ = arch::OpMultiplyAddComplex
-> 
+  /// Multiply-add operator
+  /// Selects between (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
+  typename Operator_ = arch::OpMultiplyAddComplex>
 struct DefaultEpilogueComplexTensorOp {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  using Operator = Operator_;
+  using Operator                      = Operator_;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -113,81 +105,71 @@ struct DefaultEpilogueComplexTensorOp {
     typename WarpMmaTensorOp::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    OutputTileThreadMap,
-    ElementOutput
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<OutputTileThreadMap, ElementOutput>;
 
   using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
     typename WarpMmaTensorOp::Shape,
     typename WarpMmaTensorOp::Policy::Operator::Shape,
     typename WarpMmaTensorOp::Policy::Operator::ElementC,
     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-    LayoutC
-  >;
+    LayoutC>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    ElementAccumulator,
-    LayoutC
-  >;
+  using WarpTileIterator =
+    cutlass::epilogue::warp::TileIteratorTensorOp<typename WarpMmaTensorOp::Shape,
+                                                  typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                                  ElementAccumulator,
+                                                  LayoutC>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = cutlass::MatrixShape<0, 0>;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Partial specialization and defines sensible defaults for epilogues for complex*complex case
 //  3 real-valued mma operations (Gaussian Complex)
 //  A  = (ar + j ai), B = (br +j bi), D = AB
-//  P1 = (ar + ai) * br, P2 = - ar * (br - bi), P3 = ai * (br + bi) 
+//  P1 = (ar + ai) * br, P2 = - ar * (br - bi), P3 = ai * (br + bi)
 //  D  = dr + j di = (P1 - P3) + j (P1 + P2)
 /////////////////////////////////////////////////////////////////////////////////////////////////
-template <
-  typename Shape_,
-  typename WarpMmaTensorOp_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
-struct DefaultEpilogueComplexTensorOp <Shape_, WarpMmaTensorOp_, PartitionsK, 
-                                      OutputOp_, ElementsPerAccess, 
-                                      arch::OpMultiplyAddGaussianComplex
-> {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
+struct DefaultEpilogueComplexTensorOp<Shape_,
+                                      WarpMmaTensorOp_,
+                                      PartitionsK,
+                                      OutputOp_,
+                                      ElementsPerAccess,
+                                      arch::OpMultiplyAddGaussianComplex> {
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  using Operator = arch::OpMultiplyAddGaussianComplex;
+  using Operator                      = arch::OpMultiplyAddGaussianComplex;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -199,57 +181,49 @@ struct DefaultEpilogueComplexTensorOp <Shape_, WarpMmaTensorOp_, PartitionsK,
     typename WarpMmaTensorOp::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    OutputTileThreadMap,
-    ElementOutput
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<OutputTileThreadMap, ElementOutput>;
 
-  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorGaussianComplexTensorOp<
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::ElementC,
-    typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-    LayoutC
-  >;
+  using AccumulatorFragmentIterator =
+    cutlass::epilogue::warp::FragmentIteratorGaussianComplexTensorOp<
+      typename WarpMmaTensorOp::Shape,
+      typename WarpMmaTensorOp::Policy::Operator::Shape,
+      typename WarpMmaTensorOp::Policy::Operator::ElementC,
+      typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+      LayoutC>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    ElementAccumulator,
-    LayoutC
-  >;
+  using WarpTileIterator =
+    cutlass::epilogue::warp::TileIteratorTensorOp<typename WarpMmaTensorOp::Shape,
+                                                  typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                                  ElementAccumulator,
+                                                  LayoutC>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = cutlass::MatrixShape<0, 0>;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

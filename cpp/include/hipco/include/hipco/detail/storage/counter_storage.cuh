@@ -39,7 +39,6 @@
 #include <hipco/extent.cuh>
 
 #include <hip/atomic>
-
 #include <memory>
 
 namespace hipco {
@@ -55,14 +54,15 @@ namespace detail {
 template <typename SizeType, hip::thread_scope Scope, typename Allocator>
 class counter_storage : public storage_base<hipco::experimental::extent<SizeType, 1>> {
  public:
- //Todo(HIP): commented this line
-  // using storage_base<hipco::experimental::extent<SizeType, 1>>::capacity_;  ///< Storage size
+  // Todo(HIP): commented this line
+  //  using storage_base<hipco::experimental::extent<SizeType, 1>>::capacity_;  ///< Storage size
 
-  using size_type      = SizeType;                        ///< Size type
+  using size_type      = SizeType;                       ///< Size type
   using value_type     = hip::atomic<size_type, Scope>;  ///< Type of the counter
   using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<
     value_type>;  ///< Type of the allocator to (de)allocate counter
-  using counter_deleter_type = custom_deleter<size_type, allocator_type>;  ///< Type of counter deleter
+  using counter_deleter_type =
+    custom_deleter<size_type, allocator_type>;  ///< Type of counter deleter
 
   /**
    * @brief Constructor of counter storage.
@@ -71,7 +71,7 @@ class counter_storage : public storage_base<hipco::experimental::extent<SizeType
    */
   explicit constexpr counter_storage(Allocator const& allocator)
     : storage_base<hipco::experimental::extent<SizeType, 1>>{hipco::experimental::extent<size_type,
-                                                                                       1>{}},
+                                                                                         1>{}},
       allocator_{allocator},
       counter_deleter_{this->capacity(), allocator_},
       counter_{allocator_.allocate(this->capacity()), counter_deleter_}

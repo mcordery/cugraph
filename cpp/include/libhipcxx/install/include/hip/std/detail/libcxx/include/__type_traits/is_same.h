@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -25,7 +25,7 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 #if defined(_LIBCUDACXX_IS_SAME) && !defined(_LIBCUDACXX_USE_IS_SAME_FALLBACK)
 
 template <class _Tp, class _Up>
-struct _LIBCUDACXX_TEMPLATE_VIS is_same : _BoolConstant<_LIBCUDACXX_IS_SAME(_Tp, _Up)> { };
+struct _LIBCUDACXX_TEMPLATE_VIS is_same : _BoolConstant<_LIBCUDACXX_IS_SAME(_Tp, _Up)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp, class _Up>
@@ -47,8 +47,10 @@ using _IsNotSame = _BoolConstant<!_LIBCUDACXX_IS_SAME(_Tp, _Up)>;
 
 #else
 
-template <class _Tp, class _Up> struct _LIBCUDACXX_TEMPLATE_VIS is_same           : public false_type {};
-template <class _Tp>            struct _LIBCUDACXX_TEMPLATE_VIS is_same<_Tp, _Tp> : public true_type {};
+template <class _Tp, class _Up>
+struct _LIBCUDACXX_TEMPLATE_VIS is_same : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_same<_Tp, _Tp> : public true_type {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp, class _Up>
@@ -68,8 +70,8 @@ using _IsSame = _BoolConstant<is_same<_Tp, _Up>::value>;
 template <class _Tp, class _Up>
 using _IsNotSame = _BoolConstant<!is_same<_Tp, _Up>::value>;
 
-#endif // defined(_LIBCUDACXX_IS_SAME) && !defined(_LIBCUDACXX_USE_IS_SAME_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_SAME) && !defined(_LIBCUDACXX_USE_IS_SAME_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_SAME_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_SAME_H

@@ -15,7 +15,6 @@ from numbers import Integral
 import cupy as cp
 import networkx as nx
 import numpy as np
-
 from nx_cugraph.generators._utils import _create_using_class, _number_and_nodes
 from nx_cugraph.utils import index_dtype, networkx_algorithm
 

@@ -30,76 +30,68 @@
  **************************************************************************************************/
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/complex.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 namespace transform {
 namespace thread {
 
 namespace UnaryTransform {
-    struct Identity;    ///< None (i.e., identity)
-    struct Conjugate;   ///< Complex conjugate
-}
+struct Identity;   ///< None (i.e., identity)
+struct Conjugate;  ///< Complex conjugate
+}  // namespace UnaryTransform
 
 /// Element-wise unary operator that transforms one element of a fragment at a time
-template<
-    typename FragmentIn, ///< Input Fragment
-    typename FragmentOut,///< Output Fragment
-    typename Transform>  ///< Unary transform operator
-class UnaryOp
-{
-    public:
-        CUTLASS_DEVICE
-        static FragmentOut execute(FragmentIn &in)
-        {
-            static_assert(FragmentIn::kElements == FragmentOut::kElements, "Number of elements must match.");
-            static_assert(platform::is_same<Transform, UnaryTransform::Identity>::value ||
-                          platform::is_same<Transform, UnaryTransform::Conjugate>::value,
-                          "Unary Operator not supported.");
+template <typename FragmentIn,   ///< Input Fragment
+          typename FragmentOut,  ///< Output Fragment
+          typename Transform>    ///< Unary transform operator
+class UnaryOp {
+ public:
+  CUTLASS_DEVICE
+  static FragmentOut execute(FragmentIn& in)
+  {
+    static_assert(FragmentIn::kElements == FragmentOut::kElements,
+                  "Number of elements must match.");
+    static_assert(platform::is_same<Transform, UnaryTransform::Identity>::value ||
+                    platform::is_same<Transform, UnaryTransform::Conjugate>::value,
+                  "Unary Operator not supported.");
 
-            FragmentOut out;
-            if (platform::is_same<Transform, UnaryTransform::Identity>::value )
-            {
-                CUTLASS_PRAGMA_UNROLL
-                for (int i=0; i < FragmentIn::kElements; ++i){
-                   out[i] = static_cast<typename FragmentOut::Element>(in[i]);
-                }
-            }
-            else if (platform::is_same<Transform, UnaryTransform::Conjugate>::value )
-            {
-                for (int i=0; i < FragmentIn::kElements; ++i){
-                   out[i] = conj(static_cast<typename FragmentOut::Element>(in[i]));
-                }
-            }
-            return out;
-        }
+    FragmentOut out;
+    if (platform::is_same<Transform, UnaryTransform::Identity>::value) {
+      CUTLASS_PRAGMA_UNROLL
+      for (int i = 0; i < FragmentIn::kElements; ++i) {
+        out[i] = static_cast<typename FragmentOut::Element>(in[i]);
+      }
+    } else if (platform::is_same<Transform, UnaryTransform::Conjugate>::value) {
+      for (int i = 0; i < FragmentIn::kElements; ++i) {
+        out[i] = conj(static_cast<typename FragmentOut::Element>(in[i]));
+      }
+    }
+    return out;
+  }
 };
 
-template<typename FragmentIn, typename Transform>
-class UnaryOp<FragmentIn, FragmentIn, Transform>
-{
-    public:
-        CUTLASS_DEVICE
-        static FragmentIn execute(FragmentIn &in)
-        {
-            static_assert(platform::is_same<Transform, UnaryTransform::Identity>::value ||
-                          platform::is_same<Transform, UnaryTransform::Conjugate>::value,
-                          "Unary Operator not supported.");
+template <typename FragmentIn, typename Transform>
+class UnaryOp<FragmentIn, FragmentIn, Transform> {
+ public:
+  CUTLASS_DEVICE
+  static FragmentIn execute(FragmentIn& in)
+  {
+    static_assert(platform::is_same<Transform, UnaryTransform::Identity>::value ||
+                    platform::is_same<Transform, UnaryTransform::Conjugate>::value,
+                  "Unary Operator not supported.");
 
-            if (platform::is_same<Transform, UnaryTransform::Identity>::value )
-            {
-                return in;
-            }
-            else if (platform::is_same<Transform, UnaryTransform::Conjugate>::value )
-            {
-                for(int i=0; i < FragmentIn::kElements; ++i){
-                   in[i] = conj(in[i]);
-                }
-            }
-            return in;
-        }
-      };
+    if (platform::is_same<Transform, UnaryTransform::Identity>::value) {
+      return in;
+    } else if (platform::is_same<Transform, UnaryTransform::Conjugate>::value) {
+      for (int i = 0; i < FragmentIn::kElements; ++i) {
+        in[i] = conj(in[i]);
+      }
     }
+    return in;
   }
-}
+};
+}  // namespace thread
+}  // namespace transform
+}  // namespace cutlass

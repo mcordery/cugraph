@@ -33,22 +33,22 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/pitch_linear_coord.h"
 
 namespace cutlass {
 namespace layout {
 
 template <int Contiguous, int Strided>
-  using PitchLinearShape = cutlass::PitchLinearShape < Contiguous, Strided >;
-  using PitchLinearCoord = PitchLinearCoord;
+using PitchLinearShape = cutlass::PitchLinearShape<Contiguous, Strided>;
+using PitchLinearCoord = PitchLinearCoord;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Mapping function for pitch-linear memory
 class PitchLinear {
-public:
+ public:
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -67,7 +67,7 @@ public:
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -75,74 +75,61 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
-  
-  /// Constructor
-  CUTLASS_HOST_DEVICE
-  PitchLinear(LongIndex ldm = 0): stride_(ldm) { }
 
   /// Constructor
   CUTLASS_HOST_DEVICE
-  PitchLinear(Stride _stride): stride_(_stride) { }
+  PitchLinear(LongIndex ldm = 0) : stride_(ldm) {}
+
+  /// Constructor
+  CUTLASS_HOST_DEVICE
+  PitchLinear(Stride _stride) : stride_(_stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static PitchLinear packed(TensorCoord const &extent) {
-    return PitchLinear(extent.contiguous());
-  }
+  static PitchLinear packed(TensorCoord const& extent) { return PitchLinear(extent.contiguous()); }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return LongIndex(coord.contiguous()) + LongIndex(coord.strided()) * LongIndex(stride_[0]);
   }
 
   /// Returns the logical coordinate given an offset.
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex index) const {
-    return make_Coord(
-      TensorCoord::Index(index % stride_[0]),
-      TensorCoord::Index(index / stride_[0])
-    );
+  TensorCoord inverse(LongIndex index) const
+  {
+    return make_Coord(TensorCoord::Index(index % stride_[0]),
+                      TensorCoord::Index(index / stride_[0]));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  LongIndex stride(int rank) const {
-    return stride_[rank];
-  }
+  LongIndex stride(int rank) const { return stride_[rank]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  LongIndex & stride(int rank) {
-    return stride_[rank];
-  }
+  LongIndex& stride(int rank) { return stride_[rank]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
-    return extent.strided() * stride_[0];
-  }
+  LongIndex capacity(TensorCoord const& extent) const { return extent.strided() * stride_[0]; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace layout
-} // namespace cutlass
-
+}  // namespace layout
+}  // namespace cutlass

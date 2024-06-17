@@ -48,14 +48,14 @@ namespace raft::sparse::solver {
 
 // hiprand generator uniform
 inline hiprandStatus_t curand_generate_uniformX(hiprandGenerator_t generator,
-                                               float* outputPtr,
-                                               size_t n)
+                                                float* outputPtr,
+                                                size_t n)
 {
   return hiprandGenerateUniform(generator, outputPtr, n);
 }
 inline hiprandStatus_t curand_generate_uniformX(hiprandGenerator_t generator,
-                                               double* outputPtr,
-                                               size_t n)
+                                                double* outputPtr,
+                                                size_t n)
 {
   return hiprandGenerateUniformDouble(generator, outputPtr, n);
 }

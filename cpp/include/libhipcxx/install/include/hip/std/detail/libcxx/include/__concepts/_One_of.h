@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__type_traits/disjunction.h"
@@ -29,10 +29,9 @@ template <class _Ty, class... _Others>
 _LIBCUDACXX_CONCEPT _One_of = (_CUDA_VSTD::is_same_v<_Ty, _Others> || ...);
 #elif _LIBCUDACXX_STD_VER > 11
 template <class _Ty, class... _Others>
-_LIBCUDACXX_CONCEPT _One_of =
-    _CUDA_VSTD::disjunction_v<_CUDA_VSTD::is_same<_Ty, _Others>...>;
-#endif // _LIBCUDACXX_STD_VER > 11
+_LIBCUDACXX_CONCEPT _One_of = _CUDA_VSTD::disjunction_v<_CUDA_VSTD::is_same<_Ty, _Others>...>;
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_ONE_OF_H
+#endif  // _LIBCUDACXX___CONCEPTS_ONE_OF_H

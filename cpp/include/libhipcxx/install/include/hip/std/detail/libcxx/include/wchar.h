@@ -63,11 +63,10 @@ long double wcstold(const wchar_t* restrict nptr, wchar_t** restrict endptr);  /
 long wcstol(const wchar_t* restrict nptr, wchar_t** restrict endptr, int base);
 long long wcstoll(const wchar_t* restrict nptr, wchar_t** restrict endptr, int base);  // C99
 unsigned long wcstoul(const wchar_t* restrict nptr, wchar_t** restrict endptr, int base);
-unsigned long long wcstoull(const wchar_t* restrict nptr, wchar_t** restrict endptr, int base);  // C99
-wchar_t* wcscpy(wchar_t* restrict s1, const wchar_t* restrict s2);
-wchar_t* wcsncpy(wchar_t* restrict s1, const wchar_t* restrict s2, size_t n);
-wchar_t* wcscat(wchar_t* restrict s1, const wchar_t* restrict s2);
-wchar_t* wcsncat(wchar_t* restrict s1, const wchar_t* restrict s2, size_t n);
+unsigned long long wcstoull(const wchar_t* restrict nptr, wchar_t** restrict endptr, int base);  //
+C99 wchar_t* wcscpy(wchar_t* restrict s1, const wchar_t* restrict s2); wchar_t* wcsncpy(wchar_t*
+restrict s1, const wchar_t* restrict s2, size_t n); wchar_t* wcscat(wchar_t* restrict s1, const
+wchar_t* restrict s2); wchar_t* wcsncat(wchar_t* restrict s1, const wchar_t* restrict s2, size_t n);
 int wcscmp(const wchar_t* s1, const wchar_t* s2);
 int wcscoll(const wchar_t* s1, const wchar_t* s2);
 int wcsncmp(const wchar_t* s1, const wchar_t* s2, size_t n);
@@ -119,62 +118,114 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
 
 // Determine whether we have const-correct overloads for wcschr and friends.
 #if defined(_WCHAR_H_CPLUSPLUS_98_CONFORMANCE_)
-#  define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
+#define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
 #elif defined(__GLIBC_PREREQ)
-#  if __GLIBC_PREREQ(2, 10)
-#    define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
-#  endif
+#if __GLIBC_PREREQ(2, 10)
+#define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
+#endif
 #elif defined(_LIBCUDACXX_MSVCRT)
-#  if defined(_CRT_CONST_CORRECT_OVERLOADS)
-#    define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
-#  endif
+#if defined(_CRT_CONST_CORRECT_OVERLOADS)
+#define _LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS 1
+#endif
 #endif
 
-#if defined(__cplusplus) && !defined(_LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS) && defined(_LIBCUDACXX_PREFERRED_OVERLOAD)
+#if defined(__cplusplus) && !defined(_LIBCUDACXX_WCHAR_H_HAS_CONST_OVERLOADS) && \
+  defined(_LIBCUDACXX_PREFERRED_OVERLOAD)
 extern "C++" {
-inline _LIBCUDACXX_INLINE_VISIBILITY
-wchar_t* __libcpp_wcschr(const wchar_t* __s, wchar_t __c) {return (wchar_t*)wcschr(__s, __c);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-const wchar_t* wcschr(const wchar_t* __s, wchar_t __c) {return __libcpp_wcschr(__s, __c);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-      wchar_t* wcschr(      wchar_t* __s, wchar_t __c) {return __libcpp_wcschr(__s, __c);}
+inline _LIBCUDACXX_INLINE_VISIBILITY wchar_t* __libcpp_wcschr(const wchar_t* __s, wchar_t __c)
+{
+  return (wchar_t*)wcschr(__s, __c);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD const wchar_t* wcschr(
+  const wchar_t* __s, wchar_t __c)
+{
+  return __libcpp_wcschr(__s, __c);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD wchar_t* wcschr(wchar_t* __s,
+                                                                                    wchar_t __c)
+{
+  return __libcpp_wcschr(__s, __c);
+}
 
-inline _LIBCUDACXX_INLINE_VISIBILITY
-wchar_t* __libcpp_wcspbrk(const wchar_t* __s1, const wchar_t* __s2) {return (wchar_t*)wcspbrk(__s1, __s2);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-const wchar_t* wcspbrk(const wchar_t* __s1, const wchar_t* __s2) {return __libcpp_wcspbrk(__s1, __s2);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-      wchar_t* wcspbrk(      wchar_t* __s1, const wchar_t* __s2) {return __libcpp_wcspbrk(__s1, __s2);}
+inline _LIBCUDACXX_INLINE_VISIBILITY wchar_t* __libcpp_wcspbrk(const wchar_t* __s1,
+                                                               const wchar_t* __s2)
+{
+  return (wchar_t*)wcspbrk(__s1, __s2);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD const wchar_t* wcspbrk(
+  const wchar_t* __s1, const wchar_t* __s2)
+{
+  return __libcpp_wcspbrk(__s1, __s2);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD wchar_t* wcspbrk(
+  wchar_t* __s1, const wchar_t* __s2)
+{
+  return __libcpp_wcspbrk(__s1, __s2);
+}
 
-inline _LIBCUDACXX_INLINE_VISIBILITY
-wchar_t* __libcpp_wcsrchr(const wchar_t* __s, wchar_t __c) {return (wchar_t*)wcsrchr(__s, __c);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-const wchar_t* wcsrchr(const wchar_t* __s, wchar_t __c) {return __libcpp_wcsrchr(__s, __c);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-      wchar_t* wcsrchr(      wchar_t* __s, wchar_t __c) {return __libcpp_wcsrchr(__s, __c);}
+inline _LIBCUDACXX_INLINE_VISIBILITY wchar_t* __libcpp_wcsrchr(const wchar_t* __s, wchar_t __c)
+{
+  return (wchar_t*)wcsrchr(__s, __c);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD const wchar_t* wcsrchr(
+  const wchar_t* __s, wchar_t __c)
+{
+  return __libcpp_wcsrchr(__s, __c);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD wchar_t* wcsrchr(wchar_t* __s,
+                                                                                     wchar_t __c)
+{
+  return __libcpp_wcsrchr(__s, __c);
+}
 
-inline _LIBCUDACXX_INLINE_VISIBILITY
-wchar_t* __libcpp_wcsstr(const wchar_t* __s1, const wchar_t* __s2) {return (wchar_t*)wcsstr(__s1, __s2);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-const wchar_t* wcsstr(const wchar_t* __s1, const wchar_t* __s2) {return __libcpp_wcsstr(__s1, __s2);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-      wchar_t* wcsstr(      wchar_t* __s1, const wchar_t* __s2) {return __libcpp_wcsstr(__s1, __s2);}
+inline _LIBCUDACXX_INLINE_VISIBILITY wchar_t* __libcpp_wcsstr(const wchar_t* __s1,
+                                                              const wchar_t* __s2)
+{
+  return (wchar_t*)wcsstr(__s1, __s2);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD const wchar_t* wcsstr(
+  const wchar_t* __s1, const wchar_t* __s2)
+{
+  return __libcpp_wcsstr(__s1, __s2);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD wchar_t* wcsstr(
+  wchar_t* __s1, const wchar_t* __s2)
+{
+  return __libcpp_wcsstr(__s1, __s2);
+}
 
-inline _LIBCUDACXX_INLINE_VISIBILITY
-wchar_t* __libcpp_wmemchr(const wchar_t* __s, wchar_t __c, size_t __n) {return (wchar_t*)wmemchr(__s, __c, __n);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-const wchar_t* wmemchr(const wchar_t* __s, wchar_t __c, size_t __n) {return __libcpp_wmemchr(__s, __c, __n);}
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD
-      wchar_t* wmemchr(      wchar_t* __s, wchar_t __c, size_t __n) {return __libcpp_wmemchr(__s, __c, __n);}
+inline _LIBCUDACXX_INLINE_VISIBILITY wchar_t* __libcpp_wmemchr(const wchar_t* __s,
+                                                               wchar_t __c,
+                                                               size_t __n)
+{
+  return (wchar_t*)wmemchr(__s, __c, __n);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD const wchar_t* wmemchr(
+  const wchar_t* __s, wchar_t __c, size_t __n)
+{
+  return __libcpp_wmemchr(__s, __c, __n);
+}
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_PREFERRED_OVERLOAD wchar_t* wmemchr(wchar_t* __s,
+                                                                                     wchar_t __c,
+                                                                                     size_t __n)
+{
+  return __libcpp_wmemchr(__s, __c, __n);
+}
 }
 #endif
 
 #if defined(__cplusplus) && defined(_LIBCUDACXX_MSVCRT_LIKE)
 extern "C" {
-size_t mbsnrtowcs(wchar_t *__restrict dst, const char **__restrict src,
-                  size_t nmc, size_t len, mbstate_t *__restrict ps);
-size_t wcsnrtombs(char *__restrict dst, const wchar_t **__restrict src,
-                  size_t nwc, size_t len, mbstate_t *__restrict ps);
+size_t mbsnrtowcs(wchar_t* __restrict dst,
+                  const char** __restrict src,
+                  size_t nmc,
+                  size_t len,
+                  mbstate_t* __restrict ps);
+size_t wcsnrtombs(char* __restrict dst,
+                  const wchar_t** __restrict src,
+                  size_t nwc,
+                  size_t len,
+                  mbstate_t* __restrict ps);
 }  // extern "C++"
 #endif  // __cplusplus && _LIBCUDACXX_MSVCRT
 

@@ -13,16 +13,15 @@
 
 import gc
 
+import cugraph.dask as dcg
+import dask_cudf
 import pytest
+from cudf.testing.testing import assert_frame_equal, assert_series_equal
+from cugraph.dask.common.mg_utils import is_single_gpu
+from cugraph.testing import utils
+from pylibcugraph.testing import gen_fixture_params_product
 
 import cugraph
-import dask_cudf
-import cugraph.dask as dcg
-from cugraph.testing import utils
-from cugraph.dask.common.mg_utils import is_single_gpu
-from pylibcugraph.testing import gen_fixture_params_product
-from cudf.testing.testing import assert_frame_equal, assert_series_equal
-
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

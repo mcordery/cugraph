@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__type_traits/remove_cv.h"
@@ -25,8 +25,9 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if defined(_LIBCUDACXX_IS_UNION) && !defined(_LIBCUDACXX_USE_IS_UNION_FALLBACK)
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_union
-    : public integral_constant<bool, _LIBCUDACXX_IS_UNION(_Tp)> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_union
+  : public integral_constant<bool, _LIBCUDACXX_IS_UNION(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -35,17 +36,18 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_union_v = _LIBCUDACXX_IS_UNION(_Tp);
 
 #else
 
-template <class _Tp> struct __libcpp_union : public false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_union
-    : public __libcpp_union<__remove_cv_t<_Tp>> {};
+template <class _Tp>
+struct __libcpp_union : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_union : public __libcpp_union<__remove_cv_t<_Tp>> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_union_v = is_union<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_UNION) && !defined(_LIBCUDACXX_USE_IS_UNION_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_UNION) && !defined(_LIBCUDACXX_USE_IS_UNION_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_UNION_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_UNION_H

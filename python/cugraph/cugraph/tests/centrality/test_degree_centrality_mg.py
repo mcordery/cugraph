@@ -14,12 +14,11 @@
 import gc
 
 import pytest
+from cudf.testing import assert_series_equal
+from cugraph.dask.common.mg_utils import is_single_gpu
 
 import cugraph
-from cugraph.dask.common.mg_utils import is_single_gpu
-from cugraph.datasets import karate_asymmetric, polbooks, email_Eu_core
-from cudf.testing import assert_series_equal
-
+from cugraph.datasets import email_Eu_core, karate_asymmetric, polbooks
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

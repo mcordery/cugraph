@@ -13,19 +13,19 @@
 
 import gc
 
-import pytest
-import pandas as pd
-import numpy as np
-
 import cudf
-import cugraph
-import dask_cudf
-import cupy as cp
 import cugraph.dask as dcg
-from cupy.testing import assert_array_equal
+import cupy as cp
+import dask_cudf
+import numpy as np
+import pandas as pd
+import pytest
 from cudf.testing import assert_frame_equal, assert_series_equal
-from pylibcugraph.testing.utils import gen_fixture_params_product
 from cugraph.dask.common.mg_utils import is_single_gpu
+from cupy.testing import assert_array_equal
+from pylibcugraph.testing.utils import gen_fixture_params_product
+
+import cugraph
 from cugraph.datasets import cyber, netscience
 
 # If the rapids-pytest-benchmark plugin is installed, the "gpubenchmark"

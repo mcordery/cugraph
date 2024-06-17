@@ -15,7 +15,7 @@
 #include <__config>
 #include <cstddef>
 #include <initializer_list>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -26,22 +26,28 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 #if _LIBCUDACXX_STD_VER > 11
 
 template <class _Cont>
-_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY
-constexpr auto empty(const _Cont& __c)
-_NOEXCEPT_(noexcept(__c.empty()))
--> decltype        (__c.empty())
-{ return            __c.empty(); }
+_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY constexpr auto empty(
+  const _Cont& __c) _NOEXCEPT_(noexcept(__c.empty())) -> decltype(__c.empty())
+{
+  return __c.empty();
+}
 
 template <class _Tp, size_t _Sz>
-_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY
-constexpr bool empty(const _Tp (&)[_Sz]) noexcept { return false; }
+_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY constexpr bool empty(
+  const _Tp (&)[_Sz]) noexcept
+{
+  return false;
+}
 
 template <class _Ep>
-_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY
-constexpr bool empty(initializer_list<_Ep> __il) noexcept { return __il.size() == 0; }
+_LIBCUDACXX_NODISCARD_AFTER_CXX17 _LIBCUDACXX_INLINE_VISIBILITY constexpr bool empty(
+  initializer_list<_Ep> __il) noexcept
+{
+  return __il.size() == 0;
+}
 
-#endif // _LIBCUDACXX_STD_VER > 17
+#endif  // _LIBCUDACXX_STD_VER > 17
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___ITERATOR_EMPTY_H
+#endif  // _LIBCUDACXX___ITERATOR_EMPTY_H

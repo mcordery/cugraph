@@ -13,12 +13,11 @@
 
 import gc
 
+import cugraph.dask as dcg
 import pytest
 
 import cugraph
-import cugraph.dask as dcg
-from cugraph.datasets import karate, dolphins, karate_asymmetric
-
+from cugraph.datasets import dolphins, karate, karate_asymmetric
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

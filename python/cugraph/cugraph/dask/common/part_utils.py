@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from dask.distributed import futures_of, default_client, wait
-from toolz import first
 import collections
+from functools import reduce
+
+import cudf
+import cugraph.dask.comms.comms as Comms
 import dask_cudf
+import numpy as np
 from dask.array.core import Array as daskArray
+from dask.delayed import delayed
+from dask.distributed import default_client, futures_of, wait
 from dask_cudf.core import DataFrame as daskDataFrame
 from dask_cudf.core import Series as daskSeries
-from functools import reduce
-import cugraph.dask.comms.comms as Comms
-from dask.delayed import delayed
-import cudf
+from toolz import first
 
 
 def workers_to_parts(futures):

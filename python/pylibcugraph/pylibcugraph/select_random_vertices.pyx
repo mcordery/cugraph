@@ -15,49 +15,27 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph_functions cimport (
-    cugraph_two_hop_neighbors,
-    cugraph_vertex_pairs_t,
-    cugraph_vertex_pairs_get_first,
-    cugraph_vertex_pairs_get_second,
-    cugraph_vertex_pairs_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
-from pylibcugraph.utils cimport (
-    assert_success,
-    copy_to_cupy_array,
-)
-from pylibcugraph._cugraph_c.random cimport (
-    cugraph_rng_state_t
-)
-from pylibcugraph.random cimport (
-    CuGraphRandomState
-)
 from pylibcugraph._cugraph_c.array cimport (
     cugraph_type_erased_device_array_t,
-    cugraph_type_erased_device_array_view
+    cugraph_type_erased_device_array_view,
+    cugraph_type_erased_device_array_view_t,
 )
-from pylibcugraph._cugraph_c.sampling_algorithms cimport (
-    cugraph_select_random_vertices
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.graph_functions cimport (
+    cugraph_two_hop_neighbors,
+    cugraph_vertex_pairs_free,
+    cugraph_vertex_pairs_get_first,
+    cugraph_vertex_pairs_get_second,
+    cugraph_vertex_pairs_t,
 )
+from pylibcugraph._cugraph_c.random cimport cugraph_rng_state_t
+from pylibcugraph._cugraph_c.resource_handle cimport cugraph_resource_handle_t
+from pylibcugraph._cugraph_c.sampling_algorithms cimport cugraph_select_random_vertices
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.random cimport CuGraphRandomState
+from pylibcugraph.resource_handle cimport ResourceHandle
+from pylibcugraph.utils cimport assert_success, copy_to_cupy_array
 
 
 def select_random_vertices(ResourceHandle resource_handle,

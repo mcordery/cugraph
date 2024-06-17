@@ -26,7 +26,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -40,6 +39,8 @@
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <optional>
 
@@ -118,28 +119,28 @@ compute_min_hop_for_unique_label_vertex_pairs(
           thrust::make_transform_iterator((*label_offsets).data() + h_label_offsets[i],
                                           detail::shift_left_t<size_t>{h_edge_offsets[i]});
         hipcub::DeviceSegmentedSort::SortKeys(static_cast<void*>(nullptr),
-                                           tmp_storage_bytes,
-                                           vertices.begin() + h_edge_offsets[i],
-                                           segment_sorted_vertices.begin() + h_edge_offsets[i],
-                                           h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                           h_label_offsets[i + 1] - h_label_offsets[i],
-                                           offset_first,
-                                           offset_first + 1,
-                                           handle.get_stream());
+                                              tmp_storage_bytes,
+                                              vertices.begin() + h_edge_offsets[i],
+                                              segment_sorted_vertices.begin() + h_edge_offsets[i],
+                                              h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                              h_label_offsets[i + 1] - h_label_offsets[i],
+                                              offset_first,
+                                              offset_first + 1,
+                                              handle.get_stream());
 
         if (tmp_storage_bytes > d_tmp_storage.size()) {
           d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
         }
 
         hipcub::DeviceSegmentedSort::SortKeys(d_tmp_storage.data(),
-                                           tmp_storage_bytes,
-                                           vertices.begin() + h_edge_offsets[i],
-                                           segment_sorted_vertices.begin() + h_edge_offsets[i],
-                                           h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                           h_label_offsets[i + 1] - h_label_offsets[i],
-                                           offset_first,
-                                           offset_first + 1,
-                                           handle.get_stream());
+                                              tmp_storage_bytes,
+                                              vertices.begin() + h_edge_offsets[i],
+                                              segment_sorted_vertices.begin() + h_edge_offsets[i],
+                                              h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                              h_label_offsets[i + 1] - h_label_offsets[i],
+                                              offset_first,
+                                              offset_first + 1,
+                                              handle.get_stream());
       }
       d_tmp_storage.resize(0, handle.get_stream());
       d_tmp_storage.shrink_to_fit(handle.get_stream());
@@ -609,33 +610,35 @@ renumber_sampled_edgelist(
       auto offset_first =
         thrust::make_transform_iterator((*renumber_map_label_offsets).data() + h_label_offsets[i],
                                         detail::shift_left_t<size_t>{h_edge_offsets[i]});
-      hipcub::DeviceSegmentedSort::SortPairs(static_cast<void*>(nullptr),
-                                          tmp_storage_bytes,
-                                          renumber_map.begin() + h_edge_offsets[i],
-                                          segment_sorted_renumber_map.begin() + h_edge_offsets[i],
-                                          new_vertices.begin() + h_edge_offsets[i],
-                                          segment_sorted_new_vertices.begin() + h_edge_offsets[i],
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_label_offsets[i + 1] - h_label_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+      hipcub::DeviceSegmentedSort::SortPairs(
+        static_cast<void*>(nullptr),
+        tmp_storage_bytes,
+        renumber_map.begin() + h_edge_offsets[i],
+        segment_sorted_renumber_map.begin() + h_edge_offsets[i],
+        new_vertices.begin() + h_edge_offsets[i],
+        segment_sorted_new_vertices.begin() + h_edge_offsets[i],
+        h_edge_offsets[i + 1] - h_edge_offsets[i],
+        h_label_offsets[i + 1] - h_label_offsets[i],
+        offset_first,
+        offset_first + 1,
+        handle.get_stream());
 
       if (tmp_storage_bytes > d_tmp_storage.size()) {
         d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
       }
 
-      hipcub::DeviceSegmentedSort::SortPairs(d_tmp_storage.data(),
-                                          tmp_storage_bytes,
-                                          renumber_map.begin() + h_edge_offsets[i],
-                                          segment_sorted_renumber_map.begin() + h_edge_offsets[i],
-                                          new_vertices.begin() + h_edge_offsets[i],
-                                          segment_sorted_new_vertices.begin() + h_edge_offsets[i],
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_label_offsets[i + 1] - h_label_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+      hipcub::DeviceSegmentedSort::SortPairs(
+        d_tmp_storage.data(),
+        tmp_storage_bytes,
+        renumber_map.begin() + h_edge_offsets[i],
+        segment_sorted_renumber_map.begin() + h_edge_offsets[i],
+        new_vertices.begin() + h_edge_offsets[i],
+        segment_sorted_new_vertices.begin() + h_edge_offsets[i],
+        h_edge_offsets[i + 1] - h_edge_offsets[i],
+        h_label_offsets[i + 1] - h_label_offsets[i],
+        offset_first,
+        offset_first + 1,
+        handle.get_stream());
     }
     new_vertices.resize(0, handle.get_stream());
     d_tmp_storage.resize(0, handle.get_stream());

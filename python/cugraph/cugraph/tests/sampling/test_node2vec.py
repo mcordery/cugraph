@@ -14,13 +14,12 @@
 import gc
 import random
 
-import pytest
-
 import cudf
-import cugraph
-from cugraph.datasets import small_line, karate
-from cugraph.testing import utils, SMALL_DATASETS
+import pytest
+from cugraph.testing import SMALL_DATASETS, utils
 
+import cugraph
+from cugraph.datasets import karate, small_line
 
 # =============================================================================
 # Parameters

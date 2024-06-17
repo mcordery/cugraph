@@ -11,18 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .dataset import Dataset
+import gc
+import json
+import os
 from typing import Dict, Tuple, Union
 
+import numpy as np
 import pandas
 import torch
-import numpy as np
-
 from sklearn.model_selection import train_test_split
 
-import gc
-import os
-import json
+from .dataset import Dataset
 
 
 class OGBNPapers100MDataset(Dataset):

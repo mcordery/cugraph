@@ -19,8 +19,8 @@
 #include <raft/core/device_container_policy.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/host_device_accessor.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/cudart_utils.hpp>
 
 #include <rmm/mr/device/managed_memory_resource.hpp>
@@ -51,8 +51,8 @@ class managed_uvector_policy {
   {
     return c[n];
   }
-  [[nodiscard]] constexpr auto access(container_type const& c, size_t n) const noexcept
-    -> const_reference
+  [[nodiscard]] constexpr auto access(container_type const& c,
+                                      size_t n) const noexcept -> const_reference
   {
     return c[n];
   }

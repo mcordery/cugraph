@@ -12,16 +12,12 @@
 # limitations under the License.
 
 import os
-
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import cudf
-from cugraph.datasets.dataset import (
-    set_download_dir,
-    get_download_dir,
-)
-from cugraph.testing.resultset import load_resultset, default_resultset_download_dir
+from cugraph.datasets.dataset import get_download_dir, set_download_dir
+from cugraph.testing.resultset import default_resultset_download_dir, load_resultset
 
 ###############################################################################
 

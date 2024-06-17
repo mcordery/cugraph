@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
 from cugraph.gnn import FeatureStore
 from cugraph.utilities.utils import import_optional
 

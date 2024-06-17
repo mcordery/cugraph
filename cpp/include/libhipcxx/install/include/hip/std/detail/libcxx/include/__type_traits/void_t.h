@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -21,7 +21,8 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class...> using void_t = void;
+template <class...>
+using void_t = void;
 #endif
 
 template <class...>
@@ -29,4 +30,4 @@ using __void_t = void;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_VOID_T_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_VOID_T_H

@@ -27,8 +27,8 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/neighbors/sample_filter_types.hpp>
@@ -942,8 +942,8 @@ void select_and_run(
     search_kernel_config<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T>::
       choose_itopk_and_mx_candidates(itopk_size, num_itopk_candidates, block_size);
   RAFT_CUDA_TRY(hipFuncSetAttribute(kernel,
-                                     hipFuncAttributeMaxDynamicSharedMemorySize,
-                                     smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
+                                    hipFuncAttributeMaxDynamicSharedMemorySize,
+                                    smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
   dim3 thread_dims(block_size, 1, 1);
   dim3 block_dims(1, num_queries, 1);
   RAFT_LOG_DEBUG(

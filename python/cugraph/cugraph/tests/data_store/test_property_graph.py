@@ -11,21 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import gc
-
-import pytest
-import pandas as pd
-import numpy as np
+import time
 
 import cudf
 import cupy as cp
-import cugraph
-from cugraph.generators import rmat
-from cugraph.datasets import cyber
+import numpy as np
+import pandas as pd
+import pytest
 from cudf.testing import assert_frame_equal, assert_series_equal
+from cugraph.generators import rmat
 from pylibcugraph.testing.utils import gen_fixture_params_product
 
+import cugraph
+from cugraph.datasets import cyber
 
 # If the rapids-pytest-benchmark plugin is installed, the "gpubenchmark"
 # fixture will be available automatically. Check that this fixture is available
@@ -1603,6 +1602,7 @@ def test_extract_subgraph_nonrenumbered_noedgedata():
     edge_data.
     """
     from cugraph.experimental import PropertyGraph
+
     from cugraph import Graph
 
     pG = PropertyGraph()

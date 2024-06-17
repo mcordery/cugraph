@@ -17,7 +17,7 @@
 #pragma once
 
 #include <raft/core/device_mdspan.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/matrix/detail/select_radix.cuh>
 #include <raft/matrix/detail/select_warpsort.cuh>
 #include <raft/neighbors/detail/knn_brute_force.cuh>

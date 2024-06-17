@@ -11,29 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from dask_cuda import LocalCUDACluster
-from dask.distributed import Client
-import dask_cudf
-
-
-import time
 import os
-import pytest
-import numpy as np
+import time
+
 import cupy as cp
+import dask_cudf
+import dgl
+import numpy as np
+import pytest
 
 # Facing issues with rapids-pytest-benchmark plugin
 # pytest-benchmark.
 import pytest_benchmark
-
-from cugraph.generators import rmat
+import rmm
+import torch
+from cugraph.dask.comms import comms as Comms
 from cugraph.experimental import datasets
+from cugraph.generators import rmat
 from cugraph_benchmarking import params
 from cugraph_dgl import CuGraphStorage
-from cugraph.dask.comms import comms as Comms
-import dgl
-import torch
-import rmm
+from dask.distributed import Client
+from dask_cuda import LocalCUDACluster
 
 _seed = 42
 

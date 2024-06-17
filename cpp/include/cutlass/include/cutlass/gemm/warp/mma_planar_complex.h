@@ -34,15 +34,14 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/complex.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-#include "cutlass/gemm/gemm.h"
-
 #include "cutlass/array_planar_complex.h"
+#include "cutlass/complex.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/tile_iterator_planar_complex.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,11 +57,9 @@ template <
   /// Transformation applied to A operand (typically folded into math instruction)
   ComplexTransform TransformA = ComplexTransform::kNone,
   /// Transformation applied to B operand (typically folded into math instruction)
-  ComplexTransform TransformB = ComplexTransform::kNone
->
+  ComplexTransform TransformB = ComplexTransform::kNone>
 class MmaPlanarComplex {
-public:
-
+ public:
   /// Underlying real-valued warp-level matrix multiply
   using Operator = Operator_;
 
@@ -101,27 +98,23 @@ public:
   /// Layout of accumulator fragment in memory
   using LayoutC = typename Operator::LayoutC;
 
-private:
+ private:
+  /// Number of mma operations performed
+  using MmaIterations = MatrixShape<Operator::Shape::kM / Operator::Policy::Operator::Shape::kM,
+                                    Operator::Shape::kN / Operator::Policy::Operator::Shape::kN>;
 
-    /// Number of mma operations performed
-  using MmaIterations = MatrixShape<
-    Operator::Shape::kM / Operator::Policy::Operator::Shape::kM,
-    Operator::Shape::kN / Operator::Policy::Operator::Shape::kN
-  >;
-
-public:
+ public:
   /// Ctor
   CUTLASS_DEVICE
   MmaPlanarComplex() {}
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    FragmentA const &A_in, 
-    FragmentB const &B_in, 
-    FragmentC const &C) const {
-
+  void operator()(FragmentC& D,
+                  FragmentA const& A_in,
+                  FragmentB const& B_in,
+                  FragmentC const& C) const
+  {
     D.real = C.real;
     D.imag = C.imag;
 
@@ -136,8 +129,7 @@ public:
 
     if (kTransformA == ComplexTransform::kConjugate) {
       frag_A.imag = neg_A(frag_A.imag);
-    }
-    else {
+    } else {
       frag_A.imag = frag_A.imag;
     }
 
@@ -147,8 +139,7 @@ public:
     if (kTransformB == ComplexTransform::kConjugate) {
       negate<typename FragmentB::ArrayReal> neg;
       frag_B.imag = neg(frag_B.imag);
-    }
-    else {
+    } else {
       frag_B.imag = frag_B.imag;
     }
 
@@ -175,8 +166,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

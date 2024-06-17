@@ -11,14 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cudf
-import cupy
-import cugraph
-import dask_cudf
-import cugraph.dask as dcg
-from cugraph.utilities.utils import import_optional, create_list_series_from_2d_ar
-
 from typing import Union
+
+import cudf
+import cugraph.dask as dcg
+import cupy
+import dask_cudf
+from cugraph.utilities.utils import create_list_series_from_2d_ar, import_optional
+
+import cugraph
 
 pd = import_optional("pandas")
 
@@ -1870,7 +1871,7 @@ class EXPERIMENTAL__MGPropertyGraph:
         This also handles converting standard integer dtypes to nullable
         integer dtypes, needed to accommodate NA values in columns.
         """
-        for (col, dtype) in column_dtype_dict.items():
+        for col, dtype in column_dtype_dict.items():
             if col not in df.columns:
                 continue
             # If the DataFrame is Pandas and the dtype is an integer type,

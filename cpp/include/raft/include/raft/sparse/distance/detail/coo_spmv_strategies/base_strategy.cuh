@@ -56,15 +56,15 @@ class coo_spmv_strategy {
                       int n_blocks_per_row)
   {
     RAFT_CUDA_TRY(hipFuncSetCacheConfig(balanced_coo_generalized_spmv_kernel<strategy_t,
-                                                                              indptr_it,
-                                                                              value_idx,
-                                                                              value_t,
-                                                                              false,
-                                                                              tpb,
-                                                                              product_f,
-                                                                              accum_f,
-                                                                              write_f>,
-                                         hipFuncCachePreferShared));
+                                                                             indptr_it,
+                                                                             value_idx,
+                                                                             value_t,
+                                                                             false,
+                                                                             tpb,
+                                                                             product_f,
+                                                                             accum_f,
+                                                                             write_f>,
+                                        hipFuncCachePreferShared));
 
     balanced_coo_generalized_spmv_kernel<strategy_t, indptr_it, value_idx, value_t, false, tpb>
       <<<n_blocks, tpb, smem, resource::get_cuda_stream(config.handle)>>>(strategy,
@@ -106,15 +106,15 @@ class coo_spmv_strategy {
                           int n_blocks_per_row)
   {
     RAFT_CUDA_TRY(hipFuncSetCacheConfig(balanced_coo_generalized_spmv_kernel<strategy_t,
-                                                                              indptr_it,
-                                                                              value_idx,
-                                                                              value_t,
-                                                                              true,
-                                                                              tpb,
-                                                                              product_f,
-                                                                              accum_f,
-                                                                              write_f>,
-                                         hipFuncCachePreferShared));
+                                                                             indptr_it,
+                                                                             value_idx,
+                                                                             value_t,
+                                                                             true,
+                                                                             tpb,
+                                                                             product_f,
+                                                                             accum_f,
+                                                                             write_f>,
+                                        hipFuncCachePreferShared));
 
     balanced_coo_generalized_spmv_kernel<strategy_t, indptr_it, value_idx, value_t, true, tpb>
       <<<n_blocks, tpb, smem, resource::get_cuda_stream(config.handle)>>>(strategy,

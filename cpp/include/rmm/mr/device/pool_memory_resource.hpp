@@ -26,16 +26,16 @@
 #include <rmm/mr/device/device_memory_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hip/std/type_traits>
-#include <hip/hip_runtime_api.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/optional.h>
 
 #include <fmt/core.h>
+#include <hip/hip_runtime_api.h>
 
 #include <algorithm>
 #include <cstddef>
+#include <hip/std/type_traits>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -158,7 +158,7 @@ class pool_memory_resource final
    * @param maximum_pool_size Maximum size, in bytes, that the pool can grow to. Defaults to all
    * of the available memory from the upstream resource.
    */
-  template <typename Upstream2                                               = Upstream,
+  template <typename Upstream2                                             = Upstream,
             hip::std::enable_if_t<hip::mr::async_resource<Upstream2>, int> = 0>
   explicit pool_memory_resource(Upstream2& upstream_mr,
                                 std::size_t initial_pool_size,

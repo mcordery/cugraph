@@ -12,14 +12,10 @@
 # limitations under the License.
 
 import tarfile
-
 import urllib.request
 
 import cudf
-from cugraph.datasets.dataset import (
-    DefaultDownloadDir,
-    default_download_dir,
-)
+from cugraph.datasets.dataset import DefaultDownloadDir, default_download_dir
 
 # results_dir_path = utils.RAPIDS_DATASET_ROOT_DIR_PATH / "tests" / "resultsets"
 

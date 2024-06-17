@@ -19,7 +19,6 @@ import pytest
 
 from . import data
 
-
 ###############################################################################
 # fixtures
 # The fixtures used in these tests are defined here and in conftest.py
@@ -350,7 +349,7 @@ def test_get_graph_vertex_data(client_with_property_csvs_loaded):
     np_array = client.get_graph_vertex_data(vert_ids)
     assert np_array.shape == (3, 9)
     # The 1st element is the vert ID
-    for (i, vid) in enumerate(vert_ids):
+    for i, vid in enumerate(vert_ids):
         assert np_array[i][0] == vid
 
     np_array = client.get_graph_vertex_data(11)
@@ -375,7 +374,7 @@ def test_get_graph_edge_data(client_with_property_csvs_loaded):
     np_array = client.get_graph_edge_data(edge_ids)
     assert np_array.shape == (3, 11)
     # The 0th element is the edge ID
-    for (i, eid) in enumerate(edge_ids):
+    for i, eid in enumerate(edge_ids):
         assert np_array[i][0] == eid
 
     np_array = client.get_graph_edge_data(0)

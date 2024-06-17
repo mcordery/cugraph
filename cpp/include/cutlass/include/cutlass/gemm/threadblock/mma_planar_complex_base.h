@@ -53,14 +53,14 @@ namespace threadblock {
 /// Structure to compute the matrix product targeting CUDA cores and SIMT math
 /// instructions.
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename Shape_,
-    /// Policy describing tuning details (concept: MmaPolicy)
-    typename Policy_,
-    /// Number of stages,
-    int Stages,
-    /// Used for partial specialization
-    typename Enable = bool>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename Shape_,
+  /// Policy describing tuning details (concept: MmaPolicy)
+  typename Policy_,
+  /// Number of stages,
+  int Stages,
+  /// Used for partial specialization
+  typename Enable = bool>
 class MmaPlanarComplexBase {
  public:
   ///< Size of the Gemm problem - concept: gemm::GemmShape<>
@@ -81,13 +81,11 @@ class MmaPlanarComplexBase {
   using WarpGemm = typename Policy::Operator::Shape;
 
   /// Shape describing the number of warps filling the CTA
-  using WarpCount = GemmShape<Shape::kM / WarpGemm::kM,
-                              Shape::kN / WarpGemm::kN,
-                              Shape::kK / WarpGemm::kK>;
+  using WarpCount =
+    GemmShape<Shape::kM / WarpGemm::kM, Shape::kN / WarpGemm::kN, Shape::kK / WarpGemm::kK>;
 
   /// Number of warp-level GEMM oeprations
-  static int const kWarpGemmIterations =
-      (WarpGemm::kK / Operator::Policy::MmaShape::kK);
+  static int const kWarpGemmIterations = (WarpGemm::kK / Operator::Policy::MmaShape::kK);
 
   /// Number of stages
   static int const kStages = Stages;
@@ -111,16 +109,14 @@ class MmaPlanarComplexBase {
 
     /// Shape of the A matrix operand in shared memory
     using ShapeA = MatrixShape<Shape::kM + Policy::SmemPaddingA::kRow,
-                               Shape::kK * kStages +
-                                   Policy::SmemPaddingA::kColumn>;
+                               Shape::kK * kStages + Policy::SmemPaddingA::kColumn>;
 
     /// Stride to the imaginary part of the A operand
     static int const kImaginaryStrideA = ShapeA::kCount;
 
     /// Shape of the B matrix operand in shared memory
-    using ShapeB =
-        MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
-                    Shape::kN + Policy::SmemPaddingB::kColumn>;
+    using ShapeB = MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
+                               Shape::kN + Policy::SmemPaddingB::kColumn>;
 
     /// Stride to the imaginary part of the A operand
     static int const kImaginaryStrideB = ShapeB::kCount;
@@ -137,38 +133,34 @@ class MmaPlanarComplexBase {
     AlignedBuffer<typename Operator::ElementB, ShapeB::kCount + kImaginaryStrideB> operand_B;
 
    public:
-
     //
     // Methods
     //
 
     /// Returns a layout object for the A matrix
     CUTLASS_DEVICE
-    static typename Operator::LayoutA LayoutA() {
+    static typename Operator::LayoutA LayoutA()
+    {
       return Operator::LayoutA::packed({ShapeA::kRow, ShapeA::kColumn});
     }
 
     /// Returns a layout object for the B matrix
     CUTLASS_HOST_DEVICE
-    static typename Operator::LayoutB LayoutB() {
+    static typename Operator::LayoutB LayoutB()
+    {
       return Operator::LayoutB::packed({ShapeB::kRow, ShapeB::kColumn});
     }
 
     /// Returns a TensorRef to the A operand
     CUTLASS_HOST_DEVICE
-    TensorRefA operand_A_ref() {
-      return TensorRefA{operand_A.data(), LayoutA()};
-    }
+    TensorRefA operand_A_ref() { return TensorRefA{operand_A.data(), LayoutA()}; }
 
     /// Returns a TensorRef to the B operand
     CUTLASS_HOST_DEVICE
-    TensorRefB operand_B_ref() {
-      return TensorRefB{operand_B.data(), LayoutB()};
-    }
+    TensorRefB operand_B_ref() { return TensorRefB{operand_B.data(), LayoutB()}; }
   };
 
  protected:
-
   //
   // Data members
   //
@@ -179,23 +171,21 @@ class MmaPlanarComplexBase {
   /// Iterator to load a warp-scoped tile of B operand from shared memory
   typename Operator::IteratorB warp_tile_iterator_B_;
 
-public:
-
+ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   MmaPlanarComplexBase(
-      ///< Shared storage needed for internal use by threadblock-scoped GEMM
-      SharedStorage &shared_storage,
-      ///< ID within the threadblock
-      int thread_idx,
-      ///< ID of warp
-      int warp_idx,
-      ///< ID of each thread within a warp
-      int lane_idx
-    ):
-      warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
-      warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx) {
-
+    ///< Shared storage needed for internal use by threadblock-scoped GEMM
+    SharedStorage& shared_storage,
+    ///< ID within the threadblock
+    int thread_idx,
+    ///< ID of warp
+    int warp_idx,
+    ///< ID of each thread within a warp
+    int lane_idx)
+    : warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
+      warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx)
+  {
   }
 };
 

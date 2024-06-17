@@ -16,6 +16,8 @@
  */
 #pragma once
 
+#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
+
 #include <cugraph/edge_partition_device_view.cuh>
 #include <cugraph/edge_partition_edge_property_device_view.cuh>
 #include <cugraph/edge_partition_endpoint_property_device_view.cuh>
@@ -37,8 +39,6 @@
 
 #include <type_traits>
 #include <vector>
-
-#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
 using namespace hip_extensions::hip_warp_primitives;
 
 namespace cugraph {

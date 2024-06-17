@@ -13,12 +13,12 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
-
-from pylibcugraph import ResourceHandle, core_number as pylibcugraph_core_number
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import core_number as pylibcugraph_core_number
 
 
 def convert_to_cudf(cp_arrays):

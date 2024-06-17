@@ -36,8 +36,8 @@ Macros:
 
 #ifdef ELAST
 
-static const int __elast1 = ELAST+1;
-static const int __elast2 = ELAST+2;
+static const int __elast1 = ELAST + 1;
+static const int __elast2 = ELAST + 2;
 
 #else
 
@@ -65,7 +65,7 @@ static const int __elast2 = 105;
 
 #else  // defined(EOWNERDEAD)
 
-#define EOWNERDEAD __elast1
+#define EOWNERDEAD      __elast1
 #define ENOTRECOVERABLE __elast2
 #ifdef ELAST
 #undef ELAST
@@ -199,7 +199,7 @@ static const int __elast2 = 105;
 #endif
 
 #ifndef EOWNERDEAD
-#define EOWNERDEAD  9931
+#define EOWNERDEAD 9931
 #endif
 
 #ifndef EPROTO
@@ -392,6 +392,6 @@ static const int __elast2 = 105;
 #define EMLINK 9979
 #endif
 
-#endif // __cplusplus
+#endif  // __cplusplus
 
 #endif  // _LIBCUDACXX_ERRNO_H

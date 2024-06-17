@@ -11,12 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
 from cugraph.utilities.utils import import_optional
 from cugraph_dgl import CuGraphStorage
 from cugraph_dgl.utils.cugraph_conversion_utils import (
-    get_edges_dict_from_dgl_HeteroGraph,
-    add_ndata_from_dgl_HeteroGraph,
     add_edata_from_dgl_HeteroGraph,
+    add_ndata_from_dgl_HeteroGraph,
+    get_edges_dict_from_dgl_HeteroGraph,
 )
 
 dgl = import_optional("dgl")

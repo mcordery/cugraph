@@ -11,24 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import dask_cudf
-import cudf
-from dask.distributed import wait, default_client
-import numpy as np
-from pylibcugraph import (
-    ResourceHandle,
-    replicate_edgelist as pylibcugraph_replicate_edgelist,
-)
+from typing import Tuple, Union
 
+import cudf
+import cugraph.dask.comms.comms as Comms
+import cupy as cp
+import dask
+import dask_cudf
+import numpy as np
 from cugraph.dask.common.part_utils import (
     get_persisted_df_worker_map,
     persist_dask_df_equal_parts_per_worker,
 )
-
-import dask
-import cupy as cp
-import cugraph.dask.comms.comms as Comms
-from typing import Union, Tuple
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import replicate_edgelist as pylibcugraph_replicate_edgelist
 
 
 # FIXME: Convert it to a general-purpose util function
@@ -71,13 +68,13 @@ def _call_plc_replicate_dataframe(sID: bytes, df: cudf.DataFrame) -> cudf.DataFr
     for col_name in df.columns:
         cp_array = pylibcugraph_replicate_edgelist(
             resource_handle=ResourceHandle(Comms.get_handle(sID).getHandle()),
-            src_array=df[col_name]
-            if df[col_name].dtype in [np.int32, np.int64]
-            else None,
+            src_array=(
+                df[col_name] if df[col_name].dtype in [np.int32, np.int64] else None
+            ),
             dst_array=None,
-            weight_array=df[col_name]
-            if df[col_name].dtype in [np.float32, np.float64]
-            else None,
+            weight_array=(
+                df[col_name] if df[col_name].dtype in [np.float32, np.float64] else None
+            ),
             edge_id_array=None,
             edge_type_id_array=None,
         )

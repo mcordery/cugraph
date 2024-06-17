@@ -12,58 +12,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from functools import cached_property
-from pathlib import Path
+import asyncio
 import importlib
+import re
+import tempfile
 import time
 import traceback
-import re
+from functools import cached_property
 from inspect import signature
-import asyncio
-import tempfile
+from pathlib import Path
+
+import cudf
+import cupy as cp
+import dask_cudf
+import numpy as np
+import rmm
+import ucp
+from cugraph.dask import uniform_neighbor_sample as mg_uniform_neighbor_sample
+from cugraph.dask.common.mg_utils import get_visible_devices
+from cugraph.dask.comms import comms as Comms
+from cugraph.experimental import MGPropertyGraph, PropertyGraph
+from cugraph.structure.graph_implementation.simpleDistributedGraph import (
+    simpleDistributedGraphImpl,
+)
 
 # FIXME This optional import is required to support graph creation
 # extensions that use OGB.  It should be removed when a better
 # workaround is found.
 from cugraph.utilities.utils import import_optional
-
-import numpy as np
-import cupy as cp
-import ucp
-import cudf
-import dask_cudf
-import rmm
-from cugraph import (
-    batched_ego_graphs,
-    uniform_neighbor_sample,
-    node2vec,
-    Graph,
-    MultiGraph,
-)
-from dask.distributed import Client
-from dask_cuda import LocalCUDACluster
-from dask_cuda.initialize import initialize as dask_initialize
-from cugraph.experimental import PropertyGraph, MGPropertyGraph
-from cugraph.dask.comms import comms as Comms
-from cugraph.dask import uniform_neighbor_sample as mg_uniform_neighbor_sample
-from cugraph.structure.graph_implementation.simpleDistributedGraph import (
-    simpleDistributedGraphImpl,
-)
-from cugraph.dask.common.mg_utils import get_visible_devices
-
-from cugraph_service_client import defaults
 from cugraph_service_client import (
+    defaults,
     extension_return_dtype_map,
     supported_extension_return_dtypes,
 )
 from cugraph_service_client.exceptions import CugraphServiceError
 from cugraph_service_client.types import (
     BatchedEgoGraphsResult,
+    GraphVertexEdgeIDWrapper,
     Node2vecResult,
+    Offsets,
     UniformNeighborSampleResult,
     ValueWrapper,
-    GraphVertexEdgeIDWrapper,
-    Offsets,
+)
+from dask.distributed import Client
+from dask_cuda import LocalCUDACluster
+from dask_cuda.initialize import initialize as dask_initialize
+
+from cugraph import (
+    Graph,
+    MultiGraph,
+    batched_ego_graphs,
+    node2vec,
+    uniform_neighbor_sample,
 )
 
 ogb = import_optional("ogb")
@@ -1279,7 +1279,6 @@ class CugraphHandler:
         await ep.close()
 
     def __get_dataframe_from_csv(self, csv_file_name, delimiter, dtypes, header, names):
-
         """
         Read a CSV into a DataFrame and return it. This will use either a cuDF
         DataFrame or a dask_cudf DataFrame based on if the handler is

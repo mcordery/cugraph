@@ -34,25 +34,20 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
-#include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/tensor_ref.h"
-#include "cutlass/matrix_shape.h"
-
 #include "cutlass/arch/memory_sm75.h"
-#include "cutlass/gemm/gemm.h"
-
-#include "cutlass/layout/matrix.h"
-#include "cutlass/layout/tensor.h"
-#include "cutlass/layout/pitch_linear.h"
-#include "cutlass/layout/tensor_op_multiplicand_sm80.h"
-
-#include "cutlass/platform/platform.h"
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/fast_math.h"
-
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/layout/pitch_linear.h"
+#include "cutlass/layout/tensor.h"
+#include "cutlass/layout/tensor_op_multiplicand_sm80.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/platform/platform.h"
+#include "cutlass/tensor_ref.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -68,33 +63,37 @@ namespace warp {
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: PitchLinearShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: PitchLinearShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::TensorOpMultiplicandCongruous64b,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: PitchLinearShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: PitchLinearShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::TensorOpMultiplicandCongruous64b,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   static_assert(!(Shape::kContiguous % 16) && !(Shape::kStrided % 4), "Divisibility.");
 
@@ -138,23 +137,18 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Policy defining internal details of tile iterator
   struct Policy {
-
     /// Shape of one access
     using Delta = layout::PitchLinearShape<8, 4>;
 
     /// Number of iterations to load
-    using Iterations = layout::PitchLinearShape<
-      Shape::kContiguous / kElementsPerAccess / Delta::kContiguous,
-      InstructionShape::kStrided / Delta::kStrided
-    >;
-
+    using Iterations =
+      layout::PitchLinearShape<Shape::kContiguous / kElementsPerAccess / Delta::kContiguous,
+                               InstructionShape::kStrided / Delta::kStrided>;
   };
 
-private:
-
+ private:
   /// Not working on this feature at the moment.
-  static_assert(kOpDelta == 1,
-    "Alternative arrangements not supported at present.");
+  static_assert(kOpDelta == 1, "Alternative arrangements not supported at present.");
 
   /// Pointer type used for accesses
   using AccessType = AlignedArray<Element, kElementsPerAccess, 16>;
@@ -162,53 +156,45 @@ private:
   /// Internal counter used to jump to next K partition
   int k_group_idx_;
 
-public:
-
+ public:
   //
   // Derived quantities
   //
 
   /// Fragment object holding a thread's part of a tile
- using Fragment =
-     Array<Element, Shape::kContiguous * InstructionShape::kStrided / kThreads>;
+  using Fragment = Array<Element, Shape::kContiguous * InstructionShape::kStrided / kThreads>;
 
-private:
-
+ private:
   /// Layout object storing stride values
   StrideIndex stride_;
 
   /// Shared memory base pointers - not advanced
-  AccessType const *pointer_;
+  AccessType const* pointer_;
 
   /// Byte offset incremented as iterator advances
   Index byte_offset_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(): stride_(0), byte_offset_(0) { }
+  MmaTensorOpMultiplicandTileIterator() : stride_(0), byte_offset_(0) {}
 
   /// Constructor from TensorRef
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ):
-    stride_(ref.stride(0) / kElementsPerAccess), byte_offset_(0),
-    k_group_idx_(0) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : stride_(ref.stride(0) / kElementsPerAccess), byte_offset_(0), k_group_idx_(0)
+  {
+    int access_strided    = lane_id / Policy::Delta::kContiguous;
+    int access_contiguous = (lane_id % Policy::Delta::kContiguous) ^ access_strided;
 
-    int access_strided = lane_id / Policy::Delta::kContiguous;
-    int access_contiguous = (lane_id  % Policy::Delta::kContiguous) ^ access_strided;
-
-    pointer_= reinterpret_cast<AccessType const *>(ref.data()) +
-      access_contiguous + access_strided * stride_;
+    pointer_ = reinterpret_cast<AccessType const*>(ref.data()) + access_contiguous +
+               access_strided * stride_;
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     byte_offset_ += offset * sizeof(Element);
 
     return *this;
@@ -216,10 +202,10 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
-    int offset = 
-      (tile_offset.strided() * InstructionShape::kStrided) * stride_ * kElementsPerAccess + 
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
+    int offset =
+      (tile_offset.strided() * InstructionShape::kStrided) * stride_ * kElementsPerAccess +
       tile_offset.contiguous() * Shape::kContiguous;
 
     add_pointer_offset(offset);
@@ -229,8 +215,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     add_tile_offset({0, 1});
 
     return *this;
@@ -238,8 +224,8 @@ public:
 
   /// Advances the iterator along the opposite of the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-    
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     add_tile_offset({0, -1});
 
     return *this;
@@ -247,50 +233,47 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(tile_offset);
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-tile_offset);
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    load_with_byte_offset(frag, 0);
-  }
+  void load(Fragment& frag) const { load_with_byte_offset(frag, 0); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset in units of bytes
-      Index byte_offset) const {
-
-    AccessType *fetch_ptr = reinterpret_cast<AccessType *>(&frag);
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset in units of bytes
+    Index byte_offset) const
+  {
+    AccessType* fetch_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < Policy::Iterations::kStrided; ++s) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int c = 0; c < Policy::Iterations::kContiguous; ++c) {
-
         int access_idx = c + s * Policy::Iterations::kContiguous;
 
-        AccessType const *source_ptr = pointer_ +
-            Policy::Delta::kContiguous * c +
-            Policy::Delta::kStrided * s * stride_;
+        AccessType const* source_ptr =
+          pointer_ + Policy::Delta::kContiguous * c + Policy::Delta::kStrided * s * stride_;
 
-        char const *source_byte_ptr = reinterpret_cast<char const *>(source_ptr) + byte_offset + byte_offset_;
+        char const* source_byte_ptr =
+          reinterpret_cast<char const*>(source_ptr) + byte_offset + byte_offset_;
 
-        AccessType const *source = reinterpret_cast<AccessType const *>(source_byte_ptr);
+        AccessType const* source = reinterpret_cast<AccessType const*>(source_byte_ptr);
 
         fetch_ptr[access_idx] = *source;
       }
@@ -300,50 +283,50 @@ public:
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     load_with_byte_offset(frag, pointer_offset * sizeof(Element));
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     load_with_byte_offset(frag, tile_offset, 0);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     load_with_byte_offset(frag, tile_offset, pointer_offset * sizeof(Element));
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
-
-    Index pointer_offset = 
-      tile_offset.contiguous() * Shape::kContiguous / Layout::kElementsPerAccess + 
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
+    Index pointer_offset =
+      tile_offset.contiguous() * Shape::kContiguous / Layout::kElementsPerAccess +
       tile_offset.strided() * InstructionShape::kStrided * stride_;
 
     byte_offset += sizeof(AccessType) * pointer_offset;
@@ -359,9 +342,7 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-
-  }
+  void set_kgroup_index(int k_group) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -371,33 +352,37 @@ public:
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::RowMajorTensorOpMultiplicandCongruous64b,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::RowMajorTensorOpMultiplicandCongruous64b,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -428,14 +413,16 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Underlying tile iterator implementation
   using Base = MmaTensorOpMultiplicandTileIterator<
-      layout::PitchLinearShape<Shape::kColumn, Shape::kRow>, kOperand, Element,
-      layout::TensorOpMultiplicandCongruous64b,
-      layout::PitchLinearShape<InstructionShape::kColumn,
-                               InstructionShape::kRow>,
-      kOpDelta, kThreads, PartitionsK_>;
+    layout::PitchLinearShape<Shape::kColumn, Shape::kRow>,
+    kOperand,
+    Element,
+    layout::TensorOpMultiplicandCongruous64b,
+    layout::PitchLinearShape<InstructionShape::kColumn, InstructionShape::kRow>,
+    kOpDelta,
+    kThreads,
+    PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -443,29 +430,26 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -473,8 +457,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.column(), tile_offset.row()});
 
     return *this;
@@ -482,8 +466,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -491,8 +475,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -500,82 +484,83 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.column(), tile_offset.row()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.column(), tile_offset.row()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.strided(), tile_offset.contiguous()},
-      byte_offset);
+      frag, {tile_offset.strided(), tile_offset.contiguous()}, byte_offset);
   }
-
 
   /// Notify the iterator which k-group it is currently pointing to.
   ///
@@ -585,47 +570,50 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// This tile iterator is specialized for 32-thread TensorOps. It uses LDSM to load from shared
-/// memory and therefore must be initialized with a TensorRef to shared memory. 
+/// memory and therefore must be initialized with a TensorRef to shared memory.
 ///
 /// Satisfies:
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
 class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::ColumnMajorTensorOpMultiplicandCongruous64b,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  Shape_,
+  Operand_,
+  Element_,
+  cutlass::layout::ColumnMajorTensorOpMultiplicandCongruous64b,
+  InstructionShape_,
+  OpDelta_,
+  32,
+  PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -656,14 +644,16 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Underlying tile iterator implementation
   using Base = MmaTensorOpMultiplicandTileIterator<
-      layout::PitchLinearShape<Shape::kRow, Shape::kColumn>, kOperand, Element,
-      layout::TensorOpMultiplicandCongruous64b,
-      layout::PitchLinearShape<InstructionShape::kRow,
-                               InstructionShape::kColumn>,
-      kOpDelta, kThreads, PartitionsK_>;
+    layout::PitchLinearShape<Shape::kRow, Shape::kColumn>,
+    kOperand,
+    Element,
+    layout::TensorOpMultiplicandCongruous64b,
+    layout::PitchLinearShape<InstructionShape::kRow, InstructionShape::kColumn>,
+    kOpDelta,
+    kThreads,
+    PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -671,29 +661,26 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -701,8 +688,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.row(), tile_offset.column()});
 
     return *this;
@@ -710,8 +697,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -719,8 +706,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -728,82 +715,83 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.contiguous(), tile_offset.strided()},
-      byte_offset);
+      frag, {tile_offset.contiguous(), tile_offset.strided()}, byte_offset);
   }
-
 
   /// Notify the iterator which k-group it is currently pointing to.
   ///
@@ -813,9 +801,7 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -827,33 +813,37 @@ public:
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: PitchLinearShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: PitchLinearShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::TensorOpMultiplicand64bCrosswise,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: PitchLinearShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: PitchLinearShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::TensorOpMultiplicand64bCrosswise,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   static_assert(!(Shape::kContiguous % 4) && !(Shape::kStrided % 16), "Divisibility.");
 
@@ -897,44 +887,35 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Policy defining internal details of tile iterator
   struct Policy {
-
     /// Shape of one access
     using Delta = layout::PitchLinearShape<4, 16>;
 
     /// Number of iterations to load
-    using Iterations = layout::PitchLinearShape<
-      InstructionShape::kContiguous / Delta::kContiguous,
-      Shape::kStrided / Delta::kStrided
-    >;
-
+    using Iterations = layout::PitchLinearShape<InstructionShape::kContiguous / Delta::kContiguous,
+                                                Shape::kStrided / Delta::kStrided>;
   };
 
-private:
-
+ private:
   /// Not working on this feature at the moment.
-  static_assert(kOpDelta == 1,
-    "Alternative arrangements not supported at present.");
+  static_assert(kOpDelta == 1, "Alternative arrangements not supported at present.");
 
   /// Pointer type used for accesses
   using AccessType = AlignedArray<Element, kElementsPerAccess, 16>;
 
-public:
-
+ public:
   //
   // Derived quantities
   //
 
   /// Fragment object holding a thread's part of a tile
- using Fragment =
-     Array<Element, Shape::kStrided * InstructionShape::kContiguous / kThreads>;
+  using Fragment = Array<Element, Shape::kStrided * InstructionShape::kContiguous / kThreads>;
 
-private:
-
+ private:
   /// Layout object storing stride values
   StrideIndex stride_;
 
   /// Shared memory base pointers - not advanced
-  AccessType const *pointer_;
+  AccessType const* pointer_;
 
   /// Byte offset incremented as iterator advances
   Index byte_offset_;
@@ -942,33 +923,28 @@ private:
   /// Internal counter for tracking K-group
   Index k_group_idx_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(): stride_(0), byte_offset_(0) { }
+  MmaTensorOpMultiplicandTileIterator() : stride_(0), byte_offset_(0) {}
 
   /// Constructor from TensorRef
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ):
-    stride_(ref.stride(0) / kElementsPerAccess), byte_offset_(0),
-    k_group_idx_(0) {
-
-    int access_strided = lane_id / 8;
-    int access_contiguous = (lane_id  % 8);
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : stride_(ref.stride(0) / kElementsPerAccess), byte_offset_(0), k_group_idx_(0)
+  {
+    int access_strided    = lane_id / 8;
+    int access_contiguous = (lane_id % 8);
 
     byte_offset_ = (access_contiguous + access_strided * stride_) * sizeof(AccessType);
 
-    pointer_= reinterpret_cast<AccessType const *>(ref.data());
+    pointer_ = reinterpret_cast<AccessType const*>(ref.data());
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     pointer_ += offset / kElementsPerAccess;
 
     return *this;
@@ -976,38 +952,36 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-    int offset = (tile_offset.contiguous() * InstructionShape::kContiguous) *
-                     stride_ * kElementsPerAccess +
-                 tile_offset.strided() * Shape::kStrided;
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
+    int offset =
+      (tile_offset.contiguous() * InstructionShape::kContiguous) * stride_ * kElementsPerAccess +
+      tile_offset.strided() * Shape::kStrided;
 
     add_pointer_offset(offset);
-    
+
     int old_k_group_idx = k_group_idx_;
 
     k_group_idx_ += tile_offset.contiguous();
 
-    if ((k_group_idx_ & 2) ^ (old_k_group_idx & 2)) {
-      byte_offset_ ^= 0x40;
-    }
+    if ((k_group_idx_ & 2) ^ (old_k_group_idx & 2)) { byte_offset_ ^= 0x40; }
 
     return *this;
   }
 
-
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset_negative(TensorCoord const &tile_offset) {
-
-    add_tile_offset(tile_offset); // TODO fix this if it becomes an issue during warp it reset
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset_negative(TensorCoord const& tile_offset)
+  {
+    add_tile_offset(tile_offset);  // TODO fix this if it becomes an issue during warp it reset
 
     return *this;
   }
 
   /// Advances the iterator along the advance dimension
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     pointer_ += stride_ * InstructionShape::kContiguous;
 
     if (k_group_idx_ & 0x1) {
@@ -1022,56 +996,52 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(tile_offset);
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    load_with_byte_offset(frag, 0);
-  }
+  void load(Fragment& frag) const { load_with_byte_offset(frag, 0); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset in units of bytes
-      Index byte_offset) const {
-
-    AccessType *fetch_ptr = reinterpret_cast<AccessType *>(&frag);
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset in units of bytes
+    Index byte_offset) const
+  {
+    AccessType* fetch_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int c = 0; c < Policy::Iterations::kContiguous; ++c) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int s = 0; s < Policy::Iterations::kStrided; ++s) {
-
         int access_idx = c + s * Policy::Iterations::kContiguous;
 
-        AccessType const *source_ptr = pointer_ +
-            Policy::Delta::kContiguous * c * stride_ +
-            Policy::Delta::kStrided * s / kElementsPerAccess;
+        AccessType const* source_ptr = pointer_ + Policy::Delta::kContiguous * c * stride_ +
+                                       Policy::Delta::kStrided * s / kElementsPerAccess;
 
-        char const *source_byte_ptr = reinterpret_cast<char const *>(source_ptr) + byte_offset + byte_offset_;
+        char const* source_byte_ptr =
+          reinterpret_cast<char const*>(source_ptr) + byte_offset + byte_offset_;
 
-        AccessType const *source = reinterpret_cast<AccessType const *>(source_byte_ptr);
+        AccessType const* source = reinterpret_cast<AccessType const*>(source_byte_ptr);
 
         fetch_ptr[access_idx] = *source;
       }
     }
 
-    Element *exchange_ptr = reinterpret_cast<Element *>(&frag);
+    Element* exchange_ptr = reinterpret_cast<Element*>(&frag);
 
     if (k_group_idx_ & 1) {
       // exchange on 64b granularity
       CUTLASS_PRAGMA_UNROLL
       for (int i = 0; i < Fragment::kElements; i += 2) {
-        Element tmp = exchange_ptr[i];
-        exchange_ptr[i] = exchange_ptr[i + 1];
+        Element tmp         = exchange_ptr[i];
+        exchange_ptr[i]     = exchange_ptr[i + 1];
         exchange_ptr[i + 1] = tmp;
       }
     }
@@ -1080,51 +1050,51 @@ public:
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     load_with_byte_offset(frag, pointer_offset * sizeof(Element));
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     load_with_byte_offset(frag, tile_offset, 0);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     load_with_byte_offset(frag, tile_offset, pointer_offset * sizeof(Element));
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
-    Index pointer_offset = tile_offset.contiguous() *
-                               InstructionShape::kContiguous /
-                               Layout::kElementsPerAccess +
-                           tile_offset.strided() * Shape::kStrided * stride_;
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
+    Index pointer_offset =
+      tile_offset.contiguous() * InstructionShape::kContiguous / Layout::kElementsPerAccess +
+      tile_offset.strided() * Shape::kStrided * stride_;
 
     byte_offset += sizeof(AccessType) * pointer_offset;
 
@@ -1139,9 +1109,7 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    k_group_idx_ = k_group;
-  }
+  void set_kgroup_index(int k_group) { k_group_idx_ = k_group; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1150,33 +1118,37 @@ public:
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::RowMajorTensorOpMultiplicand64bCrosswise,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::RowMajorTensorOpMultiplicand64bCrosswise,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -1207,14 +1179,16 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Underlying tile iterator implementation
   using Base = MmaTensorOpMultiplicandTileIterator<
-      layout::PitchLinearShape<Shape::kColumn, Shape::kRow>, kOperand, Element,
-      layout::TensorOpMultiplicand64bCrosswise,
-      layout::PitchLinearShape<InstructionShape::kColumn,
-                               InstructionShape::kRow>,
-      kOpDelta, kThreads, PartitionsK_>;
+    layout::PitchLinearShape<Shape::kColumn, Shape::kRow>,
+    kOperand,
+    Element,
+    layout::TensorOpMultiplicand64bCrosswise,
+    layout::PitchLinearShape<InstructionShape::kColumn, InstructionShape::kRow>,
+    kOpDelta,
+    kThreads,
+    PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -1222,29 +1196,26 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -1252,8 +1223,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.column(), tile_offset.row()});
 
     return *this;
@@ -1261,8 +1232,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset_negative(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset_negative(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset_negative({tile_offset.column(), tile_offset.row()});
 
     return *this;
@@ -1270,8 +1241,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -1279,8 +1250,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -1288,80 +1259,82 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.column(), tile_offset.row()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.column(), tile_offset.row()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.strided(), tile_offset.contiguous()},
-      byte_offset);
+      frag, {tile_offset.strided(), tile_offset.contiguous()}, byte_offset);
   }
 
   /// Notify the iterator which k-group it is currently pointing to.
@@ -1372,9 +1345,7 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1383,33 +1354,38 @@ public:
 ///   ReadableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
 class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::ColumnMajorTensorOpMultiplicand64bCrosswise,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  Shape_,
+  Operand_,
+  Element_,
+  cutlass::layout::ColumnMajorTensorOpMultiplicand64bCrosswise,
+  InstructionShape_,
+  OpDelta_,
+  32,
+  PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -1440,14 +1416,16 @@ class MmaTensorOpMultiplicandTileIterator<
 
   /// Underlying tile iterator implementation
   using Base = MmaTensorOpMultiplicandTileIterator<
-      layout::PitchLinearShape<Shape::kRow, Shape::kColumn>, kOperand, Element,
-      layout::TensorOpMultiplicand64bCrosswise,
-      layout::PitchLinearShape<InstructionShape::kRow,
-                               InstructionShape::kColumn>,
-      kOpDelta, kThreads, PartitionsK_>;
+    layout::PitchLinearShape<Shape::kRow, Shape::kColumn>,
+    kOperand,
+    Element,
+    layout::TensorOpMultiplicand64bCrosswise,
+    layout::PitchLinearShape<InstructionShape::kRow, InstructionShape::kColumn>,
+    kOpDelta,
+    kThreads,
+    PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -1455,29 +1433,26 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -1485,8 +1460,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.row(), tile_offset.column()});
 
     return *this;
@@ -1494,8 +1469,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset_negative(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset_negative(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset_negative({tile_offset.row(), tile_offset.column()});
 
     return *this;
@@ -1503,8 +1478,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -1512,8 +1487,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -1521,80 +1496,82 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.contiguous(), tile_offset.strided()},
-      byte_offset);
+      frag, {tile_offset.contiguous(), tile_offset.strided()}, byte_offset);
   }
 
   /// Notify the iterator which k-group it is currently pointing to.
@@ -1605,36 +1582,32 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 /// Tile iterator specialized for canonical matrix layouts
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Operand identity
-    Operand Operand_,
-    /// Data type of A elements
-    typename Element_,
-    /// Layout of operand
-    typename Layout_,
-    /// Shape of one matrix production operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Delta between *MMA operations (in units of *MMA operations, concept:
-    /// MatrixShape)
-    int OpDelta_,
-    /// Number of threads participating in one matrix operation
-    int Threads = 32,
-    /// Number of partitions along K dimension
-    int PartitionsK_ = 1>
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Operand identity
+  Operand Operand_,
+  /// Data type of A elements
+  typename Element_,
+  /// Layout of operand
+  typename Layout_,
+  /// Shape of one matrix production operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Delta between *MMA operations (in units of *MMA operations, concept:
+  /// MatrixShape)
+  int OpDelta_,
+  /// Number of threads participating in one matrix operation
+  int Threads = 32,
+  /// Number of partitions along K dimension
+  int PartitionsK_ = 1>
 class MmaTensorOpMultiplicandTileIteratorCanonical {
  public:
-
   /// Shape of tile to load (concept: MatrixShape)
   using Shape = Shape_;
 
@@ -1642,8 +1615,9 @@ class MmaTensorOpMultiplicandTileIteratorCanonical {
   static Operand const kOperand = Operand_;
 
   /// Basic check
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -1673,47 +1647,35 @@ class MmaTensorOpMultiplicandTileIteratorCanonical {
   using TensorCoord = typename TensorRef::TensorCoord;
 
   /// Number of elements accessed per Shared Memory load
-  static int const kElementsPerAccess = 
+  static int const kElementsPerAccess =
     (sizeof_bits<Element>::value >= 32 ? 1 : 32 / sizeof_bits<Element>::value);
 
-private:
+ private:
+  static int const kWarpShapeOuter = (kOperand == Operand::kA ? Shape::kRow : Shape::kColumn);
 
-  static int const kWarpShapeOuter = 
-    (kOperand == Operand::kA ? Shape::kRow : Shape::kColumn);
+  static int const kWarpShapeInner = (kOperand == Operand::kA ? Shape::kColumn : Shape::kRow);
 
-  static int const kWarpShapeInner =
-    (kOperand == Operand::kA ? Shape::kColumn : Shape::kRow);
-
-  
   /// Rounded up instruction counts
-  using InstructionCount = MatrixShape<
-    Shape::kRow / InstructionShape::kRow,
-    Shape::kColumn / InstructionShape::kColumn
-  >;
+  using InstructionCount =
+    MatrixShape<Shape::kRow / InstructionShape::kRow, Shape::kColumn / InstructionShape::kColumn>;
 
   /// Rounded up tile dimensions
-  using WarpShapeDivisible = MatrixShape<
-    InstructionCount::kRow * InstructionShape::kRow,
-    InstructionCount::kColumn * InstructionShape::kColumn
-  >;
+  using WarpShapeDivisible = MatrixShape<InstructionCount::kRow * InstructionShape::kRow,
+                                         InstructionCount::kColumn * InstructionShape::kColumn>;
 
-public:
-
+ public:
   //
   // Derived quantities
   //
 
   /// Fragment object holding a thread's part of a tile
-  using Fragment = Array<
-    Element, 
-    WarpShapeDivisible::kRow * WarpShapeDivisible::kColumn / kThreads
-  >;
+  using Fragment =
+    Array<Element, WarpShapeDivisible::kRow * WarpShapeDivisible::kColumn / kThreads>;
 
   /// Memory access type
   using AccessType = AlignedArray<Element, kElementsPerAccess>;
 
-private:
-
+ private:
   /// Underlying tensor reference
   TensorRef ref_;
 
@@ -1726,41 +1688,35 @@ private:
   /// Used to conditionally enable extents checking
   bool divisible_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical(): divisible_(true) { }
+  MmaTensorOpMultiplicandTileIteratorCanonical() : divisible_(true) {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical(
-    TensorRef const &ref, 
-    int lane_id
-  ): ref_(ref), extent_(Shape::kRow, Shape::kColumn), divisible_(true) {
-  
+  MmaTensorOpMultiplicandTileIteratorCanonical(TensorRef const& ref, int lane_id)
+    : ref_(ref), extent_(Shape::kRow, Shape::kColumn), divisible_(true)
+  {
     if (kOperand == Operand::kA) {
       origin_ = MatrixCoord(lane_id / 4, (lane_id % 4) * kElementsPerAccess);
-    }
-    else {
+    } else {
       origin_ = MatrixCoord((lane_id % 4) * kElementsPerAccess, lane_id / 4);
     }
 
     ref_.add_coord_offset(origin_);
   }
-  
+
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical(
-    TensorRef const &ref, 
-    TensorCoord extent,
-    int lane_id
-  ): ref_(ref), extent_(extent), divisible_(false) {
-  
+  MmaTensorOpMultiplicandTileIteratorCanonical(TensorRef const& ref,
+                                               TensorCoord extent,
+                                               int lane_id)
+    : ref_(ref), extent_(extent), divisible_(false)
+  {
     if (kOperand == Operand::kA) {
       origin_ = MatrixCoord(lane_id / 4, (lane_id % 4) * kElementsPerAccess);
-    }
-    else {
+    } else {
       origin_ = MatrixCoord((lane_id % 4) * kElementsPerAccess, lane_id / 4);
     }
 
@@ -1769,8 +1725,8 @@ public:
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIteratorCanonical& add_pointer_offset(LongIndex offset)
+  {
     ref_.add_pointer_offset(offset);
 
     return *this;
@@ -1778,9 +1734,10 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical &add_tile_offset(TensorCoord const &tile_offset) {
-
-    TensorCoord coord_offset(tile_offset.row() * Shape::kRow, tile_offset.column() * Shape::kColumn);
+  MmaTensorOpMultiplicandTileIteratorCanonical& add_tile_offset(TensorCoord const& tile_offset)
+  {
+    TensorCoord coord_offset(tile_offset.row() * Shape::kRow,
+                             tile_offset.column() * Shape::kColumn);
     origin_ += coord_offset;
 
     ref_.add_coord_offset(coord_offset);
@@ -1790,96 +1747,88 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical & operator++() {
-
+  MmaTensorOpMultiplicandTileIteratorCanonical& operator++()
+  {
     if (kOperand == Operand::kA) {
       add_tile_offset({0, 1});
-    }
-    else {
+    } else {
       add_tile_offset({1, 0});
-    }    
+    }
 
     return *this;
   }
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical & operator--() {
-    
+  MmaTensorOpMultiplicandTileIteratorCanonical& operator--()
+  {
     if (kOperand == Operand::kA) {
       add_tile_offset({0, -1});
-    }
-    else {
+    } else {
       add_tile_offset({-1, 0});
-    }    
+    }
 
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIteratorCanonical& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(tile_offset);
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIteratorCanonical & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIteratorCanonical& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-tile_offset);
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) const { load_with_pointer_offset(frag, 0); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     int const kWarpShapeDivisibleInner =
       (kOperand == Operand::kA ? WarpShapeDivisible::kColumn : WarpShapeDivisible::kRow);
 
     // Take advantage of Tensor Op's 8 x 4T access pattern
     int const kAccessesInner = (kWarpShapeDivisibleInner / kElementsPerAccess) / 4;
 
-    AccessType *access_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* access_ptr = reinterpret_cast<AccessType*>(&frag);
 
     if (kOperand == Operand::kA) {
       int const kTilesPerInstruction = InstructionShape::kRow / 8;
 
       CUTLASS_PRAGMA_UNROLL
       for (int inst_m_idx = 0; inst_m_idx < InstructionCount::kRow; ++inst_m_idx) {
-
         CUTLASS_PRAGMA_UNROLL
         for (int inner_idx = 0; inner_idx < kAccessesInner; ++inner_idx) {
-
           CUTLASS_PRAGMA_UNROLL
           for (int access_m_idx = 0; access_m_idx < kTilesPerInstruction; ++access_m_idx) {
-            int access_idx = 
+            int access_idx =
               access_m_idx + kTilesPerInstruction * (inner_idx + kAccessesInner * inst_m_idx);
-            
-            MatrixCoord offset(
-              access_m_idx * 8 + inst_m_idx * InstructionShape::kRow, 
-              inner_idx * 4 * kElementsPerAccess);
+
+            MatrixCoord offset(access_m_idx * 8 + inst_m_idx * InstructionShape::kRow,
+                               inner_idx * 4 * kElementsPerAccess);
 
             MatrixCoord access_coord = origin_ + offset;
 
-            if (divisible_ || 
-              (access_coord.row() < extent_.row() && access_coord.column() < extent_.column())) {
-
-              access_ptr[access_idx] = *reinterpret_cast<AccessType const *>(
-                ref_.data() + ref_.offset(offset));
-            }
-            else {
+            if (divisible_ ||
+                (access_coord.row() < extent_.row() && access_coord.column() < extent_.column())) {
+              access_ptr[access_idx] =
+                *reinterpret_cast<AccessType const*>(ref_.data() + ref_.offset(offset));
+            } else {
               AccessType zero;
               zero.clear();
               access_ptr[access_idx] = zero;
@@ -1887,89 +1836,87 @@ public:
           }
         }
       }
-    }
-    else {
+    } else {
       CUTLASS_PRAGMA_UNROLL
       for (int inst_n_idx = 0; inst_n_idx < InstructionCount::kColumn; ++inst_n_idx) {
-
         CUTLASS_PRAGMA_UNROLL
         for (int inner_idx = 0; inner_idx < kAccessesInner; ++inner_idx) {
           int access_idx = inner_idx + kAccessesInner * inst_n_idx;
 
-          MatrixCoord offset(
-            inner_idx * 4 * kElementsPerAccess,
-            inst_n_idx * 8);
+          MatrixCoord offset(inner_idx * 4 * kElementsPerAccess, inst_n_idx * 8);
 
           MatrixCoord access_coord = origin_ + offset;
 
           if (divisible_ ||
-            (access_coord.row() < extent_.row() && access_coord.column() < extent_.column())) {
-              
-            access_ptr[access_idx] = *reinterpret_cast<AccessType const *>(
-              ref_.data() + ref_.offset(offset));
-          }
-          else {
-              AccessType zero;
-              zero.clear();
-              access_ptr[access_idx] = zero;
+              (access_coord.row() < extent_.row() && access_coord.column() < extent_.column())) {
+            access_ptr[access_idx] =
+              *reinterpret_cast<AccessType const*>(ref_.data() + ref_.offset(offset));
+          } else {
+            AccessType zero;
+            zero.clear();
+            access_ptr[access_idx] = zero;
           }
         }
-      } 
+      }
     }
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     load_with_pointer_offset(frag, byte_offset * 8 / sizeof_bits<Element>::value);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
-    
-    TensorCoord coord_offset(tile_offset.row() * Shape::kRow, tile_offset.column() * Shape::kColumn);
-  
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
+    TensorCoord coord_offset(tile_offset.row() * Shape::kRow,
+                             tile_offset.column() * Shape::kColumn);
+
     load_with_pointer_offset(frag, ref_.offset(coord_offset));
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
+    TensorCoord coord_offset(tile_offset.row() * Shape::kRow,
+                             tile_offset.column() * Shape::kColumn);
 
-    TensorCoord coord_offset(tile_offset.row() * Shape::kRow, tile_offset.column() * Shape::kColumn);
-  
     load_with_pointer_offset(frag, ref_.offset(coord_offset) + pointer_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
+    TensorCoord coord_offset(tile_offset.row() * Shape::kRow,
+                             tile_offset.column() * Shape::kColumn);
 
-    TensorCoord coord_offset(tile_offset.row() * Shape::kRow, tile_offset.column() * Shape::kColumn);
-  
-    load_with_pointer_offset(frag, ref_.offset(coord_offset) + byte_offset * 8 / sizeof_bits<Element>::value);
+    load_with_pointer_offset(
+      frag, ref_.offset(coord_offset) + byte_offset * 8 / sizeof_bits<Element>::value);
   }
 
   /// Notify the iterator which k-group it is currently pointing to.
@@ -1980,40 +1927,45 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
+  void set_kgroup_index(int k_group)
+  {
     // no operation
   }
 };
 
 /// Wrapper for ColumnMajor
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::ColumnMajor,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::ColumnMajor,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -2043,14 +1995,16 @@ class MmaTensorOpMultiplicandTileIterator<
   using TensorCoord = typename TensorRef::TensorCoord;
 
   /// Underlying tile iterator implementation
-  using Base = MmaTensorOpMultiplicandTileIteratorCanonical<
-      Shape, kOperand, Element,
-      layout::ColumnMajor,
-      InstructionShape,
-      kOpDelta, kThreads, PartitionsK_>;
+  using Base = MmaTensorOpMultiplicandTileIteratorCanonical<Shape,
+                                                            kOperand,
+                                                            Element,
+                                                            layout::ColumnMajor,
+                                                            InstructionShape,
+                                                            kOpDelta,
+                                                            kThreads,
+                                                            PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -2058,38 +2012,33 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
-  
+
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    TensorCoord const & extent,
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, extent, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, TensorCoord const& extent, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, extent, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -2097,8 +2046,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.row(), tile_offset.column()});
 
     return *this;
@@ -2106,8 +2055,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -2115,8 +2064,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -2124,80 +2073,82 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.contiguous(), tile_offset.strided()},
-      byte_offset);
+      frag, {tile_offset.contiguous(), tile_offset.strided()}, byte_offset);
   }
 
   /// Notify the iterator which k-group it is currently pointing to.
@@ -2208,41 +2159,42 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
-
 
 /// Wrapper for RowMajor
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Identifies A or B multiplicand
-    Operand Operand_,
-    /// Data type of elements
-    typename Element_,
-    /// Shape of one matrix product operation (concept: MatrixShape)
-    typename InstructionShape_,
-    /// Interval between adjacent *MMA instructions (in units of MMA
-    /// instructions)
-    int OpDelta_,
-    /// Number of partitions along K dimension
-    int PartitionsK_>
-class MmaTensorOpMultiplicandTileIterator<
-    Shape_, Operand_, Element_,
-    cutlass::layout::RowMajor,
-    InstructionShape_, OpDelta_, 32, PartitionsK_> {
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Identifies A or B multiplicand
+  Operand Operand_,
+  /// Data type of elements
+  typename Element_,
+  /// Shape of one matrix product operation (concept: MatrixShape)
+  typename InstructionShape_,
+  /// Interval between adjacent *MMA instructions (in units of MMA
+  /// instructions)
+  int OpDelta_,
+  /// Number of partitions along K dimension
+  int PartitionsK_>
+class MmaTensorOpMultiplicandTileIterator<Shape_,
+                                          Operand_,
+                                          Element_,
+                                          cutlass::layout::RowMajor,
+                                          InstructionShape_,
+                                          OpDelta_,
+                                          32,
+                                          PartitionsK_> {
  public:
-
   /// Shape of tile to load (concept: PitchLinearShape)
   using Shape = Shape_;
 
   /// Operand tag
   static Operand const kOperand = Operand_;
 
-  static_assert(kOperand == Operand::kA || kOperand== Operand::kB,
-    "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to warp-level Mma.");
+  static_assert(kOperand == Operand::kA || kOperand == Operand::kB,
+                "MmaTensorOpMultiplicandIterator may only be instantiated for A or B operands to "
+                "warp-level Mma.");
 
   /// Element type
   using Element = Element_;
@@ -2272,14 +2224,16 @@ class MmaTensorOpMultiplicandTileIterator<
   using TensorCoord = typename TensorRef::TensorCoord;
 
   /// Underlying tile iterator implementation
-  using Base = MmaTensorOpMultiplicandTileIteratorCanonical<
-      Shape, kOperand, Element,
-      layout::RowMajor,
-      InstructionShape,
-      kOpDelta, kThreads, PartitionsK_>;
+  using Base = MmaTensorOpMultiplicandTileIteratorCanonical<Shape,
+                                                            kOperand,
+                                                            Element,
+                                                            layout::RowMajor,
+                                                            InstructionShape,
+                                                            kOpDelta,
+                                                            kThreads,
+                                                            PartitionsK_>;
 
  public:
-
   //
   // Derived quantities
   //
@@ -2287,38 +2241,33 @@ class MmaTensorOpMultiplicandTileIterator<
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-private:
-
+ private:
   /// Underlying tile iterator
   Base iterator_;
 
-public:
-  
+ public:
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator() { }
+  MmaTensorOpMultiplicandTileIterator() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, lane_id)
+  {
   }
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator(
-    TensorRef const &ref, 
-    TensorCoord const &extent,
-    int lane_id
-  ): iterator_({ref.data(), ref.stride()}, extent, lane_id) {
+  MmaTensorOpMultiplicandTileIterator(TensorRef const& ref, TensorCoord const& extent, int lane_id)
+    : iterator_({ref.data(), ref.stride()}, extent, lane_id)
+  {
   }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_pointer_offset(LongIndex offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_pointer_offset(LongIndex offset)
+  {
     iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -2326,8 +2275,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator &add_tile_offset(TensorCoord const &tile_offset) {
-
+  MmaTensorOpMultiplicandTileIterator& add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.row(), tile_offset.column()});
 
     return *this;
@@ -2335,8 +2284,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator++() {
-
+  MmaTensorOpMultiplicandTileIterator& operator++()
+  {
     ++iterator_;
 
     return *this;
@@ -2344,8 +2293,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_HOST_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator--() {
-
+  MmaTensorOpMultiplicandTileIterator& operator--()
+  {
     --iterator_;
 
     return *this;
@@ -2353,80 +2302,82 @@ public:
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator+=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator+=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  MmaTensorOpMultiplicandTileIterator & operator-=(TensorCoord const &tile_offset) {
+  MmaTensorOpMultiplicandTileIterator& operator-=(TensorCoord const& tile_offset)
+  {
     add_tile_offset(-PitchLinearCoord(tile_offset.row(), tile_offset.column()));
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) const { iterator_.load(frag); }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(frag, byte_offset);
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
     // TODO
   }
 
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     iterator_.load_with_byte_offset(
-      frag,
-      {tile_offset.contiguous(), tile_offset.strided()},
-      byte_offset);
+      frag, {tile_offset.contiguous(), tile_offset.strided()}, byte_offset);
   }
 
   /// Notify the iterator which k-group it is currently pointing to.
@@ -2437,16 +2388,13 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { iterator_.set_kgroup_index(k_group); }
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

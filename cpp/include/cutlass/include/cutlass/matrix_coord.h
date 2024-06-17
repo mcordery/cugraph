@@ -33,8 +33,8 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 
@@ -43,9 +43,7 @@ namespace cutlass {
 /// MatrixCoord wraps Coord<2, int> to provide a helper for accessing named dimensions. Classes
 /// expecting a coordinate in the rank=2 index space of a matrix should use MatrixCoord.
 struct MatrixCoord : public Coord<2, int> {
-
-public:
-
+ public:
   /// Integer-valued index
   using Index = int;
 
@@ -55,51 +53,49 @@ public:
   /// LongIndex type
   using LongIndex = typename Base::LongIndex;
 
-private:
-
+ private:
   /// Rows dimension
   static int const kRow = 0;
 
   /// Columns dimension
   static int const kColumn = 1;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Default ctor
   CUTLASS_HOST_DEVICE
-  MatrixCoord() { }
+  MatrixCoord() {}
 
   /// Constructs from Coord<2>
   CUTLASS_HOST_DEVICE
-  MatrixCoord(Coord<2, Index> const &coord): Base(coord) { }
+  MatrixCoord(Coord<2, Index> const& coord) : Base(coord) {}
 
   /// Helper to construct from a row and column
   CUTLASS_HOST_DEVICE
-  MatrixCoord(Index row, Index column): Base(make_Coord(row, column)) { }
+  MatrixCoord(Index row, Index column) : Base(make_Coord(row, column)) {}
 
   /// Helper to construct from a row and column, which are LongIndex based
   CUTLASS_HOST_DEVICE
-  MatrixCoord(LongIndex row, LongIndex column): Base(make_Coord(Index(row), Index(column))) { }
+  MatrixCoord(LongIndex row, LongIndex column) : Base(make_Coord(Index(row), Index(column))) {}
 
   /// Returns the row of the coordinate
   CUTLASS_HOST_DEVICE
-  Index const & row() const { return this->at(kRow); }
+  Index const& row() const { return this->at(kRow); }
 
   /// Returns the row of the coordinate
   CUTLASS_HOST_DEVICE
-  Index & row() { return this->at(kRow); }
+  Index& row() { return this->at(kRow); }
 
   /// Returns the column of the coordinate
   CUTLASS_HOST_DEVICE
-  Index const & column() const { return this->at(kColumn); }
+  Index const& column() const { return this->at(kColumn); }
 
   /// Returns the column of the coordinate
   CUTLASS_HOST_DEVICE
-  Index & column() { return this->at(kColumn); }
+  Index& column() { return this->at(kColumn); }
 
   //
   // Coord operators
@@ -107,58 +103,53 @@ public:
 
   /// Element-wise addition
   CUTLASS_HOST_DEVICE
-  MatrixCoord operator+(Base const& b) const {
-    return MatrixCoord(Base::operator+(b));
-  }
+  MatrixCoord operator+(Base const& b) const { return MatrixCoord(Base::operator+(b)); }
 
   /// Element-wise subtraction
   CUTLASS_HOST_DEVICE
-  MatrixCoord operator-(Base const& b) const {
-    return MatrixCoord(Base::operator-(b));
-  }
+  MatrixCoord operator-(Base const& b) const { return MatrixCoord(Base::operator-(b)); }
 
   /// Element-wise multiplication
   CUTLASS_HOST_DEVICE
-  MatrixCoord operator*(Base const& b) const {
-    return MatrixCoord(Base::operator*(b));
-  }
+  MatrixCoord operator*(Base const& b) const { return MatrixCoord(Base::operator*(b)); }
 
   /// Element-wise division
   CUTLASS_HOST_DEVICE
-  MatrixCoord operator/(Base const& b) const {
-    return MatrixCoord(Base::operator/(b));
-  }
+  MatrixCoord operator/(Base const& b) const { return MatrixCoord(Base::operator/(b)); }
 
   /// In-place addition
   CUTLASS_HOST_DEVICE
-  MatrixCoord& operator+=(Base const& b) {
+  MatrixCoord& operator+=(Base const& b)
+  {
     Base::operator+=(b);
     return *this;
   }
 
   /// In-place subtraction
   CUTLASS_HOST_DEVICE
-  MatrixCoord& operator-=(Base const& b) {
+  MatrixCoord& operator-=(Base const& b)
+  {
     Base::operator-=(b);
     return *this;
   }
 
   /// In-place multiplication
   CUTLASS_HOST_DEVICE
-  MatrixCoord& operator*=(Base const& b) {
+  MatrixCoord& operator*=(Base const& b)
+  {
     Base::operator*=(b);
     return *this;
   }
 
   /// In-place division
   CUTLASS_HOST_DEVICE
-  MatrixCoord& operator/=(Base const& b) {
+  MatrixCoord& operator/=(Base const& b)
+  {
     Base::operator/=(b);
     return *this;
   }
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass

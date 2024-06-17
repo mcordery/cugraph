@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import os
 import subprocess
+import sys
 import time
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from cugraph_service_client import (
-    CugraphServiceClient,
-    defaults,
-)
+from cugraph_service_client import CugraphServiceClient, defaults
 from cugraph_service_client.exceptions import CugraphServiceError
 
 

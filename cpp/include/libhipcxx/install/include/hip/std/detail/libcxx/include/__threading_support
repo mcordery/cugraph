@@ -302,7 +302,7 @@ void __libcpp_thread_sleep_for(chrono::nanoseconds __ns)
     // We asked for a __nanosleep builtin in https://ontrack-internal.amd.com/browse/SWDEV-394550.
     // Warning: A limitation with this is that wall_clock64 will use a different clock rate for other architectures
     // than gfx90a and gfx908, so the conversion of clock ticks to nanoseconds is no longer accurate.
-    // The clock rate is currently hardcoded as _LIBCUDACXX_HIP_TSC_NANOSECONDS_PER_CYCLE. 
+    // The clock rate is currently hardcoded as _LIBCUDACXX_HIP_TSC_NANOSECONDS_PER_CYCLE.
     // We will need to find a way to make this information available either at compile time or query it at runtime.
     // The default way to query hipDeviceAttributeWallClockRate does not work on NVIDIA devices (ROCm 5.4, tested on A100).
     NV_IF_TARGET(
@@ -311,9 +311,9 @@ void __libcpp_thread_sleep_for(chrono::nanoseconds __ns)
             assert(__step < numeric_limits<unsigned>::max());
             long long  __now, __start;
             __now = wall_clock64();
-            __start = __now; 
+            __start = __now;
 
-#ifdef _LIBCUDACXX_HIP_USE_FINEGRANULAR_NANOSLEEP        
+#ifdef _LIBCUDACXX_HIP_USE_FINEGRANULAR_NANOSLEEP
             while((__now-__start)*_LIBCUDACXX_HIP_TSC_NANOSECONDS_PER_CYCLE<__step) {
                 __now = wall_clock64();
             }

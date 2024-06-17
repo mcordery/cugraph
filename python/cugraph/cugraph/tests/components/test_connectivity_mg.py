@@ -13,12 +13,11 @@
 
 import gc
 
+import cugraph.dask as dcg
 import pytest
 
 import cugraph
-import cugraph.dask as dcg
 from cugraph.datasets import netscience
-
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

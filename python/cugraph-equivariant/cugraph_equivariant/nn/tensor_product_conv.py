@@ -14,13 +14,11 @@
 from typing import Optional, Sequence, Union
 
 import torch
-from torch import nn
+from cugraph_equivariant.utils import scatter_reduce
 from e3nn import o3
 from e3nn.nn import BatchNorm
-
-from cugraph_equivariant.utils import scatter_reduce
-
 from pylibcugraphops.pytorch.operators import FusedFullyConnectedTensorProduct
+from torch import nn
 
 
 class FullyConnectedTensorProductConv(nn.Module):

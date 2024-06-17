@@ -17,9 +17,8 @@
 
 #include <rmm/cuda_device.hpp>
 
-#include <hip/hip_runtime_api.h>
-
 #include <dlfcn.h>
+#include <hip/hip_runtime_api.h>
 
 #include <memory>
 #include <optional>
@@ -92,7 +91,7 @@ struct dynamic_load_runtime {
 #else
 #define RMM_CUDART_API_WRAPPER(name, signature)                                \
   template <typename... Args>                                                  \
-  static hipError_t name(Args... args)                                        \
+  static hipError_t name(Args... args)                                         \
   {                                                                            \
     static const auto func = dynamic_load_runtime::function<signature>(#name); \
     if (func) { return (*func)(args...); }                                     \
@@ -123,8 +122,8 @@ struct async_alloc {
     static auto driver_supports_pool{[] {
       int cuda_pool_supported{};
       auto result = hipDeviceGetAttribute(&cuda_pool_supported,
-                                           hipDeviceAttributeMemoryPoolsSupported,
-                                           rmm::get_current_cuda_device().value());
+                                          hipDeviceAttributeMemoryPoolsSupported,
+                                          rmm::get_current_cuda_device().value());
       return result == hipSuccess and cuda_pool_supported == 1;
     }()};
     return runtime_supports_pool and driver_supports_pool;
@@ -147,8 +146,8 @@ struct async_alloc {
 #if CUDART_VERSION >= 11030  // 11.3 introduced cudaDevAttrMemoryPoolSupportedHandleTypes
     if (hipMemHandleTypeNone != handle_type) {
       auto const result = hipDeviceGetAttribute(&supported_handle_types_bitmask,
-                                                 cudaDevAttrMemoryPoolSupportedHandleTypes,
-                                                 rmm::get_current_cuda_device().value());
+                                                cudaDevAttrMemoryPoolSupportedHandleTypes,
+                                                rmm::get_current_cuda_device().value());
 
       // Don't throw on hipErrorInvalidValue
       auto const unsupported_runtime = (result == hipErrorInvalidValue);

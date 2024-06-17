@@ -15,21 +15,18 @@ import importlib
 import os
 import shutil
 
-from numba import cuda
-
 import cudf
-from cudf.core.column import as_column
-
 from cuda.cudart import cudaDeviceAttr
+from cudf.core.column import as_column
+from numba import cuda
 from rmm._cuda.gpu import getDeviceAttribute
-
 
 # optional dependencies
 try:
     import cupy as cp
     from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
-    from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
     from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
+    from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
 
     __cp_matrix_types = [cp_coo_matrix, cp_csr_matrix, cp_csc_matrix]
     __cp_compressed_matrix_types = [cp_csr_matrix, cp_csc_matrix]
@@ -43,8 +40,8 @@ cupy_package = cp
 try:
     import scipy as sp
     from scipy.sparse import coo_matrix as sp_coo_matrix
-    from scipy.sparse import csr_matrix as sp_csr_matrix
     from scipy.sparse import csc_matrix as sp_csc_matrix
+    from scipy.sparse import csr_matrix as sp_csr_matrix
 
     __sp_matrix_types = [sp_coo_matrix, sp_csr_matrix, sp_csc_matrix]
     __sp_compressed_matrix_types = [sp_csr_matrix, sp_csc_matrix]
@@ -256,7 +253,6 @@ def get_device_memory_info():
 # |      Many NetworkX algorithms designed for weighted graphs use
 # |      an edge attribute (by default `weight`) to hold a numerical value.
 def ensure_cugraph_obj(obj, nx_weight_attr=None, matrix_graph_type=None):
-
     """
     Convert the input obj - if possible - to a cuGraph Graph-type obj (Graph,
     etc.) and return a tuple of (cugraph Graph-type obj, original

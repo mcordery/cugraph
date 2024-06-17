@@ -14,15 +14,14 @@
 import gc
 import time
 
-import pytest
-import numpy as np
-import networkx as nx
-
 import cudf
-import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
-from cugraph.datasets import karate
+import networkx as nx
+import numpy as np
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, utils
 
+import cugraph
+from cugraph.datasets import karate
 
 print("Networkx version : {} ".format(nx.__version__))
 

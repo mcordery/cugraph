@@ -34,11 +34,11 @@
 
 #pragma once
 
-#include <limits>
-
+#include "cutlass/conv/convolution.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/device_kernel.h"
-#include "cutlass/conv/convolution.h"
+
+#include <limits>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -48,86 +48,76 @@ namespace device {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename ImplicitGemmKernel_>
+template <typename ImplicitGemmKernel_>
 class ImplicitGemmConvolution {
-public:
-
+ public:
   using ImplicitGemmKernel = ImplicitGemmKernel_;
 
-  using ElementA = typename ImplicitGemmKernel::ElementA;
-  using LayoutA = typename ImplicitGemmKernel::LayoutA;
-  using ElementB = typename ImplicitGemmKernel::ElementB;
-  using LayoutB = typename ImplicitGemmKernel::LayoutB;
-  using ElementC = typename ImplicitGemmKernel::ElementC;
-  using LayoutC = typename ImplicitGemmKernel::LayoutC;
-  using ElementAccumulator = typename ImplicitGemmKernel::ElementAccumulator;
-  using ElementCompute = typename ImplicitGemmKernel::ElementCompute;
-  using OperatorClass = typename ImplicitGemmKernel::OperatorClass;
-  using ArchTag = typename ImplicitGemmKernel::ArchTag;
-  using ThreadblockShape = typename ImplicitGemmKernel::ThreadblockShape;
-  using WarpShape = typename ImplicitGemmKernel::WarpShape;
-  using InstructionShape = typename ImplicitGemmKernel::InstructionShape;
-  using ThreadblockSwizzle = typename ImplicitGemmKernel::ThreadblockSwizzle;
-  using EpilogueOutputOp = typename ImplicitGemmKernel::EpilogueOutputOp;
-  static int const kStages = ImplicitGemmKernel::kStages;
+  using ElementA            = typename ImplicitGemmKernel::ElementA;
+  using LayoutA             = typename ImplicitGemmKernel::LayoutA;
+  using ElementB            = typename ImplicitGemmKernel::ElementB;
+  using LayoutB             = typename ImplicitGemmKernel::LayoutB;
+  using ElementC            = typename ImplicitGemmKernel::ElementC;
+  using LayoutC             = typename ImplicitGemmKernel::LayoutC;
+  using ElementAccumulator  = typename ImplicitGemmKernel::ElementAccumulator;
+  using ElementCompute      = typename ImplicitGemmKernel::ElementCompute;
+  using OperatorClass       = typename ImplicitGemmKernel::OperatorClass;
+  using ArchTag             = typename ImplicitGemmKernel::ArchTag;
+  using ThreadblockShape    = typename ImplicitGemmKernel::ThreadblockShape;
+  using WarpShape           = typename ImplicitGemmKernel::WarpShape;
+  using InstructionShape    = typename ImplicitGemmKernel::InstructionShape;
+  using ThreadblockSwizzle  = typename ImplicitGemmKernel::ThreadblockSwizzle;
+  using EpilogueOutputOp    = typename ImplicitGemmKernel::EpilogueOutputOp;
+  static int const kStages  = ImplicitGemmKernel::kStages;
   static int const kConvDim = ImplicitGemmKernel::kConvDim;
-  using WarpMmaOperator = typename ImplicitGemmKernel::WarpMmaOperator;
-  using ArchMmaOperator = typename ImplicitGemmKernel::ArchMmaOperator;
-  using MathOperator = typename ImplicitGemmKernel::MathOperator; 
+  using WarpMmaOperator     = typename ImplicitGemmKernel::WarpMmaOperator;
+  using ArchMmaOperator     = typename ImplicitGemmKernel::ArchMmaOperator;
+  using MathOperator        = typename ImplicitGemmKernel::MathOperator;
 
-  static cutlass::conv::Operator const kConvolutionalOperator = ImplicitGemmKernel::kConvolutionalOperator;
-  static cutlass::conv::IteratorAlgorithm const kIteratorAlgorithm = ImplicitGemmKernel::kIteratorAlgorithm;
+  static cutlass::conv::Operator const kConvolutionalOperator =
+    ImplicitGemmKernel::kConvolutionalOperator;
+  static cutlass::conv::IteratorAlgorithm const kIteratorAlgorithm =
+    ImplicitGemmKernel::kIteratorAlgorithm;
   static cutlass::conv::StrideSupport const kStrideSupport = ImplicitGemmKernel::kStrideSupport;
-  static cutlass::conv::GroupMode const kGroupMode = ImplicitGemmKernel::kGroupMode;
+  static cutlass::conv::GroupMode const kGroupMode         = ImplicitGemmKernel::kGroupMode;
 
-  static int const kWarpCount = 
-    (ThreadblockShape::kM / WarpShape::kM) * 
-    (ThreadblockShape::kN / WarpShape::kN) *
-    (ThreadblockShape::kK / WarpShape::kK);
+  static int const kWarpCount = (ThreadblockShape::kM / WarpShape::kM) *
+                                (ThreadblockShape::kN / WarpShape::kN) *
+                                (ThreadblockShape::kK / WarpShape::kK);
 
   /// Argument structure
   using Arguments = typename ImplicitGemmKernel::Arguments;
 
-private:
-
+ private:
   /// Kernel parameters object
   typename ImplicitGemmKernel::Params params_;
 
-public:
-
+ public:
   /// Constructs Implicit GEMM
-  ImplicitGemmConvolution() { }
+  ImplicitGemmConvolution() {}
 
   /// Determines whether the Implicit GEMM can execute the given problem.
-  static Status can_implement(Arguments const &args) {
-
+  static Status can_implement(Arguments const& args)
+  {
     // dispatch to iterators
     Status status = ImplicitGemmKernel::Mma::IteratorA::can_implement(args.problem_size);
-    if (Status::kSuccess != status) {
-      return status;
-    }
+    if (Status::kSuccess != status) { return status; }
 
     status = ImplicitGemmKernel::Mma::IteratorB::can_implement(args.problem_size);
-    if (Status::kSuccess != status) {
-      return status;
-    }
+    if (Status::kSuccess != status) { return status; }
 
     // check group conv constraint
     if (args.problem_size.groups != 1) {
-      if (kGroupMode == conv::GroupMode::kNone) {
-        return Status::kErrorInvalidProblem;
-      } 
+      if (kGroupMode == conv::GroupMode::kNone) { return Status::kErrorInvalidProblem; }
 
       // C and K should be multiple of groups
       if (args.problem_size.K % args.problem_size.groups ||
-        args.problem_size.C % args.problem_size.groups) {
+          args.problem_size.C % args.problem_size.groups) {
         return Status::kErrorInvalidProblem;
       }
 
       // split-k is not supported
-      if (args.problem_size.split_k_slices != 1) {
-        return Status::kErrorInvalidProblem;
-      }
+      if (args.problem_size.split_k_slices != 1) { return Status::kErrorInvalidProblem; }
 
       int k_per_group = args.problem_size.K / args.problem_size.groups;
       // k_per_group should be multiple of ThreadblockShape N, one CTA calculate one group
@@ -140,38 +130,33 @@ public:
       }
     }
 
-    static int const kAlignmentC = ImplicitGemmKernel::Epilogue::OutputTileIterator::kElementsPerAccess;
+    static int const kAlignmentC =
+      ImplicitGemmKernel::Epilogue::OutputTileIterator::kElementsPerAccess;
     if (kConvolutionalOperator == conv::Operator::kFprop) {
-      if (args.problem_size.K % kAlignmentC)
-        return Status::kErrorMisalignedOperand;
+      if (args.problem_size.K % kAlignmentC) return Status::kErrorMisalignedOperand;
     } else if (kConvolutionalOperator == conv::Operator::kDgrad) {
-       if (args.problem_size.C % kAlignmentC)
-        return Status::kErrorMisalignedOperand;
+      if (args.problem_size.C % kAlignmentC) return Status::kErrorMisalignedOperand;
     } else if (kConvolutionalOperator == conv::Operator::kWgrad) {
-       if (args.problem_size.C % kAlignmentC)
-        return Status::kErrorMisalignedOperand;
+      if (args.problem_size.C % kAlignmentC) return Status::kErrorMisalignedOperand;
     }
 
     // check for unsupported problem sizes for strided dgrad implementation
-    if (kConvolutionalOperator == conv::Operator::kDgrad && 
-      kStrideSupport == conv::StrideSupport::kStrided) {
-
-      // Unity stride (1x1) is supported by strided dgrad but disabled for performance 
+    if (kConvolutionalOperator == conv::Operator::kDgrad &&
+        kStrideSupport == conv::StrideSupport::kStrided) {
+      // Unity stride (1x1) is supported by strided dgrad but disabled for performance
       // reasons. For unity stride, use strided dgrad optimized unity stride specialization.
-      // Note that unit tests strided dgrad for unity stride to make sure that strided 
-      // dgrad implemetnation is functionaly sound. 
+      // Note that unit tests strided dgrad for unity stride to make sure that strided
+      // dgrad implemetnation is functionaly sound.
       // Strided dgrad implementation also support mixed strides, i.e., (1x2) and (2x1)
-      if(args.problem_size.stride_h == 1 && args.problem_size.stride_w == 1) {
+      if (args.problem_size.stride_h == 1 && args.problem_size.stride_w == 1) {
         return Status::kErrorNotSupported;
       }
 
       // split-k (serial or parallel) is not supported for strided dgrad
-      if(args.problem_size.split_k_slices > 1) {
-        return Status::kErrorNotSupported;
-      }
-      
+      if (args.problem_size.split_k_slices > 1) { return Status::kErrorNotSupported; }
+
       // dilation > {1x1} is not supported for strided dgrad
-      if(args.problem_size.dilation_h > 1 || args.problem_size.dilation_w > 1) {
+      if (args.problem_size.dilation_h > 1 || args.problem_size.dilation_w > 1) {
         return Status::kErrorNotSupported;
       }
     }
@@ -179,16 +164,14 @@ public:
     // Determine grid shape
     ThreadblockSwizzle threadblock_swizzle;
 
-    dim3 grid = threadblock_swizzle.get_grid_shape(
-      threadblock_swizzle.get_tiled_shape(
-        kConvolutionalOperator,
-        args.problem_size,
-        {ThreadblockShape::kM, ThreadblockShape::kN, ThreadblockShape::kK},
-        args.problem_size.split_k_slices));
+    dim3 grid = threadblock_swizzle.get_grid_shape(threadblock_swizzle.get_tiled_shape(
+      kConvolutionalOperator,
+      args.problem_size,
+      {ThreadblockShape::kM, ThreadblockShape::kN, ThreadblockShape::kK},
+      args.problem_size.split_k_slices));
 
     if (!(grid.y <= std::numeric_limits<uint16_t>::max() &&
           grid.z <= std::numeric_limits<uint16_t>::max())) {
-
       return Status::kErrorInvalidProblem;
     }
 
@@ -196,32 +179,30 @@ public:
   }
 
   /// Gets the workspace size
-  static size_t get_workspace_size(Arguments const &args) {
-  
+  static size_t get_workspace_size(Arguments const& args)
+  {
     size_t workspace_bytes = 0;
 
     // Determine grid shape
     ThreadblockSwizzle threadblock_swizzle;
 
     cutlass::gemm::GemmCoord grid_tiled_shape = threadblock_swizzle.get_tiled_shape(
-        kConvolutionalOperator,
-        args.problem_size,
-        {ThreadblockShape::kM, ThreadblockShape::kN, ThreadblockShape::kK},
-        args.problem_size.split_k_slices);
+      kConvolutionalOperator,
+      args.problem_size,
+      {ThreadblockShape::kM, ThreadblockShape::kN, ThreadblockShape::kK},
+      args.problem_size.split_k_slices);
 
-    if(args.split_k_mode == SplitKMode::kParallel) {
-
+    if (args.split_k_mode == SplitKMode::kParallel) {
       // Split-K parallel: CTAs in k-dimension write the partial results in a temporary workspace.
       // The user needs to call a reduction operator to optain the final output tensor
-      workspace_bytes = 
-        sizeof(ElementAccumulator) *
-        size_t(cutlass::conv::implicit_gemm_tensor_c_size(kConvolutionalOperator, args.problem_size)) *
-        size_t(grid_tiled_shape.k());
+      workspace_bytes = sizeof(ElementAccumulator) *
+                        size_t(cutlass::conv::implicit_gemm_tensor_c_size(kConvolutionalOperator,
+                                                                          args.problem_size)) *
+                        size_t(grid_tiled_shape.k());
     }
 
-    else if(args.split_k_mode == SplitKMode::kSerial && args.problem_size.split_k_slices > 1) {
-
-      // Split-K serial: The user workspace is used to store semaphore and serialize writing the 
+    else if (args.split_k_mode == SplitKMode::kSerial && args.problem_size.split_k_slices > 1) {
+      // Split-K serial: The user workspace is used to store semaphore and serialize writing the
       // final reduced output to user's output tensor
       workspace_bytes = sizeof(int) * size_t(grid_tiled_shape.m()) * size_t(grid_tiled_shape.n());
     }
@@ -230,63 +211,48 @@ public:
   }
 
   /// Initializes GEMM state from arguments.
-  Status initialize(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-   
+  Status initialize(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     if (args.problem_size.split_k_slices > 1) {
-
-      if (!workspace) {
-        return Status::kErrorWorkspaceNull;
-      }
+      if (!workspace) { return Status::kErrorWorkspaceNull; }
 
       hipError_t status = hipMemsetAsync(workspace, 0, get_workspace_size(args), stream);
 
-      if (status != hipSuccess) {
-        return Status::kErrorInternal;
-      }
+      if (status != hipSuccess) { return Status::kErrorInternal; }
     }
 
     // initialize the params structure from the arguments
-    params_ = typename ImplicitGemmKernel::Params(
-    	args,
-    	static_cast<int *>(workspace)
-    );
-    
+    params_ = typename ImplicitGemmKernel::Params(args, static_cast<int*>(workspace));
+
     int smem_size = int(sizeof(typename ImplicitGemmKernel::SharedStorage));
 
     if (smem_size >= (48 << 10)) {
-      hipError_t result = hipFuncSetAttribute(cutlass::Kernel<ImplicitGemmKernel>,
-                                    hipFuncAttributeMaxDynamicSharedMemorySize,
-                                    smem_size);
+      hipError_t result = hipFuncSetAttribute(
+        cutlass::Kernel<ImplicitGemmKernel>, hipFuncAttributeMaxDynamicSharedMemorySize, smem_size);
 
-      if (result != hipSuccess) {
-        return Status::kErrorInternal;
-      }
+      if (result != hipSuccess) { return Status::kErrorInternal; }
     }
-    
+
     return Status::kSuccess;
   }
 
   /// Initializes GEMM state from arguments.
-  Status update(Arguments const &args, void *workspace = nullptr) {
-
+  Status update(Arguments const& args, void* workspace = nullptr)
+  {
     // update the params structure from the arguments
-    params_.ptr_A = args.ref_A.data();
-    params_.ptr_B = args.ref_B.data();
-    params_.ptr_C = args.ref_C.data();
-    params_.ptr_D = args.ref_D.data();
+    params_.ptr_A     = args.ref_A.data();
+    params_.ptr_B     = args.ref_B.data();
+    params_.ptr_C     = args.ref_C.data();
+    params_.ptr_D     = args.ref_D.data();
     params_.output_op = args.output_op;
-    params_.semaphore = static_cast<int *>(workspace);
+    params_.semaphore = static_cast<int*>(workspace);
 
     return Status::kSuccess;
   }
 
   /// Runs the kernel using initialized state.
-  Status run(hipStream_t stream = nullptr) {
-
-
+  Status run(hipStream_t stream = nullptr)
+  {
     ThreadblockSwizzle threadblock_swizzle;
 
     dim3 grid = threadblock_swizzle.get_grid_shape(params_.grid_tiled_shape);
@@ -302,21 +268,14 @@ public:
   }
 
   /// Runs the kernel using initialized state.
-  Status operator()(hipStream_t stream = nullptr) {
-    return run(stream);
-  }
+  Status operator()(hipStream_t stream = nullptr) { return run(stream); }
 
   /// Runs the kernel using initialized state.
-  Status operator()(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-    
+  Status operator()(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     Status status = initialize(args, workspace, stream);
-    
-    if (status == Status::kSuccess) {
-      status = run(stream);
-    }
+
+    if (status == Status::kSuccess) { status = run(stream); }
 
     return status;
   }
@@ -324,8 +283,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-}
-}
-}
+}  // namespace device
+}  // namespace conv
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

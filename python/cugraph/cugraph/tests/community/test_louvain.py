@@ -13,15 +13,14 @@
 
 import gc
 
-import pytest
+import cudf
+import cupyx
 import networkx as nx
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS, utils
 
 import cugraph
-import cupyx
-import cudf
-from cugraph.testing import utils, UNDIRECTED_DATASETS
 from cugraph.datasets import karate_asymmetric
-
 
 try:
     import community

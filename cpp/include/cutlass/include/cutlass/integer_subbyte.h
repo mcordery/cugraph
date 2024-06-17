@@ -50,7 +50,6 @@ namespace cutlass {
 /// 4-bit signed integer type
 template <int Bits, bool Signed = true>
 struct integer_subbyte {
-
   /// Number of bits
   static int const kBits = Bits;
 
@@ -78,84 +77,71 @@ struct integer_subbyte {
 
   /// No operation
   CUTLASS_HOST_DEVICE
-  integer_subbyte() { }
+  integer_subbyte() {}
 
   /// Conversion from integer type
   CUTLASS_HOST_DEVICE
-  integer_subbyte(int value)
-      : storage(reinterpret_cast<Storage const &>(value) & kMask) {}
+  integer_subbyte(int value) : storage(reinterpret_cast<Storage const&>(value) & kMask) {}
 
   CUTLASS_HOST_DEVICE
-  integer_subbyte(unsigned value)
-      : storage(reinterpret_cast<Storage const &>(value) & kMask) {}
+  integer_subbyte(unsigned value) : storage(reinterpret_cast<Storage const&>(value) & kMask) {}
 
   CUTLASS_HOST_DEVICE
-  integer_subbyte(double value) {
-    T tmp = static_cast<T>(value);
-    storage = Storage(reinterpret_cast<unsigned const &>(tmp) & kMask);
+  integer_subbyte(double value)
+  {
+    T tmp   = static_cast<T>(value);
+    storage = Storage(reinterpret_cast<unsigned const&>(tmp) & kMask);
   }
 
   ///
   CUTLASS_HOST_DEVICE
-  operator T() const {
+  operator T() const
+  {
     if (kSigned) {
       // Sign extend
-      if (storage & Storage(1 << (kBits - 1))) {
-        return T(storage) | ~T(kMask);
-      }
+      if (storage & Storage(1 << (kBits - 1))) { return T(storage) | ~T(kMask); }
     }
     return T(storage);
   }
 
   /// Equality
   CUTLASS_HOST_DEVICE
-  bool operator==(integer_subbyte const &rhs) const {
-    return storage == rhs.storage;
-  }
+  bool operator==(integer_subbyte const& rhs) const { return storage == rhs.storage; }
 
   /// Inequality
   CUTLASS_HOST_DEVICE
-  bool operator!=(integer_subbyte const &rhs) const {
-    return storage != rhs.storage;
-  }
+  bool operator!=(integer_subbyte const& rhs) const { return storage != rhs.storage; }
 
   /// Less than or equal
   CUTLASS_HOST_DEVICE
-  bool operator<=(integer_subbyte const &rhs) const {
+  bool operator<=(integer_subbyte const& rhs) const
+  {
     if (kSigned) {
-      if (storage & (1 << (kBits - 1))) {
-        return !(rhs.storage < storage);
-      }
+      if (storage & (1 << (kBits - 1))) { return !(rhs.storage < storage); }
     }
     return storage < rhs.storage;
   }
 
   /// Less than
   CUTLASS_HOST_DEVICE
-  bool operator<(integer_subbyte const &rhs) const {
+  bool operator<(integer_subbyte const& rhs) const
+  {
     if (kSigned) {
-      if (storage & (1 << (kBits - 1))) {
-        return !(rhs.storage <= storage);
-      }
+      if (storage & (1 << (kBits - 1))) { return !(rhs.storage <= storage); }
     }
     return storage < rhs.storage;
   }
 
   /// Greater than or equal
   CUTLASS_HOST_DEVICE
-  bool operator>=(integer_subbyte const &rhs) const {
-    return !(*this < rhs);
-  }
+  bool operator>=(integer_subbyte const& rhs) const { return !(*this < rhs); }
 
   /// Greater than
   CUTLASS_HOST_DEVICE
-  bool operator>(integer_subbyte const &rhs) const {
-    return !(*this <= rhs);
-  }
+  bool operator>(integer_subbyte const& rhs) const { return !(*this <= rhs); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 /// 1-bit Unsigned integer type
 using uint1b_t = integer_subbyte<1, false>;
@@ -211,31 +197,31 @@ namespace platform {
 template <>
 struct numeric_limits<cutlass::int4b_t> {
   CUTLASS_HOST_DEVICE
-  static cutlass::int4b_t const lowest() noexcept { return -8;}
+  static cutlass::int4b_t const lowest() noexcept { return -8; }
   CUTLASS_HOST_DEVICE
-  static cutlass::int4b_t const max() noexcept { return 7;}
+  static cutlass::int4b_t const max() noexcept { return 7; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<cutlass::uint4b_t> {
   CUTLASS_HOST_DEVICE
-  static cutlass::uint4b_t const lowest() noexcept { return 0;}
+  static cutlass::uint4b_t const lowest() noexcept { return 0; }
   CUTLASS_HOST_DEVICE
-  static cutlass::uint4b_t const max() noexcept { return 15;}
+  static cutlass::uint4b_t const max() noexcept { return 15; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<cutlass::uint1b_t> {
   CUTLASS_HOST_DEVICE
-  static cutlass::uint1b_t const lowest() noexcept { return 0;}
+  static cutlass::uint1b_t const lowest() noexcept { return 0; }
   CUTLASS_HOST_DEVICE
-  static cutlass::uint1b_t const max() noexcept { return 1;}
+  static cutlass::uint1b_t const max() noexcept { return 1; }
   static constexpr bool is_integer = true;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace platform
-} // namespace cutlass
+}  // namespace platform
+}  // namespace cutlass

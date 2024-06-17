@@ -12,19 +12,13 @@
 # limitations under the License.
 
 
-import pytest
-
 import dask_cudf
-import cugraph
+import pytest
+from cugraph.dask.common.mg_utils import is_single_gpu
 from cugraph.generators import rmat
-from cugraph.testing.mg_utils import (
-    start_dask_client,
-    stop_dask_client,
-)
-from cugraph.dask.common.mg_utils import (
-    is_single_gpu,
-)
+from cugraph.testing.mg_utils import start_dask_client, stop_dask_client
 
+import cugraph
 
 ##############################################################################
 _cluster = None

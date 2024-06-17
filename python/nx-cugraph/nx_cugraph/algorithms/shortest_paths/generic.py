@@ -12,7 +12,6 @@
 # limitations under the License.
 import networkx as nx
 import numpy as np
-
 import nx_cugraph as nxcg
 from nx_cugraph.convert import _to_graph
 from nx_cugraph.utils import _dtype_param, _get_float_dtype, networkx_algorithm

@@ -26,8 +26,8 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-**************************************************************************************************/
+ *
+ **************************************************************************************************/
 /*! \file
 \brief Defies functors for mapping blockIdx to partitions of the batched reduction computation.
 */
@@ -43,25 +43,24 @@ struct DefaultBlockSwizzle {
   /// Swizzle the block index.
   CUTLASS_DEVICE dim3 swizzle() { return blockIdx; }
 
-  /// 
-  CUTLASS_HOST_DEVICE dim3 get_grid_layout(Coord<3> const &problem_size,
-                                           Coord<3> const &OutputTile) {
+  ///
+  CUTLASS_HOST_DEVICE dim3 get_grid_layout(Coord<3> const& problem_size, Coord<3> const& OutputTile)
+  {
     assert(OutputTile[0] == 1 && OutputTile[1] == 1);
     assert((problem_size[0] * problem_size[1] * problem_size[2]) % OutputTile[2] == 0);
     dim3 grid;
-    grid.x = problem_size[0] * problem_size[1] * problem_size[2]
-      / OutputTile[2] ;
+    grid.x = problem_size[0] * problem_size[1] * problem_size[2] / OutputTile[2];
     return grid;
   }
 
   ///
-  CUTLASS_DEVICE Coord<3> get_threadblock_offset(Coord<3> const &SubTile) {
+  CUTLASS_DEVICE Coord<3> get_threadblock_offset(Coord<3> const& SubTile)
+  {
     assert(SubTile[0] == 1 && SubTile[1] == 1);
-    dim3 block = swizzle();
-    Coord<3> threadblock_offset =
-      make_Coord(0, 0, block.x * SubTile[2]);
+    dim3 block                  = swizzle();
+    Coord<3> threadblock_offset = make_Coord(0, 0, block.x * SubTile[2]);
     return threadblock_offset;
   }
 };
-} // namespace reduction
-} // namespace cutlass
+}  // namespace reduction
+}  // namespace cutlass

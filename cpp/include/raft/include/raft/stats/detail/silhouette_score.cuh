@@ -31,7 +31,6 @@
 #include <rmm/device_scalar.hpp>
 
 #include <hipcub/hipcub.hpp>
-
 #include <math.h>
 
 #include <algorithm>
@@ -123,26 +122,26 @@ void countLabels(const LabelT* labels,
   rmm::device_uvector<int> countArray(nUniqueLabels, stream);
 
   RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(nullptr,
-                                                    temp_storage_bytes,
-                                                    labels,
-                                                    binCountArray,
-                                                    num_levels,
-                                                    lower_level,
-                                                    upper_level,
-                                                    nRows,
-                                                    stream));
+                                                       temp_storage_bytes,
+                                                       labels,
+                                                       binCountArray,
+                                                       num_levels,
+                                                       lower_level,
+                                                       upper_level,
+                                                       nRows,
+                                                       stream));
 
   workspace.resize(temp_storage_bytes, stream);
 
   RAFT_CUDA_TRY(hipcub::DeviceHistogram::HistogramEven(workspace.data(),
-                                                    temp_storage_bytes,
-                                                    labels,
-                                                    binCountArray,
-                                                    num_levels,
-                                                    lower_level,
-                                                    upper_level,
-                                                    nRows,
-                                                    stream));
+                                                       temp_storage_bytes,
+                                                       labels,
+                                                       binCountArray,
+                                                       num_levels,
+                                                       lower_level,
+                                                       upper_level,
+                                                       nRows,
+                                                       stream));
 }
 
 /**

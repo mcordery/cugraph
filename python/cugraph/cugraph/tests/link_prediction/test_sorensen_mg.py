@@ -12,17 +12,16 @@
 # limitations under the License.
 
 import gc
-
 import random
-import pytest
 
-import cugraph
-import dask_cudf
 import cugraph.dask as dcg
-from cugraph.testing import utils
+import dask_cudf
+import pytest
 from cugraph.dask.common.mg_utils import is_single_gpu
+from cugraph.testing import utils
 from pylibcugraph.testing import gen_fixture_params_product
 
+import cugraph
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

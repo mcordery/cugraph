@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import pytest
-
 from cugraph_pyg.nn import GATv2Conv as CuGraphGATv2Conv
 
 ATOL = 1e-6

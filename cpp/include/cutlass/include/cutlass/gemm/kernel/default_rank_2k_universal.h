@@ -30,26 +30,24 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
       Default kernel-level Rank 2k  definitions combine threadblock-scoped matrix multiply-add with
       the appropriate threadblock-scoped epilogue.
-  
+
       Note, CUTLASS epilogues universally target row-major outputs. Column-major outputs are
       accommodated by exchanging A and B operands and assuming transposed layouts.
 
-  
+
 */
 
 #pragma once
 
 #include "cutlass/blas3.h"
-
 #include "cutlass/complex.h"
-#include "cutlass/layout/matrix.h"
-
-#include "cutlass/gemm/kernel/rank_2k_universal.h"
 #include "cutlass/gemm/kernel/default_rank_2k.h"
 #include "cutlass/gemm/kernel/default_rank_2k_complex.h"
+#include "cutlass/gemm/kernel/rank_2k_universal.h"
+#include "cutlass/layout/matrix.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,56 +58,55 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA_,
-    /// Layout type for A matrix operand
-    typename LayoutA_,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB_,
-    /// Layout type for B matrix operand
-    typename LayoutB_,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC_,
-    /// Layout type for C and D matrix operands
-    typename LayoutC_,
-    /// Fill Mode for C (kLower or kUpper)
-    FillMode FillModeC_,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by SYRK
-    typename Operator,
-    /// Blas3 computation mode (symmetric/hermitian)
-    BlasMode BlasMode_ = BlasMode::kSymmetric,
-    ///
-    typename Enable = void
-    >
+  /// Element type for A matrix operand
+  typename ElementA_,
+  /// Layout type for A matrix operand
+  typename LayoutA_,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB_,
+  /// Layout type for B matrix operand
+  typename LayoutB_,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC_,
+  /// Layout type for C and D matrix operands
+  typename LayoutC_,
+  /// Fill Mode for C (kLower or kUpper)
+  FillMode FillModeC_,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by SYRK
+  typename Operator,
+  /// Blas3 computation mode (symmetric/hermitian)
+  BlasMode BlasMode_ = BlasMode::kSymmetric,
+  ///
+  typename Enable = void>
 struct DefaultRank2KUniversal;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,55 +115,55 @@ struct DefaultRank2KUniversal;
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Fill Mode for C (kLower or kUpper)
-    FillMode FillModeC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by Rank2k
-    typename Operator>
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Fill Mode for C (kLower or kUpper)
+  FillMode FillModeC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by Rank2k
+  typename Operator>
 struct DefaultRank2KUniversal<
   ElementA,
   LayoutA,
-  ComplexTransform::kNone,   // transform A
+  ComplexTransform::kNone,  // transform A
   kAlignmentA,
   ElementB,
   LayoutB,
-  ComplexTransform::kNone,   // transform B
+  ComplexTransform::kNone,  // transform B
   kAlignmentB,
   ElementC,
   LayoutC,
@@ -183,42 +180,36 @@ struct DefaultRank2KUniversal<
   SplitKSerial,
   Operator,
   BlasMode::kSymmetric,
-  typename std::enable_if< ! cutlass::is_complex<ElementAccumulator>::value>::type
-> {
+  typename std::enable_if<!cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultRank2Kkernel = typename kernel::DefaultRank2K<ElementA,
+                                                             LayoutA,
+                                                             kAlignmentA,
+                                                             ElementB,
+                                                             LayoutB,
+                                                             kAlignmentB,
+                                                             ElementC,
+                                                             LayoutC,
+                                                             FillModeC,
+                                                             ElementAccumulator,
+                                                             OperatorClass,
+                                                             ArchTag,
+                                                             ThreadblockShape,
+                                                             WarpShape,
+                                                             InstructionShape,
+                                                             EpilogueOutputOp,
+                                                             ThreadblockSwizzle,
+                                                             Stages,
+                                                             SplitKSerial,
+                                                             Operator,
+                                                             BlasMode::kSymmetric>::Rank2Kkernel;
 
-  using DefaultRank2Kkernel = typename kernel::DefaultRank2K<
-    ElementA,
-    LayoutA,
-    kAlignmentA,
-    ElementB,
-    LayoutB,
-    kAlignmentB,
-    ElementC,
-    LayoutC,
-    FillModeC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    SplitKSerial,
-    Operator,
-    BlasMode::kSymmetric
-  >::Rank2Kkernel;
-
-    /// Define the kernel in terms of the default kernel
-  using Rank2Kkernel = kernel::Rank2KUniversal<
-    typename DefaultRank2Kkernel::Mma1,
-    typename DefaultRank2Kkernel::Mma2,
-    typename DefaultRank2Kkernel::Epilogue, 
-    ThreadblockSwizzle,
-    FillModeC,
-    BlasMode::kSymmetric
-  >;
+  /// Define the kernel in terms of the default kernel
+  using Rank2Kkernel = kernel::Rank2KUniversal<typename DefaultRank2Kkernel::Mma1,
+                                               typename DefaultRank2Kkernel::Mma2,
+                                               typename DefaultRank2Kkernel::Epilogue,
+                                               ThreadblockSwizzle,
+                                               FillModeC,
+                                               BlasMode::kSymmetric>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,63 +219,62 @@ struct DefaultRank2KUniversal<
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Fill Mode for C (kLower or kUpper)
-    FillMode FillModeC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// If true, kernel is configured to support serial reduction in the
-    /// epilogue
-    bool SplitKSerial,
-    /// Operation performed by SYRK
-    typename Operator,
-    // BlasMode
-    BlasMode kBlasMode
-  >
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Fill Mode for C (kLower or kUpper)
+  FillMode FillModeC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// If true, kernel is configured to support serial reduction in the
+  /// epilogue
+  bool SplitKSerial,
+  /// Operation performed by SYRK
+  typename Operator,
+  // BlasMode
+  BlasMode kBlasMode>
 
 struct DefaultRank2KUniversal<
   ElementA,
   LayoutA,
-  TransformA,   
+  TransformA,
   kAlignmentA,
   ElementB,
   LayoutB,
-  TransformB,  
+  TransformB,
   kAlignmentB,
   ElementC,
   LayoutC,
@@ -301,42 +291,36 @@ struct DefaultRank2KUniversal<
   SplitKSerial,
   Operator,
   kBlasMode,
-  typename std::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type
-> {
+  typename std::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultRank2Kkernel = typename kernel::DefaultRank2KComplex<ElementA,
+                                                                    LayoutA,
+                                                                    ElementB,
+                                                                    LayoutB,
+                                                                    ElementC,
+                                                                    LayoutC,
+                                                                    FillModeC,
+                                                                    ElementAccumulator,
+                                                                    OperatorClass,
+                                                                    ArchTag,
+                                                                    ThreadblockShape,
+                                                                    WarpShape,
+                                                                    InstructionShape,
+                                                                    EpilogueOutputOp,
+                                                                    ThreadblockSwizzle,
+                                                                    Stages,
+                                                                    TransformA,
+                                                                    TransformB,
+                                                                    Operator,
+                                                                    SplitKSerial,
+                                                                    kBlasMode>::Rank2Kkernel;
 
-  using DefaultRank2Kkernel = typename kernel::DefaultRank2KComplex<
-    ElementA,
-    LayoutA,
-    ElementB,
-    LayoutB,
-    ElementC,
-    LayoutC,
-    FillModeC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    TransformA,
-    TransformB,
-    Operator,
-    SplitKSerial,
-    kBlasMode
-  >::Rank2Kkernel;
-
-    /// Define the kernel in terms of the default kernel
-  using Rank2Kkernel = kernel::Rank2KUniversal<
-    typename DefaultRank2Kkernel::Mma1,
-    typename DefaultRank2Kkernel::Mma2,
-    typename DefaultRank2Kkernel::Epilogue, 
-    ThreadblockSwizzle,
-    FillModeC,
-    kBlasMode
-  >;
+  /// Define the kernel in terms of the default kernel
+  using Rank2Kkernel = kernel::Rank2KUniversal<typename DefaultRank2Kkernel::Mma1,
+                                               typename DefaultRank2Kkernel::Mma2,
+                                               typename DefaultRank2Kkernel::Epilogue,
+                                               ThreadblockSwizzle,
+                                               FillModeC,
+                                               kBlasMode>;
 };
 
 }  // namespace kernel

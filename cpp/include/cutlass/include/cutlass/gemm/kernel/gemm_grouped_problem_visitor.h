@@ -37,8 +37,8 @@
 
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
-#include "cutlass/matrix_coord.h"
 #include "cutlass/gemm/kernel/grouped_problem_visitor.h"
+#include "cutlass/matrix_coord.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,26 +49,22 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace detail {
-// Helper for correctly representing problem sizes in grouped kernels 
+// Helper for correctly representing problem sizes in grouped kernels
 template <bool Transposed>
 struct GemmGroupedProblemSizeHelper {
-
   static bool const kTransposed = Transposed;
 
   CUTLASS_HOST_DEVICE
-  static void possibly_transpose_problem(cutlass::gemm::GemmCoord& problem) {
-    if (kTransposed) {
-      swap(problem.m(), problem.n());
-    }
+  static void possibly_transpose_problem(cutlass::gemm::GemmCoord& problem)
+  {
+    if (kTransposed) { swap(problem.m(), problem.n()); }
   }
 
   CUTLASS_HOST_DEVICE
-  static int32_t tile_count(const cutlass::gemm::GemmCoord& grid) {
-    return grid.m() * grid.n();
-  }
+  static int32_t tile_count(const cutlass::gemm::GemmCoord& grid) { return grid.m() * grid.n(); }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /// Visitor class to abstract away the algorithm for iterating over tiles
 template <typename ThreadblockShape,
@@ -76,36 +72,39 @@ template <typename ThreadblockShape,
           int PrefetchTileCount,
           int ThreadCount,
           bool Transposed = false>
-struct GemmGroupedProblemVisitor : public GroupedProblemVisitor<
-                                            detail::GemmGroupedProblemSizeHelper<Transposed>,
-                                            ThreadblockShape,
-                                            GroupScheduleMode_,
-                                            PrefetchTileCount,
-                                            ThreadCount> {
-
+struct GemmGroupedProblemVisitor
+  : public GroupedProblemVisitor<detail::GemmGroupedProblemSizeHelper<Transposed>,
+                                 ThreadblockShape,
+                                 GroupScheduleMode_,
+                                 PrefetchTileCount,
+                                 ThreadCount> {
   static bool const kTransposed = Transposed;
 
   using ProblemSizeHelper = detail::GemmGroupedProblemSizeHelper<Transposed>;
-  using Base = GroupedProblemVisitor<ProblemSizeHelper, ThreadblockShape, GroupScheduleMode_, PrefetchTileCount, ThreadCount>;
-  using Params = typename Base::Params;
-  using SharedStorage = typename Base::SharedStorage;
+  using Base              = GroupedProblemVisitor<ProblemSizeHelper,
+                                                  ThreadblockShape,
+                                                  GroupScheduleMode_,
+                                                  PrefetchTileCount,
+                                                  ThreadCount>;
+  using Params            = typename Base::Params;
+  using SharedStorage     = typename Base::SharedStorage;
 
   //
   // Methods
   //
   CUTLASS_DEVICE
-  GemmGroupedProblemVisitor(
-    Params const &params_,
-    SharedStorage &shared_storage_, 
-    int32_t block_idx
-  ): Base (params_, shared_storage_, block_idx)
-  {}
+  GemmGroupedProblemVisitor(Params const& params_,
+                            SharedStorage& shared_storage_,
+                            int32_t block_idx)
+    : Base(params_, shared_storage_, block_idx)
+  {
+  }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -47,16 +47,16 @@ namespace thread {
 /// Specifies internal data type for computation
 struct ScaleType {
   enum Kind {
-    Default,           // alpha x C + beta x D
-    NoBetaScaling,     // alpha x C + D
-    OnlyAlphaScaling,  // alpha x C
-    OnlyAlphaPerChannelScaling, // alpha_vec x C
-    Nothing           // C
+    Default,                     // alpha x C + beta x D
+    NoBetaScaling,               // alpha x C + D
+    OnlyAlphaScaling,            // alpha x C
+    OnlyAlphaPerChannelScaling,  // alpha_vec x C
+    Nothing                      // C
   };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass

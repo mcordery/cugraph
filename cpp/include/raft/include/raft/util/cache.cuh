@@ -291,26 +291,26 @@ class Cache {
 
     // Group cache indices as [already cached, non_cached]
     hipcub::DevicePartition::Flagged(d_temp_storage.data(),
-                                  d_temp_storage_size,
-                                  ws_tmp.data(),
-                                  is_cached.data(),
-                                  cache_idx,
-                                  d_num_selected_out.data(),
-                                  n,
-                                  stream);
+                                     d_temp_storage_size,
+                                     ws_tmp.data(),
+                                     is_cached.data(),
+                                     cache_idx,
+                                     d_num_selected_out.data(),
+                                     n,
+                                     stream);
 
     raft::update_host(n_cached, d_num_selected_out.data(), 1, stream);
 
     // Similarly re-group the input indices
     raft::copy(ws_tmp.data(), keys, n, stream);
     hipcub::DevicePartition::Flagged(d_temp_storage.data(),
-                                  d_temp_storage_size,
-                                  ws_tmp.data(),
-                                  is_cached.data(),
-                                  keys,
-                                  d_num_selected_out.data(),
-                                  n,
-                                  stream);
+                                     d_temp_storage_size,
+                                     ws_tmp.data(),
+                                     is_cached.data(),
+                                     keys,
+                                     d_num_selected_out.data(),
+                                     n,
+                                     stream);
 
     raft::interruptible::synchronize(stream);
   }
@@ -331,15 +331,15 @@ class Cache {
   {
     if (n <= 0) return;
     hipcub::DeviceRadixSort::SortPairs(d_temp_storage.data(),
-                                    d_temp_storage_size,
-                                    cidx,
-                                    ws_tmp.data(),
-                                    keys,
-                                    idx_tmp.data(),
-                                    n,
-                                    0,
-                                    sizeof(int) * 8,
-                                    stream);
+                                       d_temp_storage_size,
+                                       cidx,
+                                       ws_tmp.data(),
+                                       keys,
+                                       idx_tmp.data(),
+                                       n,
+                                       0,
+                                       sizeof(int) * 8,
+                                       stream);
 
     raft::copy(keys, idx_tmp.data(), n, stream);
 
@@ -393,13 +393,13 @@ class Cache {
       is_cached.resize(n, stream);
       idx_tmp.resize(n, stream);
       hipcub::DevicePartition::Flagged(NULL,
-                                    d_temp_storage_size,
-                                    cached_keys.data(),
-                                    is_cached.data(),
-                                    cached_keys.data(),
-                                    d_num_selected_out.data(),
-                                    n,
-                                    stream);
+                                       d_temp_storage_size,
+                                       cached_keys.data(),
+                                       is_cached.data(),
+                                       cached_keys.data(),
+                                       d_num_selected_out.data(),
+                                       n,
+                                       stream);
       d_temp_storage.resize(d_temp_storage_size, stream);
     }
   }

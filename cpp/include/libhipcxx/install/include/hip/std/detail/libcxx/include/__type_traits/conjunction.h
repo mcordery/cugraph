@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/conditional.h"
 #include "../__type_traits/enable_if.h"
@@ -50,13 +50,14 @@ template <class _Arg>
 struct conjunction<_Arg> : _Arg {};
 
 template <class _Arg, class... _Args>
-struct conjunction<_Arg, _Args...> : conditional_t<!bool(_Arg::value), _Arg, conjunction<_Args...>> {};
+struct conjunction<_Arg, _Args...>
+  : conditional_t<!bool(_Arg::value), _Arg, conjunction<_Args...>> {};
 
 template <class... _Args>
 _LIBCUDACXX_INLINE_VAR constexpr bool conjunction_v = conjunction<_Args...>::value;
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_CONJUNCTION_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_CONJUNCTION_H

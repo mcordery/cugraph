@@ -15,29 +15,22 @@
 from __future__ import annotations
 
 import warnings
+from typing import TYPE_CHECKING, List, Sequence, Tuple, Union
 
-import numpy
-from dask import delayed
-from dask.distributed import Lock, get_client, wait
-
-import dask_cudf
 import cudf
 import cupy as cp
-
-from pylibcugraph import ResourceHandle
-
-from pylibcugraph import uniform_neighbor_sample as pylibcugraph_uniform_neighbor_sample
-
-from cugraph.dask.comms import comms as Comms
+import dask_cudf
+import numpy
 from cugraph.dask import get_n_workers
-
-from typing import Sequence, List, Union, Tuple
-from typing import TYPE_CHECKING
-
 from cugraph.dask.common.part_utils import (
     get_persisted_df_worker_map,
     persist_dask_df_equal_parts_per_worker,
 )
+from cugraph.dask.comms import comms as Comms
+from dask import delayed
+from dask.distributed import Lock, get_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import uniform_neighbor_sample as pylibcugraph_uniform_neighbor_sample
 
 if TYPE_CHECKING:
     from cugraph import Graph

@@ -20,18 +20,11 @@ import os
 import re
 import tempfile
 
-import numpy as np
-
 import cudf
-
-from cugraph.gnn import (
-    DistSampleWriter,
-    UniformNeighborSampler,
-)
-
-from pylibcugraph import SGGraph, ResourceHandle, GraphProperties
-
+import numpy as np
+from cugraph.gnn import DistSampleWriter, UniformNeighborSampler
 from ogb.nodeproppred import NodePropPredDataset
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 
 
 def sample(edgelist, directory):

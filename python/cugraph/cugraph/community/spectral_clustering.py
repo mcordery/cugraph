@@ -11,20 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
-from pylibcugraph import (
-    balanced_cut_clustering as pylibcugraph_balanced_cut_clustering,
-    spectral_modularity_maximization as pylibcugraph_spectral_modularity_maximization,
-    analyze_clustering_modularity as pylibcugraph_analyze_clustering_modularity,
-    analyze_clustering_edge_cut as pylibcugraph_analyze_clustering_edge_cut,
-    analyze_clustering_ratio_cut as pylibcugraph_analyze_clustering_ratio_cut,
-)
-from pylibcugraph import ResourceHandle
 import cudf
 import numpy as np
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import (
+    analyze_clustering_edge_cut as pylibcugraph_analyze_clustering_edge_cut,
+)
+from pylibcugraph import (
+    analyze_clustering_modularity as pylibcugraph_analyze_clustering_modularity,
+)
+from pylibcugraph import (
+    analyze_clustering_ratio_cut as pylibcugraph_analyze_clustering_ratio_cut,
+)
+from pylibcugraph import balanced_cut_clustering as pylibcugraph_balanced_cut_clustering
+from pylibcugraph import (
+    spectral_modularity_maximization as pylibcugraph_spectral_modularity_maximization,
+)
 
 
 def spectralBalancedCutClustering(

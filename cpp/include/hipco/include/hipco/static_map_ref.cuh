@@ -66,7 +66,8 @@ namespace experimental {
  * @throw If the probing scheme type is not inherited from `hipco::detail::probing_scheme_base`
  *
  * @tparam Key Type used for keys. Requires `hipco::is_bitwise_comparable_v<Key>` returning true
- * @tparam T Type used for mapped values. Requires `hipco::is_bitwise_comparable_v<T>` returning true
+ * @tparam T Type used for mapped values. Requires `hipco::is_bitwise_comparable_v<T>` returning
+ * true
  * @tparam Scope The scope in which operations will be performed by individual threads.
  * @tparam KeyEqual Binary callable type used to compare two keys for equality
  * @tparam ProbingScheme Probing scheme (see `include/hipco/probing_scheme.cuh` for options)

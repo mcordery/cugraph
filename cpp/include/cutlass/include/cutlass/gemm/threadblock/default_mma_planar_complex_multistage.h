@@ -37,10 +37,9 @@
 
 #include "cutlass/arch/arch.h"
 #include "cutlass/cutlass.h"
-#include "cutlass/gemm/threadblock/default_mma_core_sm80.h"
 #include "cutlass/gemm/threadblock/default_mma.h"
+#include "cutlass/gemm/threadblock/default_mma_core_sm80.h"
 #include "cutlass/gemm/threadblock/mma_planar_complex_multistage.h"
-
 #include "cutlass/numeric_types.h"
 #include "cutlass/transform/threadblock/predicated_tile_iterator.h"
 
@@ -53,84 +52,77 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA_,
-    /// Layout type for A matrix operand
-    typename LayoutA_,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB_,
-    /// Layout type for B matrix operand
-    typename LayoutB_,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for internal accumulation
-    typename ElementAccumulator_,
-    /// Layout type for C and D matrix operands
-    typename LayoutC_,
-    /// Operator class tag
-    typename OperatorClass_,
-    /// Tag indicating architecture to tune for
-    typename ArchTag_,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape_,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape_,
-    /// Instruction-level tile size (concept: GemmShape)
-    typename InstructionShape_,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Complex transformation on operand A
-    ComplexTransform TransformA = ComplexTransform::kNone,
-    /// Complex transformation on operand B
-    ComplexTransform TransformB = ComplexTransform::kNone,
-    /// Math operator tag (e.g. arch::OpMultiplyAdd)
-    typename Operator = arch::OpMultiplyAdd
->
+  /// Element type for A matrix operand
+  typename ElementA_,
+  /// Layout type for A matrix operand
+  typename LayoutA_,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB_,
+  /// Layout type for B matrix operand
+  typename LayoutB_,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for internal accumulation
+  typename ElementAccumulator_,
+  /// Layout type for C and D matrix operands
+  typename LayoutC_,
+  /// Operator class tag
+  typename OperatorClass_,
+  /// Tag indicating architecture to tune for
+  typename ArchTag_,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape_,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape_,
+  /// Instruction-level tile size (concept: GemmShape)
+  typename InstructionShape_,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Complex transformation on operand A
+  ComplexTransform TransformA = ComplexTransform::kNone,
+  /// Complex transformation on operand B
+  ComplexTransform TransformB = ComplexTransform::kNone,
+  /// Math operator tag (e.g. arch::OpMultiplyAdd)
+  typename Operator = arch::OpMultiplyAdd>
 struct DefaultMmaPlanarComplexMultistage {
+  // Construct a planar complex variant from the real-valued variant
+  using RealMmaMultistage = typename DefaultMma<ElementA_,
+                                                LayoutA_,
+                                                kAlignmentA,
+                                                ElementB_,
+                                                LayoutB_,
+                                                kAlignmentB,
+                                                ElementAccumulator_,
+                                                LayoutC_,
+                                                OperatorClass_,
+                                                ArchTag_,
+                                                ThreadblockShape_,
+                                                WarpShape_,
+                                                InstructionShape_,
+                                                Stages,
+                                                Operator>::ThreadblockMma;
 
-    // Construct a planar complex variant from the real-valued variant
-    using RealMmaMultistage = typename DefaultMma<
-        ElementA_,
-        LayoutA_,
-        kAlignmentA,
-        ElementB_,
-        LayoutB_,
-        kAlignmentB,
-        ElementAccumulator_,
-        LayoutC_,
-        OperatorClass_,
-        ArchTag_,
-        ThreadblockShape_,
-        WarpShape_,
-        InstructionShape_,
-        Stages,
-        Operator
-    >::ThreadblockMma;
-
-    using ThreadblockMma = MmaPlanarComplexMultistage<
-      ThreadblockShape_,
-      typename RealMmaMultistage::IteratorA,
-      typename RealMmaMultistage::SmemIteratorA,
-      cutlass::arch::CacheOperation::Global,
-      typename RealMmaMultistage::IteratorB,
-      typename RealMmaMultistage::SmemIteratorB,
-      cutlass::arch::CacheOperation::Global,
-      ElementAccumulator_,
-      LayoutC_,
-      typename RealMmaMultistage::Policy,
-      Stages,
-      TransformA,
-      TransformB
-    >;
+  using ThreadblockMma = MmaPlanarComplexMultistage<ThreadblockShape_,
+                                                    typename RealMmaMultistage::IteratorA,
+                                                    typename RealMmaMultistage::SmemIteratorA,
+                                                    cutlass::arch::CacheOperation::Global,
+                                                    typename RealMmaMultistage::IteratorB,
+                                                    typename RealMmaMultistage::SmemIteratorB,
+                                                    cutlass::arch::CacheOperation::Global,
+                                                    ElementAccumulator_,
+                                                    LayoutC_,
+                                                    typename RealMmaMultistage::Policy,
+                                                    Stages,
+                                                    TransformA,
+                                                    TransformB>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-}   // namespace threadblock
-}   // namespace gemm
-}   // namespace cutlass
-
+}  // namespace threadblock
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

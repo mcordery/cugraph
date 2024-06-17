@@ -13,18 +13,18 @@
 
 import os
 import tempfile
-from pprint import pformat
 import time
-from dask.distributed import wait, default_client
+from pprint import pformat
+
+import numpy as np
+from cugraph.dask.common.mg_utils import get_visible_devices
+from cugraph.dask.comms import comms as Comms
+from cugraph.generators import rmat
 from dask import persist
-from dask.distributed import Client
 from dask.base import is_dask_collection
+from dask.distributed import Client, default_client, wait
 from dask_cuda import LocalCUDACluster
 from dask_cuda.initialize import initialize
-from cugraph.dask.comms import comms as Comms
-from cugraph.dask.common.mg_utils import get_visible_devices
-from cugraph.generators import rmat
-import numpy as np
 
 
 def start_dask_client(

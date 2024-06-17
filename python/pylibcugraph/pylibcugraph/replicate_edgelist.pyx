@@ -15,36 +15,29 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_device_array_view_free,
+    cugraph_type_erased_device_array_view_t,
 )
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
 from pylibcugraph._cugraph_c.graph_functions cimport (
     cugraph_allgather,
-    cugraph_induced_subgraph_result_t,
-    cugraph_induced_subgraph_get_sources,
     cugraph_induced_subgraph_get_destinations,
-    cugraph_induced_subgraph_get_edge_weights,
     cugraph_induced_subgraph_get_edge_ids,
     cugraph_induced_subgraph_get_edge_type_ids,
+    cugraph_induced_subgraph_get_edge_weights,
+    cugraph_induced_subgraph_get_sources,
     cugraph_induced_subgraph_get_subgraph_offsets,
     cugraph_induced_subgraph_result_free,
+    cugraph_induced_subgraph_result_t,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
+from pylibcugraph._cugraph_c.resource_handle cimport cugraph_resource_handle_t
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
-    assert_success,
     assert_CAI_type,
+    assert_success,
     copy_to_cupy_array,
-    create_cugraph_type_erased_device_array_view_from_py_obj
+    create_cugraph_type_erased_device_array_view_from_py_obj,
 )
 
 

@@ -44,29 +44,26 @@ namespace device {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ReductionKernel_
->
+template <typename ReductionKernel_>
 class ReduceSplitK {
-public:
+ public:
   using ReductionKernel = ReductionKernel_;
 
-  using Shape = typename ReductionKernel::Shape;
+  using Shape       = typename ReductionKernel::Shape;
   using ReductionOp = typename ReductionKernel::ReductionOp;
-  using OutputOp = typename ReductionKernel::OutputOp;
+  using OutputOp    = typename ReductionKernel::OutputOp;
 
-  using ElementWorkspace = typename ReductionKernel::ElementWorkspace;
+  using ElementWorkspace   = typename ReductionKernel::ElementWorkspace;
   using ElementAccumulator = typename ReductionKernel::ElementAccumulator;
-  using ElementOutput = typename ReductionKernel::ElementOutput;
+  using ElementOutput      = typename ReductionKernel::ElementOutput;
 
   using WorkspaceTensorRef = typename ReductionKernel::WorkspaceTensorRef;
-  using OutputTensorRef = typename ReductionKernel::OutputTensorRef;
+  using OutputTensorRef    = typename ReductionKernel::OutputTensorRef;
 
   using StrideIndex = typename ReductionKernel::StrideIndex;
 
   /// Argument structure
   struct Arguments {
-
     //
     // Data members
     //
@@ -86,138 +83,111 @@ public:
 
     /// Default ctor
     CUTLASS_HOST_DEVICE
-    Arguments() : 
-      problem_size(0, 0), 
-      partitions(1), 
-      partition_stride(0) { }
-   
-    CUTLASS_HOST_DEVICE 
-    Arguments(
-      MatrixCoord const & problem_size
-    ):
-      problem_size(problem_size) { }
+    Arguments() : problem_size(0, 0), partitions(1), partition_stride(0) {}
 
     CUTLASS_HOST_DEVICE
-    Arguments(
-      MatrixCoord problem_size_,
-      int partitions_,
-      size_t partition_stride_,
-      WorkspaceTensorRef workspace_,
-      OutputTensorRef destination_,
-      OutputTensorRef source_,
-      typename OutputOp::Params output_ = typename OutputOp::Params(),
-      typename ReductionOp::Params reduction_ = typename ReductionOp::Params()
-    ):
-      problem_size(problem_size_),
-      partitions(partitions_),
-      partition_stride(partition_stride_),
-      workspace(workspace_),
-      destination(destination_),
-      source(source_),
-      output(output_),
-      reduction(reduction_)
+    Arguments(MatrixCoord const& problem_size) : problem_size(problem_size) {}
+
+    CUTLASS_HOST_DEVICE
+    Arguments(MatrixCoord problem_size_,
+              int partitions_,
+              size_t partition_stride_,
+              WorkspaceTensorRef workspace_,
+              OutputTensorRef destination_,
+              OutputTensorRef source_,
+              typename OutputOp::Params output_       = typename OutputOp::Params(),
+              typename ReductionOp::Params reduction_ = typename ReductionOp::Params())
+      : problem_size(problem_size_),
+        partitions(partitions_),
+        partition_stride(partition_stride_),
+        workspace(workspace_),
+        destination(destination_),
+        source(source_),
+        output(output_),
+        reduction(reduction_)
     {
-
     }
-
   };
 
-private:
+ private:
   /// Kernel parameters object
   typename ReductionKernel::Params params_;
 
-public:
+ public:
   /// Constructs Reduction SplitK
-  ReduceSplitK() { }
+  ReduceSplitK() {}
 
   /// Determines whether the ReduceSplitK can execute the given problem.
-  static Status can_implement(Arguments const &args) {
-
-    return Status::kSuccess;
-  }
+  static Status can_implement(Arguments const& args) { return Status::kSuccess; }
 
   /// Gets the workspace size
-  static size_t get_workspace_size(Arguments const &args) {
+  static size_t get_workspace_size(Arguments const& args)
+  {
     // needs no additional workspace
     return 0;
   }
 
   /// Initializes Reduction state from arguments.
-  Status initialize(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-    
+  Status initialize(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     // initialize the params structure from the arguments
-    params_ = typename ReductionKernel::Params(
-      args.problem_size,
-      args.partitions,
-      args.partition_stride,
-      args.workspace,
-      args.destination,
-      args.source,
-      args.output,
-      args.reduction
-    );
+    params_ = typename ReductionKernel::Params(args.problem_size,
+                                               args.partitions,
+                                               args.partition_stride,
+                                               args.workspace,
+                                               args.destination,
+                                               args.source,
+                                               args.output,
+                                               args.reduction);
 
     return Status::kSuccess;
-
-   }
+  }
 
   /// Initializes Reduction kernel state from arguments.
-  Status update(Arguments const &args, void *workspace = nullptr) {
-
+  Status update(Arguments const& args, void* workspace = nullptr)
+  {
     // update the params structure from the arguments
     params_.workspace.reset(args.workspace.non_const_ref().data());
     params_.destination.reset(args.destination.non_const_ref().data());
     params_.source.reset(args.source.non_const_ref().data());
-    params_.output = args.output;
+    params_.output    = args.output;
     params_.reduction = args.reduction;
 
     return Status::kSuccess;
   }
 
   /// Runs the kernel using initialized state.
-  Status run(hipStream_t stream = nullptr) {
-
+  Status run(hipStream_t stream = nullptr)
+  {
     //
     // Launch reduction kernel
     //
     dim3 block = ReductionKernel::block_shape();
-    dim3 grid = ReductionKernel::grid_shape(params_.problem_size);
+    dim3 grid  = ReductionKernel::grid_shape(params_.problem_size);
 
-    Kernel<ReductionKernel><<< grid, block, 0, stream >>>(params_);
+    Kernel<ReductionKernel><<<grid, block, 0, stream>>>(params_);
 
     hipError_t result = hipGetLastError();
 
     return result == hipSuccess ? Status::kSuccess : Status::kErrorInternal;
   }
 
+  /// Runs the kernel using initialized state.
+  Status operator()(hipStream_t stream = nullptr) { return run(stream); }
 
   /// Runs the kernel using initialized state.
-  Status operator()(hipStream_t stream = nullptr) {
-    return run(stream);
-  }
-
-  /// Runs the kernel using initialized state.
-  Status operator()(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-    
+  Status operator()(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     Status status = initialize(args, workspace, stream);
-    
-    if (status == Status::kSuccess) {
-      status = run(stream);
-    }
+
+    if (status == Status::kSuccess) { status = run(stream); }
 
     return status;
   }
-  
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace reduction
-} // namespace cutlass
+}  // namespace device
+}  // namespace reduction
+}  // namespace cutlass

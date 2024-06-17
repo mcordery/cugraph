@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/conjunction.h"
 #include "../__type_traits/is_standard_layout.h"
@@ -25,8 +25,8 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _CharT>
-using _IsCharLikeType = _And<is_standard_layout<_CharT>, is_trivial<_CharT> >;
+using _IsCharLikeType = _And<is_standard_layout<_CharT>, is_trivial<_CharT>>;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_CHAR_LIKE_TYPE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_CHAR_LIKE_TYPE_H

@@ -12,18 +12,18 @@
 # limitations under the License.
 
 import os
-import shutil
 import re
-
-import pytest
+import shutil
 
 import cudf
 import cupy
-import cugraph
 import dask_cudf
-from cugraph.datasets import karate, email_Eu_core
+import pytest
 from cugraph.gnn import BulkSampler
 from cugraph.utilities.utils import create_directory_with_overwrite
+
+import cugraph
+from cugraph.datasets import email_Eu_core, karate
 
 
 @pytest.mark.mg

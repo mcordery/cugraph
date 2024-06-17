@@ -35,25 +35,20 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/array.h"
-#include "cutlass/platform/platform.h"
-
-#include "cutlass/numeric_conversion.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
 #include "cutlass/arch/memory_sm75.h"
 #include "cutlass/arch/mma_sm75.h"
 #include "cutlass/arch/mma_sm80.h"
-
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_policy.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/platform/platform.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,53 +60,49 @@ namespace warp {
 
 template <typename FragmentActivations, typename FragmentNormSum>
 struct SoftmaxScaleBiasTransform {
-
   using T = typename FragmentActivations::Element;
 
   static int const NumActivations = FragmentActivations::kElements;
-  static int const NumNormSum = FragmentNormSum::kElements;
-  static int const MmaElements = 2;
+  static int const NumNormSum     = FragmentNormSum::kElements;
+  static int const MmaElements    = 2;
   // One element has one scale and one bias
   static int const MmaScaleBiasPair = 2;
   // 16816 has 2 columns and 2 rows
   static int const MmaCols = 2;
   static int const MmaRows = 2;
 
-  using MmaOperand = Array<T, MmaElements>;
+  using MmaOperand     = Array<T, MmaElements>;
   using NormSumOperand = Array<__half2, MmaScaleBiasPair>;
 
   CUTLASS_DEVICE
-  void transform(MmaOperand &activations,
-                 NormSumOperand const &norm_sum) {
-
+  void transform(MmaOperand& activations, NormSumOperand const& norm_sum)
+  {
     __half2* packed_activations = reinterpret_cast<__half2*>(&activations);
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < MmaElements / 2; ++i) {
-      __half2 out = ::h2exp(__hsub2(packed_activations[i], norm_sum[2*i]));
-      packed_activations[i] = __hmul2(out, norm_sum[2*i + 1]);
+      __half2 out           = ::h2exp(__hsub2(packed_activations[i], norm_sum[2 * i]));
+      packed_activations[i] = __hmul2(out, norm_sum[2 * i + 1]);
     }
   }
 
   CUTLASS_DEVICE
-  void operator()(FragmentActivations &activations,
-                  FragmentNormSum const &norm_sum) {
-    MmaOperand *ptr_activations = reinterpret_cast<MmaOperand *>(&activations);
-    NormSumOperand const *ptr_norm_sum =
-        reinterpret_cast<NormSumOperand const *>(&norm_sum);
+  void operator()(FragmentActivations& activations, FragmentNormSum const& norm_sum)
+  {
+    MmaOperand* ptr_activations        = reinterpret_cast<MmaOperand*>(&activations);
+    NormSumOperand const* ptr_norm_sum = reinterpret_cast<NormSumOperand const*>(&norm_sum);
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < (NumActivations / MmaElements); ++i) {
-      transform(ptr_activations[i],
-                ptr_norm_sum[i / (MmaCols * MmaRows) * MmaRows + i % MmaRows]);
+      transform(ptr_activations[i], ptr_norm_sum[i / (MmaCols * MmaRows) * MmaRows + i % MmaRows]);
     }
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

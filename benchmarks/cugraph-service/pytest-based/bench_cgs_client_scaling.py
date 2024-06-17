@@ -15,16 +15,10 @@
 from threading import Thread
 
 import pytest
-
-from cugraph_service_client import (
-    CugraphServiceClient,
-    defaults,
-)
-from cugraph_service_server.testing import utils
-
 from cugraph_benchmarking import params
 from cugraph_benchmarking.timer import TimerContext
-
+from cugraph_service_client import CugraphServiceClient, defaults
+from cugraph_service_server.testing import utils
 
 _host = defaults.host
 _port = defaults.port

@@ -11,12 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import tempfile
+import time
+
 import dgl
 import torch
-import time
-from distributed import Client, Event as Dask_Event
-import tempfile
 from cugraph.dask.comms import comms as Comms
+from distributed import Client
+from distributed import Event as Dask_Event
 
 
 def enable_spilling():
@@ -54,8 +56,8 @@ def create_dask_client(scheduler_address):
 def initalize_pytorch_worker(dev_id):
     import cupy as cp
     import rmm
-    from rmm.allocators.torch import rmm_torch_allocator
     from rmm.allocators.cupy import rmm_cupy_allocator
+    from rmm.allocators.torch import rmm_torch_allocator
 
     dev = cp.cuda.Device(
         dev_id

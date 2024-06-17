@@ -15,12 +15,11 @@ import argparse
 import sys
 from collections import OrderedDict
 
+import cudf
+from benchmark import Benchmark
 from scipy.io import mmread
 
 import cugraph
-import cudf
-
-from benchmark import Benchmark
 
 
 ###############################################################################

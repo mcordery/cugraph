@@ -11,16 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pylibcugraph import leiden as pylibcugraph_leiden
-from pylibcugraph import ResourceHandle
-from cugraph.structure import Graph
+from typing import Tuple, Union
+
 import cudf
-from typing import Union, Tuple
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
+from cugraph.structure import Graph
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
 from cugraph.utilities.utils import import_optional
+from pylibcugraph import ResourceHandle
+from pylibcugraph import leiden as pylibcugraph_leiden
 
 # FIXME: the networkx.Graph type used in the type annotation for
 # leiden() is specified using a string literal to avoid depending on

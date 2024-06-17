@@ -12,13 +12,9 @@
 # limitations under the License.
 
 
-import pytest
 import cupy as cp
-
-from pylibcugraph import (
-    ResourceHandle,
-)
-from pylibcugraph import generate_rmat_edgelist
+import pytest
+from pylibcugraph import ResourceHandle, generate_rmat_edgelist
 
 # =============================================================================
 # Pytest fixtures

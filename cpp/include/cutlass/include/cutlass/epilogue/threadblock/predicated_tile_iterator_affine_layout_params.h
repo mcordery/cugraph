@@ -29,14 +29,14 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 */
 
 #pragma once
 
 #include "cutlass/cutlass.h"
-#include "cutlass/layout/matrix.h"
 #include "cutlass/fast_math.h"
+#include "cutlass/layout/matrix.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,15 +46,13 @@ namespace threadblock {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  int Rank
->
+template <int Rank>
 struct PredicatedTileIteratorAffineLayoutRankNParams {
-  using Layout = layout::AffineRankN<Rank>;
+  using Layout      = layout::AffineRankN<Rank>;
   using TensorCoord = typename Layout::TensorCoord;
 
   static bool const kBigEndian = false;
-  
+
   //
   // Data members
   //
@@ -62,16 +60,16 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
   Layout layout;
 
   /// Stride in units of bytes along M modes
-  Coord<Layout::kRank/2, typename Layout::LongIndex> stride_m;
+  Coord<Layout::kRank / 2, typename Layout::LongIndex> stride_m;
 
   /// Stride in units of bytes along N modes
-  Coord<Layout::kRank/2, typename Layout::LongIndex> stride_n;
+  Coord<Layout::kRank / 2, typename Layout::LongIndex> stride_n;
 
   /// Fast divmod objects divided by tensor extents
-  FastDivmod divmod_m[(Layout::kRank == 2) ? 1 : (Layout::kRank/2 - 1)];
+  FastDivmod divmod_m[(Layout::kRank == 2) ? 1 : (Layout::kRank / 2 - 1)];
 
   /// Fast divmod objects divided by tensor extents
-  FastDivmod divmod_n[(Layout::kRank == 2) ? 1 : (Layout::kRank/2 - 1)];
+  FastDivmod divmod_n[(Layout::kRank == 2) ? 1 : (Layout::kRank / 2 - 1)];
 
   int64_t rank2_inc_col;
   int64_t rank2_inc_row;
@@ -80,15 +78,14 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
   // Methods
   //
   CUTLASS_HOST_DEVICE
-  PredicatedTileIteratorAffineLayoutRankNParams() { }
+  PredicatedTileIteratorAffineLayoutRankNParams() {}
 
   CUTLASS_HOST_DEVICE
-  PredicatedTileIteratorAffineLayoutRankNParams(TensorCoord const &extent, 
-                                                Layout const &layout_,
+  PredicatedTileIteratorAffineLayoutRankNParams(TensorCoord const& extent,
+                                                Layout const& layout_,
                                                 int64_t element_sizeof_bits)
-  : layout(layout_) 
+    : layout(layout_)
   {
-
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < Layout::kRank / 2; ++i) {
       stride_m[i] = OffsetBytes(layout_.stride()[i], element_sizeof_bits);
@@ -102,8 +99,7 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
         divmod_m[i] = FastDivmod(extent[i + 1]);
         divmod_n[i] = FastDivmod(extent[i + Layout::kRank / 2 + 1]);
       }
-    }
-    else {
+    } else {
       // "Little Endian" scheme
       CUTLASS_PRAGMA_UNROLL
       for (int i = 0; i < Layout::kRank / 2 - 1; ++i) {
@@ -112,7 +108,7 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
       }
     }
 
-    #if 0
+#if 0
     //
     // Debug print statements to verify extents and strides are passed correctly.
     //
@@ -126,17 +122,16 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
       printf("  stride[%d]: %ld\n", i, layout_.stride()[i]);
     }
     printf("PredicatedTileIteratorAffine::Params() returning\n");
-    #endif
+#endif
   }
 
   CUTLASS_HOST_DEVICE
-  PredicatedTileIteratorAffineLayoutRankNParams(Layout const &layout_,
+  PredicatedTileIteratorAffineLayoutRankNParams(Layout const& layout_,
                                                 int32_t threadmap_delta_kColumn,
                                                 int32_t threadmap_delta_kRow,
                                                 int64_t element_sizeof_bits)
-  : layout(layout_) 
+    : layout(layout_)
   {
-
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < Layout::kRank / 2; ++i) {
       stride_m[i] = OffsetBytes(layout_.stride()[i], element_sizeof_bits);
@@ -149,8 +144,8 @@ struct PredicatedTileIteratorAffineLayoutRankNParams {
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

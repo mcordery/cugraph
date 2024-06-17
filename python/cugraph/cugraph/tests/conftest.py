@@ -11,14 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-from cugraph.testing.mg_utils import (
-    start_dask_client,
-    stop_dask_client,
-)
-
 import os
 import tempfile
+
+import pytest
+from cugraph.testing.mg_utils import start_dask_client, stop_dask_client
 
 # Avoid timeout during shutdown
 from dask_cuda.utils_test import IncreasedCloseTimeoutNanny

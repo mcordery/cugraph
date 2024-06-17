@@ -11,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cugraph_dgl.dataloading.dataloader import DataLoader
 from cugraph_dgl.dataloading.dataset import (
-    HomogenousBulkSamplerDataset,
     HeterogenousBulkSamplerDataset,
+    HomogenousBulkSamplerDataset,
 )
 from cugraph_dgl.dataloading.neighbor_sampler import NeighborSampler
-from cugraph_dgl.dataloading.dataloader import DataLoader

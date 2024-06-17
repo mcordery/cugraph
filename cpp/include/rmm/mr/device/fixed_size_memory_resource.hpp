@@ -24,9 +24,10 @@
 #include <rmm/mr/device/detail/stream_ordered_memory_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hip/hip_runtime_api.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
+
+#include <hip/hip_runtime_api.h>
 
 #include <algorithm>
 #include <cstddef>

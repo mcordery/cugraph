@@ -26,11 +26,11 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 #include <thrust/scan.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 
 #include <algorithm>

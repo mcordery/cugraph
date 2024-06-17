@@ -39,7 +39,6 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/mr/device/polymorphic_allocator.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/distance.h>
@@ -56,6 +55,8 @@
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <type_traits>
 
@@ -523,14 +524,14 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
             handle.get_stream());
         } else {
           hipcub::DeviceSegmentedSort::SortKeys(static_cast<void*>(nullptr),
-                                             tmp_storage_bytes,
-                                             tmp_minor_keys.begin() + h_edge_offsets[j],
-                                             unreduced_minor_keys.begin(),
-                                             h_edge_offsets[j + 1] - h_edge_offsets[j],
-                                             h_vertex_offsets[j + 1] - h_vertex_offsets[j],
-                                             offset_first,
-                                             offset_first + 1,
-                                             handle.get_stream());
+                                                tmp_storage_bytes,
+                                                tmp_minor_keys.begin() + h_edge_offsets[j],
+                                                unreduced_minor_keys.begin(),
+                                                h_edge_offsets[j + 1] - h_edge_offsets[j],
+                                                h_vertex_offsets[j + 1] - h_vertex_offsets[j],
+                                                offset_first,
+                                                offset_first + 1,
+                                                handle.get_stream());
         }
         if (tmp_storage_bytes > d_tmp_storage.size()) {
           d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
@@ -554,14 +555,14 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
             handle.get_stream());
         } else {
           hipcub::DeviceSegmentedSort::SortKeys(d_tmp_storage.data(),
-                                             tmp_storage_bytes,
-                                             tmp_minor_keys.begin() + h_edge_offsets[j],
-                                             unreduced_minor_keys.begin(),
-                                             h_edge_offsets[j + 1] - h_edge_offsets[j],
-                                             h_vertex_offsets[j + 1] - h_vertex_offsets[j],
-                                             offset_first,
-                                             offset_first + 1,
-                                             handle.get_stream());
+                                                tmp_storage_bytes,
+                                                tmp_minor_keys.begin() + h_edge_offsets[j],
+                                                unreduced_minor_keys.begin(),
+                                                h_edge_offsets[j + 1] - h_edge_offsets[j],
+                                                h_vertex_offsets[j + 1] - h_vertex_offsets[j],
+                                                offset_first,
+                                                offset_first + 1,
+                                                handle.get_stream());
         }
 
         thrust::copy(handle.get_thrust_policy(),

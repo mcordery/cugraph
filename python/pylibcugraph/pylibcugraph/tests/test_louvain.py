@@ -11,15 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cudf
 import cupy as cp
 import numpy as np
-import cudf
-from pylibcugraph import (
-    SGGraph,
-    ResourceHandle,
-    GraphProperties,
-)
-from pylibcugraph import louvain
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph, louvain
 
 
 def check_results(d_vertices, d_clusters, modularity):

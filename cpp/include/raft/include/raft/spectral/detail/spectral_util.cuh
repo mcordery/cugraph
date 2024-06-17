@@ -46,7 +46,7 @@ void transform_eigen_matrix(raft::resources const& handle,
                             weight_t* eigVecs)
 {
   auto stream             = resource::get_cuda_stream(handle);
-  auto hipblas.h           = resource::get_cublas_handle(handle);
+  auto hipblas.h          = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   const weight_t zero{0.0};
@@ -145,7 +145,7 @@ bool construct_indicator(raft::resources const& handle,
                          raft::spectral::matrix::laplacian_matrix_t<vertex_t, weight_t> const& B)
 {
   auto stream             = resource::get_cuda_stream(handle);
-  auto hipblas.h           = resource::get_cublas_handle(handle);
+  auto hipblas.h          = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   thrust::for_each(

@@ -11,17 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import cupy as cp
 import numpy as np
+import pytest
 from pylibcugraph import (
-    ResourceHandle,
     GraphProperties,
+    ResourceHandle,
     SGGraph,
     edge_betweenness_centrality,
 )
 from pylibcugraph.testing import utils
-
 
 TOY = utils.RAPIDS_DATASET_ROOT_DIR_PATH / "toy_graph.csv"
 

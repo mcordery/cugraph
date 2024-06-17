@@ -11,4 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .rmat import rmat, multi_rmat
+from .rmat import multi_rmat, rmat

@@ -42,48 +42,39 @@ namespace cutlass {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Statically sized array for any data type
-template <
-  typename T,
-  int N,
-  bool RegisterSized = sizeof_bits<T>::value >= 32
->
+template <typename T, int N, bool RegisterSized = sizeof_bits<T>::value >= 32>
 class Array;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the size of an Array<> in bits
 template <typename T, int N, bool RegisterSized>
-struct sizeof_bits<Array<T, N, RegisterSized> > {
-  static int const value =
-    int(sizeof(typename Array<T, N, RegisterSized>::Storage)) * 8 * int(Array<T, N, RegisterSized>::kStorageElements);
+struct sizeof_bits<Array<T, N, RegisterSized>> {
+  static int const value = int(sizeof(typename Array<T, N, RegisterSized>::Storage)) * 8 *
+                           int(Array<T, N, RegisterSized>::kStorageElements);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Returns true if the argument is a power of 2
 CUTLASS_HOST_DEVICE
-constexpr bool ispow2(unsigned x) {
-  return x && (!(x & (x - 1)));
-}
+constexpr bool ispow2(unsigned x) { return x && (!(x & (x - 1))); }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Returns the largest power of two not greater than the argument.
 CUTLASS_HOST_DEVICE
-constexpr unsigned floor_pow_2(unsigned x) {
+constexpr unsigned floor_pow_2(unsigned x)
+{
   return (x == 0 || ispow2(x)) ? x : ((floor_pow_2(x >> 1)) << 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Statically sized array for any data type
-template <
-  typename T,
-  int N
->
+template <typename T, int N>
 class Array<T, N, true> {
-public:
-
+ public:
   /// Storage type
   using Storage = T;
 
@@ -91,7 +82,7 @@ public:
   using Element = T;
 
   /// Number of storage elements
-  //static std::size_t const kStorageElements = N;
+  // static std::size_t const kStorageElements = N;
   static size_t const kStorageElements = N;
 
   /// Number of logical elements
@@ -104,10 +95,10 @@ public:
   typedef T value_type;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  typedef value_type &reference;
-  typedef value_type const & const_reference;
-  typedef value_type *pointer;
-  typedef value_type const * const_pointer;
+  typedef value_type& reference;
+  typedef value_type const& const_reference;
+  typedef value_type* pointer;
+  typedef value_type const* const_pointer;
 
   //
   // Iterators
@@ -115,236 +106,218 @@ public:
 
   /// Bidirectional iterator over elements
   class iterator {
-
     /// Pointer to object
-    T *ptr_;
+    T* ptr_;
 
-  public:
+   public:
+    CUTLASS_HOST_DEVICE
+    iterator() : ptr_(nullptr) {}
 
     CUTLASS_HOST_DEVICE
-    iterator(): ptr_(nullptr) { }
+    iterator(T* _ptr) : ptr_(_ptr) {}
 
     CUTLASS_HOST_DEVICE
-    iterator(T *_ptr): ptr_(_ptr) { }
-
-    CUTLASS_HOST_DEVICE
-    iterator &operator++() {
+    iterator& operator++()
+    {
       ++ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    iterator &operator--() {
+    iterator& operator--()
+    {
       --ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    iterator operator++(int) {
+    iterator operator++(int)
+    {
       iterator ret(*this);
       ++ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    iterator operator--(int) {
+    iterator operator--(int)
+    {
       iterator ret(*this);
       --ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    T &operator*() const {
-      return *ptr_;
-    }
+    T& operator*() const { return *ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator==(iterator const &other) const {
-      return ptr_ == other.ptr_;
-    }
+    bool operator==(iterator const& other) const { return ptr_ == other.ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator!=(iterator const &other) const {
-      return ptr_ != other.ptr_;
-    }
+    bool operator!=(iterator const& other) const { return ptr_ != other.ptr_; }
   };
 
   /// Bidirectional constant iterator over elements
   class const_iterator {
-
     /// Pointer to object
-    const T *ptr_;
+    const T* ptr_;
 
-  public:
+   public:
+    CUTLASS_HOST_DEVICE
+    const_iterator() : ptr_(nullptr) {}
 
     CUTLASS_HOST_DEVICE
-    const_iterator(): ptr_(nullptr) { }
+    const_iterator(T const* _ptr) : ptr_(_ptr) {}
 
     CUTLASS_HOST_DEVICE
-    const_iterator(T const *_ptr): ptr_(_ptr) { }
-
-    CUTLASS_HOST_DEVICE
-    const_iterator &operator++() {
+    const_iterator& operator++()
+    {
       ++ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    const_iterator &operator--() {
+    const_iterator& operator--()
+    {
       --ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    const_iterator operator++(int) {
+    const_iterator operator++(int)
+    {
       const_iterator ret(*this);
       ++ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    const_iterator operator--(int) {
+    const_iterator operator--(int)
+    {
       const_iterator ret(*this);
       --ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    T const &operator*() const {
-      return *ptr_;
-    }
+    T const& operator*() const { return *ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator==(const_iterator const &other) const {
-      return ptr_ == other.ptr_;
-    }
+    bool operator==(const_iterator const& other) const { return ptr_ == other.ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator!=(const_iterator const &other) const {
-      return ptr_ != other.ptr_;
-    }
+    bool operator!=(const_iterator const& other) const { return ptr_ != other.ptr_; }
   };
 
   /// Bidirectional iterator over elements
   class reverse_iterator {
-
     /// Pointer to object
-    T *ptr_;
+    T* ptr_;
 
-  public:
+   public:
+    CUTLASS_HOST_DEVICE
+    reverse_iterator() : ptr_(nullptr) {}
 
     CUTLASS_HOST_DEVICE
-    reverse_iterator(): ptr_(nullptr) { }
+    reverse_iterator(T* _ptr) : ptr_(_ptr) {}
 
     CUTLASS_HOST_DEVICE
-    reverse_iterator(T *_ptr): ptr_(_ptr) { }
-
-    CUTLASS_HOST_DEVICE
-    reverse_iterator &operator++() {
+    reverse_iterator& operator++()
+    {
       --ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    reverse_iterator &operator--() {
+    reverse_iterator& operator--()
+    {
       ++ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    reverse_iterator operator++(int) {
+    reverse_iterator operator++(int)
+    {
       iterator ret(*this);
       --ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    reverse_iterator operator--(int) {
+    reverse_iterator operator--(int)
+    {
       iterator ret(*this);
       ++ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    T &operator*() const {
-      return *(ptr_ - 1);
-    }
+    T& operator*() const { return *(ptr_ - 1); }
 
     CUTLASS_HOST_DEVICE
-    bool operator==(reverse_iterator const &other) const {
-      return ptr_ == other.ptr_;
-    }
+    bool operator==(reverse_iterator const& other) const { return ptr_ == other.ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator!=(reverse_iterator const &other) const {
-      return ptr_ != other.ptr_;
-    }
+    bool operator!=(reverse_iterator const& other) const { return ptr_ != other.ptr_; }
   };
 
   /// Bidirectional constant iterator over elements
   class const_reverse_iterator {
-
     /// Pointer to object
-    T const *ptr_;
+    T const* ptr_;
 
-  public:
+   public:
+    CUTLASS_HOST_DEVICE
+    const_reverse_iterator() : ptr_(nullptr) {}
 
     CUTLASS_HOST_DEVICE
-    const_reverse_iterator(): ptr_(nullptr) { }
+    const_reverse_iterator(T const* _ptr) : ptr_(_ptr) {}
 
     CUTLASS_HOST_DEVICE
-    const_reverse_iterator(T const *_ptr): ptr_(_ptr) { }
-
-    CUTLASS_HOST_DEVICE
-    const_reverse_iterator &operator++() {
+    const_reverse_iterator& operator++()
+    {
       --ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    const_reverse_iterator &operator--() {
+    const_reverse_iterator& operator--()
+    {
       ++ptr_;
       return *this;
     }
 
     CUTLASS_HOST_DEVICE
-    const_reverse_iterator operator++(int) {
+    const_reverse_iterator operator++(int)
+    {
       const_reverse_iterator ret(*this);
       --ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    const_reverse_iterator operator--(int) {
+    const_reverse_iterator operator--(int)
+    {
       const_reverse_iterator ret(*this);
       ++ptr_;
       return ret;
     }
 
     CUTLASS_HOST_DEVICE
-    T const &operator*() const {
-      return *(ptr_ - 1);
-    }
+    T const& operator*() const { return *(ptr_ - 1); }
 
     CUTLASS_HOST_DEVICE
-    bool operator==(const_iterator const &other) const {
-      return ptr_ == other.ptr_;
-    }
+    bool operator==(const_iterator const& other) const { return ptr_ == other.ptr_; }
 
     CUTLASS_HOST_DEVICE
-    bool operator!=(const_iterator const &other) const {
-      return ptr_ != other.ptr_;
-    }
+    bool operator!=(const_iterator const& other) const { return ptr_ != other.ptr_; }
   };
 
-private:
-
+ private:
   /// Internal storage
   Storage storage[kElements];
 
-public:
-
-  #if 0
+ public:
+#if 0
   CUTLASS_HOST_DEVICE
   Array() { }
 
@@ -355,92 +328,69 @@ public:
       storage[i] = x.storage[i];
     }
   }
-  #endif
+#endif
 
   /// Efficient clear method
   CUTLASS_HOST_DEVICE
-  void clear() {
-    fill(T(0));
-  }
+  void clear() { fill(T(0)); }
 
   CUTLASS_HOST_DEVICE
-  reference at(size_type pos) {
-    return reinterpret_cast<reference>(storage[pos]);
-  }
+  reference at(size_type pos) { return reinterpret_cast<reference>(storage[pos]); }
 
   CUTLASS_HOST_DEVICE
-  const_reference at(size_type pos) const {
+  const_reference at(size_type pos) const
+  {
     return reinterpret_cast<const_reference>(storage[pos]);
   }
 
   CUTLASS_HOST_DEVICE
-  reference operator[](size_type pos) {
-    return reinterpret_cast<reference>(storage[pos]);
-  }
+  reference operator[](size_type pos) { return reinterpret_cast<reference>(storage[pos]); }
 
   CUTLASS_HOST_DEVICE
-  const_reference operator[](size_type pos) const {
+  const_reference operator[](size_type pos) const
+  {
     return reinterpret_cast<const_reference>(storage[pos]);
   }
 
   CUTLASS_HOST_DEVICE
-  reference front() {
-    return reinterpret_cast<reference>(storage[0]);
-  }
+  reference front() { return reinterpret_cast<reference>(storage[0]); }
 
   CUTLASS_HOST_DEVICE
-  const_reference front() const {
-    return reinterpret_cast<const_reference>(storage[0]);
-  }
+  const_reference front() const { return reinterpret_cast<const_reference>(storage[0]); }
 
   CUTLASS_HOST_DEVICE
-  reference back() {
-    return reinterpret_cast<reference>(storage[kStorageElements - 1]);
-  }
+  reference back() { return reinterpret_cast<reference>(storage[kStorageElements - 1]); }
 
   CUTLASS_HOST_DEVICE
-  const_reference back() const {
+  const_reference back() const
+  {
     return reinterpret_cast<const_reference>(storage[kStorageElements - 1]);
   }
 
   CUTLASS_HOST_DEVICE
-  pointer data() {
-    return reinterpret_cast<pointer>(storage);
-  }
+  pointer data() { return reinterpret_cast<pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  const_pointer data() const {
-    return reinterpret_cast<const_pointer>(storage);
-  }
-  
-  CUTLASS_HOST_DEVICE
-  pointer raw_data() {
-    return reinterpret_cast<pointer>(storage);
-  }
+  const_pointer data() const { return reinterpret_cast<const_pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  const_pointer raw_data() const {
-    return reinterpret_cast<const_pointer>(storage);
-  }
-
+  pointer raw_data() { return reinterpret_cast<pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  constexpr bool empty() const {
-    return !kElements;
-  }
+  const_pointer raw_data() const { return reinterpret_cast<const_pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  constexpr size_type size() const {
-    return kElements;
-  }
+  constexpr bool empty() const { return !kElements; }
 
   CUTLASS_HOST_DEVICE
-  constexpr size_type max_size() const {
-    return kElements;
-  }
+  constexpr size_type size() const { return kElements; }
 
   CUTLASS_HOST_DEVICE
-  void fill(T const &value) {
+  constexpr size_type max_size() const { return kElements; }
+
+  CUTLASS_HOST_DEVICE
+  void fill(T const& value)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kElements; ++i) {
       storage[i] = static_cast<Storage>(value);
@@ -448,64 +398,59 @@ public:
   }
 
   CUTLASS_HOST_DEVICE
-  iterator begin() {
-    return iterator(storage);
-  }
+  iterator begin() { return iterator(storage); }
 
   CUTLASS_HOST_DEVICE
-  const_iterator cbegin() const {
-    return const_iterator(storage);
-  }
+  const_iterator cbegin() const { return const_iterator(storage); }
 
   CUTLASS_HOST_DEVICE
-  iterator end() {
-    return iterator(reinterpret_cast<pointer>(storage + kStorageElements));
-  }
+  iterator end() { return iterator(reinterpret_cast<pointer>(storage + kStorageElements)); }
 
   CUTLASS_HOST_DEVICE
-  const_iterator cend() const {
+  const_iterator cend() const
+  {
     return const_iterator(reinterpret_cast<const_pointer>(storage + kStorageElements));
   }
 
   CUTLASS_HOST_DEVICE
-  reverse_iterator rbegin() {
+  reverse_iterator rbegin()
+  {
     return reverse_iterator(reinterpret_cast<pointer>(storage + kStorageElements));
   }
 
   CUTLASS_HOST_DEVICE
-  const_reverse_iterator crbegin() const {
+  const_reverse_iterator crbegin() const
+  {
     return const_reverse_iterator(reinterpret_cast<const_pointer>(storage + kStorageElements));
   }
 
   CUTLASS_HOST_DEVICE
-  reverse_iterator rend() {
-    return reverse_iterator(reinterpret_cast<pointer>(storage));
-  }
+  reverse_iterator rend() { return reverse_iterator(reinterpret_cast<pointer>(storage)); }
 
   CUTLASS_HOST_DEVICE
-  const_reverse_iterator crend() const {
+  const_reverse_iterator crend() const
+  {
     return const_reverse_iterator(reinterpret_cast<const_pointer>(storage));
   }
 
   //
   // Comparison operators
   //
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename Element>
-CUTLASS_HOST_DEVICE
-Array<Element, 1> make_Array(Element x) {
+CUTLASS_HOST_DEVICE Array<Element, 1> make_Array(Element x)
+{
   Array<Element, 1> m;
   m[0] = x;
   return m;
 }
 
 template <typename Element>
-CUTLASS_HOST_DEVICE
-Array<Element, 2> make_Array(Element x, Element y) {
+CUTLASS_HOST_DEVICE Array<Element, 2> make_Array(Element x, Element y)
+{
   Array<Element, 2> m;
   m[0] = x;
   m[1] = y;
@@ -513,8 +458,8 @@ Array<Element, 2> make_Array(Element x, Element y) {
 }
 
 template <typename Element>
-CUTLASS_HOST_DEVICE
-Array<Element, 3> make_Array(Element x, Element y, Element z) {
+CUTLASS_HOST_DEVICE Array<Element, 3> make_Array(Element x, Element y, Element z)
+{
   Array<Element, 3> m;
   m[0] = x;
   m[1] = y;
@@ -523,8 +468,8 @@ Array<Element, 3> make_Array(Element x, Element y, Element z) {
 }
 
 template <typename Element>
-CUTLASS_HOST_DEVICE
-Array<Element, 4> make_Array(Element x, Element y, Element z, Element w) {
+CUTLASS_HOST_DEVICE Array<Element, 4> make_Array(Element x, Element y, Element z, Element w)
+{
   Array<Element, 4> m;
   m[0] = x;
   m[1] = y;
@@ -535,7 +480,7 @@ Array<Element, 4> make_Array(Element x, Element y, Element z, Element w) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -554,16 +499,13 @@ template <
   /// Number of elements in the array
   int N,
   /// Alignment requirement in bytes
-  int Alignment = sizeof_bits<T>::value * N / 8
->
-class alignas(Alignment) AlignedArray: public Array<T, N> {
-public:
-
+  int Alignment = sizeof_bits<T>::value * N / 8>
+class alignas(Alignment) AlignedArray : public Array<T, N> {
+ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-

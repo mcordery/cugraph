@@ -32,7 +32,6 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -47,6 +46,7 @@
 #include <thrust/scatter.h>
 
 #include <algorithm>
+#include <hip/functional>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -318,7 +318,7 @@ void update_edge_major_property(raft::handle_t const& handle,
           auto bool_first = thrust::make_transform_iterator(
             vertex_first,
             hip::proclaim_return_type<bool>([vertex_property_input_first,
-                                              vertex_partition] __device__(auto v) {
+                                             vertex_partition] __device__(auto v) {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
                 *(vertex_property_input_first + packed_bool_offset(v_offset)) &
@@ -731,7 +731,7 @@ void update_edge_minor_property(raft::handle_t const& handle,
           auto bool_first = thrust::make_transform_iterator(
             vertex_first,
             hip::proclaim_return_type<bool>([vertex_property_input_first,
-                                              vertex_partition] __device__(auto v) {
+                                             vertex_partition] __device__(auto v) {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
                 *(vertex_property_input_first + packed_bool_offset(v_offset)) &

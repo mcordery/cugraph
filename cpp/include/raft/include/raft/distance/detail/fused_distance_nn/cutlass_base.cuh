@@ -33,8 +33,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/semaphore>
-
 #include <cutlass/cutlass.h>
 #include <cutlass/gemm/device/gemm.h>
 #include <cutlass/gemm/device/gemm_grouped.h>
@@ -43,6 +41,8 @@
 #include <cutlass/layout/tensor.h>
 #include <cutlass/matrix_coord.h>
 #include <cutlass/tensor_view.h>
+
+#include <hip/semaphore>
 
 namespace raft {
 namespace distance {

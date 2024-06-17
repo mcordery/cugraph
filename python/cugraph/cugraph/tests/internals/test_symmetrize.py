@@ -13,12 +13,12 @@
 
 import gc
 
-import pytest
-import pandas as pd
-
 import cudf
-import cugraph
+import pandas as pd
+import pytest
 from cugraph.testing import DEFAULT_DATASETS
+
+import cugraph
 
 
 @pytest.mark.sg

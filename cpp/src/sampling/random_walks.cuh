@@ -30,7 +30,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -55,6 +54,7 @@
 
 #include <cassert>
 #include <cstdlib>  // FIXME: requirement for temporary std::getenv()
+#include <hip/functional>
 #include <limits>
 //
 #include "rw_traversals.hpp"
@@ -908,9 +908,9 @@ struct coo_convertor_t {
 
     index_t total_sz{0};
     RAFT_CUDA_TRY(hipMemcpy(&total_sz,
-                             original::raw_ptr(d_scan) + num_paths_ - 1,
-                             sizeof(index_t),
-                             hipMemcpyDeviceToHost));
+                            original::raw_ptr(d_scan) + num_paths_ - 1,
+                            sizeof(index_t),
+                            hipMemcpyDeviceToHost));
 
     original::device_vec_t<int> d_stencil(total_sz, handle_.get_stream());
 

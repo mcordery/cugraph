@@ -12,21 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dask.distributed import wait, default_client
-import dask_cudf
-import cudf
 import operator as op
-from cugraph.dask.common.part_utils import (
-    persist_dask_df_equal_parts_per_worker,
-)
 
-from pylibcugraph import ResourceHandle
-
-from pylibcugraph import (
-    uniform_random_walks as pylibcugraph_uniform_random_walks,
-)
-
+import cudf
+import dask_cudf
+from cugraph.dask.common.part_utils import persist_dask_df_equal_parts_per_worker
 from cugraph.dask.comms import comms as Comms
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import uniform_random_walks as pylibcugraph_uniform_random_walks
 
 
 def convert_to_cudf(cp_paths, number_map=None, is_vertex_paths=False):

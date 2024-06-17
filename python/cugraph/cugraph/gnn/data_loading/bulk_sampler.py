@@ -11,24 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
-
+import time
+import warnings
 from typing import Union
 
 import cudf
 import dask_cudf
-
-from dask.distributed import wait
-from dask.distributed import futures_of
+import pylibcugraph
+from cugraph.gnn.data_loading.bulk_sampler_io import write_samples
+from dask.distributed import futures_of, wait
 
 import cugraph
-import pylibcugraph
-
-from cugraph.gnn.data_loading.bulk_sampler_io import write_samples
-
-import warnings
-import logging
-import time
 
 
 class BulkSampler:

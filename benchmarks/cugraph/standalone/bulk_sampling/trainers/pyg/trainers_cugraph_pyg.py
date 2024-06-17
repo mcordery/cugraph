@@ -11,22 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .trainers_pyg import PyGTrainer
-from models.pyg import CuGraphSAGE
-from datasets import Dataset
+import os
+import re
 
-import torch
 import numpy as np
-
-from torch.nn.parallel import DistributedDataParallel as ddp
-from torch.distributed.optim import ZeroRedundancyOptimizer
-
+import torch
 from cugraph.gnn import FeatureStore
 from cugraph_pyg.data import CuGraphStore
 from cugraph_pyg.loader import BulkSampleLoader
+from models.pyg import CuGraphSAGE
+from torch.distributed.optim import ZeroRedundancyOptimizer
+from torch.nn.parallel import DistributedDataParallel as ddp
 
-import os
-import re
+from datasets import Dataset
+
+from .trainers_pyg import PyGTrainer
 
 
 class PyGCuGraphTrainer(PyGTrainer):

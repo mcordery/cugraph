@@ -11,34 +11,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.testing.utils import (
-    RAPIDS_DATASET_ROOT_DIR_PATH,
-    RAPIDS_DATASET_ROOT_DIR,
-)
 from cugraph.testing.resultset import (
     Resultset,
-    load_resultset,
-    get_resultset,
     default_resultset_download_dir,
+    get_resultset,
+    load_resultset,
 )
-from cugraph.datasets import (
+from cugraph.testing.utils import RAPIDS_DATASET_ROOT_DIR, RAPIDS_DATASET_ROOT_DIR_PATH
+
+from cugraph.datasets import (  # twitter,
+    cit_patents,
     cyber,
     dining_prefs,
     dolphins,
-    karate,
-    karate_disjoint,
-    polbooks,
-    netscience,
-    small_line,
-    small_tree,
     email_Eu_core,
-    toy_graph,
-    toy_graph_undirected,
-    soc_livejournal,
-    cit_patents,
     europe_osm,
     hollywood,
-    # twitter,
+    karate,
+    karate_disjoint,
+    netscience,
+    polbooks,
+    small_line,
+    small_tree,
+    soc_livejournal,
+    toy_graph,
+    toy_graph_undirected,
 )
 
 #

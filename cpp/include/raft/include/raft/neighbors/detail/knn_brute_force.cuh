@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/detail/distance_ops/l2_exp.cuh>

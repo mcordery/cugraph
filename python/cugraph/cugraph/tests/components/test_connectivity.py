@@ -12,27 +12,25 @@
 # limitations under the License.
 
 import gc
-
 import time
 from collections import defaultdict
 
-import pytest
-import cupy as cp
-import numpy as np
-import networkx as nx
-from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
-from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
-from scipy.sparse import coo_matrix as sp_coo_matrix
-from scipy.sparse import csr_matrix as sp_csr_matrix
-from scipy.sparse import csc_matrix as sp_csc_matrix
-from cugraph.utilities import is_nx_graph_type
-
 import cudf
-import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
-from cugraph.datasets import dolphins, netscience, email_Eu_core
+import cupy as cp
+import networkx as nx
+import numpy as np
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, utils
+from cugraph.utilities import is_nx_graph_type
+from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
+from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
+from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+from scipy.sparse import coo_matrix as sp_coo_matrix
+from scipy.sparse import csc_matrix as sp_csc_matrix
+from scipy.sparse import csr_matrix as sp_csr_matrix
 
+import cugraph
+from cugraph.datasets import dolphins, email_Eu_core, netscience
 
 DATASETS_BATCH = [dolphins, netscience, email_Eu_core]
 
@@ -134,7 +132,7 @@ def cugraph_call(
     # their labels.
     elif expected_return_type is dict:
         assert type(result) is dict
-        for (vert, label) in result.items():
+        for vert, label in result.items():
             label_vertex_dict[label].append(vert)
 
     # A CuPy/SciPy input means the return value will be a 2-tuple of:

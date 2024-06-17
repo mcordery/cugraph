@@ -33,21 +33,20 @@
 
 #pragma once
 
+#include <thrust/distance.h>
+#include <thrust/pair.h>
+#include <thrust/tuple.h>
+
 #include <hipco/detail/equal_wrapper.cuh>
 #include <hipco/detail/probing_scheme_base.cuh>
 #include <hipco/extent.cuh>
 #include <hipco/pair.cuh>
 #include <hipco/probing_scheme.cuh>
 
-#include <thrust/distance.h>
-#include <thrust/pair.h>
-#include <thrust/tuple.h>
-
-#include <hip/atomic>
-
 #include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 
 #include <cstdint>
+#include <hip/atomic>
 #include <type_traits>
 
 namespace hipco {
@@ -305,7 +304,7 @@ class open_addressing_ref_impl {
         if (eq_res == detail::equal_result::EQUAL) { return false; }
         if (eq_res == detail::equal_result::EMPTY or
             hipco::detail::bitwise_compare(this->extract_key(slot_content),
-                                          this->erased_key_sentinel())) {
+                                           this->erased_key_sentinel())) {
           auto const intra_window_index = thrust::distance(window_slots.begin(), &slot_content);
           switch (attempt_insert((storage_ref_.data() + *probing_iter)->data() + intra_window_index,
                                  slot_content,
@@ -321,7 +320,8 @@ class open_addressing_ref_impl {
   }
 
   template <typename T>
-  constexpr typename std::underlying_type<T>::type to_underlying_t(T t) noexcept {
+  constexpr typename std::underlying_type<T>::type to_underlying_t(T t) noexcept
+  {
     return static_cast<typename std::underlying_type<T>::type>(t);
   }
   /**
@@ -353,7 +353,7 @@ class open_addressing_ref_impl {
               return window_probing_results{detail::equal_result::EQUAL, i};
             default: {
               if (hipco::detail::bitwise_compare(this->extract_key(window_slots[i]),
-                                                this->erased_key_sentinel())) {
+                                                 this->erased_key_sentinel())) {
                 return window_probing_results{detail::equal_result::ERASED, i};
               } else {
                 continue;
@@ -378,7 +378,7 @@ class open_addressing_ref_impl {
                              window_slots[intra_window_index],
                              value)
             : insert_result::CONTINUE;
-        // Todo(HIP): 
+        // Todo(HIP):
         switch (static_cast<insert_result>(group.shfl(to_underlying_t(status), src_lane))) {
           case insert_result::SUCCESS: return true;
           case insert_result::DUPLICATE: return false;
@@ -423,7 +423,7 @@ class open_addressing_ref_impl {
         if (eq_res == detail::equal_result::EQUAL) { return {iterator{&window_ptr[i]}, false}; }
         if (eq_res == detail::equal_result::EMPTY or
             hipco::detail::bitwise_compare(this->extract_key(window_slots[i]),
-                                          this->erased_key_sentinel())) {
+                                           this->erased_key_sentinel())) {
           switch ([&]() {
             if constexpr (sizeof(value_type) <= 8) {
               return packed_cas(window_ptr + i, window_slots[i], value);
@@ -479,7 +479,7 @@ class open_addressing_ref_impl {
               return window_probing_results{detail::equal_result::EQUAL, i};
             default: {
               if (hipco::detail::bitwise_compare(this->extract_key(window_slots[i]),
-                                                this->erased_key_sentinel())) {
+                                                 this->erased_key_sentinel())) {
                 return window_probing_results{detail::equal_result::ERASED, i};
               } else {
                 continue;
@@ -777,8 +777,9 @@ class open_addressing_ref_impl {
       // Find a match for the probe key, thus return an iterator to the entry
       auto const group_finds_match = group.ballot(state == detail::equal_result::EQUAL);
       if (group_finds_match) {
-        auto const src_lane = __ffsll((unsigned long long)group_finds_match) - 1; //Todo(HIP): added (unsigned long long)
-        auto const res      = group.shfl(
+        auto const src_lane = __ffsll((unsigned long long)group_finds_match) -
+                              1;  // Todo(HIP): added (unsigned long long)
+        auto const res = group.shfl(
           reinterpret_cast<intptr_t>(&(*(storage_ref_.data() + *probing_iter))[intra_window_index]),
           src_lane);
         return const_iterator{reinterpret_cast<value_type*>(res)};
@@ -817,7 +818,8 @@ class open_addressing_ref_impl {
       } else if constexpr (Scope == hip::thread_scope_device) {
         return atomicCAS(slot_ptr, *expected_ptr, *desired_ptr);
       } else if constexpr (Scope == hip::thread_scope_block) {
-        return atomicCAS_system(slot_ptr, *expected_ptr, *desired_ptr); //TODO(HIP): atomicCAS_block is missing for hip
+        return atomicCAS_system(
+          slot_ptr, *expected_ptr, *desired_ptr);  // TODO(HIP): atomicCAS_block is missing for hip
       } else {
         static_assert(hipco::dependent_false<decltype(Scope)>, "Unsupported thread scope");
       }
@@ -830,7 +832,8 @@ class open_addressing_ref_impl {
       } else if constexpr (Scope == hip::thread_scope_device) {
         return atomicCAS(slot_ptr, *expected_ptr, *desired_ptr);
       } else if constexpr (Scope == hip::thread_scope_block) {
-        return atomicCAS_system(slot_ptr, *expected_ptr, *desired_ptr); //TODO(HIP): atomicCAS_block is missing for hip
+        return atomicCAS_system(
+          slot_ptr, *expected_ptr, *desired_ptr);  // TODO(HIP): atomicCAS_block is missing for hip
       } else {
         static_assert(hipco::dependent_false<decltype(Scope)>, "Unsupported thread scope");
       }
@@ -856,7 +859,7 @@ class open_addressing_ref_impl {
       } else if constexpr (Scope == hip::thread_scope_device) {
         atomicExch(slot_ptr, *value_ptr);
       } else if constexpr (Scope == hip::thread_scope_block) {
-        atomicExch_system(slot_ptr, *value_ptr); //TODO(HIP): atomicExch_block is missing for hip
+        atomicExch_system(slot_ptr, *value_ptr);  // TODO(HIP): atomicExch_block is missing for hip
       } else {
         static_assert(hipco::dependent_false<decltype(Scope)>, "Unsupported thread scope");
       }
@@ -868,14 +871,14 @@ class open_addressing_ref_impl {
       } else if constexpr (Scope == hip::thread_scope_device) {
         atomicExch(slot_ptr, *value_ptr);
       } else if constexpr (Scope == hip::thread_scope_block) {
-        atomicExch_system(slot_ptr, *value_ptr);//TODO(HIP): atomicExch_block is missing for hip
+        atomicExch_system(slot_ptr, *value_ptr);  // TODO(HIP): atomicExch_block is missing for hip
       } else {
         static_assert(hipco::dependent_false<decltype(Scope)>, "Unsupported thread scope");
       }
     }
   }
 
-//  private:
+  //  private:
   /**
    * @brief Extracts the key from a given value type.
    *
@@ -890,7 +893,6 @@ class open_addressing_ref_impl {
     Value const& value) const noexcept
   {
     if constexpr (has_payload) {
-
       return value.first;
     } else {
       return thrust::raw_reference_cast(value);
@@ -912,7 +914,7 @@ class open_addressing_ref_impl {
   [[nodiscard]] __host__ __device__ constexpr auto const& extract_payload(
     Value const& value) const noexcept
   {
-        return value.second;
+    return value.second;
   }
 
   /**

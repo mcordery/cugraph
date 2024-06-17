@@ -17,8 +17,8 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/eig.cuh>
 #include <raft/linalg/gemm.cuh>
 #include <raft/linalg/qr.cuh>
@@ -52,8 +52,8 @@ void randomized_svd(const raft::resources& handle,
                     bool gen_U,
                     bool gen_V)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "raft::linalg::randomized_svd(%d, %d, %d)", n_rows, n_cols, k);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "raft::linalg::randomized_svd(%d, %d, %d)", n_rows, n_cols, k);
 
   RAFT_EXPECTS(k < std::min(n_rows, n_cols), "k must be < min(n_rows, n_cols)");
   RAFT_EXPECTS((k + p) < std::min(n_rows, n_cols), "k + p must be < min(n_rows, n_cols)");
@@ -168,7 +168,7 @@ void rsvdFixedRank(raft::resources const& handle,
                    hipStream_t stream)
 {
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH     = resource::get_cublas_handle(handle);
 
   // All the notations are following Algorithm 4 & 5 in S. Voronin's paper:
   // https://arxiv.org/abs/1502.05366

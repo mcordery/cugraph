@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import pickle
+import sys
 from pathlib import Path
 
 import pytest
-
 
 # FIXME: Remove this once these pass in the CI environment.
 pytest.skip(
@@ -40,8 +39,8 @@ def test_load_and_call_graph_creation_extension(graph_creation_extension2):
     Ensures load_extensions reads the extensions and makes the new APIs they
     add available.
     """
-    from cugraph_service_server.cugraph_handler import CugraphHandler
     from cugraph_service_client.exceptions import CugraphServiceError
+    from cugraph_service_server.cugraph_handler import CugraphHandler
 
     handler = CugraphHandler()
 
@@ -93,8 +92,8 @@ def test_load_call_unload_extensions(graph_creation_extension2, extension1):
     """
     Ensure extensions can be loaded, run, and unloaded.
     """
-    from cugraph_service_server.cugraph_handler import CugraphHandler
     from cugraph_service_client.exceptions import CugraphServiceError
+    from cugraph_service_server.cugraph_handler import CugraphHandler
 
     handler = CugraphHandler()
 
@@ -299,7 +298,6 @@ def test_load_call_unload_extensions_python_module_path(extension1):
 
 
 def test_load_call_unload_graph_creation_extension_no_args(graph_creation_extension1):
-
     """
     Test graph_creation_extension1 which contains an extension with no args.
     """
@@ -343,8 +341,8 @@ def test_load_call_unload_graph_creation_extension_bad_arg_order(
     """
     Test an extension that has the facade arg in the wrong position.
     """
-    from cugraph_service_server.cugraph_handler import CugraphHandler
     from cugraph_service_client.exceptions import CugraphServiceError
+    from cugraph_service_server.cugraph_handler import CugraphHandler
 
     handler = CugraphHandler()
 

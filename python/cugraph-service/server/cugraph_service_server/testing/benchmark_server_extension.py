@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import dask_cudf
+import numpy as np
+from cugraph.experimental import MGPropertyGraph, PropertyGraph
+from cugraph.generators import rmat
 
 import cugraph
-from cugraph.experimental import PropertyGraph, MGPropertyGraph
 from cugraph import datasets
-from cugraph.generators import rmat
 
 
 # Graph creation extensions (these are assumed to return a Graph object)

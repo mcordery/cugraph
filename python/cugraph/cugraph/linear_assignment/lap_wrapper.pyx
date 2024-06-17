@@ -16,11 +16,14 @@
 # cython: embedsignature = True
 # cython: language_level = 3
 
-from cugraph.linear_assignment.lap cimport hungarian as c_hungarian
 from cugraph.linear_assignment.lap cimport dense_hungarian as c_dense_hungarian
+from cugraph.linear_assignment.lap cimport hungarian as c_hungarian
 from cugraph.structure.graph_primtypes cimport *
+
 from cugraph.structure import graph_primtypes_wrapper
+
 from libc.stdint cimport uintptr_t
+
 import cudf
 import numpy as np
 

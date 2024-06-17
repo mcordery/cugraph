@@ -13,16 +13,17 @@
 
 # Utils to convert b/w dgl heterograph to cugraph GraphStore
 from __future__ import annotations
+
 from typing import Dict, Tuple, Union
 
 import cudf
-import pandas as pd
+import cupy as cp
 import dask.dataframe as dd
 import dask_cudf
-from dask.distributed import get_client
-import cupy as cp
+import pandas as pd
+from cugraph.gnn.dgl_extensions.dgl_uniform_sampler import dst_n, src_n
 from cugraph.utilities.utils import import_optional
-from cugraph.gnn.dgl_extensions.dgl_uniform_sampler import src_n, dst_n
+from dask.distributed import get_client
 
 dgl = import_optional("dgl")
 F = import_optional("dgl.backend")

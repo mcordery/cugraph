@@ -15,44 +15,23 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
 from pylibcugraph._cugraph_c.community_algorithms cimport (
-    cugraph_hierarchical_clustering_result_t,
-    cugraph_leiden,
-    cugraph_hierarchical_clustering_result_get_vertices,
+    cugraph_hierarchical_clustering_result_free,
     cugraph_hierarchical_clustering_result_get_clusters,
     cugraph_hierarchical_clustering_result_get_modularity,
-    cugraph_hierarchical_clustering_result_free,
+    cugraph_hierarchical_clustering_result_get_vertices,
+    cugraph_hierarchical_clustering_result_t,
+    cugraph_leiden,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
-from pylibcugraph.utils cimport (
-    assert_success,
-    copy_to_cupy_array,
-)
-from pylibcugraph._cugraph_c.random cimport (
-    cugraph_rng_state_t
-)
-from pylibcugraph.random cimport (
-    CuGraphRandomState
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.random cimport cugraph_rng_state_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.random cimport CuGraphRandomState
+from pylibcugraph.resource_handle cimport ResourceHandle
+from pylibcugraph.utils cimport assert_success, copy_to_cupy_array
 
 
 def leiden(ResourceHandle resource_handle,

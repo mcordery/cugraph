@@ -33,11 +33,11 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/extrema.h>
 
+#include <hipcub/hipcub.hpp>
 #include <math.h>
 
 namespace raft {

@@ -11,8 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
-from typing import List, Tuple, Dict, Optional
+
 from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
+
 import cudf
 from cugraph.utilities.utils import import_optional
 from cugraph_dgl.nn import SparseGraph

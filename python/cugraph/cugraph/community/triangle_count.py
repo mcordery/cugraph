@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.utilities import ensure_cugraph_obj_for_nx
-import cudf
-
-from pylibcugraph import triangle_count as pylibcugraph_triangle_count
-
-from pylibcugraph import ResourceHandle
-
 import warnings
+
+import cudf
+from cugraph.utilities import ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import triangle_count as pylibcugraph_triangle_count
 
 
 # FIXME: Move this function to the utility module so that it can be

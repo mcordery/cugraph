@@ -10,29 +10,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import copy
 import gc
 import random
 
-import pytest
-import copy
-
-import cupy
 import cudf
-import cugraph
-import dask_cudf
 import cugraph.dask as dcg
 import cugraph.dask.comms.comms as Comms
+import cupy
+import dask_cudf
+import pytest
+from cudf.testing.testing import assert_frame_equal
+from cugraph.dask.common.input_utils import get_distributed_data
+from cugraph.dask.common.part_utils import persist_dask_df_equal_parts_per_worker
+from cugraph.dask.traversal.bfs import convert_to_cudf
 from cugraph.testing import utils
 from dask.distributed import wait
 from pylibcugraph import ResourceHandle
 from pylibcugraph import bfs as pylibcugraph_bfs
-from cudf.testing.testing import assert_frame_equal
-from cugraph.dask.traversal.bfs import convert_to_cudf
-from cugraph.dask.common.input_utils import get_distributed_data
 from pylibcugraph.testing.utils import gen_fixture_params_product
-from cugraph.dask.common.part_utils import (
-    persist_dask_df_equal_parts_per_worker,
-)
+
+import cugraph
 
 
 # =============================================================================

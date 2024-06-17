@@ -42,7 +42,6 @@ namespace cutlass {
 
 /// Structure containing the basic launch configuration of a CUDA kernel.
 struct KernelLaunchConfiguration {
-
   /// CUDA grid dimensions
   dim3 grid;
 
@@ -58,16 +57,14 @@ struct KernelLaunchConfiguration {
 
   /// Constructs a KernellaunchConfiguration object
   CUTLASS_HOST_DEVICE
-  KernelLaunchConfiguration(
-    dim3 _grid = dim3(1,1,1),
-    dim3 _block = dim3(1,1,1),
-    size_t _dynamic_smem = 0
-  ):
-    grid(_grid),
-    block(_block),
-    dynamic_smem(_dynamic_smem) { }
+  KernelLaunchConfiguration(dim3 _grid           = dim3(1, 1, 1),
+                            dim3 _block          = dim3(1, 1, 1),
+                            size_t _dynamic_smem = 0)
+    : grid(_grid), block(_block), dynamic_smem(_dynamic_smem)
+  {
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass

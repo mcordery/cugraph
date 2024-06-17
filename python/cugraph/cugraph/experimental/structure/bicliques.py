@@ -11,10 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import OrderedDict
+
 # Import needed libraries
 import cudf
 import numpy as np
-from collections import OrderedDict
 
 
 def EXPERIMENTAL__find_bicliques(

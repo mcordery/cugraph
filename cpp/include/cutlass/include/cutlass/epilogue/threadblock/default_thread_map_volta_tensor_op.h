@@ -29,14 +29,14 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 
 */
 
 #pragma once
 
-#include "predicated_tile_iterator.h"
 #include "cutlass/gemm/gemm.h"
+#include "predicated_tile_iterator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,182 +47,162 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the optimal thread map for TensorOp accumulator layouts
-template <
-  typename ThreadblockShape,
-  typename WarpShape,
-  int PartitionsK,
-  typename ElementOutput,
-  int ElementsPerAccess,
-  typename ElementAccumulator
->
+template <typename ThreadblockShape,
+          typename WarpShape,
+          int PartitionsK,
+          typename ElementOutput,
+          int ElementsPerAccess,
+          typename ElementAccumulator>
 struct DefaultThreadMapVoltaTensorOp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the optimal thread map for TensorOp accumulator layouts
-template <
-  typename ThreadblockShape_,
-  typename WarpShape_,
-  int PartitionsK,
-  typename ElementOutput_,
-  int ElementsPerAccess
->
-struct DefaultThreadMapVoltaTensorOp<
-  ThreadblockShape_, 
-  WarpShape_, 
-  PartitionsK, 
-  ElementOutput_, 
-  ElementsPerAccess, 
-  half_t> {
-
-  using ThreadblockShape = ThreadblockShape_;
-  using WarpShape = WarpShape_;
-  static int const kPartitionsK = PartitionsK;
-  using ElementOutput = ElementOutput_;
+template <typename ThreadblockShape_,
+          typename WarpShape_,
+          int PartitionsK,
+          typename ElementOutput_,
+          int ElementsPerAccess>
+struct DefaultThreadMapVoltaTensorOp<ThreadblockShape_,
+                                     WarpShape_,
+                                     PartitionsK,
+                                     ElementOutput_,
+                                     ElementsPerAccess,
+                                     half_t> {
+  using ThreadblockShape              = ThreadblockShape_;
+  using WarpShape                     = WarpShape_;
+  static int const kPartitionsK       = PartitionsK;
+  using ElementOutput                 = ElementOutput_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  using ElementAccumulator = half_t;
+  using ElementAccumulator            = half_t;
 
   //
   // Definitions
   //
 
   struct Detail {
-
-    static int const kTensorOpRows = 16;
-    static int const kWarpSize = 32;
+    static int const kTensorOpRows      = 16;
+    static int const kWarpSize          = 32;
     static int const kInterleavedTilesM = WarpShape::kM / 32;
 
-    static_assert(
-      !(ThreadblockShape::kM % WarpShape::kM) &&
-      !(ThreadblockShape::kN % WarpShape::kN), "Divisibility");
+    static_assert(!(ThreadblockShape::kM % WarpShape::kM) &&
+                    !(ThreadblockShape::kN % WarpShape::kN),
+                  "Divisibility");
 
     /// Number of warps
-    using WarpCount = gemm::GemmShape<
-      ThreadblockShape::kM / WarpShape::kM,
-      ThreadblockShape::kN / WarpShape::kN,
-      kPartitionsK
-    >;
+    using WarpCount = gemm::GemmShape<ThreadblockShape::kM / WarpShape::kM,
+                                      ThreadblockShape::kN / WarpShape::kN,
+                                      kPartitionsK>;
 
     /// Number of participating threads
     static int const kThreads = WarpCount::kCount * kWarpSize;
 
-    using Shape = cutlass::epilogue::threadblock::OutputTileShape<
-      ThreadblockShape::kN,   // column
-      4,                      // row
-      4,                      // group
-      WarpCount::kM,          // cluster
-      1                       // tile
-    >;
-    
+    using Shape = cutlass::epilogue::threadblock::OutputTileShape<ThreadblockShape::kN,  // column
+                                                                  4,                     // row
+                                                                  4,                     // group
+                                                                  WarpCount::kM,         // cluster
+                                                                  1                      // tile
+                                                                  >;
+
     /// Number of iterations per subspace
-    using Count = cutlass::epilogue::threadblock::OutputTileShape<
-      1,                                // column
-      2,                                // row
-      kInterleavedTilesM,               // group
-      1,                                // cluster
-      WarpShape::kM / kTensorOpRows     // iterations
-    >;
+    using Count =
+      cutlass::epilogue::threadblock::OutputTileShape<1,                             // column
+                                                      2,                             // row
+                                                      kInterleavedTilesM,            // group
+                                                      1,                             // cluster
+                                                      WarpShape::kM / kTensorOpRows  // iterations
+                                                      >;
   };
 
   //
   // ThreadMap
   //
-  
-  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept OutputTileThreadMap
-  using Type = OutputTileOptimalThreadMap <
-    typename Detail::Shape,
-    typename Detail::Count,
-    Detail::kThreads,
-    kElementsPerAccess,
-    sizeof_bits<ElementOutput>::value
-  >;
+
+  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept
+  /// OutputTileThreadMap
+  using Type = OutputTileOptimalThreadMap<typename Detail::Shape,
+                                          typename Detail::Count,
+                                          Detail::kThreads,
+                                          kElementsPerAccess,
+                                          sizeof_bits<ElementOutput>::value>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the optimal thread map for TensorOp accumulator layouts
-template <
-  typename ThreadblockShape_,
-  typename WarpShape_,
-  int PartitionsK,
-  typename ElementOutput_,
-  int ElementsPerAccess
->
-struct DefaultThreadMapVoltaTensorOp<
-  ThreadblockShape_,
-  WarpShape_,
-  PartitionsK,
-  ElementOutput_,
-  ElementsPerAccess,
-  float> {
-
-  using ThreadblockShape = ThreadblockShape_;
-  using WarpShape = WarpShape_;
-  static int const kPartitionsK = PartitionsK;
-  using ElementOutput = ElementOutput_;
+template <typename ThreadblockShape_,
+          typename WarpShape_,
+          int PartitionsK,
+          typename ElementOutput_,
+          int ElementsPerAccess>
+struct DefaultThreadMapVoltaTensorOp<ThreadblockShape_,
+                                     WarpShape_,
+                                     PartitionsK,
+                                     ElementOutput_,
+                                     ElementsPerAccess,
+                                     float> {
+  using ThreadblockShape              = ThreadblockShape_;
+  using WarpShape                     = WarpShape_;
+  static int const kPartitionsK       = PartitionsK;
+  using ElementOutput                 = ElementOutput_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  using ElementAccumulator = float;
+  using ElementAccumulator            = float;
 
   //
   // Definitions
   //
 
   struct Detail {
-
-    static int const kTensorOpRows = 16;
-    static int const kWarpSize = 32;
+    static int const kTensorOpRows      = 16;
+    static int const kWarpSize          = 32;
     static int const kInterleavedTilesM = WarpShape::kM / 32;
 
-    static_assert(
-      !(ThreadblockShape::kM % WarpShape::kM) &&
-      !(ThreadblockShape::kN % WarpShape::kN), "Divisibility");
+    static_assert(!(ThreadblockShape::kM % WarpShape::kM) &&
+                    !(ThreadblockShape::kN % WarpShape::kN),
+                  "Divisibility");
 
     /// Number of warps
-    using WarpCount = gemm::GemmShape<
-      ThreadblockShape::kM / WarpShape::kM,
-      ThreadblockShape::kN / WarpShape::kN,
-      kPartitionsK
-    >;
+    using WarpCount = gemm::GemmShape<ThreadblockShape::kM / WarpShape::kM,
+                                      ThreadblockShape::kN / WarpShape::kN,
+                                      kPartitionsK>;
 
     /// Number of participating threads
     static int const kThreads = WarpCount::kCount * kWarpSize;
 
-    using Shape = cutlass::epilogue::threadblock::OutputTileShape<
-      ThreadblockShape::kN,   // column
-      4,                      // row
-      4,                      // group
-      WarpCount::kM,          // cluster
-      1                       // tile
-    >;
-    
+    using Shape = cutlass::epilogue::threadblock::OutputTileShape<ThreadblockShape::kN,  // column
+                                                                  4,                     // row
+                                                                  4,                     // group
+                                                                  WarpCount::kM,         // cluster
+                                                                  1                      // tile
+                                                                  >;
+
     /// Number of iterations per subspace
-    using Count = cutlass::epilogue::threadblock::OutputTileShape<
-      1,                                // column
-      2,                                // row
-      kInterleavedTilesM,               // group
-      1,                                // cluster
-      WarpShape::kM / kTensorOpRows     // iterations
-    >;
+    using Count =
+      cutlass::epilogue::threadblock::OutputTileShape<1,                             // column
+                                                      2,                             // row
+                                                      kInterleavedTilesM,            // group
+                                                      1,                             // cluster
+                                                      WarpShape::kM / kTensorOpRows  // iterations
+                                                      >;
   };
 
   //
   // ThreadMap
   //
-  
-  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept OutputTileThreadMap
-  using Type = OutputTileOptimalThreadMap <
-    typename Detail::Shape,
-    typename Detail::Count,
-    Detail::kThreads,
-    kElementsPerAccess,
-    sizeof_bits<ElementOutput>::value
-  >;
+
+  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept
+  /// OutputTileThreadMap
+  using Type = OutputTileOptimalThreadMap<typename Detail::Shape,
+                                          typename Detail::Count,
+                                          Detail::kThreads,
+                                          kElementsPerAccess,
+                                          sizeof_bits<ElementOutput>::value>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

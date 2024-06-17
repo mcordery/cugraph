@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/remove_const.h"
 #include "../__type_traits/remove_volatile.h"
@@ -34,18 +34,21 @@ using __remove_cv_t = _LIBCUDACXX_REMOVE_CV(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS remove_cv
-{typedef __remove_volatile_t<__remove_const_t<_Tp> > type;};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS remove_cv {
+  typedef __remove_volatile_t<__remove_const_t<_Tp>> type;
+};
 
 template <class _Tp>
-using __remove_cv_t = __remove_volatile_t<__remove_const_t<_Tp> >;
+using __remove_cv_t = __remove_volatile_t<__remove_const_t<_Tp>>;
 
-#endif // defined(_LIBCUDACXX_REMOVE_CV) && !defined(_LIBCUDACXX_USE_REMOVE_CV_FALLBACK)
+#endif  // defined(_LIBCUDACXX_REMOVE_CV) && !defined(_LIBCUDACXX_USE_REMOVE_CV_FALLBACK)
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using remove_cv_t = __remove_cv_t<_Tp>;
+template <class _Tp>
+using remove_cv_t = __remove_cv_t<_Tp>;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_REMOVE_CV_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_REMOVE_CV_H

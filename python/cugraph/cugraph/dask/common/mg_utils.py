@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import gc
-import numba.cuda
+import os
 
+import numba.cuda
 
 # FIXME: this raft import breaks the library if ucx-py is
 # not available. They are necessary only when doing MG work.

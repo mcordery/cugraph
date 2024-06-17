@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-
 import cudf
-import cugraph
-import dask_cudf
 import cugraph.dask as dcg
+import dask_cudf
+import pytest
 from cugraph.testing.utils import RAPIDS_DATASET_ROOT_DIR_PATH
 
+import cugraph
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

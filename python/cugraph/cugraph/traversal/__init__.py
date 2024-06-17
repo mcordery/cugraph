@@ -11,12 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.traversal.bfs import bfs
-from cugraph.traversal.bfs import bfs_edges
-from cugraph.traversal.sssp import (
-    sssp,
-    shortest_path,
-    filter_unreachable,
-    shortest_path_length,
-)
+from cugraph.traversal.bfs import bfs, bfs_edges
 from cugraph.traversal.ms_bfs import concurrent_bfs, multi_source_bfs
+from cugraph.traversal.sssp import (
+    filter_unreachable,
+    shortest_path,
+    shortest_path_length,
+    sssp,
+)

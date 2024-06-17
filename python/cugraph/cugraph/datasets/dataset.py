@@ -11,14 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cudf
-import dask_cudf
-import yaml
 import os
-import pandas as pd
-import cugraph.dask as dcg
-from pathlib import Path
 import urllib.request
+from pathlib import Path
+
+import cudf
+import cugraph.dask as dcg
+import dask_cudf
+import pandas as pd
+import yaml
 from cugraph.structure.graph_classes import Graph
 
 

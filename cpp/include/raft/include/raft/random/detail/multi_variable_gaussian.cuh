@@ -18,8 +18,8 @@
 #include "curand_wrappers.hpp"
 
 #include <raft/core/device_mdspan.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
 #include <raft/linalg/detail/cusolver_wrappers.hpp>
@@ -48,7 +48,7 @@ namespace detail {
 enum Filler : unsigned char {
   LOWER,  // = 0
   UPPER   // = 1
-};        // used in memseting upper/lower matrix
+};  // used in memseting upper/lower matrix
 
 /**
  * @brief Reset values within the epsilon absolute range to zero
@@ -134,10 +134,10 @@ class multi_variable_gaussian_impl {
  private:
   // adjustable stuff
   const int dim;
-  const int nPoints     = 1;
-  const double tol      = 1.e-7;
-  const T epsilon       = 1.e-12;
-  const int max_sweeps  = 100;
+  const int nPoints      = 1;
+  const double tol       = 1.e-7;
+  const T epsilon        = 1.e-12;
+  const int max_sweeps   = 100;
   hipblasFillMode_t uplo = HIPBLAS_FILL_MODE_LOWER;
   const Decomposer method;
 
@@ -148,7 +148,7 @@ class multi_variable_gaussian_impl {
   hiprandGenerator_t gen;
   raft::resources const& handle;
   hipsolverEigMode_t jobz = HIPSOLVER_EIG_MODE_VECTOR;
-  bool deinitilized      = false;
+  bool deinitilized       = false;
 
  public:  // functions
   multi_variable_gaussian_impl() = delete;

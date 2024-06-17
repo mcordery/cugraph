@@ -30,22 +30,19 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
-    Default kernel-level Depthwise implicit GEMM convolution definitions combine threadblock-scoped 
-      matrix multiply-add with the appropriate threadblock-scoped epilogue.  
+    \brief
+    Default kernel-level Depthwise implicit GEMM convolution definitions combine threadblock-scoped
+      matrix multiply-add with the appropriate threadblock-scoped epilogue.
 */
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/conv/kernel/default_conv2d.h"
-
-#include "cutlass/conv/threadblock/depthwise_mma_core_with_lane_access_size.h"
-
 #include "cutlass/conv/threadblock/conv2d_fprop_activation_tile_access_iterator_analytic.h"
-
 #include "cutlass/conv/threadblock/conv2d_fprop_filter_tile_access_iterator_analytic.h"
 #include "cutlass/conv/threadblock/depthwise_fprop_pipelined.h"
+#include "cutlass/conv/threadblock/depthwise_mma_core_with_lane_access_size.h"
+#include "cutlass/cutlass.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -55,164 +52,151 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Defines a kernel for Conv2dFprop
-template <
-  typename ElementA,
-  typename LayoutA,
-  typename ElementB,
-  typename LayoutB,
-  typename ElementC,
-  typename LayoutC,
-  typename ElementAccumulator,
-  typename OperatorClass,
-  typename ArchTag,
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename EpilogueOutputOp,
-  typename ThreadblockSwizzle,
-  int Stages,
-  typename MathOperatorTag,
-  conv::IteratorAlgorithm IteratorAlgorithm = IteratorAlgorithm::kAnalytic,
-  conv::StrideSupport StrideSupport = StrideSupport::kStrided,
-  /// Access granularity of A matrix in units of elements
-  int AlignmentA = 128 / cutlass::sizeof_bits<ElementA>::value,
-  /// Access granularity of B matrix in units of elements
-  int AlignmentB = cutlass::sizeof_bits<ElementB>::value / cutlass::sizeof_bits<ElementB>::value
-> struct DefaultDepthwiseFprop;
+template <typename ElementA,
+          typename LayoutA,
+          typename ElementB,
+          typename LayoutB,
+          typename ElementC,
+          typename LayoutC,
+          typename ElementAccumulator,
+          typename OperatorClass,
+          typename ArchTag,
+          typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename EpilogueOutputOp,
+          typename ThreadblockSwizzle,
+          int Stages,
+          typename MathOperatorTag,
+          conv::IteratorAlgorithm IteratorAlgorithm = IteratorAlgorithm::kAnalytic,
+          conv::StrideSupport StrideSupport         = StrideSupport::kStrided,
+          /// Access granularity of A matrix in units of elements
+          int AlignmentA = 128 / cutlass::sizeof_bits<ElementA>::value,
+          /// Access granularity of B matrix in units of elements
+          int AlignmentB =
+            cutlass::sizeof_bits<ElementB>::value / cutlass::sizeof_bits<ElementB>::value>
+struct DefaultDepthwiseFprop;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //                            OpClassSimt convolutions
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Defines a kernel for Depthwise specialization for Analytic IteratorAlgorithm, 
+/// Defines a kernel for Depthwise specialization for Analytic IteratorAlgorithm,
 /// 2 stage pipeline, and FFMA-based mainloop for SM50
-template <
-  typename ElementA,
-  typename LayoutA,
-  typename ElementB,
-  typename LayoutB,
-  typename ElementC,
-  typename LayoutC,
-  typename ElementAccumulator,
-  typename ArchTag,
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename EpilogueOutputOp,
-  typename ThreadblockSwizzle,
-  typename MathOperatorTag,
-  conv::StrideSupport StrideSupport,
-  int AlignmentA,
-  int AlignmentB
->
-struct DefaultDepthwiseFprop <
-  ElementA,
-  LayoutA,
-  ElementB,
-  LayoutB,
-  ElementC,
-  LayoutC,
-  ElementAccumulator,
-  arch::OpClassSimt,
-  ArchTag,
-  ThreadblockShape,
-  WarpShape,
-  InstructionShape,
-  EpilogueOutputOp,
-  ThreadblockSwizzle,
-  2,
-  MathOperatorTag, //   cutlass::arch::OpMultiplyAdd
-  IteratorAlgorithm::kAnalytic,
-  StrideSupport,
-  AlignmentA,
-  AlignmentB
-> {
-
+template <typename ElementA,
+          typename LayoutA,
+          typename ElementB,
+          typename LayoutB,
+          typename ElementC,
+          typename LayoutC,
+          typename ElementAccumulator,
+          typename ArchTag,
+          typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename EpilogueOutputOp,
+          typename ThreadblockSwizzle,
+          typename MathOperatorTag,
+          conv::StrideSupport StrideSupport,
+          int AlignmentA,
+          int AlignmentB>
+struct DefaultDepthwiseFprop<ElementA,
+                             LayoutA,
+                             ElementB,
+                             LayoutB,
+                             ElementC,
+                             LayoutC,
+                             ElementAccumulator,
+                             arch::OpClassSimt,
+                             ArchTag,
+                             ThreadblockShape,
+                             WarpShape,
+                             InstructionShape,
+                             EpilogueOutputOp,
+                             ThreadblockSwizzle,
+                             2,
+                             MathOperatorTag,  //   cutlass::arch::OpMultiplyAdd
+                             IteratorAlgorithm::kAnalytic,
+                             StrideSupport,
+                             AlignmentA,
+                             AlignmentB> {
   // Define the core components from GEMM
   using MmaCore = typename cutlass::conv::threadblock::DepthwiseMmaCoreWithLaneAccessSize<
-      ThreadblockShape,
-      WarpShape,
-      InstructionShape,
-      ElementA,
-      layout::RowMajor,
-      ElementB,
-      layout::ColumnMajor,
-      ElementAccumulator,
-      layout::RowMajor,
-      arch::OpClassSimt,
-      128,
-      sizeof_bits<ElementB>::value,
-      2,
-      MathOperatorTag>;
+    ThreadblockShape,
+    WarpShape,
+    InstructionShape,
+    ElementA,
+    layout::RowMajor,
+    ElementB,
+    layout::ColumnMajor,
+    ElementAccumulator,
+    layout::RowMajor,
+    arch::OpClassSimt,
+    128,
+    sizeof_bits<ElementB>::value,
+    2,
+    MathOperatorTag>;
 
   // Define iterators over tiles from the A operand
   using ThreadMapA = typename MmaCore::IteratorThreadMapA;
-  using IteratorA =
-    cutlass::conv::threadblock::TileIterator<
-      cutlass::conv::threadblock::Conv2dFpropActivationTileAccessIteratorAnalytic<
-        cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
-        ElementA, LayoutA,
-        ThreadMapA
-      >
-    >;
+  using IteratorA  = cutlass::conv::threadblock::TileIterator<
+     cutlass::conv::threadblock::Conv2dFpropActivationTileAccessIteratorAnalytic<
+       cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
+       ElementA,
+       LayoutA,
+       ThreadMapA>>;
 
   using SmemIteratorA = typename MmaCore::SmemIteratorA;
 
   // Define iterators over tiles from the B operand
-  using ThreadMapB = typename MmaCore::IteratorThreadMapB;
+  using ThreadMapB  = typename MmaCore::IteratorThreadMapB;
   using AccessTypeB = cutlass::AlignedArray<ElementB, AlignmentB>;
-  using IteratorB =
-    cutlass::conv::threadblock::TileIterator<
+  using IteratorB   = cutlass::conv::threadblock::TileIterator<
       cutlass::conv::threadblock::Conv2dFpropFilterTileAccessIteratorAnalytic<
         cutlass::MatrixShape<ThreadblockShape::kK, ThreadblockShape::kN>,
-        ElementB, LayoutB,
+        ElementB,
+        LayoutB,
         ThreadMapB,
         AccessTypeB,
-        cutlass::conv::GroupMode::kDepthwise
-      >
-    >;
-  
+        cutlass::conv::GroupMode::kDepthwise>>;
+
   using SmemIteratorB = typename MmaCore::SmemIteratorB;
 
   // Warp-level GEMM components
   using WarpMmaSimtOp = typename MmaCore::MmaWarpSimt;
-  using MmaPolicy = typename MmaCore::MmaPolicy;
+  using MmaPolicy     = typename MmaCore::MmaPolicy;
 
   // Define the Mma
-  using Mma = threadblock::DepthwiseFpropPipelined<
-    ThreadblockShape,
-    IteratorA,
-    SmemIteratorA,
-    IteratorB,
-    SmemIteratorB,
-    ElementC,
-    LayoutC,
-    MmaPolicy
-  >;
+  using Mma = threadblock::DepthwiseFpropPipelined<ThreadblockShape,
+                                                   IteratorA,
+                                                   SmemIteratorA,
+                                                   IteratorB,
+                                                   SmemIteratorB,
+                                                   ElementC,
+                                                   LayoutC,
+                                                   MmaPolicy>;
 
   // Define the epilogue
-  using Epilogue = typename epilogue::threadblock::DefaultEpilogueSimt<
-    ThreadblockShape,
-    WarpMmaSimtOp,
-    EpilogueOutputOp,
-    EpilogueOutputOp::kCount
-  >::Epilogue;
+  using Epilogue =
+    typename epilogue::threadblock::DefaultEpilogueSimt<ThreadblockShape,
+                                                        WarpMmaSimtOp,
+                                                        EpilogueOutputOp,
+                                                        EpilogueOutputOp::kCount>::Epilogue;
 
   // Define the kernel
-  using Kernel = cutlass::conv::kernel::ImplicitGemmConvolution<
-    Mma,
-    Epilogue,
-    ThreadblockSwizzle,
-    conv::Operator::kFprop,
-    Conv2dProblemSize,
-    cutlass::conv::GroupMode::kDepthwise
-  >;
+  using Kernel =
+    cutlass::conv::kernel::ImplicitGemmConvolution<Mma,
+                                                   Epilogue,
+                                                   ThreadblockSwizzle,
+                                                   conv::Operator::kFprop,
+                                                   Conv2dProblemSize,
+                                                   cutlass::conv::GroupMode::kDepthwise>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace conv
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace conv
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

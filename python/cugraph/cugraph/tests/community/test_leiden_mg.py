@@ -11,12 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cugraph.dask as dcg
 import pytest
 
 import cugraph
-import cugraph.dask as dcg
-from cugraph.datasets import karate_asymmetric, karate, dolphins
-
+from cugraph.datasets import dolphins, karate, karate_asymmetric
 
 # =============================================================================
 # Parameters

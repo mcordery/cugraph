@@ -21,10 +21,11 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hip/memory_resource>
 #include <thrust/device_malloc_allocator.h>
 #include <thrust/device_ptr.h>
 #include <thrust/memory.h>
+
+#include <hip/memory_resource>
 
 namespace rmm::mr {
 /**

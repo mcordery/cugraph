@@ -58,16 +58,16 @@
 #endif
 #endif
 
-#endif //!(defined(__clang__) && defined(__CUDA__))
+#endif  //!(defined(__clang__) && defined(__CUDA__))
 
 #if defined(CUTLASS_ARCH_WMMA_ENABLED)
 
-#include <mma.h>
 #include "cutlass/arch/mma.h"
 #include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/numeric_types.h"
 
+#include <mma.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,56 +78,56 @@ namespace arch {
 /// Statically maps cutlass data types => nvcuda::wmma data types
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Type_>
-struct CutlassToWmmaDataType{
+struct CutlassToWmmaDataType {
   using Type = Type_;
 };
 
 /// Statically maps cutlass::half_t => __half
-template<>
+template <>
 struct CutlassToWmmaDataType<cutlass::half_t> {
   using Type = __half;
 };
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ >= 11)
-template<>
+template <>
 struct CutlassToWmmaDataType<cutlass::bfloat16_t> {
   using Type = hip_bfloat16;
 };
 #endif
 
 /// Statically maps int8_t => char
-template<>
+template <>
 struct CutlassToWmmaDataType<int8_t> {
   using Type = signed char;
 };
 
 /// Statically maps uint8_t => char
-template<>
+template <>
 struct CutlassToWmmaDataType<uint8_t> {
   using Type = unsigned char;
 };
 
 /// Statically maps int32_t => int
-template<>
+template <>
 struct CutlassToWmmaDataType<int32_t> {
   using Type = int;
 };
 
 #if defined(CUTLASS_SUBBYTE_INTEGER_MATRIX_MULTIPLY_ENABLED)
 /// Statically maps cutlass::int4b_t => experimental::precision::s4
-template<>
+template <>
 struct CutlassToWmmaDataType<cutlass::int4b_t> {
   using Type = nvcuda::wmma::experimental::precision::s4;
 };
 
 /// Statically maps cutlass::uint4b_t => experimental::precision::s4
-template<>
+template <>
 struct CutlassToWmmaDataType<cutlass::uint4b_t> {
   using Type = nvcuda::wmma::experimental::precision::u4;
 };
 
 /// Statically maps cutlass::uint1b_t => experimental::precision::b1
-template<>
+template <>
 struct CutlassToWmmaDataType<cutlass::uint1b_t> {
   using Type = nvcuda::wmma::experimental::precision::b1;
 };
@@ -137,13 +137,12 @@ struct CutlassToWmmaDataType<cutlass::uint1b_t> {
 /// Statically maps cutlass::layout => nvcuda::wmma layout tags
 ////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Layout_>
-struct CutlassToWmmaLayout {
-};
+struct CutlassToWmmaLayout {};
 
 /// Statically maps cutlass::layout::RowMajor => nvcuda::wmma::row_major layout tags
 template <>
 struct CutlassToWmmaLayout<cutlass::layout::RowMajor> {
-  using Layout = nvcuda::wmma::row_major;
+  using Layout                              = nvcuda::wmma::row_major;
   static nvcuda::wmma::layout_t const value = nvcuda::wmma::layout_t::mem_row_major;
 };
 
@@ -152,7 +151,7 @@ struct CutlassToWmmaLayout<cutlass::layout::RowMajor> {
 ////////////////////////////////////////////////////////////////////////////////////////////////
 template <>
 struct CutlassToWmmaLayout<cutlass::layout::ColumnMajor> {
-  using Layout = nvcuda::wmma::col_major;
+  using Layout                              = nvcuda::wmma::col_major;
   static nvcuda::wmma::layout_t const value = nvcuda::wmma::layout_t::mem_col_major;
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,18 +160,18 @@ struct CutlassToWmmaLayout<cutlass::layout::ColumnMajor> {
 /// Statically maps nvcuda::wmma data types => cutlass data types
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename Type_>
-struct WmmaToCutlassDataType{
+struct WmmaToCutlassDataType {
   using Type = Type_;
 };
 
 /// Statically maps __half => cutlass::half_t
-template<>
+template <>
 struct WmmaToCutlassDataType<__half> {
   using Type = cutlass::half_t;
 };
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800) && (__CUDACC_VER_MAJOR__ >= 11)
-template<>
+template <>
 struct WmmaToCutlassDataType<hip_bfloat16> {
   using Type = cutlass::bfloat16_t;
 };
@@ -182,24 +181,24 @@ struct WmmaToCutlassDataType<hip_bfloat16> {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // WMMA template structure defines nvcuda::wmma::fragments and static assertion chaeks
-// for a specific template paramterized data type (Element[A|B|C]), layout (Layout[A|B|C]), 
+// for a specific template paramterized data type (Element[A|B|C]), layout (Layout[A|B|C]),
 // and native wmma size (Shape)
 /////////////////////////////////////////////////////////////////////////////////////////////////
-template <  
-  typename Shape_,                                   ///< Size of the matrix product (concept: GemmShape)
-  typename ElementA_,                                ///< Data type of A elements 
-  typename LayoutA_,                                 ///< Layout of A matrix (concept: MatrixLayout)  
-  typename ElementB_,                                ///< Data type of B elements
-  typename LayoutB_,                                 ///< Layout of B matrix (concept: MatrixLayout)  
-  typename ElementC_,                                ///< Element type of C matrix  
-  typename LayoutC_,                                 /// Layout of C matrix (concept: MatrixLayout)
-  typename Operator_ = cutlass::arch::OpMultiplyAdd   ///< Inner product operator (multiply-add, xor.popc)
->
+template <typename Shape_,     ///< Size of the matrix product (concept: GemmShape)
+          typename ElementA_,  ///< Data type of A elements
+          typename LayoutA_,   ///< Layout of A matrix (concept: MatrixLayout)
+          typename ElementB_,  ///< Data type of B elements
+          typename LayoutB_,   ///< Layout of B matrix (concept: MatrixLayout)
+          typename ElementC_,  ///< Element type of C matrix
+          typename LayoutC_,   /// Layout of C matrix (concept: MatrixLayout)
+          typename Operator_ =
+            cutlass::arch::OpMultiplyAdd  ///< Inner product operator (multiply-add, xor.popc)
+          >
 struct Wmma;
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -220,4 +219,4 @@ struct Wmma;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#endif //CUTLASS_ARCH_WMMA_ENABLED
+#endif  // CUTLASS_ARCH_WMMA_ENABLED

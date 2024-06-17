@@ -118,8 +118,7 @@ void search(raft::resources const& handle,
     const raft::neighbors::ivf_pq::index_params& params,                                        \
     const T* dataset,                                                                           \
     IdxT n_rows,                                                                                \
-    uint32_t dim)                                                                               \
-    ->raft::neighbors::ivf_pq::index<IdxT>;
+    uint32_t dim) -> raft::neighbors::ivf_pq::index<IdxT>;
 
 instantiate_raft_neighbors_ivf_pq_build(float, int64_t);
 instantiate_raft_neighbors_ivf_pq_build(half, int64_t);
@@ -146,8 +145,7 @@ instantiate_raft_neighbors_ivf_pq_build(uint8_t, int64_t);
     const raft::neighbors::ivf_pq::index<IdxT>& idx,                                             \
     const T* new_vectors,                                                                        \
     const IdxT* new_indices,                                                                     \
-    IdxT n_rows)                                                                                 \
-    ->raft::neighbors::ivf_pq::index<IdxT>;                                                      \
+    IdxT n_rows) -> raft::neighbors::ivf_pq::index<IdxT>;                                        \
                                                                                                  \
   extern template void raft::neighbors::ivf_pq::extend<T, IdxT>(                                 \
     raft::resources const& handle,                                                               \

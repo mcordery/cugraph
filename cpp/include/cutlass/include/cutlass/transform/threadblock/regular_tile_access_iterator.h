@@ -45,10 +45,12 @@ namespace threadblock {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Shape, typename Element, typename Layout, int AdvanceRank,
+template <typename Shape,
+          typename Element,
+          typename Layout,
+          int AdvanceRank,
           typename ThreadMap,
-          int Alignment =
-              sizeof_bits<Element>::value* ThreadMap::kElementsPerAccess / 8>
+          int Alignment = sizeof_bits<Element>::value * ThreadMap::kElementsPerAccess / 8>
 class RegularTileAccessIterator;
 
 ////////////////////////////////////////////////////////////////////////////////

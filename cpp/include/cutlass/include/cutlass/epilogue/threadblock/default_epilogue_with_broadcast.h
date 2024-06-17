@@ -38,18 +38,15 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/gemm/gemm.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_volta_tensor_op.h"
 #include "cutlass/epilogue/threadblock/epilogue.h"
 #include "cutlass/epilogue/threadblock/epilogue_with_broadcast.h"
-
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,124 +57,100 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename ElementTensor,
-  typename ElementVector,
-  typename OutputOp,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename ElementTensor,
+          typename ElementVector,
+          typename OutputOp,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueWithBroadcastTensorOp {
-
   /// Use defaults related to the existing epilogue
-  using Base = DefaultEpilogueTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    ElementsPerAccess
-  >;
+  using Base =
+    DefaultEpilogueTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, ElementsPerAccess>;
 
   //
   // Stores the result z = (y = GEMM(A, B, C), broadcast)
   //
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementOutput,
+                                                           ScatterD,
+                                                           PermuteDLayout>;
 
   //
   // Additional tensor tile iterator - stores t = Elementwise(z)
   //
-  using TensorTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementTensor
-  >;
+  using TensorTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementTensor>;
 
   /// Define the epilogue
-  using Epilogue = EpilogueWithBroadcast<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputTileIterator,
-    TensorTileIterator,
-    ElementVector,
-    typename Base::AccumulatorFragmentIterator,
-    typename Base::WarpTileIterator,
-    typename Base::SharedLoadIterator,
-    OutputOp,
-    typename Base::Padding,
-    Base::kFragmentsPerIteration
-  >;
+  using Epilogue = EpilogueWithBroadcast<Shape,
+                                         WarpMmaTensorOp,
+                                         PartitionsK,
+                                         OutputTileIterator,
+                                         TensorTileIterator,
+                                         ElementVector,
+                                         typename Base::AccumulatorFragmentIterator,
+                                         typename Base::WarpTileIterator,
+                                         typename Base::SharedLoadIterator,
+                                         OutputOp,
+                                         typename Base::Padding,
+                                         Base::kFragmentsPerIteration>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for VoltaTensorOps.
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename ElementTensor,
-  typename ElementVector,
-  typename OutputOp,
-  int ElementsPerAccess
->
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename ElementTensor,
+          typename ElementVector,
+          typename OutputOp,
+          int ElementsPerAccess>
 struct DefaultEpilogueWithBroadcastVoltaTensorOp {
-
   /// Use defaults related to the existing epilogue
-  using Base = DefaultEpilogueVoltaTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    ElementsPerAccess
-  >;
+  using Base =
+    DefaultEpilogueVoltaTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, ElementsPerAccess>;
 
   //
   // Stores the result z = (y = GEMM(A, B, C), broadcast)
   //
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementOutput
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementOutput>;
 
   //
   // Additional tensor tile iterator - stores t = Elementwise(z)
   //
-  using TensorTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementTensor
-  >;
+  using TensorTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementTensor>;
 
   /// Define the epilogue
-  using Epilogue = EpilogueWithBroadcast<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputTileIterator,
-    TensorTileIterator,
-    ElementVector,
-    typename Base::AccumulatorFragmentIterator,
-    typename Base::WarpTileIterator,
-    typename Base::SharedLoadIterator,
-    OutputOp,
-    typename Base::Padding
-  >;
+  using Epilogue = EpilogueWithBroadcast<Shape,
+                                         WarpMmaTensorOp,
+                                         PartitionsK,
+                                         OutputTileIterator,
+                                         TensorTileIterator,
+                                         ElementVector,
+                                         typename Base::AccumulatorFragmentIterator,
+                                         typename Base::WarpTileIterator,
+                                         typename Base::SharedLoadIterator,
+                                         OutputOp,
+                                         typename Base::Padding>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

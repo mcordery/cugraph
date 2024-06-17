@@ -16,7 +16,6 @@
 #pragma once
 
 #include <hip/hip_fp16.h>
-
 #include <stdint.h>
 
 namespace raft::neighbors::cagra::detail {
@@ -41,8 +40,8 @@ void _cuann_find_topk(uint32_t topK,
                       ValT* outputVals,        // [sizeBatch, ldOV,]
                       uint32_t ldOV,           // (*) ldOV >= topK
                       void* workspace,
-                      bool sort           = false,
-                      uint32_t* hint      = NULL,
+                      bool sort          = false,
+                      uint32_t* hint     = NULL,
                       hipStream_t stream = 0);
 
 #ifdef __CUDA_ARCH__

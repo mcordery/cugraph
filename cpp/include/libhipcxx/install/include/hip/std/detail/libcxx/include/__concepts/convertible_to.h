@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__type_traits/is_convertible.h"
@@ -28,39 +28,33 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.convertible]
 
-template<class _From, class _To>
-concept convertible_to =
-  is_convertible_v<_From, _To> &&
-  requires {
-    static_cast<_To>(_CUDA_VSTD::declval<_From>());
-  };
+template <class _From, class _To>
+concept convertible_to = is_convertible_v<_From, _To> && requires
+{
+  static_cast<_To>(_CUDA_VSTD::declval<_From>());
+};
 
 #elif _LIBCUDACXX_STD_VER > 11
 
-// We cannot put this conversion check with the other constraint, as types with deleted operator will break here
-template<class _From, class _To>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  __test_conversion_,
-  requires()(
-    static_cast<_To>(_CUDA_VSTD::declval<_From>())
-  ));
+// We cannot put this conversion check with the other constraint, as types with deleted operator
+// will break here
+template <class _From, class _To>
+_LIBCUDACXX_CONCEPT_FRAGMENT(__test_conversion_,
+                             requires()(static_cast<_To>(_CUDA_VSTD::declval<_From>())));
 
-template<class _From, class _To>
+template <class _From, class _To>
 _LIBCUDACXX_CONCEPT __test_conversion = _LIBCUDACXX_FRAGMENT(__test_conversion_, _From, _To);
 
-template<class _From, class _To>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  __convertible_to_,
-  requires()(
-    requires(is_convertible_v<_From, _To>),
-    requires(__test_conversion<_From, _To>)
-  ));
+template <class _From, class _To>
+_LIBCUDACXX_CONCEPT_FRAGMENT(__convertible_to_,
+                             requires()(requires(is_convertible_v<_From, _To>),
+                                        requires(__test_conversion<_From, _To>)));
 
-template<class _From, class _To>
+template <class _From, class _To>
 _LIBCUDACXX_CONCEPT convertible_to = _LIBCUDACXX_FRAGMENT(__convertible_to_, _From, _To);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_CONVERTIBLE_TO_H
+#endif  // _LIBCUDACXX___CONCEPTS_CONVERTIBLE_TO_H

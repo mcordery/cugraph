@@ -13,12 +13,12 @@
 # limitations under the License.
 #
 
+import warnings
 from collections.abc import Iterable
 
+import cudf
 import dask_cudf
 import numpy as np
-import cudf
-import warnings
 
 
 class NumberMap:

@@ -30,7 +30,7 @@
  **************************************************************************************************/
 
 /*! \file
-  \brief 
+  \brief
     Defines a GEMM with Reduction based on an existing UniversalGemm kernel.
 
 */
@@ -38,12 +38,10 @@
 #pragma once
 
 #include "cutlass/cutlass.h"
-
-#include "cutlass/gemm/kernel/gemm_with_fused_epilogue.h"
-#include "cutlass/gemm/kernel/default_gemm_universal.h"
-
 #include "cutlass/epilogue/threadblock/default_epilogue_with_reduction.h"
 #include "cutlass/epilogue/threadblock/epilogue_with_reduction.h"
+#include "cutlass/gemm/kernel/default_gemm_universal.h"
+#include "cutlass/gemm/kernel/gemm_with_fused_epilogue.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -97,25 +95,30 @@ template <
   /// Operation performed by GEMM
   typename Operator,
   ///
-  typename Enable = void
->
+  typename Enable = void>
 struct DefaultGemmWithReduction {
-
-  using GemmBase = typename DefaultGemmUniversal<
-    ElementA_, LayoutA_, TransformA, kAlignmentA,
-    ElementB_, LayoutB_, TransformB, kAlignmentB,
-    ElementC_, LayoutC_, ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    Operator,
-    SharedMemoryClearOption::kClearLastStage
-  >::GemmKernel;
+  using GemmBase =
+    typename DefaultGemmUniversal<ElementA_,
+                                  LayoutA_,
+                                  TransformA,
+                                  kAlignmentA,
+                                  ElementB_,
+                                  LayoutB_,
+                                  TransformB,
+                                  kAlignmentB,
+                                  ElementC_,
+                                  LayoutC_,
+                                  ElementAccumulator,
+                                  OperatorClass,
+                                  ArchTag,
+                                  ThreadblockShape,
+                                  WarpShape,
+                                  InstructionShape,
+                                  EpilogueOutputOp,
+                                  ThreadblockSwizzle,
+                                  Stages,
+                                  Operator,
+                                  SharedMemoryClearOption::kClearLastStage>::GemmKernel;
 
   // Replace epilogue
   using Epilogue = typename cutlass::epilogue::threadblock::DefaultEpilogueWithReductionTensorOp<
@@ -125,15 +128,10 @@ struct DefaultGemmWithReduction {
     ElementC_,
     EpilogueOutputOp,
     EpilogueReductionOp,
-    GemmBase::Epilogue::kElementsPerAccess
-  >::Epilogue;
+    GemmBase::Epilogue::kElementsPerAccess>::Epilogue;
 
   // Compose the GEMM kernel
-  using GemmKernel = GemmWithFusedEpilogue<
-    typename GemmBase::Mma,
-    Epilogue,
-    ThreadblockSwizzle
-  >;
+  using GemmKernel = GemmWithFusedEpilogue<typename GemmBase::Mma, Epilogue, ThreadblockSwizzle>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,58 +181,63 @@ template <
   /// Operation performed by GEMM
   typename Operator,
   ///
-  typename Enable
->
-struct DefaultGemmWithReduction<
-  ElementA_, LayoutA_, TransformA, kAlignmentA, 
-  ElementB_, LayoutB_, TransformB, kAlignmentB,
-  ElementC_, LayoutC_,
-  ElementAccumulator,
-  OperatorClass,
-  cutlass::arch::Sm70,
-  ThreadblockShape,
-  WarpShape,
-  InstructionShape,
-  EpilogueOutputOp,
-  EpilogueReductionOp,
-  ThreadblockSwizzle,
-  Stages,
-  Operator,
-  Enable
-  >  {
-
-  using GemmBase = typename DefaultGemmUniversal<
-    ElementA_, LayoutA_, TransformA, kAlignmentA,
-    ElementB_, LayoutB_, TransformB, kAlignmentB,
-    ElementC_, LayoutC_, ElementAccumulator,
-    OperatorClass,
-    cutlass::arch::Sm70,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    Operator
-  >::GemmKernel;
+  typename Enable>
+struct DefaultGemmWithReduction<ElementA_,
+                                LayoutA_,
+                                TransformA,
+                                kAlignmentA,
+                                ElementB_,
+                                LayoutB_,
+                                TransformB,
+                                kAlignmentB,
+                                ElementC_,
+                                LayoutC_,
+                                ElementAccumulator,
+                                OperatorClass,
+                                cutlass::arch::Sm70,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                EpilogueOutputOp,
+                                EpilogueReductionOp,
+                                ThreadblockSwizzle,
+                                Stages,
+                                Operator,
+                                Enable> {
+  using GemmBase = typename DefaultGemmUniversal<ElementA_,
+                                                 LayoutA_,
+                                                 TransformA,
+                                                 kAlignmentA,
+                                                 ElementB_,
+                                                 LayoutB_,
+                                                 TransformB,
+                                                 kAlignmentB,
+                                                 ElementC_,
+                                                 LayoutC_,
+                                                 ElementAccumulator,
+                                                 OperatorClass,
+                                                 cutlass::arch::Sm70,
+                                                 ThreadblockShape,
+                                                 WarpShape,
+                                                 InstructionShape,
+                                                 EpilogueOutputOp,
+                                                 ThreadblockSwizzle,
+                                                 Stages,
+                                                 Operator>::GemmKernel;
 
   // Replace epilogue
-  using Epilogue = typename cutlass::epilogue::threadblock::DefaultEpilogueWithReductionVoltaTensorOp<
-    typename GemmBase::Epilogue::Shape,
-    typename GemmBase::Epilogue::WarpMmaOperator,
-    GemmBase::Epilogue::kPartitionsK,
-    ElementC_,
-    EpilogueOutputOp,
-    EpilogueReductionOp,
-    GemmBase::Epilogue::kElementsPerAccess
-  >::Epilogue;
+  using Epilogue =
+    typename cutlass::epilogue::threadblock::DefaultEpilogueWithReductionVoltaTensorOp<
+      typename GemmBase::Epilogue::Shape,
+      typename GemmBase::Epilogue::WarpMmaOperator,
+      GemmBase::Epilogue::kPartitionsK,
+      ElementC_,
+      EpilogueOutputOp,
+      EpilogueReductionOp,
+      GemmBase::Epilogue::kElementsPerAccess>::Epilogue;
 
   // Compose the GEMM kernel
-  using GemmKernel = GemmWithFusedEpilogue<
-    typename GemmBase::Mma,
-    Epilogue,
-    ThreadblockSwizzle
-  >;
+  using GemmKernel = GemmWithFusedEpilogue<typename GemmBase::Mma, Epilogue, ThreadblockSwizzle>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

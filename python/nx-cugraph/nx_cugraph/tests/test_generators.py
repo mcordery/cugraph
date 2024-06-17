@@ -12,10 +12,9 @@
 # limitations under the License.
 import networkx as nx
 import numpy as np
+import nx_cugraph as nxcg
 import pytest
 from packaging.version import parse
-
-import nx_cugraph as nxcg
 
 from .testing_utils import assert_graphs_equal
 

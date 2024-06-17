@@ -19,12 +19,12 @@
 #include <raft/core/cudart_utils.hpp>
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/logger.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/linalg/gemm.cuh>
@@ -47,8 +47,8 @@
 
 #include <rmm/resource_ref.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <hip/hip_fp16.h>
+#include <hipcub/hipcub.hpp>
 
 #include <optional>
 
@@ -77,12 +77,12 @@ void select_clusters(raft::resources const& handle,
                      const float* cluster_centers,  // [n_lists, dim_ext]
                      rmm::device_async_resource_ref mr)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::search::select_clusters(n_probes = %u, n_queries = %u, n_lists = %u, dim = %u)",
-//    n_probes,
-//    n_queries,
-//    n_lists,
-//    dim);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::search::select_clusters(n_probes = %u, n_queries = %u, n_lists = %u, dim = %u)",
+  //    n_probes,
+  //    n_queries,
+  //    n_lists,
+  //    dim);
   auto stream = resource::get_cuda_stream(handle);
   /* NOTE[qc_distances]
 
@@ -264,12 +264,12 @@ void ivfpq_search_worker(raft::resources const& handle,
                          double preferred_shmem_carveout,
                          IvfSampleFilterT sample_filter)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::search-worker(n_queries = %u, n_probes = %u, k = %u, dim = %zu)",
-//    n_queries,
-//    n_probes,
-//    topK,
-//    index.dim());
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::search-worker(n_queries = %u, n_probes = %u, k = %u, dim = %zu)",
+  //    n_queries,
+  //    n_probes,
+  //    topK,
+  //    index.dim());
   auto stream = resource::get_cuda_stream(handle);
   auto mr     = resource::get_workspace_resource(handle);
 
@@ -331,26 +331,26 @@ void ivfpq_search_worker(raft::resources const& handle,
     int end_bit               = sizeof(uint32_t) * 8;
     size_t cub_workspace_size = 0;
     hipcub::DeviceRadixSort::SortPairs(nullptr,
-                                    cub_workspace_size,
-                                    clusters_to_probe,
-                                    cluster_labels_out.data(),
-                                    index_list,
-                                    index_list_sorted,
-                                    n_queries_probes,
-                                    begin_bit,
-                                    end_bit,
-                                    stream);
+                                       cub_workspace_size,
+                                       clusters_to_probe,
+                                       cluster_labels_out.data(),
+                                       index_list,
+                                       index_list_sorted,
+                                       n_queries_probes,
+                                       begin_bit,
+                                       end_bit,
+                                       stream);
     rmm::device_buffer cub_workspace(cub_workspace_size, stream, mr);
     hipcub::DeviceRadixSort::SortPairs(cub_workspace.data(),
-                                    cub_workspace_size,
-                                    clusters_to_probe,
-                                    cluster_labels_out.data(),
-                                    index_list,
-                                    index_list_sorted,
-                                    n_queries_probes,
-                                    begin_bit,
-                                    end_bit,
-                                    stream);
+                                       cub_workspace_size,
+                                       clusters_to_probe,
+                                       cluster_labels_out.data(),
+                                       index_list,
+                                       index_list_sorted,
+                                       n_queries_probes,
+                                       begin_bit,
+                                       end_bit,
+                                       stream);
   }
 
   // select and run the main search kernel
@@ -598,19 +598,19 @@ inline void search(raft::resources const& handle,
   static_assert(std::is_same_v<T, float> || std::is_same_v<T, half> || std::is_same_v<T, uint8_t> ||
                   std::is_same_v<T, int8_t>,
                 "Unsupported element type.");
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::search(n_queries = %u, n_probes = %u, k = %u, dim = %zu)",
-//    n_queries,
-//    params.n_probes,
-//    k,
-//    index.dim());
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::search(n_queries = %u, n_probes = %u, k = %u, dim = %zu)",
+  //    n_queries,
+  //    params.n_probes,
+  //    k,
+  //    index.dim());
 
   RAFT_EXPECTS(
     params.internal_distance_dtype == HIP_R_16F || params.internal_distance_dtype == HIP_R_32F,
     "internal_distance_dtype must be either HIP_R_16F or HIP_R_32F");
-  RAFT_EXPECTS(params.lut_dtype == HIP_R_16F || params.lut_dtype == HIP_R_32F ||
-                 params.lut_dtype == HIP_R_8U,
-               "lut_dtype must be HIP_R_16F, HIP_R_32F or HIP_R_8U");
+  RAFT_EXPECTS(
+    params.lut_dtype == HIP_R_16F || params.lut_dtype == HIP_R_32F || params.lut_dtype == HIP_R_8U,
+    "lut_dtype must be HIP_R_16F, HIP_R_32F or HIP_R_8U");
   RAFT_EXPECTS(k > 0, "parameter `k` in top-k must be positive.");
   RAFT_EXPECTS(
     k <= index.size(),
@@ -656,8 +656,8 @@ inline void search(raft::resources const& handle,
 
   for (uint32_t offset_q = 0; offset_q < n_queries; offset_q += max_queries) {
     uint32_t queries_batch = min(max_queries, n_queries - offset_q);
-//    common::nvtx::range<common::nvtx::domain::raft> batch_scope(
-//      "ivf_pq::search-batch(queries: %u - %u)", offset_q, offset_q + queries_batch);
+    //    common::nvtx::range<common::nvtx::domain::raft> batch_scope(
+    //      "ivf_pq::search-batch(queries: %u - %u)", offset_q, offset_q + queries_batch);
 
     select_clusters(handle,
                     clusters_to_probe.data(),

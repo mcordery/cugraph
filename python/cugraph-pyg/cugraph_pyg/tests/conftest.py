@@ -12,21 +12,20 @@
 # limitations under the License.
 
 import os
-import pytest
-
-from dask_cuda.initialize import initialize as dask_initialize
-from dask_cuda import LocalCUDACluster
-from dask.distributed import Client
-from cugraph.dask.comms import comms as Comms
-from cugraph.dask.common.mg_utils import get_visible_devices
-from cugraph.testing.mg_utils import stop_dask_client
-
-import torch
-import numpy as np
-from cugraph.gnn import FeatureStore
-from cugraph.datasets import karate
-
 import tempfile
+
+import numpy as np
+import pytest
+import torch
+from cugraph.dask.common.mg_utils import get_visible_devices
+from cugraph.dask.comms import comms as Comms
+from cugraph.gnn import FeatureStore
+from cugraph.testing.mg_utils import stop_dask_client
+from dask.distributed import Client
+from dask_cuda import LocalCUDACluster
+from dask_cuda.initialize import initialize as dask_initialize
+
+from cugraph.datasets import karate
 
 # module-wide fixtures
 

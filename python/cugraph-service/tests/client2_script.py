@@ -14,8 +14,8 @@
 """
 Script to be used to simulate a cugraph_service client.
 """
-import time
 import random
+import time
 
 from cugraph_service_client import CugraphServiceClient
 

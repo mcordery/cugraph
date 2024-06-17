@@ -19,9 +19,8 @@
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/nvtx/ranges.hpp>
 
-#include <hip/memory_resource>
-
 #include <cstddef>
+#include <hip/memory_resource>
 #include <utility>
 
 namespace rmm::mr {

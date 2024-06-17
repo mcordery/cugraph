@@ -40,8 +40,6 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
-#include <hip/functional>
 #include <thrust/distance.h>
 #include <thrust/execution_policy.h>
 #include <thrust/fill.h>
@@ -55,6 +53,9 @@
 #include <thrust/tuple.h>
 #include <thrust/type_traits/integer_sequence.h>
 
+#include <hipcub/hipcub.hpp>
+
+#include <hip/functional>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -495,7 +496,8 @@ __global__ static void per_v_transform_reduce_e_high_degree(
     static_cast<size_t>(major_range_first - edge_partition.major_range_first());
   auto idx = static_cast<size_t>(blockIdx.x);
 
-  using BlockReduce = hipcub::BlockReduce<e_op_result_t, per_v_transform_reduce_e_kernel_block_size>;
+  using BlockReduce =
+    hipcub::BlockReduce<e_op_result_t, per_v_transform_reduce_e_kernel_block_size>;
   [[maybe_unused]] __shared__
     typename BlockReduce::TempStorage temp_storage;  // relevant only if update_major == true
 

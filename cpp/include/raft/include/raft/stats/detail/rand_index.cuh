@@ -60,7 +60,6 @@
 #include <rmm/device_uvector.hpp>
 
 #include <hipcub/hipcub.hpp>
-
 #include <math.h>
 
 namespace raft {
@@ -101,8 +100,9 @@ RAFT_KERNEL computeTheNumerator(
   }
 
   // specialize blockReduce for a 2D block of 1024 threads of type uint64_t
-  typedef hipcub::BlockReduce<uint64_t, BLOCK_DIM_X, hipcub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
-    BlockReduce;
+  typedef hipcub::
+    BlockReduce<uint64_t, BLOCK_DIM_X, hipcub::BLOCK_REDUCE_WARP_REDUCTIONS, BLOCK_DIM_Y>
+      BlockReduce;
 
   // Allocate shared memory for blockReduce
   __shared__ typename BlockReduce::TempStorage temp_storage;

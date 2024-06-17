@@ -22,8 +22,8 @@
 
 #include <rmm/resource_ref.hpp>
 
-#include <hip/hip_runtime.h>
 #include <hip/hip_fp16.h>
+#include <hip/hip_runtime.h>
 
 #include <cfloat>
 #include <cstdint>
@@ -274,16 +274,16 @@ void copy_with_padding(raft::resources const& res,
     raft::copy(dst.data_handle(), src.data_handle(), src.size(), resource::get_cuda_stream(res));
   } else {
     // copy with padding
-    RAFT_CUDA_TRY(hipMemsetAsync(
-      dst.data_handle(), 0, dst.size() * sizeof(T), resource::get_cuda_stream(res)));
+    RAFT_CUDA_TRY(
+      hipMemsetAsync(dst.data_handle(), 0, dst.size() * sizeof(T), resource::get_cuda_stream(res)));
     RAFT_CUDA_TRY(hipMemcpy2DAsync(dst.data_handle(),
-                                    sizeof(T) * dst.extent(1),
-                                    src.data_handle(),
-                                    sizeof(T) * src.extent(1),
-                                    sizeof(T) * src.extent(1),
-                                    src.extent(0),
-                                    hipMemcpyDefault,
-                                    resource::get_cuda_stream(res)));
+                                   sizeof(T) * dst.extent(1),
+                                   src.data_handle(),
+                                   sizeof(T) * src.extent(1),
+                                   sizeof(T) * src.extent(1),
+                                   src.extent(0),
+                                   hipMemcpyDefault,
+                                   resource::get_cuda_stream(res)));
   }
 }
 }  // namespace raft::neighbors::cagra::detail

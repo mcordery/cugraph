@@ -12,6 +12,6 @@
 # limitations under the License.
 
 from cugraph.tree.minimum_spanning_tree import (
-    minimum_spanning_tree,
     maximum_spanning_tree,
+    minimum_spanning_tree,
 )

@@ -14,13 +14,14 @@
 import json
 import os
 import time
+from argparse import ArgumentParser
+
 import dgl
-from dgl.dataloading import MultiLayerNeighborSampler, DataLoader
 import pandas as pd
 import torch
+from dgl.dataloading import DataLoader, MultiLayerNeighborSampler
+from load_graph_feats import load_edges_from_disk, load_node_features, load_node_labels
 from model import run_1_epoch
-from argparse import ArgumentParser
-from load_graph_feats import load_edges_from_disk, load_node_labels, load_node_features
 
 
 class DataLoaderArgs:

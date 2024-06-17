@@ -15,9 +15,8 @@
  */
 #pragma once
 
-#include <hip_fp16.hpp>
-
 #include <hip/library_types.h>
+#include <hip_fp16.hpp>
 
 #include <cstdint>
 

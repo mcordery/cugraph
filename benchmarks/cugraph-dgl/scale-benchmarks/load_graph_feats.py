@@ -11,10 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 import numpy as np
 import pandas as pd
 import torch
-import os
 
 
 def load_edges_from_disk(parquet_path, replication_factor, input_meta):

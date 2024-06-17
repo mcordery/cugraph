@@ -14,22 +14,21 @@
 # This file test the Renumbering features
 
 import gc
-import pytest
 
-import pandas
-import numpy as np
-
-import dask
 import cudf
-import dask_cudf
 import cugraph.dask as dcg
+import dask
+import dask_cudf
+import numpy as np
+import pandas
+import pytest
+from cudf.testing import assert_frame_equal, assert_series_equal
+from cugraph.dask.common.mg_utils import is_single_gpu
+from cugraph.structure.number_map import NumberMap
+from cugraph.testing import utils
+
 import cugraph
 from cugraph.datasets import karate, karate_disjoint
-from cugraph.testing import utils
-from cugraph.structure.number_map import NumberMap
-from cugraph.dask.common.mg_utils import is_single_gpu
-from cudf.testing import assert_frame_equal, assert_series_equal
-
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

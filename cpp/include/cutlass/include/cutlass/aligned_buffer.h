@@ -35,21 +35,16 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Modifies semantics of cutlass::Array<> to provide guaranteed alignment. 
-template <
-  typename T,
-  int N,
-  int Align = 16
->
+/// Modifies semantics of cutlass::Array<> to provide guaranteed alignment.
+template <typename T, int N, int Align = 16>
 struct AlignedBuffer {
-  
   /// Internal storage type
   using Storage = uint8_t;
 
@@ -60,16 +55,13 @@ struct AlignedBuffer {
   static int const kAlign = Align;
 
   /// Number of storage elements
-  static int const kBytes = 
-    (sizeof_bits<T>::value * N + 7) / 8;
+  static int const kBytes = (sizeof_bits<T>::value * N + 7) / 8;
 
-private:
-
+ private:
   /// Internal storage
   alignas(Align) Storage storage[kBytes];
 
-public:
-
+ public:
   //
   // C++ standard members
   //
@@ -77,53 +69,36 @@ public:
   typedef T value_type;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  typedef value_type *pointer;
-  typedef value_type const * const_pointer;
+  typedef value_type* pointer;
+  typedef value_type const* const_pointer;
 
-  using ArrayType = Array<T, N>;
-  using reference = typename ArrayType::reference;
+  using ArrayType       = Array<T, N>;
+  using reference       = typename ArrayType::reference;
   using const_reference = typename ArrayType::const_reference;
 
-public:
+ public:
+  CUTLASS_HOST_DEVICE
+  pointer data() { return reinterpret_cast<pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  pointer data() {
-    return reinterpret_cast<pointer>(storage); 
-  }
+  const_pointer data() const { return reinterpret_cast<pointer>(storage); }
 
   CUTLASS_HOST_DEVICE
-  const_pointer data() const {
-    return reinterpret_cast<pointer>(storage); 
-  }
-  
-  CUTLASS_HOST_DEVICE
-  Storage * raw_data() {
-    return storage;
-  }
+  Storage* raw_data() { return storage; }
 
   CUTLASS_HOST_DEVICE
-  Storage const * raw_data() const {
-    return storage;
-  }
-
+  Storage const* raw_data() const { return storage; }
 
   CUTLASS_HOST_DEVICE
-  constexpr bool empty() const {
-    return !kCount;
-  }
+  constexpr bool empty() const { return !kCount; }
 
   CUTLASS_HOST_DEVICE
-  constexpr size_type size() const {
-    return kCount;
-  }
+  constexpr size_type size() const { return kCount; }
 
   CUTLASS_HOST_DEVICE
-  constexpr size_type max_size() const {
-    return kCount;
-  }
+  constexpr size_type max_size() const { return kCount; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
-
+}  // namespace cutlass

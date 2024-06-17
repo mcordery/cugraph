@@ -22,7 +22,7 @@
 
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/device_mdspan.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/linalg/map.cuh>
@@ -105,32 +105,32 @@ void segmented_sort_by_key(raft::resources const& handle,
   size_t temp_storage_bytes = 0;
   if (asc) {
     hipcub::DeviceSegmentedRadixSort::SortPairs(nullptr,
-                                             temp_storage_bytes,
-                                             keys,
-                                             out_dists.data_handle(),
-                                             values,
-                                             out_inds.data_handle(),
-                                             n_elements,
-                                             n_segments,
-                                             offsets,
-                                             offsets + 1,
-                                             0,
-                                             sizeof(ValT) * 8,
-                                             stream);
+                                                temp_storage_bytes,
+                                                keys,
+                                                out_dists.data_handle(),
+                                                values,
+                                                out_inds.data_handle(),
+                                                n_elements,
+                                                n_segments,
+                                                offsets,
+                                                offsets + 1,
+                                                0,
+                                                sizeof(ValT) * 8,
+                                                stream);
   } else {
     hipcub::DeviceSegmentedRadixSort::SortPairsDescending(nullptr,
-                                                       temp_storage_bytes,
-                                                       keys,
-                                                       out_dists.data_handle(),
-                                                       values,
-                                                       out_inds.data_handle(),
-                                                       n_elements,
-                                                       n_segments,
-                                                       offsets,
-                                                       offsets + 1,
-                                                       0,
-                                                       sizeof(ValT) * 8,
-                                                       stream);
+                                                          temp_storage_bytes,
+                                                          keys,
+                                                          out_dists.data_handle(),
+                                                          values,
+                                                          out_inds.data_handle(),
+                                                          n_elements,
+                                                          n_segments,
+                                                          offsets,
+                                                          offsets + 1,
+                                                          0,
+                                                          sizeof(ValT) * 8,
+                                                          stream);
   }
 
   auto d_temp_storage = raft::make_device_mdarray<char, size_t>(
@@ -139,34 +139,34 @@ void segmented_sort_by_key(raft::resources const& handle,
   if (asc) {
     // Run sorting operation
     hipcub::DeviceSegmentedRadixSort::SortPairs((void*)d_temp_storage.data_handle(),
-                                             temp_storage_bytes,
-                                             keys,
-                                             out_dists.data_handle(),
-                                             values,
-                                             out_inds.data_handle(),
-                                             n_elements,
-                                             n_segments,
-                                             offsets,
-                                             offsets + 1,
-                                             0,
-                                             sizeof(ValT) * 8,
-                                             stream);
+                                                temp_storage_bytes,
+                                                keys,
+                                                out_dists.data_handle(),
+                                                values,
+                                                out_inds.data_handle(),
+                                                n_elements,
+                                                n_segments,
+                                                offsets,
+                                                offsets + 1,
+                                                0,
+                                                sizeof(ValT) * 8,
+                                                stream);
 
   } else {
     // Run sorting operation
     hipcub::DeviceSegmentedRadixSort::SortPairsDescending((void*)d_temp_storage.data_handle(),
-                                                       temp_storage_bytes,
-                                                       keys,
-                                                       out_dists.data_handle(),
-                                                       values,
-                                                       out_inds.data_handle(),
-                                                       n_elements,
-                                                       n_segments,
-                                                       offsets,
-                                                       offsets + 1,
-                                                       0,
-                                                       sizeof(ValT) * 8,
-                                                       stream);
+                                                          temp_storage_bytes,
+                                                          keys,
+                                                          out_dists.data_handle(),
+                                                          values,
+                                                          out_inds.data_handle(),
+                                                          n_elements,
+                                                          n_segments,
+                                                          offsets,
+                                                          offsets + 1,
+                                                          0,
+                                                          sizeof(ValT) * 8,
+                                                          stream);
   }
 
   raft::copy(values, out_inds.data_handle(), out_inds.size(), stream);
@@ -247,8 +247,8 @@ void select_k(raft::resources const& handle,
               SelectAlgo algo   = SelectAlgo::kAuto,
               const IdxT* len_i = nullptr)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "matrix::select_k(batch_size = %zu, len = %zu, k = %d)", batch_size, len, k);
 
   if (algo == SelectAlgo::kAuto) { algo = choose_select_k_algorithm(batch_size, len, k); }
 

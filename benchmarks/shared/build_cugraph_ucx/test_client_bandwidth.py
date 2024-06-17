@@ -11,14 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dask_cuda import LocalCUDACluster
-from dask.distributed import Client, wait
-import cupy as cp
-import numpy as np
-import cudf
-import dask_cudf
-import rmm
 from time import perf_counter_ns
+
+import cudf
+import cupy as cp
+import dask_cudf
+import numpy as np
+import rmm
+from dask.distributed import Client, wait
+from dask_cuda import LocalCUDACluster
 
 
 def benchmark_func(func, n_times=10):

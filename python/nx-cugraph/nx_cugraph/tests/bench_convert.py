@@ -14,9 +14,8 @@ import random
 
 import networkx as nx
 import numpy as np
-import pytest
-
 import nx_cugraph as nxcg
+import pytest
 
 try:
     import cugraph

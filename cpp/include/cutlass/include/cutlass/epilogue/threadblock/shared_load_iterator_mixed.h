@@ -31,7 +31,8 @@
 /*! \file
   \brief Epilogue for threadblock scoped GEMMs using Tensor Ops optimized for mixed-precision.
 
-  This assumes the shared memory tile is in a permuted layout which avoids bank conflicts on loading.
+  This assumes the shared memory tile is in a permuted layout which avoids bank conflicts on
+  loading.
 
   When the fragment is loaded into registers, it matches the row-major thread map assumed by
   the predicated tile iterator writing to global memory.
@@ -43,14 +44,13 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/threadblock/output_tile_thread_map.h"
 #include "cutlass/layout/matrix.h"
 #include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 #include "cutlass/tensor_ref.h"
-
-#include "cutlass/epilogue/threadblock/output_tile_thread_map.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -64,15 +64,14 @@ namespace threadblock {
 ///
 /// Satisfies: ReadableTileIterator
 ///
-template <
-  typename ThreadMap_,       ///< Thread map (conept: OutputTileThreadMap)
-  typename Element_,         ///< Accumulator data type
-  int ElementSizeBits_,      ///< Size of accumulator in bits
-  int OutputSizeBits_,       ///< Size of output element in bits
-  int ElementsPerAccess,     ///< Vector length of output vector
-  int ContiguousLanes        ///< Number of lanes in the warp writing to contiguous elements
-                             ///  in the global memory tensor
->
+template <typename ThreadMap_,    ///< Thread map (conept: OutputTileThreadMap)
+          typename Element_,      ///< Accumulator data type
+          int ElementSizeBits_,   ///< Size of accumulator in bits
+          int OutputSizeBits_,    ///< Size of output element in bits
+          int ElementsPerAccess,  ///< Vector length of output vector
+          int ContiguousLanes     ///< Number of lanes in the warp writing to contiguous elements
+                                  ///  in the global memory tensor
+          >
 class SharedLoadIteratorMixed;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,23 +80,22 @@ class SharedLoadIteratorMixed;
 ///
 /// Satisfies: ReadableTileIterator
 ///
-template <
-  typename ThreadMap_,       ///< Thread map (conept: OutputTileThreadMap)
-  typename Element_          ///< Accumulator data type
->
+template <typename ThreadMap_,  ///< Thread map (conept: OutputTileThreadMap)
+          typename Element_     ///< Accumulator data type
+          >
 class SharedLoadIteratorMixed<ThreadMap_, Element_, 32, 16, 8, 8> {
-public:
+ public:
   using ThreadMap = ThreadMap_;
-  using Shape = typename ThreadMap::Shape;
+  using Shape     = typename ThreadMap::Shape;
 
   using Element = Element_;
 
-  using Layout = layout::RowMajor;
-  using TensorRef = TensorRef<Element, Layout>;
+  using Layout         = layout::RowMajor;
+  using TensorRef      = TensorRef<Element, Layout>;
   using ConstTensorRef = typename TensorRef::ConstTensorRef;
 
-  using Index = typename Layout::Index;
-  using LongIndex = typename Layout::LongIndex;
+  using Index       = typename Layout::Index;
+  using LongIndex   = typename Layout::LongIndex;
   using TensorCoord = MatrixCoord;
 
   static int const kElementsPerAccess = ThreadMap::kElementsPerAccess;
@@ -107,63 +105,51 @@ public:
   static int const kThreads = ThreadMap::kThreads;
 
   /// Fragment object
-  using Fragment = Array<
-    Element, 
-    ThreadMap::Iterations::kColumn * 
-    ThreadMap::Iterations::kRow * 
-    ThreadMap::Iterations::kGroup * 
-    ThreadMap::Iterations::kCluster * 
-    ThreadMap::kElementsPerAccess>;
+  using Fragment = Array<Element,
+                         ThreadMap::Iterations::kColumn * ThreadMap::Iterations::kRow *
+                           ThreadMap::Iterations::kGroup * ThreadMap::Iterations::kCluster *
+                           ThreadMap::kElementsPerAccess>;
 
   /// Memory access size
-  using AccessType = AlignedArray<
-    Element, 
-    ThreadMap::kElementsPerAccess, 
-    kAlignment>;
+  using AccessType = AlignedArray<Element, ThreadMap::kElementsPerAccess, kAlignment>;
 
   /// Vector type used for SMEM loads
-  using LoadType = AlignedArray<
-    Element,
-    const_min(128 / sizeof_bits<Element>::value, ThreadMap::kElementsPerAccess),
-    const_min(16, kAlignment)
-  >;
+  using LoadType =
+    AlignedArray<Element,
+                 const_min(128 / sizeof_bits<Element>::value, ThreadMap::kElementsPerAccess),
+                 const_min(16, kAlignment)>;
 
   static int const kLoadsPerAccess = AccessType::kElements / LoadType::kElements;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Byte-level pointer
-  LoadType const *pointers_[kLoadsPerAccess];
+  LoadType const* pointers_[kLoadsPerAccess];
 
   /// Stride along adjacent rows in units of LoadType
   int stride_;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Constructor
   CUTLASS_DEVICE
-  SharedLoadIteratorMixed(
-    TensorRef ref,
-    int thread_idx
-  ):
-    stride_((ref.stride(0) / LoadType::kElements)) {
-
+  SharedLoadIteratorMixed(TensorRef ref, int thread_idx)
+    : stride_((ref.stride(0) / LoadType::kElements))
+  {
     TensorCoord thread_offset = ThreadMap::initial_offset(thread_idx);
 
     // Initialize pointers
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
-      pointers_[i] = reinterpret_cast<LoadType const *>(ref.data());
+      pointers_[i] = reinterpret_cast<LoadType const*>(ref.data());
 
-      int col_idx = (thread_offset.column() / kElementsPerAccess) * kLoadsPerAccess;
+      int col_idx     = (thread_offset.column() / kElementsPerAccess) * kLoadsPerAccess;
       int bank_offset = (col_idx * int(sizeof(LoadType)) / 128) % kLoadsPerAccess;
 
       col_idx += (bank_offset + i) % kLoadsPerAccess;
@@ -174,7 +160,8 @@ public:
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
       pointers_[i] += pointer_offset / LoadType::kElements;
@@ -182,50 +169,45 @@ public:
   }
 
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &offset) {
+  void add_tile_offset(TensorCoord const& offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
-      pointers_[i] += 
-        offset.row() * Shape::kRow * stride_ + 
-        offset.column() * Shape::kColumn / LoadType::kElements;
+      pointers_[i] += offset.row() * Shape::kRow * stride_ +
+                      offset.column() * Shape::kColumn / LoadType::kElements;
     }
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) const {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset) const
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int cluster = 0; cluster < ThreadMap::Iterations::kCluster; ++cluster) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int group = 0; group < ThreadMap::Iterations::kGroup; ++group) {
-
         CUTLASS_PRAGMA_UNROLL
         for (int row = 0; row < ThreadMap::Iterations::kRow; ++row) {
-
           int row_ptr_offset =
-            row * ThreadMap::Delta::kRow * stride_ + 
-            group * ThreadMap::Delta::kGroup* stride_ + 
-            cluster * ThreadMap::Delta::kCluster * stride_ +
-            pointer_offset / LoadType::kElements;
+            row * ThreadMap::Delta::kRow * stride_ + group * ThreadMap::Delta::kGroup * stride_ +
+            cluster * ThreadMap::Delta::kCluster * stride_ + pointer_offset / LoadType::kElements;
 
-          int frag_row_idx = (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
+          int frag_row_idx =
+            (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
 
-          LoadType *frag_ptr = reinterpret_cast<LoadType *>(&frag);
+          LoadType* frag_ptr = reinterpret_cast<LoadType*>(&frag);
 
           CUTLASS_PRAGMA_UNROLL
           for (int column = 0; column < ThreadMap::Iterations::kColumn; ++column) {
-            
             int frag_idx = frag_row_idx * ThreadMap::Iterations::kColumn + column;
 
             CUTLASS_PRAGMA_UNROLL
             for (int v = 0; v < kLoadsPerAccess; ++v) {
-           
-              int vector_idx = (column * ThreadMap::Delta::kColumn / kElementsPerAccess * kLoadsPerAccess); 
+              int vector_idx =
+                (column * ThreadMap::Delta::kColumn / kElementsPerAccess * kLoadsPerAccess);
 
-              LoadType const *memory_pointer = pointers_[v] + row_ptr_offset;
-            
+              LoadType const* memory_pointer = pointers_[v] + row_ptr_offset;
+
               frag_ptr[frag_idx * kLoadsPerAccess + v] = memory_pointer[vector_idx];
             }
           }
@@ -236,32 +218,28 @@ public:
 
   /// Loads a fragment
   CUTLASS_DEVICE
-  void load(Fragment &frag) const {
-
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) const { load_with_pointer_offset(frag, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Partial specialization for int32_t x 16 => int8_t/int4b_t x 16 
-template <
-  typename ThreadMap_,      ///< Thread map (conept: OutputTileThreadMap)
-  int OutputSizeBits_       ///< Size of output element in bits
->
+/// Partial specialization for int32_t x 16 => int8_t/int4b_t x 16
+template <typename ThreadMap_,  ///< Thread map (conept: OutputTileThreadMap)
+          int OutputSizeBits_   ///< Size of output element in bits
+          >
 class SharedLoadIteratorMixed<ThreadMap_, int32_t, 32, OutputSizeBits_, 16, 8> {
-public:
+ public:
   using ThreadMap = ThreadMap_;
-  using Shape = typename ThreadMap::Shape;
+  using Shape     = typename ThreadMap::Shape;
 
   using Element = int32_t;
 
-  using Layout = layout::RowMajor;
-  using TensorRef = TensorRef<Element, Layout>;
+  using Layout         = layout::RowMajor;
+  using TensorRef      = TensorRef<Element, Layout>;
   using ConstTensorRef = typename TensorRef::ConstTensorRef;
 
-  using Index = typename Layout::Index;
-  using LongIndex = typename Layout::LongIndex;
+  using Index       = typename Layout::Index;
+  using LongIndex   = typename Layout::LongIndex;
   using TensorCoord = MatrixCoord;
 
   static int const kElementsPerAccess = ThreadMap::kElementsPerAccess;
@@ -271,73 +249,61 @@ public:
   static int const kThreads = ThreadMap::kThreads;
 
   /// Fragment object
-  using Fragment = Array<
-    Element, 
-    ThreadMap::Iterations::kColumn * 
-    ThreadMap::Iterations::kRow * 
-    ThreadMap::Iterations::kGroup * 
-    ThreadMap::Iterations::kCluster * 
-    ThreadMap::kElementsPerAccess>;
+  using Fragment = Array<Element,
+                         ThreadMap::Iterations::kColumn * ThreadMap::Iterations::kRow *
+                           ThreadMap::Iterations::kGroup * ThreadMap::Iterations::kCluster *
+                           ThreadMap::kElementsPerAccess>;
 
   /// Memory access size
-  using AccessType = AlignedArray<
-    Element, 
-    16, 
-    kAlignment>;
+  using AccessType = AlignedArray<Element, 16, kAlignment>;
 
   /// Vector type used for SMEM loads
-  using LoadType = AlignedArray<
-    Element,
-    4,
-    16
-  >;
+  using LoadType = AlignedArray<Element, 4, 16>;
 
   static int const kLoadsPerAccess = 4;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Byte-level pointer
-  LoadType const *pointers_[kLoadsPerAccess];
+  LoadType const* pointers_[kLoadsPerAccess];
 
   /// Stride along adjacent rows in units of LoadType
   int stride_;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Constructor
   CUTLASS_DEVICE
-  SharedLoadIteratorMixed(
-    TensorRef ref,
-    int thread_idx
-  ):
-    stride_((ref.stride(0) / LoadType::kElements)) {
-
+  SharedLoadIteratorMixed(TensorRef ref, int thread_idx)
+    : stride_((ref.stride(0) / LoadType::kElements))
+  {
     TensorCoord thread_offset = ThreadMap::initial_offset(thread_idx);
-    
+
     // Initialize pointers
-    LoadType const *base_ptr = reinterpret_cast<LoadType const *>(ref.data()) + thread_offset.row() * stride_;
-      
+    LoadType const* base_ptr =
+      reinterpret_cast<LoadType const*>(ref.data()) + thread_offset.row() * stride_;
+
     int lane_col_idx = thread_offset.column() / 16;
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
-      int lane_offset = (lane_col_idx % 2) * 4 | ((lane_col_idx / 2) * 8) | ((lane_col_idx / 2) ^ i);
- 
+      int lane_offset =
+        (lane_col_idx % 2) * 4 | ((lane_col_idx / 2) * 8) | ((lane_col_idx / 2) ^ i);
+
       pointers_[i] = base_ptr + lane_offset;
     }
   }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
       pointers_[i] += pointer_offset / LoadType::kElements;
@@ -345,48 +311,42 @@ public:
   }
 
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &offset) {
+  void add_tile_offset(TensorCoord const& offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
-      pointers_[i] += 
-        offset.row() * Shape::kRow * stride_ + 
-        offset.column() * Shape::kColumn / LoadType::kElements;
+      pointers_[i] += offset.row() * Shape::kRow * stride_ +
+                      offset.column() * Shape::kColumn / LoadType::kElements;
     }
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int cluster = 0; cluster < ThreadMap::Iterations::kCluster; ++cluster) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int group = 0; group < ThreadMap::Iterations::kGroup; ++group) {
-
         CUTLASS_PRAGMA_UNROLL
         for (int row = 0; row < ThreadMap::Iterations::kRow; ++row) {
-
           int row_ptr_offset =
-            row * ThreadMap::Delta::kRow * stride_ + 
-            group * ThreadMap::Delta::kGroup* stride_ + 
-            cluster * ThreadMap::Delta::kCluster * stride_ +
-            pointer_offset / LoadType::kElements;
+            row * ThreadMap::Delta::kRow * stride_ + group * ThreadMap::Delta::kGroup * stride_ +
+            cluster * ThreadMap::Delta::kCluster * stride_ + pointer_offset / LoadType::kElements;
 
-          int frag_row_idx = (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
+          int frag_row_idx =
+            (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
 
-          LoadType *frag_ptr = reinterpret_cast<LoadType *>(&frag);
+          LoadType* frag_ptr = reinterpret_cast<LoadType*>(&frag);
 
           CUTLASS_PRAGMA_UNROLL
           for (int column = 0; column < ThreadMap::Iterations::kColumn; ++column) {
-            
             int frag_idx = frag_row_idx * ThreadMap::Iterations::kColumn + column;
 
             CUTLASS_PRAGMA_UNROLL
             for (int v = 0; v < kLoadsPerAccess; ++v) {
-           
-              LoadType const *memory_pointer = pointers_[v];
-            
+              LoadType const* memory_pointer = pointers_[v];
+
               frag_ptr[frag_idx * kLoadsPerAccess + v] = memory_pointer[row_ptr_offset];
             }
           }
@@ -397,32 +357,27 @@ public:
 
   /// Loads a fragment
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
-
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { load_with_pointer_offset(frag, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for int32_t x 8 => int8_t/int4b_t x 8
-template <
-  typename ThreadMap_,      ///< Thread map (conept: OutputTileThreadMap)
-  int OutputSizeBits_
->
+template <typename ThreadMap_,  ///< Thread map (conept: OutputTileThreadMap)
+          int OutputSizeBits_>
 class SharedLoadIteratorMixed<ThreadMap_, int32_t, 32, OutputSizeBits_, 8, 8> {
-public:
+ public:
   using ThreadMap = ThreadMap_;
-  using Shape = typename ThreadMap::Shape;
+  using Shape     = typename ThreadMap::Shape;
 
   using Element = int32_t;
 
-  using Layout = layout::RowMajor;
-  using TensorRef = TensorRef<Element, Layout>;
+  using Layout         = layout::RowMajor;
+  using TensorRef      = TensorRef<Element, Layout>;
   using ConstTensorRef = typename TensorRef::ConstTensorRef;
 
-  using Index = typename Layout::Index;
-  using LongIndex = typename Layout::LongIndex;
+  using Index       = typename Layout::Index;
+  using LongIndex   = typename Layout::LongIndex;
   using TensorCoord = MatrixCoord;
 
   static int const kElementsPerAccess = ThreadMap::kElementsPerAccess;
@@ -432,60 +387,46 @@ public:
   static int const kThreads = ThreadMap::kThreads;
 
   /// Fragment object
-  using Fragment = Array<
-    Element, 
-    ThreadMap::Iterations::kColumn * 
-    ThreadMap::Iterations::kRow * 
-    ThreadMap::Iterations::kGroup * 
-    ThreadMap::Iterations::kCluster * 
-    ThreadMap::kElementsPerAccess>;
+  using Fragment = Array<Element,
+                         ThreadMap::Iterations::kColumn * ThreadMap::Iterations::kRow *
+                           ThreadMap::Iterations::kGroup * ThreadMap::Iterations::kCluster *
+                           ThreadMap::kElementsPerAccess>;
 
   /// Memory access size
-  using AccessType = AlignedArray<
-    Element, 
-    8, 
-    kAlignment>;
+  using AccessType = AlignedArray<Element, 8, kAlignment>;
 
   /// Vector type used for SMEM loads
-  using LoadType = AlignedArray<
-    Element,
-    4,
-    16
-  >;
+  using LoadType = AlignedArray<Element, 4, 16>;
 
   static int const kLoadsPerAccess = 2;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Byte-level pointer
-  LoadType const *pointers_[kLoadsPerAccess];
+  LoadType const* pointers_[kLoadsPerAccess];
 
   /// Stride along adjacent rows in units of LoadType
   int stride_;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Constructor
   CUTLASS_DEVICE
-  SharedLoadIteratorMixed(
-    TensorRef ref,
-    int thread_idx
-  ):
-    stride_((ref.stride(0) / LoadType::kElements)) {
-
+  SharedLoadIteratorMixed(TensorRef ref, int thread_idx)
+    : stride_((ref.stride(0) / LoadType::kElements))
+  {
     TensorCoord thread_offset = ThreadMap::initial_offset(thread_idx);
-    
+
     // Initialize pointers
-    LoadType const *base_ptr = reinterpret_cast<LoadType const *>(ref.data()) + thread_offset.row() * stride_;
-      
+    LoadType const* base_ptr =
+      reinterpret_cast<LoadType const*>(ref.data()) + thread_offset.row() * stride_;
+
     int lane_col_idx = thread_offset.column() / 8;
 
     CUTLASS_PRAGMA_UNROLL
@@ -498,7 +439,8 @@ public:
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
       pointers_[i] += pointer_offset / LoadType::kElements;
@@ -506,48 +448,42 @@ public:
   }
 
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &offset) {
+  void add_tile_offset(TensorCoord const& offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kLoadsPerAccess; ++i) {
-      pointers_[i] += 
-        offset.row() * Shape::kRow * stride_ + 
-        offset.column() * Shape::kColumn / LoadType::kElements;
+      pointers_[i] += offset.row() * Shape::kRow * stride_ +
+                      offset.column() * Shape::kColumn / LoadType::kElements;
     }
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int cluster = 0; cluster < ThreadMap::Iterations::kCluster; ++cluster) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int group = 0; group < ThreadMap::Iterations::kGroup; ++group) {
-
         CUTLASS_PRAGMA_UNROLL
         for (int row = 0; row < ThreadMap::Iterations::kRow; ++row) {
-
           int row_ptr_offset =
-            row * ThreadMap::Delta::kRow * stride_ + 
-            group * ThreadMap::Delta::kGroup* stride_ + 
-            cluster * ThreadMap::Delta::kCluster * stride_ +
-            pointer_offset / LoadType::kElements;
+            row * ThreadMap::Delta::kRow * stride_ + group * ThreadMap::Delta::kGroup * stride_ +
+            cluster * ThreadMap::Delta::kCluster * stride_ + pointer_offset / LoadType::kElements;
 
-          int frag_row_idx = (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
+          int frag_row_idx =
+            (row + ThreadMap::Iterations::kRow * (group + ThreadMap::Iterations::kGroup * cluster));
 
-          LoadType *frag_ptr = reinterpret_cast<LoadType *>(&frag);
+          LoadType* frag_ptr = reinterpret_cast<LoadType*>(&frag);
 
           CUTLASS_PRAGMA_UNROLL
           for (int column = 0; column < ThreadMap::Iterations::kColumn; ++column) {
-            
             int frag_idx = frag_row_idx * ThreadMap::Iterations::kColumn + column;
 
             CUTLASS_PRAGMA_UNROLL
             for (int v = 0; v < kLoadsPerAccess; ++v) {
-           
-              LoadType const *memory_pointer = pointers_[v];
-            
+              LoadType const* memory_pointer = pointers_[v];
+
               frag_ptr[frag_idx * kLoadsPerAccess + v] = memory_pointer[row_ptr_offset];
             }
           }
@@ -558,16 +494,13 @@ public:
 
   /// Loads a fragment
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
-
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { load_with_pointer_offset(frag, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -16,37 +16,25 @@
 
 from pylibcugraph import GraphProperties, SGGraph
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_device_array_view_copy,
+    cugraph_type_erased_device_array_view_t,
 )
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
 from pylibcugraph._cugraph_c.labeling_algorithms cimport (
+    cugraph_labeling_result_free,
+    cugraph_labeling_result_get_labels,
+    cugraph_labeling_result_get_vertices,
     cugraph_labeling_result_t,
     cugraph_weakly_connected_components,
-    cugraph_labeling_result_get_vertices,
-    cugraph_labeling_result_get_labels,
-    cugraph_labeling_result_free,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
-    assert_success,
     assert_CAI_type,
+    assert_success,
     copy_to_cupy_array,
     create_cugraph_type_erased_device_array_view_from_py_obj,
 )

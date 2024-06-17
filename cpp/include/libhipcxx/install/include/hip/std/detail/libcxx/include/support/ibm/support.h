@@ -18,7 +18,7 @@ extern "builtin" unsigned int __cntlz4(unsigned int);
 extern "builtin" unsigned int __cntlz8(unsigned long long);
 
 // Builtin functions for counting population
-#define __builtin_popcount(x) __popcnt4(x)
+#define __builtin_popcount(x)   __popcnt4(x)
 #define __builtin_popcountll(x) __popcnt8(x)
 #if defined(__64BIT__)
 #define __builtin_popcountl(x) __builtin_popcountll(x)
@@ -27,7 +27,7 @@ extern "builtin" unsigned int __cntlz8(unsigned long long);
 #endif
 
 // Builtin functions for counting trailing zeros
-#define __builtin_ctz(x) __cnttz4(x)
+#define __builtin_ctz(x)   __cnttz4(x)
 #define __builtin_ctzll(x) __cnttz8(x)
 #if defined(__64BIT__)
 #define __builtin_ctzl(x) __builtin_ctzll(x)
@@ -36,7 +36,7 @@ extern "builtin" unsigned int __cntlz8(unsigned long long);
 #endif
 
 // Builtin functions for counting leading zeros
-#define __builtin_clz(x) __cntlz4(x)
+#define __builtin_clz(x)   __cntlz4(x)
 #define __builtin_clzll(x) __cntlz8(x)
 #if defined(__64BIT__)
 #define __builtin_clzl(x) __builtin_clzll(x)
@@ -50,4 +50,4 @@ extern "builtin" unsigned int __cntlz8(unsigned long long);
 #define __SIZE_WIDTH__ 32
 #endif
 
-#endif // _LIBCUDACXX_SUPPORT_IBM_SUPPORT_H
+#endif  // _LIBCUDACXX_SUPPORT_IBM_SUPPORT_H

@@ -184,9 +184,11 @@
 //   using base_type::num_windows;
 
 //   using allocator_type =
-//     typename std::allocator_traits<Allocator>::template rebind_alloc<window_type>;  ///< Type of the
+//     typename std::allocator_traits<Allocator>::template rebind_alloc<window_type>;  ///< Type of
+//     the
 //                                                                            ///< allocator to
-//                                                                            ///< (de)allocate windows
+//                                                                            ///< (de)allocate
+//                                                                            windows
 //   using window_deleter_type = custom_deleter<allocator_type>;  ///< Type of window deleter
 //   using ref_type = aow_storage_ref<window_size, value_type, extent_type>;  ///< Storage ref type
 
@@ -194,7 +196,8 @@
 //    * @brief Constructor of AoW storage.
 //    *
 //    * @note The input `size` should be exclusively determined by the return value of
-//    * `make_valid_extent` since it depends on the requested low-bound value, the probing scheme, and
+//    * `make_valid_extent` since it depends on the requested low-bound value, the probing scheme,
+//    and
 //    * the storage.
 //    *
 //    * @param size Number of windows to (de)allocate
@@ -246,7 +249,8 @@
 //   void initialize(value_type key, hipStream_t stream) noexcept
 //   {
 //     auto constexpr stride = 4;
-//     auto const grid_size  = (this->num_windows() + stride * detail::HIPCO_DEFAULT_BLOCK_SIZE - 1) /
+//     auto const grid_size  = (this->num_windows() + stride * detail::HIPCO_DEFAULT_BLOCK_SIZE - 1)
+//     /
 //                            (stride * detail::HIPCO_DEFAULT_BLOCK_SIZE);
 
 //     detail::initialize<<<grid_size, detail::HIPCO_DEFAULT_BLOCK_SIZE, 0, stream>>>(

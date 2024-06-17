@@ -24,10 +24,10 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 #include <stdio.h>
 

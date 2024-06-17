@@ -23,9 +23,8 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hip/memory_resource>
-
 #include <cstddef>
+#include <hip/memory_resource>
 #include <vector>
 
 namespace rmm {
@@ -264,8 +263,7 @@ class device_uvector {
   {
     RMM_EXPECTS(
       element_index < size(), "Attempt to access out of bounds element.", rmm::out_of_range);
-    RMM_CUDA_TRY(
-      hipMemsetAsync(element_ptr(element_index), 0, sizeof(value_type), stream.value()));
+    RMM_CUDA_TRY(hipMemsetAsync(element_ptr(element_index), 0, sizeof(value_type), stream.value()));
   }
 
   /**

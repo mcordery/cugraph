@@ -32,9 +32,9 @@
 
 #pragma once
 
-#include <hipco/detail/bitwise_compare.cuh>
-
 #include <thrust/tuple.h>
+
+#include <hipco/detail/bitwise_compare.cuh>
 
 #include <hip/std/bit>
 #include <hip/std/cmath>

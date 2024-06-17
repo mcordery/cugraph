@@ -15,8 +15,8 @@
 import io
 
 import thriftpy2
-from thriftpy2.rpc import make_client
 from thriftpy2.protocol import TBinaryProtocolFactory
+from thriftpy2.rpc import make_client
 from thriftpy2.server import TSimpleServer
 from thriftpy2.thrift import TProcessor
 from thriftpy2.transport import (
@@ -24,7 +24,6 @@ from thriftpy2.transport import (
     TServerSocket,
     TTransportException,
 )
-
 
 # This is the Thrift input file as a string rather than a separate file. This
 # allows the Thrift input to be contained within the module that's responsible

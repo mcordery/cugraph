@@ -14,7 +14,6 @@ import warnings
 
 import networkx as nx
 import pylibcugraph as plc
-
 from nx_cugraph.convert import _to_undirected_graph
 from nx_cugraph.utils import (
     _dtype_param,

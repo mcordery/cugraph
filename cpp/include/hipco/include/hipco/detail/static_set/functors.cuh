@@ -69,7 +69,8 @@ struct slot_is_filled {
    *
    * @return `true` if slot is filled
    */
-  __host__ __device__ constexpr bool operator()(T const& slot) const noexcept //todo(HIP): double check if __host__ is needed
+  __host__ __device__ constexpr bool operator()(
+    T const& slot) const noexcept  // todo(HIP): double check if __host__ is needed
   {
     return not(hipco::detail::bitwise_compare(empty_sentinel_, slot) or
                hipco::detail::bitwise_compare(erased_sentinel_, slot));

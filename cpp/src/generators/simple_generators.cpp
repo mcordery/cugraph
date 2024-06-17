@@ -21,7 +21,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/functional>
 #include <thrust/copy.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
@@ -29,6 +28,7 @@
 #include <thrust/sequence.h>
 #include <thrust/tuple.h>
 
+#include <hip/functional>
 #include <numeric>
 
 namespace cugraph {

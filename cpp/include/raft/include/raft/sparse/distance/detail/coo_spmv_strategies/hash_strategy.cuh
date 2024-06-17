@@ -21,9 +21,10 @@
 #include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 
-#include <hipco/static_map.cuh>
 #include <thrust/copy.h>
 #include <thrust/iterator/counting_iterator.h>
+
+#include <hipco/static_map.cuh>
 
 // this is needed by hipco as key, value must be bitwise comparable.
 // compilers don't declare float/double as bitwise comparable
@@ -46,8 +47,8 @@ class hash_strategy : public coo_spmv_strategy<value_idx, value_t, tpb> {
   using insert_type = typename hipco::experimental::
     static_map<value_idx, value_t, hip::thread_scope_block>::device_mutable_view;
   using smem_type = typename insert_type::slot_type*;
-  using find_type =
-    typename hipco::experimental::static_map<value_idx, value_t, hip::thread_scope_block>::device_view;
+  using find_type = typename hipco::experimental::
+    static_map<value_idx, value_t, hip::thread_scope_block>::device_view;
 
   hash_strategy(const distances_config_t<value_idx, value_t>& config_,
                 float capacity_threshold_ = 0.5,

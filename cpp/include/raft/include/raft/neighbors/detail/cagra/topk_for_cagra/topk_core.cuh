@@ -17,10 +17,9 @@
 #pragma once
 #include "topk.h"
 
-#include <hipcub/hipcub.hpp>
-
 #include <assert.h>
 #include <float.h>
+#include <hipcub/hipcub.hpp>
 #include <stdint.h>
 #include <stdio.h>
 

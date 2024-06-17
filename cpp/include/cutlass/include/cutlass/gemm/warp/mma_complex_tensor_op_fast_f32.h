@@ -36,27 +36,22 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
-#include "cutlass/array.h"
-#include "cutlass/complex.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-#include "cutlass/functional.h"
-
 #include "cutlass/arch/memory_sm75.h"
 #include "cutlass/arch/mma_sm75.h"
 #include "cutlass/arch/mma_sm80.h"
-
+#include "cutlass/array.h"
+#include "cutlass/complex.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/functional.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma.h"
-
-#include "cutlass/gemm/warp/mma_tensor_op_policy.h"
+#include "cutlass/gemm/warp/mma_complex_tensor_op_tile_iterator_sm80.h"
 #include "cutlass/gemm/warp/mma_tensor_op.h"
-
+#include "cutlass/gemm/warp/mma_tensor_op_policy.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
-#include "cutlass/gemm/warp/mma_complex_tensor_op_tile_iterator_sm80.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,7 +64,7 @@ namespace detail {
 template <
   /// Data type of real & imag members of complex numbers in the SourceFragment
   typename RealElement,
-  /// Destination fragment required by the mma operation 
+  /// Destination fragment required by the mma operation
   typename DestinationFragment,
   /// Source fragment holding complex<RealElement> elements
   typename SourceFragment,
@@ -88,32 +83,29 @@ template <
 struct UnpackComplexConvertAndPackForMmaFastF32;
 
 // Partial specialization for OperandA and Congruous smem layout
-template <
-  typename RealElement,
-  typename DestinationFragment, 
-  typename SourceFragment,
-  typename MmaIterations,
-  typename MmaOperandShape,
-  ComplexTransform Transform_,
-  FloatRoundStyle RoundBig_,
-  FloatRoundStyle RoundSmall_>
-struct UnpackComplexConvertAndPackForMmaFastF32 <
-  RealElement,
-  DestinationFragment,
-  SourceFragment,
-  MmaIterations,
-  MmaOperandShape,
-  Transform_,
-  Operand::kA,
-  RoundBig_,
-  RoundSmall_> {
-  
+template <typename RealElement,
+          typename DestinationFragment,
+          typename SourceFragment,
+          typename MmaIterations,
+          typename MmaOperandShape,
+          ComplexTransform Transform_,
+          FloatRoundStyle RoundBig_,
+          FloatRoundStyle RoundSmall_>
+struct UnpackComplexConvertAndPackForMmaFastF32<RealElement,
+                                                DestinationFragment,
+                                                SourceFragment,
+                                                MmaIterations,
+                                                MmaOperandShape,
+                                                Transform_,
+                                                Operand::kA,
+                                                RoundBig_,
+                                                RoundSmall_> {
   //
   // Type definitions
   //
-  static Operand const kOperand = Operand::kA;
+  static Operand const kOperand            = Operand::kA;
   static ComplexTransform const kTransform = Transform_;
-  static FloatRoundStyle const kRoundBig = RoundBig_;
+  static FloatRoundStyle const kRoundBig   = RoundBig_;
   static FloatRoundStyle const kRoundSmall = RoundSmall_;
 
   // Data type of elements in the destination fragment
@@ -124,13 +116,13 @@ struct UnpackComplexConvertAndPackForMmaFastF32 <
 
   // Operand layout parameters
   using SourceFragmentLayout = layout::ColumnMajor;
-  static int const kLdm = MmaIterations::kRow * MmaOperandShape::kRow;
+  static int const kLdm      = MmaIterations::kRow * MmaOperandShape::kRow;
 
   // BigSmall Fragment holding two TF32 elements (big, small) for every float
   using BigSmallFragment = Array<MmaElement, 2>;
 
   /// Index in fargments for the big and small part
-  static int const kBigIndex = 0;
+  static int const kBigIndex   = 0;
   static int const kSmallIndex = 1;
 
   /// Ctor
@@ -138,36 +130,39 @@ struct UnpackComplexConvertAndPackForMmaFastF32 <
   UnpackComplexConvertAndPackForMmaFastF32() {}
 
   CUTLASS_DEVICE
-  void operator()(DestinationFragment *dest, SourceFragment const &source) {
-    
+  void operator()(DestinationFragment* dest, SourceFragment const& source)
+  {
     Converter convert_op;
     SourceFragmentLayout layout(kLdm);
 
-    DestinationFragment *dest_big_ = reinterpret_cast<DestinationFragment*>(dest);
-    DestinationFragment *dest_small_ = reinterpret_cast<DestinationFragment*>(&dest[MmaIterations::kRow * 2]);
+    DestinationFragment* dest_big_ = reinterpret_cast<DestinationFragment*>(dest);
+    DestinationFragment* dest_small_ =
+      reinterpret_cast<DestinationFragment*>(&dest[MmaIterations::kRow * 2]);
 
     CUTLASS_PRAGMA_UNROLL
-    for(int i=0; i<MmaIterations::kRow; i++) {
+    for (int i = 0; i < MmaIterations::kRow; i++) {
       int pos = 0;
       CUTLASS_PRAGMA_UNROLL
-      for(int c=0; c<MmaOperandShape::kColumn; c++) {
+      for (int c = 0; c < MmaOperandShape::kColumn; c++) {
         CUTLASS_PRAGMA_UNROLL
-        for(int r=0; r<MmaOperandShape::kRow; r++) {
+        for (int r = 0; r < MmaOperandShape::kRow; r++) {
           // Logical position of element in source fragment
           int row = r + i * MmaOperandShape::kRow;
           int col = c;
 
           // Access complex<RealElement> and apply rounding on real and imag parts
-          BigSmallFragment a = convert_op(source[layout(MatrixCoord{row,col})].real());
-          BigSmallFragment b = convert_op(source[layout(MatrixCoord{row,col})].imag());
+          BigSmallFragment a = convert_op(source[layout(MatrixCoord{row, col})].real());
+          BigSmallFragment b = convert_op(source[layout(MatrixCoord{row, col})].imag());
 
           // Unpack rounded complex<MmaElement> and pack into DestinationFragment for mma operation
           dest_big_[i][pos] = a[kBigIndex];
-          dest_big_[i+MmaIterations::kRow][pos] = (kTransform == ComplexTransform::kConjugate ? -b[kBigIndex] : b[kBigIndex]);
+          dest_big_[i + MmaIterations::kRow][pos] =
+            (kTransform == ComplexTransform::kConjugate ? -b[kBigIndex] : b[kBigIndex]);
 
           // Unpack rounded complex<MmaElement> and pack into DestinationFragment for mma operation
           dest_small_[i][pos] = a[kSmallIndex];
-          dest_small_[i+MmaIterations::kRow][pos] = (kTransform == ComplexTransform::kConjugate ? -b[kSmallIndex] : b[kSmallIndex]);
+          dest_small_[i + MmaIterations::kRow][pos] =
+            (kTransform == ComplexTransform::kConjugate ? -b[kSmallIndex] : b[kSmallIndex]);
 
           // Next position
           pos++;
@@ -178,32 +173,29 @@ struct UnpackComplexConvertAndPackForMmaFastF32 <
 };
 
 // Partial specialization for OperandB and Congruous smem layout
-template <
-  typename RealElement,
-  typename DestinationFragment, 
-  typename SourceFragment,
-  typename MmaIterations,
-  typename MmaOperandShape,
-  ComplexTransform Transform_,
-  FloatRoundStyle RoundBig_,
-  FloatRoundStyle RoundSmall_>
-struct UnpackComplexConvertAndPackForMmaFastF32 <
-  RealElement,
-  DestinationFragment,
-  SourceFragment,
-  MmaIterations,
-  MmaOperandShape,
-  Transform_,
-  Operand::kB,
-  RoundBig_,
-  RoundSmall_> {
-  
+template <typename RealElement,
+          typename DestinationFragment,
+          typename SourceFragment,
+          typename MmaIterations,
+          typename MmaOperandShape,
+          ComplexTransform Transform_,
+          FloatRoundStyle RoundBig_,
+          FloatRoundStyle RoundSmall_>
+struct UnpackComplexConvertAndPackForMmaFastF32<RealElement,
+                                                DestinationFragment,
+                                                SourceFragment,
+                                                MmaIterations,
+                                                MmaOperandShape,
+                                                Transform_,
+                                                Operand::kB,
+                                                RoundBig_,
+                                                RoundSmall_> {
   //
   // Type definitions
   //
-  static Operand const kOperand = Operand::kB;
+  static Operand const kOperand            = Operand::kB;
   static ComplexTransform const kTransform = Transform_;
-  static FloatRoundStyle const kRoundBig = RoundBig_;
+  static FloatRoundStyle const kRoundBig   = RoundBig_;
   static FloatRoundStyle const kRoundSmall = RoundSmall_;
 
   // Data type of elements in the destination fragment
@@ -214,13 +206,13 @@ struct UnpackComplexConvertAndPackForMmaFastF32 <
 
   // Operand layout parameters
   using SourceFragmentLayout = layout::RowMajor;
-  static int const kLdm = MmaIterations::kColumn * MmaOperandShape::kColumn;
+  static int const kLdm      = MmaIterations::kColumn * MmaOperandShape::kColumn;
 
   // BigSmall Fragment holding two TF32 elements (big, small) for every float
   using BigSmallFragment = Array<MmaElement, 2>;
 
   /// Index in fargments for the big and small part
-  static int const kBigIndex = 0;
+  static int const kBigIndex   = 0;
   static int const kSmallIndex = 1;
 
   /// Ctor
@@ -228,45 +220,48 @@ struct UnpackComplexConvertAndPackForMmaFastF32 <
   UnpackComplexConvertAndPackForMmaFastF32() {}
 
   CUTLASS_HOST_DEVICE
-  void operator()(DestinationFragment *dest, SourceFragment const &source) {
-    
+  void operator()(DestinationFragment* dest, SourceFragment const& source)
+  {
     Converter convert_op;
     SourceFragmentLayout layout(kLdm);
 
-    DestinationFragment *dest_big_ = reinterpret_cast<DestinationFragment*>(dest);
-    DestinationFragment *dest_small_ = reinterpret_cast<DestinationFragment*>(&dest[MmaIterations::kColumn * 2]);
+    DestinationFragment* dest_big_ = reinterpret_cast<DestinationFragment*>(dest);
+    DestinationFragment* dest_small_ =
+      reinterpret_cast<DestinationFragment*>(&dest[MmaIterations::kColumn * 2]);
 
     CUTLASS_PRAGMA_UNROLL
-    for(int i=0; i<MmaIterations::kColumn; i++) {
+    for (int i = 0; i < MmaIterations::kColumn; i++) {
       int pos = 0;
       CUTLASS_PRAGMA_UNROLL
-      for(int c=0; c<MmaOperandShape::kColumn; c++) {
+      for (int c = 0; c < MmaOperandShape::kColumn; c++) {
         CUTLASS_PRAGMA_UNROLL
-        for(int r=0; r<MmaOperandShape::kRow; r++) {
+        for (int r = 0; r < MmaOperandShape::kRow; r++) {
           // Logical position of element in source fragment
           int row = r;
           int col = c + i * MmaOperandShape::kColumn;
 
           // Access complex<RealElement> apply rounding on real and imag parts
-          BigSmallFragment a = convert_op(source[layout(MatrixCoord{row,col})].real());
-          BigSmallFragment b = convert_op(source[layout(MatrixCoord{row,col})].imag());
+          BigSmallFragment a = convert_op(source[layout(MatrixCoord{row, col})].real());
+          BigSmallFragment b = convert_op(source[layout(MatrixCoord{row, col})].imag());
 
           // Unpack rounded complex<MmaElement> and pack into DestinationFragment for mma operation
           dest_big_[i][pos] = a[kBigIndex];
-          dest_big_[i+MmaIterations::kColumn][pos] = (kTransform == ComplexTransform::kConjugate ? -b[kBigIndex] : b[kBigIndex]);
+          dest_big_[i + MmaIterations::kColumn][pos] =
+            (kTransform == ComplexTransform::kConjugate ? -b[kBigIndex] : b[kBigIndex]);
 
           // Unpack rounded complex<MmaElement> and pack into DestinationFragment for mma operation
           dest_small_[i][pos] = a[kSmallIndex];
-          dest_small_[i+MmaIterations::kColumn][pos] = (kTransform == ComplexTransform::kConjugate ? -b[kSmallIndex] : b[kSmallIndex]);
+          dest_small_[i + MmaIterations::kColumn][pos] =
+            (kTransform == ComplexTransform::kConjugate ? -b[kSmallIndex] : b[kSmallIndex]);
 
           // next position
-          pos++;       
+          pos++;
         }
       }
     }
   }
 };
-} // namespace detail 
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -292,8 +287,7 @@ template <
   /// Complex transform on B operand
   ComplexTransform TransformB = ComplexTransform::kNone,
   /// Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 class MmaComplexTensorOpFastF32;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +297,7 @@ class MmaComplexTensorOpFastF32;
 //  Rounding: float -> tfloat32_t (round half_ulp_truncate nearest)
 //  Math instruction: MMA.1688.F32.TF32
 //  Output data type: complex<float>
-// 
+//
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
   /// Size of the Gemm problem - concept: gemm::GemmShape<>
@@ -321,21 +315,19 @@ template <
   /// Complex transform on B operand
   ComplexTransform TransformB,
   /// Used for partial specialization
-  typename Enable
->
-class MmaComplexTensorOpFastF32<
-  Shape_, 
-  complex<float>, 
-  LayoutA_, 
-  complex<float>,
-  LayoutB_,
-  complex<float>,
-  LayoutC_,
-  Policy_,
-  TransformA,
-  TransformB,
-  Enable>  {
-public:
+  typename Enable>
+class MmaComplexTensorOpFastF32<Shape_,
+                                complex<float>,
+                                LayoutA_,
+                                complex<float>,
+                                LayoutB_,
+                                complex<float>,
+                                LayoutC_,
+                                Policy_,
+                                TransformA,
+                                TransformB,
+                                Enable> {
+ public:
   /// Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;
 
@@ -381,9 +373,9 @@ public:
   /// Indicates class of matrix operator
   using OperatorClass = arch::OpClassTensorOp;
 
-  /// Indicates math operator 
+  /// Indicates math operator
   using MathOperator = arch::OpMultiplyAddComplexFastF32;
-  
+
   /// Complex transform on A operand
   static ComplexTransform const kTransformA = TransformA;
 
@@ -393,25 +385,22 @@ public:
   /// Number of threads participating in warp-level matrix product
   static int const kThreadCount = 32;
 
-
   /// Tune F32 to TF32 big small conversion for complex<float> operation
   /// Different combination of big small conversin can cause different tradeoff
   /// between speed and accuracy.  Generally, use round_half_ulp_truncate can
   /// improve the performance but hur the accuracy.
-  using ComplexFastF32 = FastF32 <
-    FloatRoundStyle::round_toward_zero,        // kRoundBigA
-    FloatRoundStyle::round_half_ulp_truncate,  // kRoundSmallA
-    FloatRoundStyle::round_toward_zero,        // kRoundBigB
-    FloatRoundStyle::round_half_ulp_truncate,  // kRoundSmallB
-    TensorFloat32Op::k3xTF32                   // Number of TF32 operations 
-  >;
+  using ComplexFastF32 = FastF32<FloatRoundStyle::round_toward_zero,        // kRoundBigA
+                                 FloatRoundStyle::round_half_ulp_truncate,  // kRoundSmallA
+                                 FloatRoundStyle::round_toward_zero,        // kRoundBigB
+                                 FloatRoundStyle::round_half_ulp_truncate,  // kRoundSmallB
+                                 TensorFloat32Op::k3xTF32  // Number of TF32 operations
+                                 >;
 
   /// Index in fargments for the big and small part
-  static int const kBigIndex = 0;
+  static int const kBigIndex   = 0;
   static int const kSmallIndex = 1;
 
-public:
-
+ public:
   /// Iterates over the A operand in memory
   using IteratorA = MmaTensorOpMultiplicandTileIterator<
     MatrixShape<Shape::kM, Shape::kK>,
@@ -421,8 +410,7 @@ public:
     MatrixShape<ArchMmaOperator::Shape::kM, ArchMmaOperator::Shape::kK>,
     Policy::OpDelta::kRow,
     32,
-    1
-  >;
+    1>;
 
   /// Storage for A tile
   using FragmentA = typename IteratorA::Fragment;
@@ -430,13 +418,12 @@ public:
   /// Storage for transformed A tile
   // (4 times the original FragmentA::kElements)
   // (real_big), (imag_big), (real_small), (imag_small)
-  using TransformedFragmentA = Array<typename ArchMmaOperator::ElementA, 
-                                              FragmentA::kElements * 2 * 2>;
+  using TransformedFragmentA =
+    Array<typename ArchMmaOperator::ElementA, FragmentA::kElements * 2 * 2>;
 
   // Fragment bisecting big and small sections
   // (real_big, imag_big), (real_small, imag_small)
-  using AccessTypeFragmentA = Array<typename ArchMmaOperator::ElementA, 
-                                                    FragmentA::kElements * 2>;
+  using AccessTypeFragmentA = Array<typename ArchMmaOperator::ElementA, FragmentA::kElements * 2>;
 
   /// Iterates over the B operand in memory
   using IteratorB = MmaTensorOpMultiplicandTileIterator<
@@ -447,41 +434,36 @@ public:
     MatrixShape<ArchMmaOperator::Shape::kK, ArchMmaOperator::Shape::kN>,
     Policy::OpDelta::kColumn,
     32,
-    1
-  >;
+    1>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
 
-  /// Storage for transformed B tile 
+  /// Storage for transformed B tile
   // (4 times the original FragmentB::kElements)
   // (real_big), (imag_big), (real_small), (imag_small)
-  using TransformedFragmentB = Array<typename ArchMmaOperator::ElementB, 
-                                              FragmentB::kElements * 2 * 2>;
+  using TransformedFragmentB =
+    Array<typename ArchMmaOperator::ElementB, FragmentB::kElements * 2 * 2>;
 
   // Fragment bisecting big and small sections
   // (real_big, imag_big), (real_small, imag_small)
-  using AccessTypeFragmentB = Array<typename ArchMmaOperator::ElementB, 
-                                                    FragmentB::kElements * 2>;
+  using AccessTypeFragmentB = Array<typename ArchMmaOperator::ElementB, FragmentB::kElements * 2>;
 
-  static_assert(
-    !(Shape::kM % ArchMmaOperator::Shape::kM) && 
-    !(Shape::kN % ArchMmaOperator::Shape::kN),
-    "Shape of warp-level Mma must be divisible by operator shape.");
+  static_assert(!(Shape::kM % ArchMmaOperator::Shape::kM) &&
+                  !(Shape::kN % ArchMmaOperator::Shape::kN),
+                "Shape of warp-level Mma must be divisible by operator shape.");
 
-  /// Number of complex products operations performed (one complex product needs four mma instructions)
-  using MmaIterations = MatrixShape<
-    Shape::kM / ArchMmaOperator::Shape::kM,
-    Shape::kN / ArchMmaOperator::Shape::kN
-  >;
+  /// Number of complex products operations performed (one complex product needs four mma
+  /// instructions)
+  using MmaIterations =
+    MatrixShape<Shape::kM / ArchMmaOperator::Shape::kM, Shape::kN / ArchMmaOperator::Shape::kN>;
 
   /// Iterates over the C operand in memory
-  using IteratorC = MmaTensorOpAccumulatorTileIterator<
-     MatrixShape<Shape::kM, Shape::kN>, 
-     ElementC, 
-     LayoutC,
-     typename ArchMmaOperator::Shape, 
-     typename Policy::OpDelta>;
+  using IteratorC = MmaTensorOpAccumulatorTileIterator<MatrixShape<Shape::kM, Shape::kN>,
+                                                       ElementC,
+                                                       LayoutC,
+                                                       typename ArchMmaOperator::Shape,
+                                                       typename Policy::OpDelta>;
 
   /// Storage for C tile, the accumulator. Note, regardless of multiplicand type, this
   /// storage arrangement is to be considered 'planar complex' in the sense that all real-valued
@@ -494,21 +476,23 @@ public:
   //
   using InstMmaOperandA = typename ArchMmaOperator::FragmentA;
   using InstMmaOperandB = typename ArchMmaOperator::FragmentB;
-  using MmaOperandC = typename ArchMmaOperator::FragmentC;
+  using MmaOperandC     = typename ArchMmaOperator::FragmentC;
 
-  static_assert(platform::is_same<cutlass::gemm::GemmShape<16, 8, 8>, typename ArchMmaOperator::Shape>::value, 
+  static_assert(
+    platform::is_same<cutlass::gemm::GemmShape<16, 8, 8>, typename ArchMmaOperator::Shape>::value,
     "This implementation only supports MMA.1688 math instructions.");
 
-  static_assert(InstMmaOperandA::kElements == 4, 
-    "This implementation only supports math instructions in which exactly four element is needed for the A operand."
-    "We can geneneralize later.");
+  static_assert(InstMmaOperandA::kElements == 4,
+                "This implementation only supports math instructions in which exactly four element "
+                "is needed for the A operand."
+                "We can geneneralize later.");
 
-  static_assert(InstMmaOperandB::kElements == 2, 
-    "This implementation only supports math instructions in which exactly two element is needed for the B operand."
-    "We can geneneralize later.");
+  static_assert(InstMmaOperandB::kElements == 2,
+                "This implementation only supports math instructions in which exactly two element "
+                "is needed for the B operand."
+                "We can geneneralize later.");
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -516,8 +500,7 @@ private:
   /// Underlying real-valued matrix multiply operator (concept: arch::Mma)
   ArchMmaOperator mma;
 
-public:
-
+ public:
   //
   // Methods
   //
@@ -528,21 +511,18 @@ public:
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    TransformedFragmentA const &A, 
-    TransformedFragmentB const &B, 
-    FragmentC const &C
-  ) const {
-
-    AccessTypeFragmentA const *complex_A = reinterpret_cast<AccessTypeFragmentA const*>(&A);
-    AccessTypeFragmentB const *complex_B = reinterpret_cast<AccessTypeFragmentB const*>(&B);
+  void operator()(FragmentC& D,
+                  TransformedFragmentA const& A,
+                  TransformedFragmentB const& B,
+                  FragmentC const& C) const
+  {
+    AccessTypeFragmentA const* complex_A = reinterpret_cast<AccessTypeFragmentA const*>(&A);
+    AccessTypeFragmentB const* complex_B = reinterpret_cast<AccessTypeFragmentB const*>(&B);
 
     //
     // Accumulate in place
     //
     D = C;
-
 
     complex_mma_operator(D, complex_A[kSmallIndex], complex_B[kBigIndex], D);
 
@@ -556,108 +536,105 @@ public:
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void complex_mma_operator(
-    FragmentC &D, 
-    AccessTypeFragmentA const &complex_A, 
-    AccessTypeFragmentB const &complex_B, 
-    FragmentC const &C
-  ) const {
-
+  void complex_mma_operator(FragmentC& D,
+                            AccessTypeFragmentA const& complex_A,
+                            AccessTypeFragmentB const& complex_B,
+                            FragmentC const& C) const
+  {
     // Instruction Operands A & B holding real part followed by imaginary part for mma operations
-    InstMmaOperandA const *operand_A = reinterpret_cast<InstMmaOperandA const *>(&complex_A);
-    InstMmaOperandB const *operand_B = reinterpret_cast<InstMmaOperandB const *>(&complex_B);
-
+    InstMmaOperandA const* operand_A = reinterpret_cast<InstMmaOperandA const*>(&complex_A);
+    InstMmaOperandB const* operand_B = reinterpret_cast<InstMmaOperandB const*>(&complex_B);
 
     CUTLASS_PRAGMA_UNROLL
     for (int m = 0; m < MmaIterations::kRow; ++m) {
-
       // mma(accum.real(), a.real(), b.real(), accum.real());
       CUTLASS_PRAGMA_UNROLL
       for (int n = 0; n < MmaIterations::kColumn; ++n) {
-
         // Real-valued accumulator part
-        MmaOperandC *accum = reinterpret_cast<MmaOperandC *>(&D) + 
-          (m + n * MmaIterations::kRow);
+        MmaOperandC* accum = reinterpret_cast<MmaOperandC*>(&D) + (m + n * MmaIterations::kRow);
 
-          mma(*accum, operand_A[m], operand_B[n], *accum);
+        mma(*accum, operand_A[m], operand_B[n], *accum);
       }
 
-      // mma(accum.imag(), a.real(), b.imag(), accum.imag()); 
+      // mma(accum.imag(), a.real(), b.imag(), accum.imag());
       CUTLASS_PRAGMA_UNROLL
       for (int n = MmaIterations::kColumn - 1; n >= 0; --n) {
-
         // Complex-valued accumulator part
-        MmaOperandC *accum = reinterpret_cast<MmaOperandC *>(&D) + 
-          (m + n * MmaIterations::kRow) + MmaIterations::kCount;
+        MmaOperandC* accum = reinterpret_cast<MmaOperandC*>(&D) + (m + n * MmaIterations::kRow) +
+                             MmaIterations::kCount;
 
-        mma(*accum, operand_A[m], operand_B[n+MmaIterations::kColumn], *accum);
+        mma(*accum, operand_A[m], operand_B[n + MmaIterations::kColumn], *accum);
       }
 
       // mma(accum.real(), a.imag(), -b.imag(), accum.real())
       CUTLASS_PRAGMA_UNROLL
       for (int n = 0; n < MmaIterations::kColumn; ++n) {
-
         // negate OperandB to accumulate  -(a.imag()*b.imag())
-        // negating OperandB emits less instrucitons than negating OperandA as OperandB has less elements
+        // negating OperandB emits less instrucitons than negating OperandA as OperandB has less
+        // elements
         negate<InstMmaOperandB> negate_op;
 
         // Real-valued accumulator part
-        MmaOperandC *accum = reinterpret_cast<MmaOperandC *>(&D) + 
-          (m + n * MmaIterations::kRow);
+        MmaOperandC* accum = reinterpret_cast<MmaOperandC*>(&D) + (m + n * MmaIterations::kRow);
 
-         mma(*accum, operand_A[m+MmaIterations::kRow], negate_op(operand_B[n+MmaIterations::kColumn]), *accum);
+        mma(*accum,
+            operand_A[m + MmaIterations::kRow],
+            negate_op(operand_B[n + MmaIterations::kColumn]),
+            *accum);
       }
 
       // mma(accum.imag(), a.imag(), b.real(), accum.imag())
       CUTLASS_PRAGMA_UNROLL
       for (int n = MmaIterations::kColumn - 1; n >= 0; --n) {
-
         // Complex-valued accumulator part
-        MmaOperandC *accum = reinterpret_cast<MmaOperandC *>(&D) + 
-          (m + n * MmaIterations::kRow) + MmaIterations::kCount;
+        MmaOperandC* accum = reinterpret_cast<MmaOperandC*>(&D) + (m + n * MmaIterations::kRow) +
+                             MmaIterations::kCount;
 
-        mma(*accum, operand_A[m+MmaIterations::kRow], operand_B[n], *accum);
+        mma(*accum, operand_A[m + MmaIterations::kRow], operand_B[n], *accum);
       }
     }
   }
 
   /// Transform the mma operands to the required types
   CUTLASS_DEVICE
-  void transform(TransformedFragmentA &dst_A, TransformedFragmentB &dst_B,
-                 FragmentA const &A, FragmentB const &B) const {
+  void transform(TransformedFragmentA& dst_A,
+                 TransformedFragmentB& dst_B,
+                 FragmentA const& A,
+                 FragmentB const& B) const
+  {
+    detail::UnpackComplexConvertAndPackForMmaFastF32<RealElementA,
+                                                     InstMmaOperandA,
+                                                     FragmentA,
+                                                     MmaIterations,
+                                                     MatrixShape<2, 2>,
+                                                     kTransformA,
+                                                     Operand::kA,
+                                                     ComplexFastF32::kRoundBigA,
+                                                     ComplexFastF32::kRoundSmallA>
+      convert_A;
 
-    detail::UnpackComplexConvertAndPackForMmaFastF32 <
-      RealElementA,
-      InstMmaOperandA,
-      FragmentA,
-      MmaIterations,
-      MatrixShape<2, 2>,
-      kTransformA,
-      Operand::kA,
-      ComplexFastF32::kRoundBigA,
-      ComplexFastF32::kRoundSmallA> convert_A;
+    detail::UnpackComplexConvertAndPackForMmaFastF32<RealElementB,
+                                                     InstMmaOperandB,
+                                                     FragmentB,
+                                                     MmaIterations,
+                                                     MatrixShape<2, 1>,
+                                                     kTransformB,
+                                                     Operand::kB,
+                                                     ComplexFastF32::kRoundBigB,
+                                                     ComplexFastF32::kRoundSmallB>
+      convert_B;
 
-    detail::UnpackComplexConvertAndPackForMmaFastF32 <
-      RealElementB,
-      InstMmaOperandB,
-      FragmentB,
-      MmaIterations,
-      MatrixShape<2, 1>,
-      kTransformB,
-      Operand::kB,
-      ComplexFastF32::kRoundBigB,
-      ComplexFastF32::kRoundSmallB> convert_B;
-
-    // Convert Fragment[A|B] holding complex<RealElement[A|B]> to InstMmaOperand[A|B] holding InstMmaOperand[A|B]::Element
-    convert_A(reinterpret_cast<InstMmaOperandA *>(&dst_A), A); 
-    convert_B(reinterpret_cast<InstMmaOperandB *>(&dst_B), B); 
+    // Convert Fragment[A|B] holding complex<RealElement[A|B]> to InstMmaOperand[A|B] holding
+    // InstMmaOperand[A|B]::Element
+    convert_A(reinterpret_cast<InstMmaOperandA*>(&dst_A), A);
+    convert_B(reinterpret_cast<InstMmaOperandB*>(&dst_B), B);
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

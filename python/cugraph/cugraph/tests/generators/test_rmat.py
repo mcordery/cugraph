@@ -12,15 +12,14 @@
 # limitations under the License.
 
 
-import pytest
-
 import cudf
-import cugraph
-from cugraph.generators import rmat
-from cupyx.scipy.sparse import coo_matrix, triu, tril
-import numpy as np
 import cupy as cp
+import numpy as np
+import pytest
+from cugraph.generators import rmat
+from cupyx.scipy.sparse import coo_matrix, tril, triu
 
+import cugraph
 
 ##############################################################################
 

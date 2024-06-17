@@ -14,27 +14,27 @@
 import gc
 import time
 
-import pytest
-import pandas as pd
-import scipy
-import networkx as nx
-
-import cupy
 import cudf
-import cugraph
-from cugraph.testing import utils
-from cudf.testing import assert_series_equal
-from cudf.testing.testing import assert_frame_equal
+import cugraph.dask as dcg
+import cupy
 
 # MG
 import dask_cudf
-import cugraph.dask as dcg
+import networkx as nx
+import pandas as pd
+import pytest
+import scipy
+from cudf.testing import assert_series_equal
+from cudf.testing.testing import assert_frame_equal
+from cugraph.dask.common.mg_utils import is_single_gpu
+from cugraph.dask.traversal.bfs import convert_to_cudf
+from cugraph.testing import utils
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
 from pylibcugraph import ResourceHandle
 from pylibcugraph import bfs as pylibcugraph_bfs
-from cugraph.dask.traversal.bfs import convert_to_cudf
-from cugraph.dask.common.mg_utils import is_single_gpu
+
+import cugraph
 
 
 # =============================================================================

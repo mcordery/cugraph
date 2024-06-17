@@ -35,18 +35,16 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/arch/arch.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/device_kernel.h"
-
-#include "cutlass/gemm/gemm.h"
-#include "cutlass/gemm/threadblock/threadblock_swizzle.h"
-#include "cutlass/gemm/kernel/gemm_universal.h"
-
-#include "cutlass/gemm/kernel/default_gemm_universal.h"
 #include "cutlass/gemm/device/default_gemm_configuration.h"
 #include "cutlass/gemm/device/gemm_universal_base.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/gemm/kernel/default_gemm_universal.h"
+#include "cutlass/gemm/kernel/gemm_universal.h"
+#include "cutlass/gemm/threadblock/threadblock_swizzle.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,10 +56,8 @@ namespace device {
 
 template <typename GemvKernel_>
 class Gemv {
-public:
-
+ public:
   using GemvKernel = GemvKernel_;
-
 
   using ElementA = typename GemvKernel::ElementA;
   using LayoutA  = typename GemvKernel::LayoutA;
@@ -69,66 +65,59 @@ public:
   using ElementC = typename GemvKernel::ElementC;
 
   using ElementAccumulator = typename GemvKernel::ElementAccumulator;
-  using EpilogueOutputOp = typename GemvKernel::EpilogueOutputOp;
+  using EpilogueOutputOp   = typename GemvKernel::EpilogueOutputOp;
 
   static ComplexTransform const kTransformA = GemvKernel::kTransformA;
   static ComplexTransform const kTransformB = GemvKernel::kTransformB;
 
   static int const kThreadCount = GemvKernel::kThreadCount;
-  static int const kStages = GemvKernel::kStages;
+  static int const kStages      = GemvKernel::kStages;
 
   static int const kAlignmentA = GemvKernel::kAlignmentA;
   static int const kAlignmentB = GemvKernel::kAlignmentB;
   static int const kAlignmentC = GemvKernel::kAlignmentC;
 
   using Arguments = typename GemvKernel::Arguments;
-  using Params = typename GemvKernel::Params;
+  using Params    = typename GemvKernel::Params;
 
-private:
-
+ private:
   Params params_;
 
-public:
-
+ public:
   /// Constructs the Gemv.
-  Gemv() { }
+  Gemv() {}
 
   /// Determines whether the Gemv can execute the given problem.
-  static Status can_implement(Arguments const &args) {
-
-    return GemvKernel::can_implement(args);
-  }
+  static Status can_implement(Arguments const& args) { return GemvKernel::can_implement(args); }
 
   /// Gets the workspace size
-  static size_t get_workspace_size(Arguments const &args) {
-    
-    return 0;
-  }
+  static size_t get_workspace_size(Arguments const& args) { return 0; }
 
   /// Computes the grid shape
-  static dim3 get_grid_shape(Arguments const &args) { 
-    return dim3((args.problem_size.row() + (kThreadCount - 1)) / kThreadCount, 1, args.batch_count % 65565);
+  static dim3 get_grid_shape(Arguments const& args)
+  {
+    return dim3(
+      (args.problem_size.row() + (kThreadCount - 1)) / kThreadCount, 1, args.batch_count % 65565);
   }
 
   /// Initializes Gemv state from arguments.
-  Status initialize(Arguments const &args, void *workspace = nullptr, hipStream_t stream = nullptr) {
+  Status initialize(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     params_ = Params(args);
     return Status::kSuccess;
   }
 
   /// Lightweight update given a subset of arguments
-  Status update(Arguments const &args, void *workspace = nullptr) {
-    return params_.update(args);    
-  }
+  Status update(Arguments const& args, void* workspace = nullptr) { return params_.update(args); }
 
   /// Runs the kernel using initialized state.
-  Status run(hipStream_t stream = nullptr) {
-
+  Status run(hipStream_t stream = nullptr)
+  {
     dim3 grid = get_grid_shape(params_);
     dim3 block(GemvKernel::kThreadCount, 1, 1);
 
     int smem_size = int(sizeof(typename GemvKernel::SharedStorage));
-    
+
     // Launch
     cutlass::Kernel<GemvKernel><<<grid, block, smem_size, stream>>>(params_);
 
@@ -137,29 +126,20 @@ public:
     //
     hipError_t result = hipGetLastError();
 
-    if (result != hipSuccess) {
-      return Status::kErrorInternal;
-    }
-  
+    if (result != hipSuccess) { return Status::kErrorInternal; }
+
     return Status::kSuccess;
   }
 
   /// Runs the kernel using initialized state.
-  Status operator()(hipStream_t stream = nullptr) {
-    return run(stream);
-  }
+  Status operator()(hipStream_t stream = nullptr) { return run(stream); }
 
   /// Runs the kernel using initialized state.
-  Status operator()(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-    
+  Status operator()(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     Status status = initialize(args, workspace, stream);
-    
-    if (status == Status::kSuccess) {
-      status = run(stream);
-    }
+
+    if (status == Status::kSuccess) { status = run(stream); }
 
     return status;
   }
@@ -167,8 +147,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace device
-} // namespace gemm
-} // namespace cutlass
+}  // namespace device
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

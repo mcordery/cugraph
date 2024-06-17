@@ -11,36 +11,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cugraph.structure.convert_matrix import (
+    from_adjlist,
+    from_cudf_edgelist,
+    from_edgelist,
+    from_numpy_array,
+    from_numpy_matrix,
+    from_pandas_adjacency,
+    from_pandas_edgelist,
+    to_numpy_array,
+    to_numpy_matrix,
+    to_pandas_adjacency,
+    to_pandas_edgelist,
+)
 from cugraph.structure.graph_classes import (
+    BiPartiteGraph,
     Graph,
     MultiGraph,
-    BiPartiteGraph,
-)
-from cugraph.structure.graph_classes import (
-    is_weighted,
+    is_bipartite,
     is_directed,
     is_multigraph,
-    is_bipartite,
     is_multipartite,
-)
-from cugraph.structure.number_map import NumberMap
-from cugraph.structure.symmetrize import symmetrize, symmetrize_df, symmetrize_ddf
-from cugraph.structure.replicate_edgelist import (
-    replicate_edgelist,
-    replicate_cudf_dataframe,
-    replicate_cudf_series,
-)
-from cugraph.structure.convert_matrix import (
-    from_edgelist,
-    from_cudf_edgelist,
-    from_pandas_edgelist,
-    to_pandas_edgelist,
-    from_pandas_adjacency,
-    to_pandas_adjacency,
-    from_numpy_array,
-    to_numpy_array,
-    from_numpy_matrix,
-    to_numpy_matrix,
-    from_adjlist,
+    is_weighted,
 )
 from cugraph.structure.hypergraph import hypergraph
+from cugraph.structure.number_map import NumberMap
+from cugraph.structure.replicate_edgelist import (
+    replicate_cudf_dataframe,
+    replicate_cudf_series,
+    replicate_edgelist,
+)
+from cugraph.structure.symmetrize import symmetrize, symmetrize_ddf, symmetrize_df

@@ -11,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cudf
 from cugraph.layout import force_atlas2_wrapper
 from cugraph.utilities import ensure_cugraph_obj_for_nx
-import cudf
 
 
 def force_atlas2(
@@ -33,7 +33,6 @@ def force_atlas2(
     verbose=False,
     callback=None,
 ):
-
     """
     ForceAtlas2 is a continuous graph layout algorithm for handy network
     visualization.

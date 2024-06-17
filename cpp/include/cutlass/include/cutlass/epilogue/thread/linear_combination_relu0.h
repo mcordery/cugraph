@@ -31,20 +31,21 @@
 /*! \file
   \brief Functor performing linear combination with a relu operation used by epilogues.
   This one only supports relu0 and tries to folding relu into other instructions.  Thus,
-  serial splitk is not supported by this one.  For example, relu can be folded into 
+  serial splitk is not supported by this one.  For example, relu can be folded into
   hfma2/hmul2 for sm80+
 */
 
 #pragma once
 
-#include <cutlass/half.h>
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-#include "cutlass/functional.h"
-#include "cutlass/numeric_conversion.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/thread/activation.h"
 #include "cutlass/epilogue/thread/scale_type.h"
+#include "cutlass/functional.h"
+#include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
+
+#include <cutlass/half.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,11 +58,9 @@ namespace thread {
 namespace detail {
 
 /// Single source of truth for whether to unroll for `LinearCombinationClamp()`
-constexpr bool LinearCombinationRelu0IsHeavy() {
-  return false;
-}
+constexpr bool LinearCombinationRelu0IsHeavy() { return false; }
 
-}
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -69,30 +68,28 @@ constexpr bool LinearCombinationRelu0IsHeavy() {
 ///
 /// D = alpha * accumulator + beta * source + uniform
 ///
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-                                                       ///< Usually it is 128/sizeof_bits<ElementOutput_>,
-                                                       ///< but we use 64 or 32 sometimes when there are not enough data to store
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  typename ElementCompute_ = ElementOutput_,           ///< Data type used to compute linear combination
-  ScaleType::Kind Scale = ScaleType::Default,          ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
+template <typename ElementOutput_,  ///< Data type used to load and store tensors
+          int Count,                ///< Number of elements computed per operation
+                                    ///< Usually it is 128/sizeof_bits<ElementOutput_>,
+          ///< but we use 64 or 32 sometimes when there are not enough data to store
+          typename ElementAccumulator_ = ElementOutput_,  ///< Accumulator data type
+          typename ElementCompute_ =
+            ElementOutput_,  ///< Data type used to compute linear combination
+          ScaleType::Kind Scale = ScaleType::Default,  ///< Control Alpha and Beta scaling
+          FloatRoundStyle Round = FloatRoundStyle::round_to_nearest>
 class LinearCombinationRelu0 {
-public:
-
-  using ElementOutput = ElementOutput_;
+ public:
+  using ElementOutput      = ElementOutput_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementCompute_;
+  using ElementCompute     = ElementCompute_;
 
-  static int const kCount = Count;
+  static int const kCount             = Count;
   static const ScaleType::Kind kScale = Scale;
 
-  using FragmentOutput = Array<ElementOutput, kCount>;
+  using FragmentOutput      = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using FragmentCompute = Array<ElementCompute, kCount>;
-  using FragmentScaleBias = Array<ElementCompute, kCount>;
+  using FragmentCompute     = Array<ElementCompute, kCount>;
+  using FragmentScaleBias   = Array<ElementCompute, kCount>;
 
   static FloatRoundStyle const kRound = Round;
 
@@ -100,41 +97,36 @@ public:
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta;                   ///< scales source tensor
-    ElementCompute const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
-    ElementCompute const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
+    ElementCompute alpha;  ///< scales accumulators
+    ElementCompute beta;   ///< scales source tensor
+    ElementCompute const*
+      alpha_ptr;  ///< pointer to accumulator scalar - if not null, loads it from memory
+    ElementCompute const*
+      beta_ptr;  ///< pointer to source scalar - if not null, loads it from memory
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta(ElementCompute(0)),
-      alpha_ptr(nullptr), 
-      beta_ptr(nullptr) { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta = ElementCompute(0)
-    ): alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params()
+      : alpha(ElementCompute(1)), beta(ElementCompute(0)), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr,
-      ElementCompute const *beta_ptr = nullptr
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) {
+    Params(ElementCompute alpha, ElementCompute beta = ElementCompute(0))
+      : alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
+    }
 
+    CUTLASS_HOST_DEVICE
+    Params(ElementCompute const* alpha_ptr, ElementCompute const* beta_ptr = nullptr)
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr)
+    {
     }
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -142,19 +134,19 @@ private:
   ElementCompute alpha_;
   ElementCompute beta_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  LinearCombinationRelu0(Params const &params) {
-
+  LinearCombinationRelu0(Params const& params)
+  {
     alpha_ = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    beta_ = (params.beta_ptr ? *params.beta_ptr : params.beta);
+    beta_  = (params.beta_ptr ? *params.beta_ptr : params.beta);
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
+  bool is_source_needed() const
+  {
     if (Scale == ScaleType::NoBetaScaling) return true;
 
     if (Scale == ScaleType::OnlyAlphaScaling) return false;
@@ -166,21 +158,18 @@ public:
 
   /// This is used for serial reduction which is not supported by Relu0
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    assert(k_partition == 0);
-  }
-  
+  void set_k_partition(int k_partition, int k_partition_count) { assert(k_partition == 0); }
+
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator, 
-    FragmentOutput const &source) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentOutput const& source) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementOutput, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
-    FragmentCompute converted_source = source_converter(source);
+    FragmentCompute converted_source      = source_converter(source);
     FragmentCompute converted_accumulator = accumulator_converter(accumulator);
 
     // Perform binary operations
@@ -192,15 +181,17 @@ public:
 
     if (Scale == ScaleType::NoBetaScaling) {
       intermediate = converted_source;
-      intermediate = mul_add_relu0_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
+      intermediate = mul_add_relu0_accumulator(
+        alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
     } else if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
 
       // Compute threshold optionally
       intermediate = relu(intermediate);
     } else {
-      intermediate = mul_add_source(beta_, converted_source);                             // X =  beta * C + uniform
-      intermediate = mul_add_relu0_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
+      intermediate = mul_add_source(beta_, converted_source);  // X =  beta * C + uniform
+      intermediate = mul_add_relu0_accumulator(
+        alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
     }
 
     // Convert to destination numeric type
@@ -211,9 +202,8 @@ public:
 
   /// Computes linear scaling: D = alpha * accumulator
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -228,7 +218,7 @@ public:
     if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_accumulator(alpha_, converted_accumulator);    // D = alpha * Accum
+      intermediate = mul_accumulator(alpha_, converted_accumulator);  // D = alpha * Accum
     }
 
     // Compute threshold optionally
@@ -243,11 +233,10 @@ public:
   /// Computes per-channel linear scaling and bias : D = scale * accumulator + bias
   /// Scale and Bias are from input Fragment
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator,
-    FragmentScaleBias const &scale,
-    FragmentScaleBias const &bias) const {
-    
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentScaleBias const& scale,
+                            FragmentScaleBias const& bias) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -258,10 +247,12 @@ public:
 
     multiply_add<FragmentCompute> mul_add_accumulator;
 
-    if(Scale == ScaleType::OnlyAlphaPerChannelScaling)
-      intermediate = mul_add_accumulator(scale, converted_accumulator, bias);    // D = scale * Accum + bias
+    if (Scale == ScaleType::OnlyAlphaPerChannelScaling)
+      intermediate =
+        mul_add_accumulator(scale, converted_accumulator, bias);  // D = scale * Accum + bias
     else
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, bias);   // D = alpha * Accum + bias
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, bias);  // D = alpha * Accum + bias
 
     ReLu<FragmentCompute> relu;
 
@@ -278,7 +269,8 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Conditional guards to enable partial specialization for packed integers
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 720) && ((__CUDACC_VER_MAJOR__ > 10) || ((__CUDACC_VER_MAJOR__ >= 10) && (__CUDACC_VER_MINOR__ >= 2)))
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 720) && \
+  ((__CUDACC_VER_MAJOR__ > 10) || ((__CUDACC_VER_MAJOR__ >= 10) && (__CUDACC_VER_MINOR__ >= 2)))
 
 /// Applies a linear combination operator to an array of elements.
 ///
@@ -286,68 +278,60 @@ public:
 ///
 /// Special handling for int types
 
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-  ScaleType::Kind Scale,                               ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round
->
-class LinearCombinationRelu0 <ElementOutput_, Count, int, float, Scale, Round> {
-public:
-
-  using ElementOutput = ElementOutput_;
+template <typename ElementOutput_,  ///< Data type used to load and store tensors
+          int Count,                ///< Number of elements computed per operation
+          ScaleType::Kind Scale,    ///< Control Alpha and Beta scaling
+          FloatRoundStyle Round>
+class LinearCombinationRelu0<ElementOutput_, Count, int, float, Scale, Round> {
+ public:
+  using ElementOutput      = ElementOutput_;
   using ElementAccumulator = int;
-  using ElementCompute = float;
+  using ElementCompute     = float;
 
   static bool const kIsHeavy = detail::LinearCombinationRelu0IsHeavy();
 
-  static int const kCount = Count;
+  static int const kCount             = Count;
   static const ScaleType::Kind kScale = Scale;
 
-  using FragmentOutput = Array<ElementOutput, kCount>;
+  using FragmentOutput      = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using FragmentCompute = Array<ElementCompute, kCount>;
-  using FragmentScaleBias = Array<ElementCompute, kCount>;
+  using FragmentCompute     = Array<ElementCompute, kCount>;
+  using FragmentScaleBias   = Array<ElementCompute, kCount>;
 
   static FloatRoundStyle const kRound = Round;
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta;                   ///< scales source tensor
-    ElementCompute const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
-    ElementCompute const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
+    ElementCompute alpha;  ///< scales accumulators
+    ElementCompute beta;   ///< scales source tensor
+    ElementCompute const*
+      alpha_ptr;  ///< pointer to accumulator scalar - if not null, loads it from memory
+    ElementCompute const*
+      beta_ptr;  ///< pointer to source scalar - if not null, loads it from memory
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta(ElementCompute(0)),
-      alpha_ptr(nullptr), 
-      beta_ptr(nullptr) { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta = ElementCompute(0)
-    ): alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params()
+      : alpha(ElementCompute(1)), beta(ElementCompute(0)), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr,
-      ElementCompute const *beta_ptr = nullptr
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) {
+    Params(ElementCompute alpha, ElementCompute beta = ElementCompute(0))
+      : alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
+    }
 
+    CUTLASS_HOST_DEVICE
+    Params(ElementCompute const* alpha_ptr, ElementCompute const* beta_ptr = nullptr)
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr)
+    {
     }
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -355,19 +339,19 @@ private:
   ElementCompute alpha_;
   ElementCompute beta_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  LinearCombinationRelu0(Params const &params) {
-
+  LinearCombinationRelu0(Params const& params)
+  {
     alpha_ = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    beta_ = (params.beta_ptr ? *params.beta_ptr : params.beta);
+    beta_  = (params.beta_ptr ? *params.beta_ptr : params.beta);
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
+  bool is_source_needed() const
+  {
     if (Scale == ScaleType::NoBetaScaling) return true;
 
     if (Scale == ScaleType::OnlyAlphaScaling) return false;
@@ -379,21 +363,18 @@ public:
 
   /// This is used for serial reduction which is not supported by Relu0
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    assert(k_partition == 0);
-  }
-  
+  void set_k_partition(int k_partition, int k_partition_count) { assert(k_partition == 0); }
+
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator, 
-    FragmentOutput const &source) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentOutput const& source) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementOutput, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
-    FragmentCompute converted_source = source_converter(source);
+    FragmentCompute converted_source      = source_converter(source);
     FragmentCompute converted_accumulator = accumulator_converter(accumulator);
 
     // Perform binary operations
@@ -405,12 +386,14 @@ public:
 
     if (Scale == ScaleType::NoBetaScaling) {
       intermediate = converted_source;
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
-    }  else if (Scale == ScaleType::Nothing) {
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
+    } else if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_add_source(beta_, converted_source);                             // X =  beta * C + uniform
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
+      intermediate = mul_add_source(beta_, converted_source);  // X =  beta * C + uniform
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
     }
 
     // Compute threshold optionally
@@ -425,22 +408,19 @@ public:
       scaled_accumulator = compute_converter(intermediate);
 
       // Convert to destination numeric type
-      NumericArrayConverter<ElementOutput, int, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, int, kCount, Round> destination_converter;
 
       return destination_converter(scaled_accumulator);
     } else {
-      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
       return destination_converter(intermediate);
     }
   }
 
   /// Computes linear scaling: D = alpha * accumulator
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -455,7 +435,7 @@ public:
     if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_accumulator(alpha_, converted_accumulator);    // D = alpha * Accum
+      intermediate = mul_accumulator(alpha_, converted_accumulator);  // D = alpha * Accum
     }
 
     // Compute threshold optionally
@@ -470,13 +450,11 @@ public:
       scaled_accumulator = compute_converter(intermediate);
 
       // Convert to destination numeric type
-      NumericArrayConverter<ElementOutput, int, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, int, kCount, Round> destination_converter;
 
       return destination_converter(scaled_accumulator);
     } else {
-      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
       return destination_converter(intermediate);
     }
   }
@@ -484,11 +462,10 @@ public:
   /// Computes per-channel linear scaling and bias : D = scale * accumulator + bias
   /// Scale and Bias are from input Fragment
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator,
-    FragmentScaleBias const &scale,
-    FragmentScaleBias const &bias) const {
-    
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentScaleBias const& scale,
+                            FragmentScaleBias const& bias) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -499,10 +476,12 @@ public:
 
     multiply_add<FragmentCompute> mul_add_accumulator;
 
-    if(Scale == ScaleType::OnlyAlphaPerChannelScaling)
-      intermediate = mul_add_accumulator(scale, converted_accumulator, bias);    // D = scale * Accum + bias
+    if (Scale == ScaleType::OnlyAlphaPerChannelScaling)
+      intermediate =
+        mul_add_accumulator(scale, converted_accumulator, bias);  // D = scale * Accum + bias
     else
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, bias);   // D = alpha * Accum + bias
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, bias);  // D = alpha * Accum + bias
 
     ReLu<FragmentCompute> relu;
 
@@ -518,24 +497,22 @@ public:
       scaled_accumulator = compute_converter(intermediate);
 
       // Convert to destination numeric type
-      NumericArrayConverter<ElementOutput, int, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, int, kCount, Round> destination_converter;
 
       return destination_converter(scaled_accumulator);
     } else {
-      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round>
-          destination_converter;
+      NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
       return destination_converter(intermediate);
     }
   }
 };
 
-#endif // Conditional guards to enable partial specialization for packed integers
+#endif  // Conditional guards to enable partial specialization for packed integers
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

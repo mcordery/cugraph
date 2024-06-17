@@ -12,9 +12,8 @@
 # limitations under the License.
 import cupy as cp
 import networkx as nx
-import pylibcugraph as plc
-
 import nx_cugraph as nxcg
+import pylibcugraph as plc
 from nx_cugraph.convert import _to_undirected_graph
 from nx_cugraph.utils import (
     _get_int_dtype,

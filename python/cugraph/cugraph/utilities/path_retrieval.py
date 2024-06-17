@@ -11,11 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import cudf
-
-from cugraph.structure.symmetrize import symmetrize
+import numpy as np
 from cugraph.structure.number_map import NumberMap
+from cugraph.structure.symmetrize import symmetrize
 from cugraph.utilities import path_retrieval_wrapper
 
 

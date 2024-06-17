@@ -48,16 +48,16 @@ namespace device {
 /// Rank2K Grouped
 template <typename Rank2Kkernel_>
 class Rank2KGrouped : public BaseGrouped<Rank2Kkernel_> {
-public:
-  using Rank2Kkernel = Rank2Kkernel_;
+ public:
+  using Rank2Kkernel                        = Rank2Kkernel_;
   static const cutlass::FillMode kFillModeC = Rank2Kkernel::kFillModeC;
-  static const cutlass::BlasMode kBlasMode = Rank2Kkernel::kBlasMode;
+  static const cutlass::BlasMode kBlasMode  = Rank2Kkernel::kBlasMode;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace device
-} // namespace gemm
-} // namespace cutlass
+}  // namespace device
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

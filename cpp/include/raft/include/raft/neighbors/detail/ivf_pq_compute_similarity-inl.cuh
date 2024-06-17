@@ -42,8 +42,9 @@ static_assert((kMaxCapacity >= 32) && !(kMaxCapacity & (kMaxCapacity - 1)),
               "kMaxCapacity must be a power of two, not smaller than the WarpSize.");
 
 // using weak attribute here, because it may be compiled multiple times.
-auto RAFT_WEAK_FUNCTION is_local_topk_feasible(uint32_t k, uint32_t n_probes, uint32_t n_queries)
-  -> bool
+auto RAFT_WEAK_FUNCTION is_local_topk_feasible(uint32_t k,
+                                               uint32_t n_probes,
+                                               uint32_t n_queries) -> bool
 {
   if (k > kMaxCapacity) { return false; }            // warp_sort not possible
   if (n_queries * n_probes <= 16) { return false; }  // overall amount of work is too small
@@ -526,8 +527,8 @@ template <typename OutT,
           typename IvfSampleFilterT = raft::neighbors::filtering::none_ivf_sample_filter>
 struct compute_similarity_kernel_config {
  public:
-  static auto get(uint32_t pq_bits, uint32_t k_max)
-    -> compute_similarity_kernel_t<OutT, LutT, IvfSampleFilterT>
+  static auto get(uint32_t pq_bits,
+                  uint32_t k_max) -> compute_similarity_kernel_t<OutT, LutT, IvfSampleFilterT>
   {
     return kernel_choose_bits(pq_bits, k_max);
   }

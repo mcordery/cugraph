@@ -17,17 +17,16 @@ import inspect
 import io
 import os
 
+import cudf
 import numpy as np
 import pandas as pd
-import scipy
+import pylibcugraph
 import pytest
+import scipy
+from cugraph.testing import utils
+from numba import cuda
 
 import cugraph
-import pylibcugraph
-import cudf
-from numba import cuda
-from cugraph.testing import utils
-
 
 modules_to_skip = ["dask", "proto", "raft"]
 datasets = utils.RAPIDS_DATASET_ROOT_DIR_PATH

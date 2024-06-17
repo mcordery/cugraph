@@ -11,17 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
+
 import cudf
 import numpy as np
-
-import cugraph
 from cugraph.utilities.utils import (
-    import_optional,
     MissingModule,
     create_list_series_from_2d_ar,
+    import_optional,
 )
 
-from typing import Union
+import cugraph
 
 pd = import_optional("pandas")
 
@@ -2513,7 +2513,7 @@ class EXPERIMENTAL__PropertyGraph:
         integer dtypes, needed to accommodate NA values in columns.
         """
         update_cols = {}
-        for (col, dtype) in column_dtype_dict.items():
+        for col, dtype in column_dtype_dict.items():
             if col not in df.columns:
                 continue
             # If the DataFrame is Pandas and the dtype is an integer type,

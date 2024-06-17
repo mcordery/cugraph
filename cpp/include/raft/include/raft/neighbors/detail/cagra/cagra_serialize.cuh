@@ -19,7 +19,7 @@
 #include <raft/core/host_mdarray.hpp>
 #include <raft/core/mdarray.hpp>
 #include <raft/core/mdspan_types.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/serialize.hpp>
 #include <raft/neighbors/cagra_types.hpp>
@@ -50,7 +50,7 @@ void serialize(raft::resources const& res,
                const index<T, IdxT>& index_,
                bool include_dataset)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::serialize");
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::serialize");
 
   RAFT_LOG_DEBUG(
     "Saving CAGRA index, size %zu, dim %u", static_cast<size_t>(index_.size()), index_.dim());
@@ -99,7 +99,7 @@ void serialize_to_hnswlib(raft::resources const& res,
 {
   // static_assert(std::is_same_v<IdxT, int> or std::is_same_v<IdxT, uint32_t>,
   //               "An hnswlib index can only be trained with int32 or uint32 IdxT");
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::serialize");
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::serialize");
   RAFT_LOG_DEBUG("Saving CAGRA index to hnswlib format, size %zu, dim %u",
                  static_cast<size_t>(index_.size()),
                  index_.dim());
@@ -151,13 +151,13 @@ void serialize_to_hnswlib(raft::resources const& res,
   // Remove padding before saving the dataset
   auto host_dataset = make_host_matrix<T, int64_t>(dataset.extent(0), dataset.extent(1));
   RAFT_CUDA_TRY(hipMemcpy2DAsync(host_dataset.data_handle(),
-                                  sizeof(T) * host_dataset.extent(1),
-                                  dataset.data_handle(),
-                                  sizeof(T) * dataset.stride(0),
-                                  sizeof(T) * host_dataset.extent(1),
-                                  dataset.extent(0),
-                                  hipMemcpyDefault,
-                                  resource::get_cuda_stream(res)));
+                                 sizeof(T) * host_dataset.extent(1),
+                                 dataset.data_handle(),
+                                 sizeof(T) * dataset.stride(0),
+                                 sizeof(T) * host_dataset.extent(1),
+                                 dataset.extent(0),
+                                 hipMemcpyDefault,
+                                 resource::get_cuda_stream(res)));
   resource::sync_stream(res);
 
   auto graph = index_.graph();
@@ -228,7 +228,7 @@ void serialize_to_hnswlib(raft::resources const& res,
 template <typename T, typename IdxT>
 auto deserialize(raft::resources const& res, std::istream& is) -> index<T, IdxT>
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::deserialize");
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("cagra::deserialize");
 
   char dtype_string[4];
   is.read(dtype_string, 4);

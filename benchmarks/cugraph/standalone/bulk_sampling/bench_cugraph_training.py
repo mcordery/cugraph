@@ -22,15 +22,13 @@ import argparse
 import json
 import warnings
 
-import torch
 import numpy as np
 import pandas
-
+import torch
 import torch.distributed as dist
+from cugraph.testing.mg_utils import enable_spilling
 
 from datasets import OGBNPapers100MDataset
-
-from cugraph.testing.mg_utils import enable_spilling
 
 
 def init_pytorch_worker(rank: int, use_rmm_torch_allocator: bool = False) -> None:

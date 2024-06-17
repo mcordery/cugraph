@@ -14,9 +14,7 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-)
+from pylibcugraph._cugraph_c.resource_handle cimport cugraph_resource_handle_t
 
 
 cdef class ResourceHandle:

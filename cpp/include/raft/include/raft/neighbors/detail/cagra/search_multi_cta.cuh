@@ -27,8 +27,8 @@
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/linalg/map.cuh>

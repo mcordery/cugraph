@@ -206,18 +206,18 @@ void random_pickup(
 
   random_pickup_kernel<TEAM_SIZE, DATASET_BLOCK_DIM, DATASET_DESCRIPTOR_T>
     <<<grid_size, block_size, smem_size, hip_stream>>>(dataset_desc,
-                                                        queries_ptr,
-                                                        num_pickup,
-                                                        num_distilation,
-                                                        rand_xor_mask,
-                                                        seed_ptr,
-                                                        num_seeds,
-                                                        result_indices_ptr,
-                                                        result_distances_ptr,
-                                                        ldr,
-                                                        visited_hashmap_ptr,
-                                                        hash_bitlen,
-                                                        metric);
+                                                       queries_ptr,
+                                                       num_pickup,
+                                                       num_distilation,
+                                                       rand_xor_mask,
+                                                       seed_ptr,
+                                                       num_seeds,
+                                                       result_indices_ptr,
+                                                       result_distances_ptr,
+                                                       ldr,
+                                                       visited_hashmap_ptr,
+                                                       hash_bitlen,
+                                                       metric);
 }
 
 template <class INDEX_T>
@@ -309,15 +309,15 @@ void pickup_next_parents(INDEX_T* const parent_candidates_ptr,  // [num_queries,
   }
   pickup_next_parents_kernel<INDEX_T>
     <<<num_queries, block_size, 0, hip_stream>>>(parent_candidates_ptr,
-                                                  lds,
-                                                  parent_candidates_size,
-                                                  visited_hashmap_ptr,
-                                                  hash_bitlen,
-                                                  small_hash_bitlen,
-                                                  parent_list_ptr,
-                                                  ldd,
-                                                  parent_list_size,
-                                                  terminate_flag);
+                                                 lds,
+                                                 parent_candidates_size,
+                                                 visited_hashmap_ptr,
+                                                 hash_bitlen,
+                                                 small_hash_bitlen,
+                                                 parent_list_ptr,
+                                                 ldd,
+                                                 parent_list_size,
+                                                 terminate_flag);
 }
 
 template <unsigned TEAM_SIZE,
@@ -474,21 +474,21 @@ void compute_distance_to_child_nodes(
                                          DATASET_DESCRIPTOR_T,
                                          SAMPLE_FILTER_T>
     <<<grid_size, block_size, smem_size, hip_stream>>>(parent_node_list,
-                                                        parent_candidates_ptr,
-                                                        parent_distance_ptr,
-                                                        lds,
-                                                        search_width,
-                                                        dataset_desc,
-                                                        neighbor_graph_ptr,
-                                                        graph_degree,
-                                                        query_ptr,
-                                                        visited_hashmap_ptr,
-                                                        hash_bitlen,
-                                                        result_indices_ptr,
-                                                        result_distances_ptr,
-                                                        ldd,
-                                                        sample_filter,
-                                                        metric);
+                                                       parent_candidates_ptr,
+                                                       parent_distance_ptr,
+                                                       lds,
+                                                       search_width,
+                                                       dataset_desc,
+                                                       neighbor_graph_ptr,
+                                                       graph_degree,
+                                                       query_ptr,
+                                                       visited_hashmap_ptr,
+                                                       hash_bitlen,
+                                                       result_indices_ptr,
+                                                       result_distances_ptr,
+                                                       ldd,
+                                                       sample_filter,
+                                                       metric);
 }
 
 template <class INDEX_T>
@@ -558,12 +558,12 @@ void apply_filter(INDEX_T* const result_indices_ptr,
   const std::uint32_t grid_size  = ceildiv(num_queries * result_buffer_size, block_size);
 
   apply_filter_kernel<<<grid_size, block_size, 0, hip_stream>>>(result_indices_ptr,
-                                                                 result_distances_ptr,
-                                                                 lds,
-                                                                 result_buffer_size,
-                                                                 num_queries,
-                                                                 query_id_offset,
-                                                                 sample_filter);
+                                                                result_distances_ptr,
+                                                                lds,
+                                                                result_buffer_size,
+                                                                num_queries,
+                                                                query_id_offset,
+                                                                sample_filter);
 }
 
 template <class T>
@@ -844,7 +844,7 @@ struct search : search_plan_impl<DATASET_DESCRIPTOR_T, SAMPLE_FILTER_T> {
                   SAMPLE_FILTER_T sample_filter)
   {
     // Init hashmap
-    hipStream_t stream      = resource::get_cuda_stream(res);
+    hipStream_t stream       = resource::get_cuda_stream(res);
     const uint32_t hash_size = hashmap::get_size(hash_bitlen);
     set_value_batch(
       hashmap.data(), hash_size, utils::get_max_value<INDEX_T>(), hash_size, num_queries, stream);

@@ -36,8 +36,8 @@
 
 #pragma once
 
-#include "cutlass/matrix_shape.h"
 #include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_shape.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,35 +48,30 @@ namespace warp {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Policy details related to the epilogue
-template <
-  typename WarpShape,     ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape, ///< matrix multiply operation shape (concept: gemm:GemmShape)
-  typename Layout         ///< target shared memory layout
->
-struct TensorOpPolicy; 
+template <typename WarpShape,      ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape,  ///< matrix multiply operation shape (concept: gemm:GemmShape)
+          typename Layout          ///< target shared memory layout
+          >
+struct TensorOpPolicy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major
-template <
-  typename WarpShape,           ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape        ///< matrix multiply operation shape (concept: gemm::GemmShape)
->
+template <typename WarpShape,     ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          >
 struct TensorOpPolicy<WarpShape, OperatorShape, layout::RowMajor> {
-
   /// Number of operations
-  using OperatorCount = MatrixShape<
-    (WarpShape::kM + OperatorShape::kM - 1) / OperatorShape::kM,
-    (WarpShape::kN + OperatorShape::kN - 1) / OperatorShape::kN
-  >;
+  using OperatorCount = MatrixShape<(WarpShape::kM + OperatorShape::kM - 1) / OperatorShape::kM,
+                                    (WarpShape::kN + OperatorShape::kN - 1) / OperatorShape::kN>;
 
   //
   // Hard-coded constants regarding Tensor Operations
   //
 
   static int const kElementsPerAccess = 2;
-  static int const kRowsPerIteration = 8;
-  static bool const kDivisible = 
+  static int const kRowsPerIteration  = 8;
+  static bool const kDivisible =
     !(WarpShape::kM % OperatorShape::kM) && !(WarpShape::kN % OperatorShape::kN);
 
   //
@@ -92,57 +87,53 @@ struct TensorOpPolicy<WarpShape, OperatorShape, layout::RowMajor> {
   using TileIterations = MatrixShape<kIterations, 1>;
 
   static int const kAccumulatorRowStride = kElementsPerAccess;
-  static int const kAccumulatorColumnStride = kElementsPerAccess * OperatorCount::kRow * kIterationsPerInstruction;
-
+  static int const kAccumulatorColumnStride =
+    kElementsPerAccess * OperatorCount::kRow * kIterationsPerInstruction;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for column-major-interleaved
-template <
-    typename WarpShape,  ///< shape of warp-level GEMM (concept: MatrixShape)
-    typename OperatorShape,   ///< matrix multiply operation (concept: arch::Mma)
-    int InterleavedK     ///< number of interleaved k
-    >
-struct TensorOpPolicy<WarpShape, OperatorShape,
-                      layout::ColumnMajorInterleaved<InterleavedK> > {
+template <typename WarpShape,      ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape,  ///< matrix multiply operation (concept: arch::Mma)
+          int InterleavedK         ///< number of interleaved k
+          >
+struct TensorOpPolicy<WarpShape, OperatorShape, layout::ColumnMajorInterleaved<InterleavedK>> {
   /// Number of operations
-  using OperatorCount = MatrixShape<WarpShape::kM / OperatorShape::kM,
-                                    WarpShape::kN / OperatorShape::kN>;
+  using OperatorCount =
+    MatrixShape<WarpShape::kM / OperatorShape::kM, WarpShape::kN / OperatorShape::kN>;
 
   //
   // Hard-coded constants regarding Tensor Operations
   //
 
   static int const kElementsPerAccess = 2;
-  static int const kRowsPerIteration = 8;
+  static int const kRowsPerIteration  = 8;
 
   //
   // Derived quantities
   //
 
   // Number of 'externally visible' iterations per actual instruction
-  static int const kIterationsPerInstruction =
-      OperatorShape::kM / kRowsPerIteration;
+  static int const kIterationsPerInstruction = OperatorShape::kM / kRowsPerIteration;
 
   // Number of externally visible iterations
-  static int const kIterations = WarpShape::kN / InterleavedK *
-                                 OperatorCount::kRow *
-                                 kIterationsPerInstruction;
+  static int const kIterations =
+    WarpShape::kN / InterleavedK * OperatorCount::kRow * kIterationsPerInstruction;
 
   static int const kElementsPerIteration = InterleavedK / OperatorShape::kN * kElementsPerAccess;
 
   static int const kAccessPerIteration = kElementsPerIteration / kElementsPerAccess;
 
   // Number of externally visible iterations
-  //static int const kTileIterations = OperatorCount::kRow * kIterationsPerInstruction;
+  // static int const kTileIterations = OperatorCount::kRow * kIterationsPerInstruction;
   using TileIterations = MatrixShape<1, WarpShape::kN / InterleavedK>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

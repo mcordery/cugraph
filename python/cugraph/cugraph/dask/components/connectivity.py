@@ -13,11 +13,10 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
-
+from dask.distributed import default_client, wait
 from pylibcugraph import ResourceHandle
 from pylibcugraph import weakly_connected_components as pylibcugraph_wcc
 

@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-
-import cugraph
 import cugraph.dask as dcg
+import pytest
 from cudf.testing.testing import assert_frame_equal
 from cugraph.dask.common.mg_utils import is_single_gpu
-from cugraph.datasets import karate, dolphins, email_Eu_core
 
+import cugraph
+from cugraph.datasets import dolphins, email_Eu_core, karate
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

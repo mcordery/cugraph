@@ -39,18 +39,21 @@ extern "C" {
 extern "C" {
 #endif
 
-inline _LIBCUDACXX_INLINE_VISIBILITY float strtof_l(const char* __nptr, char** __endptr,
-                                                locale_t) {
+inline _LIBCUDACXX_INLINE_VISIBILITY float strtof_l(const char* __nptr, char** __endptr, locale_t)
+{
   return ::strtof(__nptr, __endptr);
 }
 
-inline _LIBCUDACXX_INLINE_VISIBILITY double strtod_l(const char* __nptr,
-                                                 char** __endptr, locale_t) {
+inline _LIBCUDACXX_INLINE_VISIBILITY double strtod_l(const char* __nptr, char** __endptr, locale_t)
+{
   return ::strtod(__nptr, __endptr);
 }
 
-inline _LIBCUDACXX_INLINE_VISIBILITY long strtol_l(const char* __nptr, char** __endptr,
-                                               int __base, locale_t) {
+inline _LIBCUDACXX_INLINE_VISIBILITY long strtol_l(const char* __nptr,
+                                                   char** __endptr,
+                                                   int __base,
+                                                   locale_t)
+{
   return ::strtol(__nptr, __endptr, __base);
 }
 
@@ -58,10 +61,10 @@ inline _LIBCUDACXX_INLINE_VISIBILITY long strtol_l(const char* __nptr, char** __
 }
 #endif
 
-#endif // __ANDROID_API__ < 26
+#endif  // __ANDROID_API__ < 26
 
-#endif // __NDK_MAJOR__ <= 16
-#endif // defined(__ANDROID__)
+#endif  // __NDK_MAJOR__ <= 16
+#endif  // defined(__ANDROID__)
 
-#endif // defined(__BIONIC__)
-#endif // _LIBCUDACXX_SUPPORT_ANDROID_LOCALE_BIONIC_H
+#endif  // defined(__BIONIC__)
+#endif  // _LIBCUDACXX_SUPPORT_ANDROID_LOCALE_BIONIC_H

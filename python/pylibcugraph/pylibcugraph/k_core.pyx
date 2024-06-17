@@ -15,45 +15,33 @@
 # cython: language_level = 3
 
 from libc.stdint cimport uintptr_t
+
 import warnings
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
 from pylibcugraph._cugraph_c.core_algorithms cimport (
-    cugraph_core_result_t,
-    cugraph_k_core_result_t,
     cugraph_core_result_create,
+    cugraph_core_result_free,
+    cugraph_core_result_t,
     cugraph_k_core,
     cugraph_k_core_degree_type_t,
-    cugraph_k_core_result_get_src_vertices,
-    cugraph_k_core_result_get_dst_vertices,
-    cugraph_k_core_result_get_weights,
     cugraph_k_core_result_free,
-    cugraph_core_result_free,
+    cugraph_k_core_result_get_dst_vertices,
+    cugraph_k_core_result_get_src_vertices,
+    cugraph_k_core_result_get_weights,
+    cugraph_k_core_result_t,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
     assert_success,
     copy_to_cupy_array,
     create_cugraph_type_erased_device_array_view_from_py_obj,
 )
+
 
 def k_core(ResourceHandle resource_handle,
            _GPUGraph graph,

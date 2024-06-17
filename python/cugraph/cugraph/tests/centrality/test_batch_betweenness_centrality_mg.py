@@ -13,17 +13,12 @@
 
 import gc
 
-import pytest
 import numpy as np
-
+import pytest
 from cugraph.dask.common.mg_utils import is_single_gpu
+from test_betweenness_centrality import calc_betweenness_centrality, compare_scores
+
 from cugraph.datasets import karate
-
-from test_betweenness_centrality import (
-    calc_betweenness_centrality,
-    compare_scores,
-)
-
 
 # =============================================================================
 # Parameters

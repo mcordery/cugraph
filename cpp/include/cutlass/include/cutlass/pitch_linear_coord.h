@@ -33,30 +33,26 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Template defining a shape used by pitch-linear operators
-template <
-  int Contiguous,
-  int Strided
->
+template <int Contiguous, int Strided>
 struct PitchLinearShape {
   static int const kContiguous = Contiguous;
-  static int const kStrided = Strided;
-  static int const kCount = Contiguous * Strided;
+  static int const kStrided    = Strided;
+  static int const kCount      = Contiguous * Strided;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Coordinate in pitch-linear space
 struct PitchLinearCoord : public Coord<2, int> {
-public:
-
+ public:
   /// Integer-valued index
   using Index = int;
 
@@ -66,52 +62,52 @@ public:
   /// Long integer type
   using LongIndex = typename Base::LongIndex;
 
-private:
-
+ private:
   /// Rows dimension
   static int const kContiguous = 0;
 
   /// Columns dimension
   static int const kStrided = 1;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Default ctor
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord() { }
+  PitchLinearCoord() {}
 
   /// Constructs from Coord<2>
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord(Coord<2, Index> const &coord): Base(coord) { }
+  PitchLinearCoord(Coord<2, Index> const& coord) : Base(coord) {}
 
   /// Helper to construct from a row and column
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord(Index contiguous_, Index strided_): Base(make_Coord(contiguous_, strided_)) { }
+  PitchLinearCoord(Index contiguous_, Index strided_) : Base(make_Coord(contiguous_, strided_)) {}
 
   /// Helper to construct from a row and column based on LongIndex
   CUTLASS_HOST_DEVICE
   PitchLinearCoord(LongIndex contiguous_, LongIndex strided_)
-    : Base(make_Coord(Index(contiguous_), Index(strided_))) { }
+    : Base(make_Coord(Index(contiguous_), Index(strided_)))
+  {
+  }
 
   /// Returns the contiguous dimension
   CUTLASS_HOST_DEVICE
-  Index const & contiguous() const { return this->at(kContiguous); }
+  Index const& contiguous() const { return this->at(kContiguous); }
 
   /// Returns the contiguous dimension
   CUTLASS_HOST_DEVICE
-  Index & contiguous() { return this->at(kContiguous); }
+  Index& contiguous() { return this->at(kContiguous); }
 
   /// Returns the column of the coordinate
   CUTLASS_HOST_DEVICE
-  Index const & strided() const { return this->at(kStrided); }
+  Index const& strided() const { return this->at(kStrided); }
 
   /// Returns the column of the coordinate
   CUTLASS_HOST_DEVICE
-  Index & strided() { return this->at(kStrided); }
+  Index& strided() { return this->at(kStrided); }
 
   //
   // Coord operators
@@ -119,57 +115,51 @@ public:
 
   /// Element-wise addition
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord operator+(Base const& b) const {
-    return PitchLinearCoord(Base::operator+(b));
-  }
+  PitchLinearCoord operator+(Base const& b) const { return PitchLinearCoord(Base::operator+(b)); }
 
   /// Element-wise subtraction
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord operator-(Base const& b) const {
-    return PitchLinearCoord(Base::operator-(b));
-  }
+  PitchLinearCoord operator-(Base const& b) const { return PitchLinearCoord(Base::operator-(b)); }
 
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord operator-() const {
-    return PitchLinearCoord(-at(0), -at(1));
-  }
+  PitchLinearCoord operator-() const { return PitchLinearCoord(-at(0), -at(1)); }
 
   /// Element-wise multiplication
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord operator*(Base const& b) const {
-    return PitchLinearCoord(Base::operator*(b));
-  }
+  PitchLinearCoord operator*(Base const& b) const { return PitchLinearCoord(Base::operator*(b)); }
 
   /// Element-wise division
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord operator/(Base const& b) const {
-    return PitchLinearCoord(Base::operator/(b));
-  }
+  PitchLinearCoord operator/(Base const& b) const { return PitchLinearCoord(Base::operator/(b)); }
 
   /// In-place addition
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord& operator+=(Base const& b) {
+  PitchLinearCoord& operator+=(Base const& b)
+  {
     Base::operator+=(b);
     return *this;
   }
 
   /// In-place subtraction
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord& operator-=(Base const& b) {
+  PitchLinearCoord& operator-=(Base const& b)
+  {
     Base::operator-=(b);
     return *this;
   }
 
   /// In-place multiplication
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord& operator*=(Base const& b) {
+  PitchLinearCoord& operator*=(Base const& b)
+  {
     Base::operator*=(b);
     return *this;
   }
 
   /// In-place division
   CUTLASS_HOST_DEVICE
-  PitchLinearCoord& operator/=(Base const& b) {
+  PitchLinearCoord& operator/=(Base const& b)
+  {
     Base::operator/=(b);
     return *this;
   }
@@ -177,5 +167,4 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
-
+}  // namespace cutlass

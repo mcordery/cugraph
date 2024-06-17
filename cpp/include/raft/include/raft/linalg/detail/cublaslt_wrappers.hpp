@@ -16,17 +16,16 @@
 #pragma once
 
 #include <raft/core/cublas_macros.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/resource/cublaslt_handle.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/util/cache.hpp>
 #include <raft/util/cuda_data_type.hpp>
 
-#include <hip_fp16.hpp>
-
 #include <cublasLt.h>
+#include <hip_fp16.hpp>
 
 #include <type_traits>
 
@@ -248,8 +247,8 @@ template <bool DevicePointerMode = false, typename S, typename A, typename B, ty
                                   uint64_t ldc,
                                   hipStream_t stream)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> batch_scope(
-//    "linalg::matmul(m = %d, n = %d, k = %d)", m, n, k);
+  //  common::nvtx::range<common::nvtx::domain::raft> batch_scope(
+  //    "linalg::matmul(m = %d, n = %d, k = %d)", m, n, k);
   std::shared_ptr<matmul_desc> mm_desc{nullptr};
   matmul_key_t mm_key{m, n, k, lda, ldb, ldc, trans_a, trans_b};
   auto& cache =

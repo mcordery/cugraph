@@ -36,8 +36,8 @@
 
 #pragma once
 
-#include "cutlass/matrix_shape.h"
 #include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_shape.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,26 +47,23 @@ namespace warp {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename WarpShape,            ///< shape of warp-level GEMM (concept: GemmShape)
-  typename Operator,             ///< matrix multiply operation (concept: arch::Mma)
-  typename Layout,               ///< destination layout in shared memory
-  typename MmaSimtPolicy         ///< policy defining lane arrangement (concept: MmaSimtPolicy)
->
+template <typename WarpShape,     ///< shape of warp-level GEMM (concept: GemmShape)
+          typename Operator,      ///< matrix multiply operation (concept: arch::Mma)
+          typename Layout,        ///< destination layout in shared memory
+          typename MmaSimtPolicy  ///< policy defining lane arrangement (concept: MmaSimtPolicy)
+          >
 struct SimtPolicy;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major
-template <
-  typename WarpShape_,           ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename Operator_,            ///< matrix multiply operation (concept: arch::Mma)
-  typename MmaSimtPolicy_        ///< policy defining lane arrangement (concept: MmaSimtPolicy)
->
+template <typename WarpShape_,     ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename Operator_,      ///< matrix multiply operation (concept: arch::Mma)
+          typename MmaSimtPolicy_  ///< policy defining lane arrangement (concept: MmaSimtPolicy)
+          >
 struct SimtPolicy<WarpShape_, Operator_, layout::RowMajor, MmaSimtPolicy_> {
-
-  using WarpShape = WarpShape_;
-  using Operator = Operator_;
+  using WarpShape     = WarpShape_;
+  using Operator      = Operator_;
   using MmaSimtPolicy = MmaSimtPolicy_;
 
   static_assert(!(WarpShape::kM % MmaSimtPolicy::WarpShape::kRow), "Divisibility");
@@ -76,8 +73,7 @@ struct SimtPolicy<WarpShape_, Operator_, layout::RowMajor, MmaSimtPolicy_> {
   static int const kIterations = WarpShape::kM / MmaSimtPolicy::WarpShape::kRow;
 
   /// Number of accumulators written per iteration
-  static int const kElementsPerIteration = 
-    (WarpShape::kN / MmaSimtPolicy::WarpShape::kColumn);
+  static int const kElementsPerIteration = (WarpShape::kN / MmaSimtPolicy::WarpShape::kColumn);
 
   /// Total number of accumulators
   static int const kAccumulatorElementCount = kElementsPerIteration * kIterations;
@@ -92,16 +88,14 @@ struct SimtPolicy<WarpShape_, Operator_, layout::RowMajor, MmaSimtPolicy_> {
   static int const kAccessesPerIteration = kElementsPerIteration / kElementsPerAccess;
 
   /// Number of elements in between accumulator chunks of (LaneMmaShape::kM x LaneMmaShape::kN)
-  using Delta = MatrixShape<
-    MmaSimtPolicy::WarpShape::kRow * MmaSimtPolicy::LaneMmaShape::kM,
-    MmaSimtPolicy::WarpShape::kColumn * MmaSimtPolicy::LaneMmaShape::kN
-  >;
+  using Delta = MatrixShape<MmaSimtPolicy::WarpShape::kRow * MmaSimtPolicy::LaneMmaShape::kM,
+                            MmaSimtPolicy::WarpShape::kColumn * MmaSimtPolicy::LaneMmaShape::kN>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

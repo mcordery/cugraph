@@ -11,28 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Tuple, Any, Union, List, Dict
-
-from enum import Enum, auto
-
-from dataclasses import dataclass
-from collections import defaultdict
-from itertools import chain
-from functools import cached_property
-
-import numpy as np
-import cupy
-import pandas
-import cudf
-import cugraph
 import warnings
+from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum, auto
+from functools import cached_property
+from itertools import chain
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import cudf
+import cupy
 import dask.array as dar
 import dask.dataframe as dd
 import dask.distributed as distributed
 import dask_cudf
+import numpy as np
+import pandas
+from cugraph.utilities.utils import MissingModule, import_optional
 
-from cugraph.utilities.utils import import_optional, MissingModule
+import cugraph
 
 torch = import_optional("torch")
 torch_geometric = import_optional("torch_geometric")
@@ -512,9 +509,9 @@ class CuGraphStore:
             # Have to check for empty partitions and handle them appropriately
             df = df.persist()
             df = df.map_partitions(
-                lambda f: cudf.DataFrame.from_pandas(f)
-                if len(f) > 0
-                else get_empty_df(),
+                lambda f: (
+                    cudf.DataFrame.from_pandas(f) if len(f) > 0 else get_empty_df()
+                ),
                 meta=get_empty_df(),
             ).reset_index(
                 drop=True
@@ -522,12 +519,16 @@ class CuGraphStore:
         else:
             df = pandas.DataFrame(
                 {
-                    "src": pandas.Series(na_dst)
-                    if order == "CSC"
-                    else pandas.Series(na_src),
-                    "dst": pandas.Series(na_src)
-                    if order == "CSC"
-                    else pandas.Series(na_dst),
+                    "src": (
+                        pandas.Series(na_dst)
+                        if order == "CSC"
+                        else pandas.Series(na_src)
+                    ),
+                    "dst": (
+                        pandas.Series(na_src)
+                        if order == "CSC"
+                        else pandas.Series(na_dst)
+                    ),
                     "etp": pandas.Series(na_etp),
                 }
             )

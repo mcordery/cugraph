@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import pytest
-
 from cugraph_pyg.nn import TransformerConv as CuGraphTransformerConv
 
 ATOL = 1e-6

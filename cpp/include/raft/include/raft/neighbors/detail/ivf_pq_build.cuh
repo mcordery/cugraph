@@ -19,10 +19,10 @@
 #include <raft/cluster/kmeans_balanced.cuh>
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/logger.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/linalg/add.cuh>
@@ -51,9 +51,10 @@
 #include <rmm/mr/device/managed_memory_resource.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hip/hip_fp16.h>
 #include <thrust/extrema.h>
 #include <thrust/scan.h>
+
+#include <hip/hip_fp16.h>
 
 #include <memory>
 #include <variant>
@@ -126,8 +127,8 @@ inline void make_rotation_matrix(raft::resources const& handle,
                                  float* rotation_matrix,
                                  raft::random::RngState rng = raft::random::RngState(7ULL))
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::make_rotation_matrix(%u * %u)", n_rows, n_cols);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::make_rotation_matrix(%u * %u)", n_rows, n_cols);
   auto stream  = resource::get_cuda_stream(handle);
   bool inplace = n_rows == n_cols;
   uint32_t n   = std::max(n_rows, n_cols);
@@ -138,13 +139,13 @@ inline void make_rotation_matrix(raft::resources const& handle,
     linalg::detail::qrGetQ_inplace(handle, mat, n, n, stream);
     if (!inplace) {
       RAFT_CUDA_TRY(hipMemcpy2DAsync(rotation_matrix,
-                                      sizeof(float) * n_cols,
-                                      mat,
-                                      sizeof(float) * n,
-                                      sizeof(float) * n_cols,
-                                      n_rows,
-                                      hipMemcpyDefault,
-                                      stream));
+                                     sizeof(float) * n_cols,
+                                     mat,
+                                     sizeof(float) * n,
+                                     sizeof(float) * n_cols,
+                                     n_rows,
+                                     hipMemcpyDefault,
+                                     stream));
     }
   } else {
     uint32_t stride = n + 1;
@@ -321,13 +322,13 @@ void set_centers(raft::resources const& handle, index<IdxT>* index, const float*
 
   // combine cluster_centers and their norms
   RAFT_CUDA_TRY(hipMemcpy2DAsync(index->centers().data_handle(),
-                                  sizeof(float) * index->dim_ext(),
-                                  cluster_centers,
-                                  sizeof(float) * index->dim(),
-                                  sizeof(float) * index->dim(),
-                                  index->n_lists(),
-                                  hipMemcpyDefault,
-                                  stream));
+                                 sizeof(float) * index->dim_ext(),
+                                 cluster_centers,
+                                 sizeof(float) * index->dim(),
+                                 sizeof(float) * index->dim(),
+                                 index->n_lists(),
+                                 hipMemcpyDefault,
+                                 stream));
 
   rmm::device_uvector<float> center_norms(index->n_lists(), stream, device_memory);
   raft::linalg::rowNorm(center_norms.data(),
@@ -338,13 +339,13 @@ void set_centers(raft::resources const& handle, index<IdxT>* index, const float*
                         true,
                         stream);
   RAFT_CUDA_TRY(hipMemcpy2DAsync(index->centers().data_handle() + index->dim(),
-                                  sizeof(float) * index->dim_ext(),
-                                  center_norms.data(),
-                                  sizeof(float),
-                                  sizeof(float),
-                                  index->n_lists(),
-                                  hipMemcpyDefault,
-                                  stream));
+                                 sizeof(float) * index->dim_ext(),
+                                 center_norms.data(),
+                                 sizeof(float),
+                                 sizeof(float),
+                                 index->n_lists(),
+                                 hipMemcpyDefault,
+                                 stream));
 
   //     Rotate cluster_centers
   float alpha = 1.0;
@@ -410,8 +411,8 @@ void train_per_subset(raft::resources const& handle,
   rmm::device_uvector<uint32_t> pq_cluster_sizes(index.pq_book_size(), stream, device_memory);
 
   for (uint32_t j = 0; j < index.pq_dim(); j++) {
-//    common::nvtx::range<common::nvtx::domain::raft> pq_per_subspace_scope(
-//      "ivf_pq::build::per_subspace[%u]", j);
+    //    common::nvtx::range<common::nvtx::domain::raft> pq_per_subspace_scope(
+    //      "ivf_pq::build::per_subspace[%u]", j);
 
     // Get the rotated cluster centers for each training vector.
     // This will be subtracted from the input vectors afterwards.
@@ -509,8 +510,8 @@ void train_per_cluster(raft::resources const& handle,
   for (uint32_t l = 0; l < index.n_lists(); l++) {
     auto cluster_size = cluster_sizes.data()[l];
     if (cluster_size == 0) continue;
-//    common::nvtx::range<common::nvtx::domain::raft> pq_per_cluster_scope(
-//      "ivf_pq::build::per_cluster[%u](size = %u)", l, cluster_size);
+    //    common::nvtx::range<common::nvtx::domain::raft> pq_per_cluster_scope(
+    //      "ivf_pq::build::per_cluster[%u](size = %u)", l, cluster_size);
 
     select_residuals(handle,
                      rot_vectors.data(),
@@ -1504,8 +1505,8 @@ void extend(raft::resources const& handle,
             const IdxT* new_indices,
             IdxT n_rows)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::extend(%zu, %u)", size_t(n_rows), index->dim());
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::extend(%zu, %u)", size_t(n_rows), index->dim());
 
   auto stream           = resource::get_cuda_stream(handle);
   const auto n_clusters = index->n_lists();
@@ -1583,13 +1584,13 @@ void extend(raft::resources const& handle,
     rmm::device_uvector<float> cluster_centers(
       size_t(n_clusters) * size_t(index->dim()), stream, device_memory);
     RAFT_CUDA_TRY(hipMemcpy2DAsync(cluster_centers.data(),
-                                    sizeof(float) * index->dim(),
-                                    index->centers().data_handle(),
-                                    sizeof(float) * index->dim_ext(),
-                                    sizeof(float) * index->dim(),
-                                    n_clusters,
-                                    hipMemcpyDefault,
-                                    stream));
+                                   sizeof(float) * index->dim(),
+                                   index->centers().data_handle(),
+                                   sizeof(float) * index->dim_ext(),
+                                   sizeof(float) * index->dim(),
+                                   n_clusters,
+                                   hipMemcpyDefault,
+                                   stream));
     for (const auto& batch : vec_batches) {
       auto batch_data_view = raft::make_device_matrix_view<const T, internal_extents_t>(
         batch.data(), batch.size(), index->dim());
@@ -1684,8 +1685,8 @@ auto build(raft::resources const& handle,
            IdxT n_rows,
            uint32_t dim) -> index<IdxT>
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_pq::build(%zu, %u)", size_t(n_rows), dim);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_pq::build(%zu, %u)", size_t(n_rows), dim);
   static_assert(std::is_same_v<T, float> || std::is_same_v<T, half> || std::is_same_v<T, uint8_t> ||
                   std::is_same_v<T, int8_t>,
                 "Unsupported data type");
@@ -1717,13 +1718,13 @@ auto build(raft::resources const& handle,
     // TODO: a proper sampling
     if constexpr (std::is_same_v<T, float>) {
       RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset.data(),
-                                      sizeof(T) * index.dim(),
-                                      dataset,
-                                      sizeof(T) * index.dim() * trainset_ratio,
-                                      sizeof(T) * index.dim(),
-                                      n_rows_train,
-                                      hipMemcpyDefault,
-                                      stream));
+                                     sizeof(T) * index.dim(),
+                                     dataset,
+                                     sizeof(T) * index.dim() * trainset_ratio,
+                                     sizeof(T) * index.dim(),
+                                     n_rows_train,
+                                     hipMemcpyDefault,
+                                     stream));
     } else {
       size_t dim = index.dim();
       hipPointerAttribute_t dataset_attr;
@@ -1744,13 +1745,13 @@ auto build(raft::resources const& handle,
         // We copy the data in strides, one row at a time, and place the smaller rows of type T
         // at the end of float rows.
         RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset_tmp,
-                                        sizeof(float) * index.dim(),
-                                        dataset,
-                                        sizeof(T) * index.dim() * trainset_ratio,
-                                        sizeof(T) * index.dim(),
-                                        n_rows_train,
-                                        hipMemcpyDefault,
-                                        stream));
+                                       sizeof(float) * index.dim(),
+                                       dataset,
+                                       sizeof(T) * index.dim() * trainset_ratio,
+                                       sizeof(T) * index.dim(),
+                                       n_rows_train,
+                                       hipMemcpyDefault,
+                                       stream));
         // Transform the input `{T -> float}`, one row per warp.
         // The threads in each warp copy the data synchronously; this and the layout of the data
         // (content is aligned to the end of the rows) together allow doing the transform in-place.

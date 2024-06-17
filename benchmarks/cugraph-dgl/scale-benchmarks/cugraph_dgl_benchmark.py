@@ -16,16 +16,17 @@ os.environ["LIBCUDF_CUFILE_POLICY"] = "KVIKIO"
 os.environ["KVIKIO_NTHREADS"] = "64"
 os.environ["RAPIDS_NO_INITIALIZE"] = "1"
 import json
-import pandas as pd
 import os
 import time
-from rmm.allocators.torch import rmm_torch_allocator
+from argparse import ArgumentParser
+
+import pandas as pd
 import rmm
 import torch
 from cugraph_dgl.dataloading import HomogenousBulkSamplerDataset
+from load_graph_feats import load_node_features, load_node_labels
 from model import run_1_epoch
-from argparse import ArgumentParser
-from load_graph_feats import load_node_labels, load_node_features
+from rmm.allocators.torch import rmm_torch_allocator
 
 
 def create_dataloader(sampled_dir, total_num_nodes, sparse_format, return_type):

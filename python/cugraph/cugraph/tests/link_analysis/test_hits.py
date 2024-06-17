@@ -13,15 +13,15 @@
 
 import gc
 
-import pytest
+import cudf
 import networkx as nx
 import pandas as pd
-
-import cudf
-import cugraph
-from cugraph.testing import utils, UNDIRECTED_DATASETS
-from cugraph.datasets import email_Eu_core, karate
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS, utils
 from pylibcugraph.testing.utils import gen_fixture_params_product
+
+import cugraph
+from cugraph.datasets import email_Eu_core, karate
 
 
 # =============================================================================

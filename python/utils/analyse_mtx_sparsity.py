@@ -20,12 +20,13 @@
 #           <mmFile>_row_lengths_histogram.png (please comment plt.*
 #               at the end of the script if not needed)
 
-import numpy as np
 import sys
-from scipy.io import mmread
-import scipy.sparse
-import networkx as nx
+
 import matplotlib.pyplot as plt
+import networkx as nx
+import numpy as np
+import scipy.sparse
+from scipy.io import mmread
 
 
 def gini(v):

@@ -34,11 +34,11 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,47 +51,39 @@ namespace thread {
 /// Applies a reduction sum to an array of elements.
 ///
 ///
-template <
-  typename Element_,                             ///< Data type used to load and store tensors
-  int Count                                      ///< Number of elements computed per operation
->
+template <typename Element_,  ///< Data type used to load and store tensors
+          int Count           ///< Number of elements computed per operation
+          >
 class ReductionOpPlus {
-public:
-
-  using Element = Element_;
+ public:
+  using Element           = Element_;
   static int const kCount = Count;
 
   using Fragment = Array<Element, kCount>;
   using Operator = plus<Fragment>;
 
   /// Host-constructable parameters structure
-  struct Params { };
+  struct Params {};
 
-private:
-
+ private:
   /// reduction operator
   Operator operator_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  ReductionOpPlus(Params const &params) {
+  ReductionOpPlus(Params const& params) {}
 
-  }
-
-  /// Computes Compute => 
+  /// Computes Compute =>
   CUTLASS_HOST_DEVICE
-  Fragment operator()(
-    Fragment const &lhs,
-    Fragment const &rhs) const {
-
+  Fragment operator()(Fragment const& lhs, Fragment const& rhs) const
+  {
     return operator_(lhs, rhs);
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass

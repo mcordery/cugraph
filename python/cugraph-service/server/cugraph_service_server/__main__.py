@@ -15,10 +15,7 @@
 import argparse
 from pathlib import Path
 
-from cugraph_service_server import (
-    defaults,
-    start_server_blocking,
-)
+from cugraph_service_server import defaults, start_server_blocking
 
 
 def main():

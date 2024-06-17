@@ -11,18 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-
 import cudf
+import numpy as np
 from cugraph.structure import Graph, MultiGraph
+from cugraph.utilities import cupy_package as cp
 from cugraph.utilities import (
     ensure_cugraph_obj,
-    is_matrix_type,
     is_cp_matrix_type,
+    is_matrix_type,
     is_nx_graph_type,
-    cupy_package as cp,
 )
-from pylibcugraph import sssp as pylibcugraph_sssp, ResourceHandle
+from pylibcugraph import ResourceHandle
+from pylibcugraph import sssp as pylibcugraph_sssp
 
 
 def _ensure_args(

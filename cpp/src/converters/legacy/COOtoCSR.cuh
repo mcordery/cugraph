@@ -29,8 +29,6 @@
 #include <rmm/exec_policy.hpp>
 #include <rmm/resource_ref.hpp>
 
-#include <hipcub/device/device_radix_sort.hpp>
-#include <hipcub/device/device_run_length_encode.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/extrema.h>
 #include <thrust/fill.h>
@@ -42,6 +40,9 @@
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/device/device_radix_sort.hpp>
+#include <hipcub/device/device_run_length_encode.hpp>
 
 #include <algorithm>
 

@@ -24,6 +24,7 @@
 #include <rmm/mr/device/device_memory_resource.hpp>
 
 #include <cuda/std/type_traits>
+
 #include <hip/hip_runtime_api.h>
 
 #include <cstddef>
@@ -132,8 +133,7 @@ class cuda_async_memory_resource final : public device_memory_resource {
     auto* ptr            = do_allocate(pool_size, cuda_stream_default);
     do_deallocate(ptr, pool_size, cuda_stream_default);
 #else
-    RMM_FAIL(
-      "hipMallocAsync not supported by the version of the CUDA Toolkit used for this build");
+    RMM_FAIL("hipMallocAsync not supported by the version of the CUDA Toolkit used for this build");
 #endif
   }
 

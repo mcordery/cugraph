@@ -11,14 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
 import cudf
-
-from pylibcugraph import ecg as pylibcugraph_ecg
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
 from pylibcugraph import ResourceHandle
+from pylibcugraph import ecg as pylibcugraph_ecg
 
 
 def ecg(input_graph, min_weight=0.05, ensemble_size=16, weight=None):

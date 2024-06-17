@@ -12,11 +12,10 @@
 # limitations under the License.
 
 import pytest
-
 import torch
-from torch import nn
-from e3nn import o3
 from cugraph_equivariant.nn import FullyConnectedTensorProductConv
+from e3nn import o3
+from torch import nn
 
 device = torch.device("cuda:0")
 

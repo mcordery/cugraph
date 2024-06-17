@@ -38,10 +38,9 @@
 #include <hipco/extent.cuh>
 #include <hipco/utility/allocator.hpp>
 
-#include <hip/std/array>
-
 #include <cstddef>
 #include <cstdint>
+#include <hip/std/array>
 #include <iterator>
 #include <memory>
 
@@ -83,7 +82,8 @@ class aow_storage : public detail::aow_storage_base<T, WindowSize, Extent> {
   using base_type::num_windows;
 
   /// Type of the allocator to (de)allocate windows
-  using allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<window_type>;
+  using allocator_type =
+    typename std::allocator_traits<Allocator>::template rebind_alloc<window_type>;
   using window_deleter_type =
     detail::custom_deleter<size_type, allocator_type>;  ///< Type of window deleter
   using ref_type = aow_storage_ref<value_type, window_size, extent_type>;  ///< Storage ref type
@@ -109,7 +109,7 @@ class aow_storage : public detail::aow_storage_base<T, WindowSize, Extent> {
   aow_storage& operator=(aow_storage&&) = default;
   ~aow_storage()                        = default;  ///< Destructor
 
-  aow_storage(aow_storage const&) = delete;
+  aow_storage(aow_storage const&)            = delete;
   aow_storage& operator=(aow_storage const&) = delete;
 
   /**
@@ -162,7 +162,9 @@ class aow_storage : public detail::aow_storage_base<T, WindowSize, Extent> {
  * @tparam WindowSize Number of slots in each window
  * @tparam Extent Type of extent denoting storage capacity
  */
-template <typename T, int32_t WindowSize, typename Extent = hipco::experimental::extent<std::size_t>>
+template <typename T,
+          int32_t WindowSize,
+          typename Extent = hipco::experimental::extent<std::size_t>>
 class aow_storage_ref : public detail::aow_storage_base<T, WindowSize, Extent> {
  public:
   using base_type = detail::aow_storage_base<T, WindowSize, Extent>;  ///< AoW base class type

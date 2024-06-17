@@ -14,12 +14,12 @@
 import gc
 from timeit import default_timer as timer
 
+import cudf
 import numpy as np
 import pytest
-
-import cudf
-import cugraph
 from scipy.optimize import linear_sum_assignment
+
+import cugraph
 
 
 def create_random_bipartite(v1, v2, size, dtype):

@@ -14,7 +14,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cstddef>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__iterator/iterator.h"
 #include "../__iterator/iterator_traits.h"
@@ -29,37 +29,43 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _Container>
 class _LIBCUDACXX_TEMPLATE_VIS front_insert_iterator
-    : public iterator<output_iterator_tag,
-                      void,
-                      void,
-                      void,
-                      void>
-{
-protected:
-    _Container* container;
-public:
-    typedef _Container container_type;
+  : public iterator<output_iterator_tag, void, void, void, void> {
+ protected:
+  _Container* container;
 
-    _LIBCUDACXX_INLINE_VISIBILITY explicit front_insert_iterator(_Container& __x) : container(_CUDA_VSTD::addressof(__x)) {}
-    _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator=(const typename _Container::value_type& __value_)
-        {container->push_front(__value_); return *this;}
+ public:
+  typedef _Container container_type;
+
+  _LIBCUDACXX_INLINE_VISIBILITY explicit front_insert_iterator(_Container& __x)
+    : container(_CUDA_VSTD::addressof(__x))
+  {
+  }
+  _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator=(
+    const typename _Container::value_type& __value_)
+  {
+    container->push_front(__value_);
+    return *this;
+  }
 #ifndef _LIBCUDACXX_CXX03_LANG
-    _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator=(typename _Container::value_type&& __value_)
-        {container->push_front(_CUDA_VSTD::move(__value_)); return *this;}
+  _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator=(
+    typename _Container::value_type&& __value_)
+  {
+    container->push_front(_CUDA_VSTD::move(__value_));
+    return *this;
+  }
 #endif  // _LIBCUDACXX_CXX03_LANG
-    _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator*()     {return *this;}
-    _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator++()    {return *this;}
-    _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator  operator++(int) {return *this;}
+  _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator*() { return *this; }
+  _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator& operator++() { return *this; }
+  _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator operator++(int) { return *this; }
 };
 
 template <class _Container>
-inline _LIBCUDACXX_INLINE_VISIBILITY
-front_insert_iterator<_Container>
-front_inserter(_Container& __x)
+inline _LIBCUDACXX_INLINE_VISIBILITY front_insert_iterator<_Container> front_inserter(
+  _Container& __x)
 {
-    return front_insert_iterator<_Container>(__x);
+  return front_insert_iterator<_Container>(__x);
 }
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___ITERATOR_FRONT_INSERT_ITERATOR_H
+#endif  // _LIBCUDACXX___ITERATOR_FRONT_INSERT_ITERATOR_H

@@ -89,8 +89,8 @@ inline const char* cublas_error_to_string(hipblasStatus_t err)
  */
 #define RAFT_CUBLAS_TRY(call)                                              \
   do {                                                                     \
-    hipblasStatus_t const status = (call);                                  \
-    if (HIPBLAS_STATUS_SUCCESS != status) {                                 \
+    hipblasStatus_t const status = (call);                                 \
+    if (HIPBLAS_STATUS_SUCCESS != status) {                                \
       std::string msg{};                                                   \
       SET_ERROR_MSG(msg,                                                   \
                     "cuBLAS error encountered at: ",                       \
@@ -113,8 +113,8 @@ inline const char* cublas_error_to_string(hipblasStatus_t err)
 //  */
 #define RAFT_CUBLAS_TRY_NO_THROW(call)                               \
   do {                                                               \
-    hipblasStatus_t const status = call;                              \
-    if (HIPBLAS_STATUS_SUCCESS != status) {                           \
+    hipblasStatus_t const status = call;                             \
+    if (HIPBLAS_STATUS_SUCCESS != status) {                          \
       printf("CUBLAS call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                  \
              __FILE__,                                               \

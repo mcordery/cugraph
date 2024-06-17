@@ -12,9 +12,8 @@
 # limitations under the License.
 
 import pytest
-
-from cugraph_dgl.nn.conv.base import SparseGraph
 from cugraph_dgl.nn import SAGEConv as CuGraphSAGEConv
+from cugraph_dgl.nn.conv.base import SparseGraph
 
 dgl = pytest.importorskip("dgl", reason="DGL not available")
 torch = pytest.importorskip("torch", reason="PyTorch not available")

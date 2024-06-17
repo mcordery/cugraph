@@ -25,13 +25,12 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/sort.h>
 
+#include <hipco/operator.hpp>
 #include <hipco/static_set.cuh>
 #include <hipco/storage.cuh>
-#include <hipco/operator.hpp>
-
-#include <hip/atomic>
 
 #include <algorithm>
+#include <hip/atomic>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -77,8 +76,9 @@ struct key_binary_search_store_device_view_t {
 
 template <typename ViewType>
 struct key_hipco_store_contains_device_view_t {
-  using key_type                   = typename ViewType::key_type;
-  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::template ref_type<hipco::experimental::contains_tag>;
+  using key_type = typename ViewType::key_type;
+  using hipco_store_device_ref_type =
+    typename ViewType::hipco_set_type::template ref_type<hipco::experimental::contains_tag>;
 
   static_assert(!ViewType::binary_search);
 
@@ -94,8 +94,9 @@ struct key_hipco_store_contains_device_view_t {
 
 template <typename ViewType>
 struct key_hipco_store_insert_device_view_t {
-  using key_type                   = typename ViewType::key_type;
-  using hipco_store_device_ref_type = typename ViewType::hipco_set_type::template ref_type<hipco::experimental::insert_tag>;
+  using key_type = typename ViewType::key_type;
+  using hipco_store_device_ref_type =
+    typename ViewType::hipco_set_type::template ref_type<hipco::experimental::insert_tag>;
 
   static_assert(!ViewType::binary_search);
 
@@ -152,15 +153,15 @@ class key_hipco_store_view_t {
 
   static constexpr bool binary_search = false;
 
-  using hipco_set_type =
-    hipco::experimental::static_set<key_t,
-                     hipco::experimental::extent<std::size_t>,
-                     hip::thread_scope_device,
-                     thrust::equal_to<key_t>,
-                     hipco::experimental::linear_probing<1,  // CG size
-                                          hipco::murmurhash3_32<key_t>>,
-                     rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
-                     hipco_storage_type>;
+  using hipco_set_type = hipco::experimental::static_set<
+    key_t,
+    hipco::experimental::extent<std::size_t>,
+    hip::thread_scope_device,
+    thrust::equal_to<key_t>,
+    hipco::experimental::linear_probing<1,  // CG size
+                                        hipco::murmurhash3_32<key_t>>,
+    rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
+    hipco_storage_type>;
 
   key_hipco_store_view_t(hipco_set_type const* store) : hipco_store_(store) {}
 
@@ -173,9 +174,15 @@ class key_hipco_store_view_t {
     hipco_store_->contains(key_first, key_last, value_first, stream);
   }
 
-  auto hipco_store_contains_device_ref() const { return hipco_store_->ref(hipco::experimental::contains); }
+  auto hipco_store_contains_device_ref() const
+  {
+    return hipco_store_->ref(hipco::experimental::contains);
+  }
 
-  auto hipco_store_insert_device_ref() const { return hipco_store_->ref(hipco::experimental::insert); }
+  auto hipco_store_insert_device_ref() const
+  {
+    return hipco_store_->ref(hipco::experimental::insert);
+  }
 
   key_t invalid_key() const { return hipco_store_->get_empty_key_sentinel(); }
 
@@ -243,15 +250,15 @@ class key_hipco_store_t {
  public:
   using key_type = key_t;
 
-  using hipco_set_type =
-    hipco::experimental::static_set<key_t,
-                     hipco::experimental::extent<std::size_t>,
-                     hip::thread_scope_device,
-                     thrust::equal_to<key_t>,
-                     hipco::experimental::linear_probing<1,  // CG size
-                                          hipco::murmurhash3_32<key_t>>,
-                     rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
-                     hipco_storage_type>;
+  using hipco_set_type = hipco::experimental::static_set<
+    key_t,
+    hipco::experimental::extent<std::size_t>,
+    hip::thread_scope_device,
+    thrust::equal_to<key_t>,
+    hipco::experimental::linear_probing<1,  // CG size
+                                        hipco::murmurhash3_32<key_t>>,
+    rmm::mr::stream_allocator_adaptor<rmm::mr::polymorphic_allocator<std::byte>>,
+    hipco_storage_type>;
 
   key_hipco_store_t(rmm::cuda_stream_view stream) {}
 
@@ -264,9 +271,9 @@ class key_hipco_store_t {
 
   template <typename KeyIterator>
   key_hipco_store_t(KeyIterator key_first,
-                   KeyIterator key_last,
-                   key_t invalid_key,
-                   rmm::cuda_stream_view stream)
+                    KeyIterator key_last,
+                    key_t invalid_key,
+                    rmm::cuda_stream_view stream)
   {
     auto num_keys = static_cast<size_t>(thrust::distance(key_first, key_last));
     allocate(num_keys, invalid_key, stream);
@@ -322,22 +329,22 @@ class key_hipco_store_t {
   void allocate(size_t num_keys, key_t invalid_key, rmm::cuda_stream_view stream)
   {
     double constexpr load_factor = 0.7;
-    auto hipco_size               = std::max(
+    auto hipco_size              = std::max(
       static_cast<size_t>(static_cast<double>(num_keys) / load_factor),
       static_cast<size_t>(num_keys) + 1);  // hipco::static_map requires at least one empty slot
 
     auto stream_adapter = rmm::mr::make_stream_allocator_adaptor(
       rmm::mr::polymorphic_allocator<std::byte>(rmm::mr::get_current_device_resource()), stream);
-    hipco_store_ =
-      std::make_unique<hipco_set_type>(hipco_size,
-                                      hipco::empty_key<key_t>{invalid_key},
-                                      thrust::equal_to<key_t>{},
-                                      hipco::experimental::linear_probing<1,  // CG size
-                                                           hipco::murmurhash3_32<key_t>>{},
-                                      hip::thread_scope_device,
-                                      hipco_storage_type{},
-                                      stream_adapter,
-                                      stream.value());
+    hipco_store_ = std::make_unique<hipco_set_type>(
+      hipco_size,
+      hipco::empty_key<key_t>{invalid_key},
+      thrust::equal_to<key_t>{},
+      hipco::experimental::linear_probing<1,  // CG size
+                                          hipco::murmurhash3_32<key_t>>{},
+      hip::thread_scope_device,
+      hipco_storage_type{},
+      stream_adapter,
+      stream.value());
   }
 
   std::unique_ptr<hipco_set_type> hipco_store_{nullptr};

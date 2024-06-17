@@ -18,11 +18,13 @@ NetworkX is required at runtime in order to call any of these functions, so
 ensure code using these utilities has done the proper checks prior to calling.
 """
 
-import cugraph
-from .utils import import_optional
 import cudf
 from cudf import from_pandas
 from cudf.api.types import is_integer_dtype
+
+import cugraph
+
+from .utils import import_optional
 
 # nx will be a MissingModule instance if NetworkX is not installed (any
 # attribute access on a MissingModule instance results in a RuntimeError).

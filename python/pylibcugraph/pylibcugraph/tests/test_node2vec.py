@@ -11,12 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import cupy as cp
 import numpy as np
-from pylibcugraph import ResourceHandle, GraphProperties, SGGraph, node2vec
+import pytest
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph, node2vec
 from pylibcugraph.testing import utils
-
 
 COMPRESSED = [False, True]
 LINE = utils.RAPIDS_DATASET_ROOT_DIR_PATH / "small_line.csv"

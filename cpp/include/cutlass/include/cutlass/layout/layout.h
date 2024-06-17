@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Defines layout functions used by TensorRef and derived classes. 
+    \brief Defines layout functions used by TensorRef and derived classes.
 
     Layout functions map logical coordinates to linear memory. They often require additional
     data to describe strides between elements.
@@ -40,14 +40,13 @@
 #pragma once
 
 #include "cutlass/cutlass.h"
-#include "cutlass/matrix_coord.h"
 #include "cutlass/layout/matrix.h"
 #include "cutlass/layout/pitch_linear.h"
 #include "cutlass/layout/tensor.h"
-#include "cutlass/layout/vector.h"
-
 #include "cutlass/layout/tensor_op_multiplicand_sm70.h"
 #include "cutlass/layout/tensor_op_multiplicand_sm75.h"
+#include "cutlass/layout/vector.h"
+#include "cutlass/matrix_coord.h"
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace cutlass {
@@ -55,10 +54,9 @@ namespace layout {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace layout
-} // namespace cutlass
+}  // namespace layout
+}  // namespace cutlass
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -23,9 +23,8 @@
 #include <rmm/detail/logging_assert.hpp>
 #include <rmm/logger.hpp>
 
-#include <hip/hip_runtime_api.h>
-
 #include <fmt/core.h>
+#include <hip/hip_runtime_api.h>
 #include <spdlog/common.h>
 
 #include <algorithm>

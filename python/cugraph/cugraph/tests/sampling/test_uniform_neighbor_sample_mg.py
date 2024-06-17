@@ -12,23 +12,23 @@
 # limitations under the License.
 
 import gc
-import random
 import os
+import random
 
-import pytest
-
-import pandas
-import cupy
 import cudf
-import cugraph
-import dask_cudf
 import cugraph.dask as dcg
-from cugraph.testing import UNDIRECTED_DATASETS
+import cupy
+import dask_cudf
+import pandas
+import pytest
 from cugraph.dask import uniform_neighbor_sample
 from cugraph.dask.common.mg_utils import is_single_gpu
 from cugraph.structure.symmetrize import _memory_efficient_drop_duplicates
-from cugraph.datasets import email_Eu_core, small_tree
+from cugraph.testing import UNDIRECTED_DATASETS
 from pylibcugraph.testing.utils import gen_fixture_params_product
+
+import cugraph
+from cugraph.datasets import email_Eu_core, small_tree
 
 # If the rapids-pytest-benchmark plugin is installed, the "gpubenchmark"
 # fixture will be available automatically. Check that this fixture is available

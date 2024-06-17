@@ -39,7 +39,6 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -59,6 +58,8 @@
 #include <thrust/tuple.h>
 #include <thrust/type_traits/integer_sequence.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 #include <cstdlib>

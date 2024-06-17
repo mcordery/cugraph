@@ -11,9 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.link_prediction.jaccard import jaccard
-from cugraph.link_prediction.jaccard import jaccard_coefficient
-from cugraph.link_prediction.sorensen import sorensen
-from cugraph.link_prediction.sorensen import sorensen_coefficient
-from cugraph.link_prediction.overlap import overlap
-from cugraph.link_prediction.overlap import overlap_coefficient
+from cugraph.link_prediction.jaccard import jaccard, jaccard_coefficient
+from cugraph.link_prediction.overlap import overlap, overlap_coefficient
+from cugraph.link_prediction.sorensen import sorensen, sorensen_coefficient

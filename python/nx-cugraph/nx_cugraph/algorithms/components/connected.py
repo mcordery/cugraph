@@ -13,7 +13,6 @@
 import cupy as cp
 import networkx as nx
 import pylibcugraph as plc
-
 from nx_cugraph.convert import _to_undirected_graph
 from nx_cugraph.utils import _groupby, networkx_algorithm, not_implemented_for
 

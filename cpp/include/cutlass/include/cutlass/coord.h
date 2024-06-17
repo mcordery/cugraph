@@ -47,15 +47,12 @@ namespace cutlass {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Statically-sized array specifying Coords within a tensor
-template <
-  int Rank_,                          ///< Logical rank of coordinate
-  typename Index_ = int,              ///< Index type used for each dimension
-  typename LongIndex_ = int64_t       ///< Long index type used for linear offsets
->
+template <int Rank_,                     ///< Logical rank of coordinate
+          typename Index_     = int,     ///< Index type used for each dimension
+          typename LongIndex_ = int64_t  ///< Long index type used for linear offsets
+          >
 struct Coord {
-
-public:
-
+ public:
   //
   // Type and constant definitions
   //
@@ -69,8 +66,7 @@ public:
   /// Type used to represent linear offsets
   using LongIndex = LongIndex_;
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -78,15 +74,15 @@ private:
   /// Indices
   Index idx[kRank];
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Default ctor initializes uniformly
   CUTLASS_HOST_DEVICE
-  explicit Coord(Index value = Index(0)) {
+  explicit Coord(Index value = Index(0))
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] = value;
     }
@@ -94,7 +90,8 @@ public:
 
   /// Constructs from an array of integers
   CUTLASS_HOST_DEVICE
-  Coord(Index const (&_idx)[kRank]) {
+  Coord(Index const (&_idx)[kRank])
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] = _idx[i];
     }
@@ -103,14 +100,13 @@ public:
   /// Returns a slice of the Coord which may be larger or smaller in rank
   /// than this.
   template <int Slice>
-  CUTLASS_HOST_DEVICE
-  Coord<Slice> slice(int start = 0, Index identity = 0) const {
+  CUTLASS_HOST_DEVICE Coord<Slice> slice(int start = 0, Index identity = 0) const
+  {
     Coord<Slice> result;
     for (int i = 0; i < Slice; ++i) {
       if (i + start < kRank) {
         result[i] = idx[i + start];
-      }
-      else {
+      } else {
         result[i] = identity;
       }
     }
@@ -119,53 +115,50 @@ public:
 
   /// Returns the index of the dimension with least value
   CUTLASS_HOST_DEVICE
-  int min_dim_index() const {
+  int min_dim_index() const
+  {
     int i = 0;
     for (int j = 1; j < kRank; ++j) {
-      if (idx[j] < idx[i]) {
-        i = j;
-      }
+      if (idx[j] < idx[i]) { i = j; }
     }
     return i;
   }
 
   /// Returns the index of the dimension with greatest value
   CUTLASS_HOST_DEVICE
-  int max_dim_index() const {
+  int max_dim_index() const
+  {
     int i = 0;
     for (int j = 1; j < kRank; ++j) {
-      if (idx[j] > idx[i]) {
-        i = j;
-      }
+      if (idx[j] > idx[i]) { i = j; }
     }
     return i;
   }
 
   /// Returns true if Coord is non-zero.
   CUTLASS_HOST_DEVICE
-  explicit operator bool() const {
+  explicit operator bool() const
+  {
     for (int i = 0; i < kRank; ++i) {
-      if (idx[i]) {
-        return true;
-      }
+      if (idx[i]) { return true; }
     }
     return false;
   }
 
   /// Returns true if Coord is uniformly zero.
   CUTLASS_HOST_DEVICE
-  bool operator!() const {
+  bool operator!() const
+  {
     for (int i = 0; i < kRank; ++i) {
-      if (idx[i]) {
-        return false;
-      }
+      if (idx[i]) { return false; }
     }
     return true;
   }
 
   /// Element-wise addition
   CUTLASS_HOST_DEVICE
-  Coord operator+(Coord const& b) const {
+  Coord operator+(Coord const& b) const
+  {
     Coord c;
     for (int i = 0; i < kRank; ++i) {
       c.idx[i] = idx[i] + b.idx[i];
@@ -175,7 +168,8 @@ public:
 
   /// Element-wise subtraction
   CUTLASS_HOST_DEVICE
-  Coord operator-(Coord const& b) const {
+  Coord operator-(Coord const& b) const
+  {
     Coord c;
     for (int i = 0; i < kRank; ++i) {
       c.idx[i] = idx[i] - b.idx[i];
@@ -185,7 +179,8 @@ public:
 
   /// Element-wise multiplication
   CUTLASS_HOST_DEVICE
-  Coord operator*(Coord const& b) const {
+  Coord operator*(Coord const& b) const
+  {
     Coord c;
     for (int i = 0; i < kRank; ++i) {
       c.idx[i] = idx[i] * b.idx[i];
@@ -195,7 +190,8 @@ public:
 
   /// Element-wise division
   CUTLASS_HOST_DEVICE
-  Coord operator/(Coord const& b) const {
+  Coord operator/(Coord const& b) const
+  {
     Coord c;
     for (int i = 0; i < kRank; ++i) {
       c.idx[i] = idx[i] / b.idx[i];
@@ -205,7 +201,8 @@ public:
 
   /// In-place addition
   CUTLASS_HOST_DEVICE
-  Coord& operator+=(Coord const& b) {
+  Coord& operator+=(Coord const& b)
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] += b.idx[i];
     }
@@ -214,7 +211,8 @@ public:
 
   /// In-place subtraction
   CUTLASS_HOST_DEVICE
-  Coord& operator-=(Coord const& b) {
+  Coord& operator-=(Coord const& b)
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] -= b.idx[i];
     }
@@ -223,7 +221,8 @@ public:
 
   /// In-place multiplication
   CUTLASS_HOST_DEVICE
-  Coord& operator*=(Coord const& b) {
+  Coord& operator*=(Coord const& b)
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] *= b.idx[i];
     }
@@ -232,7 +231,8 @@ public:
 
   /// In-place division
   CUTLASS_HOST_DEVICE
-  Coord& operator/=(Coord const& b) {
+  Coord& operator/=(Coord const& b)
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] /= b.idx[i];
     }
@@ -247,7 +247,8 @@ public:
 
   /// Computes the dot product with anotherCoord object
   CUTLASS_HOST_DEVICE
-  LongIndex dot(Coord const& b, LongIndex sum = LongIndex(0)) const {
+  LongIndex dot(Coord const& b, LongIndex sum = LongIndex(0)) const
+  {
     for (int i = 0; i < kRank; ++i) {
       sum += idx[i] * b.idx[i];
     }
@@ -256,7 +257,8 @@ public:
 
   /// Gets the index of a given Coord element
   template <int Dim>
-  CUTLASS_HOST_DEVICE Index& at() {
+  CUTLASS_HOST_DEVICE Index& at()
+  {
     return idx[Dim];
   }
 
@@ -266,7 +268,8 @@ public:
 
   /// Gets the index of a given Coord element
   template <int Dim>
-  CUTLASS_HOST_DEVICE Index const& at() const {
+  CUTLASS_HOST_DEVICE Index const& at() const
+  {
     return idx[Dim];
   }
 
@@ -276,7 +279,8 @@ public:
 
   /// Determines if two Coord<> objects are equal
   CUTLASS_HOST_DEVICE
-  bool operator==(Coord const& b) const {
+  bool operator==(Coord const& b) const
+  {
     bool equal = true;
     for (int i = 0; equal && i < kRank; ++i) {
       equal = (idx[i] == b.idx[i]);
@@ -290,7 +294,8 @@ public:
 
   /// Clamps a coordinate to a range specified by maximum and minimum values
   CUTLASS_HOST_DEVICE
-  Coord& clamp(Coord const& max, Coord const& min = Coord()) {
+  Coord& clamp(Coord const& max, Coord const& min = Coord())
+  {
     for (int i = 0; i < kRank; ++i) {
       idx[i] = __NV_STD_MAX(__NV_STD_MIN(idx[i], max.idx[i]), min.idx[i]);
     }
@@ -299,7 +304,8 @@ public:
 
   /// Returns the sum of all elements
   CUTLASS_HOST_DEVICE
-  Index sum() const {
+  Index sum() const
+  {
     Index sum_(idx[0]);
     for (int i = 1; i < kRank; ++i) {
       sum_ += idx[i];
@@ -309,7 +315,8 @@ public:
 
   /// Returns the product of all elements
   CUTLASS_HOST_DEVICE
-  LongIndex product() const {
+  LongIndex product() const
+  {
     LongIndex product_(idx[0]);
     for (int i = 1; i < kRank; ++i) {
       product_ *= idx[i];
@@ -319,50 +326,43 @@ public:
 
   /// Less than operator
   CUTLASS_HOST_DEVICE
-  bool operator<(Coord const &b) const {
+  bool operator<(Coord const& b) const
+  {
     for (int i = 0; i < kRank; ++i) {
-      if (!(idx[i] < b[i])) {
-        return false;
-      }
+      if (!(idx[i] < b[i])) { return false; }
     }
     return true;
   }
 
   /// Less than or equals operator
   CUTLASS_HOST_DEVICE
-  bool operator<=(Coord const &b) const {
+  bool operator<=(Coord const& b) const
+  {
     for (int i = 0; i < kRank; ++i) {
-      if (!(idx[i] <= b[i])) {
-        return false;
-      }
+      if (!(idx[i] <= b[i])) { return false; }
     }
     return true;
   }
 
   /// Greater than operator
   CUTLASS_HOST_DEVICE
-  bool operator>(Coord const &b) const {
-    return !(*this <= b);
-  }
+  bool operator>(Coord const& b) const { return !(*this <= b); }
 
   /// Greater than or equals operator
   CUTLASS_HOST_DEVICE
-  bool operator>=(Coord const &b) const {
-    return !(*this < b);
-  }
+  bool operator>=(Coord const& b) const { return !(*this < b); }
 };
 
-} // namespace cutlass 
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace cutlass {
 
-
 /// Scalar multiplication
 template <int Rank, typename Index>
-CUTLASS_HOST_DEVICE
-Coord<Rank, Index> operator*(Index s, Coord<Rank, Index> coord) {
+CUTLASS_HOST_DEVICE Coord<Rank, Index> operator*(Index s, Coord<Rank, Index> coord)
+{
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < Rank; ++i) {
     coord[i] *= s;
@@ -372,8 +372,8 @@ Coord<Rank, Index> operator*(Index s, Coord<Rank, Index> coord) {
 
 /// Scalar multiplication
 template <int Rank, typename Index>
-CUTLASS_HOST_DEVICE
-Coord<Rank, Index> operator*(Coord<Rank, Index> coord, Index s) {
+CUTLASS_HOST_DEVICE Coord<Rank, Index> operator*(Coord<Rank, Index> coord, Index s)
+{
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < Rank; ++i) {
     coord[i] *= s;
@@ -383,8 +383,8 @@ Coord<Rank, Index> operator*(Coord<Rank, Index> coord, Index s) {
 
 /// Scalar division
 template <int Rank, typename Index>
-CUTLASS_HOST_DEVICE
-Coord<Rank, Index> operator/(Index s, Coord<Rank, Index> coord) {
+CUTLASS_HOST_DEVICE Coord<Rank, Index> operator/(Index s, Coord<Rank, Index> coord)
+{
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < Rank; ++i) {
     coord[i] = s / coord[i];
@@ -394,8 +394,8 @@ Coord<Rank, Index> operator/(Index s, Coord<Rank, Index> coord) {
 
 /// Scalar division
 template <int Rank, typename Index>
-CUTLASS_HOST_DEVICE
-Coord<Rank, Index> operator/(Coord<Rank, Index> coord, Index s) {
+CUTLASS_HOST_DEVICE Coord<Rank, Index> operator/(Coord<Rank, Index> coord, Index s)
+{
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < Rank; ++i) {
     coord[i] /= s;
@@ -410,49 +410,49 @@ Coord<Rank, Index> operator/(Coord<Rank, Index> coord, Index s) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Helper to make a 2-element coordinate
-template <typename T> 
-CUTLASS_HOST_DEVICE
-Coord<1, T> make_Coord(T _0) {
+template <typename T>
+CUTLASS_HOST_DEVICE Coord<1, T> make_Coord(T _0)
+{
   T values[1] = {_0};
   return Coord<1, T>(values);
 }
 
 /// Helper to make a 2-element coordinate
-template <typename T> 
-CUTLASS_HOST_DEVICE
-Coord<2, T> make_Coord(T _0, T _1) {
+template <typename T>
+CUTLASS_HOST_DEVICE Coord<2, T> make_Coord(T _0, T _1)
+{
   T values[2] = {_0, _1};
   return Coord<2, T>(values);
 }
 
 /// Helper to make a 3-element coordinate
-template <typename T> 
-CUTLASS_HOST_DEVICE
-Coord<3, T> make_Coord(T _0, T _1, T _2) {
+template <typename T>
+CUTLASS_HOST_DEVICE Coord<3, T> make_Coord(T _0, T _1, T _2)
+{
   T values[3] = {_0, _1, _2};
   return Coord<3, T>(values);
 }
 
 /// Helper to make a 4-element coordinate
-template <typename T> 
-CUTLASS_HOST_DEVICE
-Coord<4, T> make_Coord(T _0, T _1, T _2, T _3) {
+template <typename T>
+CUTLASS_HOST_DEVICE Coord<4, T> make_Coord(T _0, T _1, T _2, T _3)
+{
   T values[4] = {_0, _1, _2, _3};
   return Coord<4, T>(values);
 }
 
 /// Helper to make a 5-element coordinate
-template <typename T> 
-CUTLASS_HOST_DEVICE
-Coord<5, T> make_Coord(T _0, T _1, T _2, T _3, T _4) {
+template <typename T>
+CUTLASS_HOST_DEVICE Coord<5, T> make_Coord(T _0, T _1, T _2, T _3, T _4)
+{
   T values[5] = {_0, _1, _2, _3, _4};
   return Coord<5, T>(values);
 }
 
 /// Helper to make a 1-element coordinate
-template <int N, typename T> 
-CUTLASS_HOST_DEVICE
-Coord<N, T>make_Coord_with_padding(T _0) {
+template <int N, typename T>
+CUTLASS_HOST_DEVICE Coord<N, T> make_Coord_with_padding(T _0)
+{
   Coord<N, T> coord;
 
   CUTLASS_PRAGMA_UNROLL
@@ -468,4 +468,3 @@ Coord<N, T>make_Coord_with_padding(T _0) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }  // namespace cutlass
-

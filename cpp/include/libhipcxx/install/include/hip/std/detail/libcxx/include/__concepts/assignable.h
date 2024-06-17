@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__concepts/common_reference_with.h"
@@ -31,30 +31,32 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.assignable]
 
-template<class _Lhs, class _Rhs>
+template <class _Lhs, class _Rhs>
 concept assignable_from =
   is_lvalue_reference_v<_Lhs> &&
   common_reference_with<__make_const_lvalue_ref<_Lhs>, __make_const_lvalue_ref<_Rhs>> &&
-  requires (_Lhs __lhs, _Rhs&& __rhs) {
-    { __lhs = _CUDA_VSTD::forward<_Rhs>(__rhs) } -> same_as<_Lhs>;
-  };
+  requires(_Lhs __lhs, _Rhs&& __rhs)
+{
+  {
+    __lhs = _CUDA_VSTD::forward<_Rhs>(__rhs)
+  } -> same_as<_Lhs>;
+};
 
 #elif _LIBCUDACXX_STD_VER > 11
 
-template<class _Lhs, class _Rhs>
+template <class _Lhs, class _Rhs>
 _LIBCUDACXX_CONCEPT_FRAGMENT(
   __assignable_from_,
   requires(_Lhs __lhs, _Rhs&& __rhs)(
     requires(is_lvalue_reference_v<_Lhs>),
     requires(common_reference_with<__make_const_lvalue_ref<_Lhs>, __make_const_lvalue_ref<_Rhs>>),
-    requires(same_as<_Lhs, decltype(__lhs = _CUDA_VSTD::forward<_Rhs>(__rhs))>)
-  ));
+    requires(same_as<_Lhs, decltype(__lhs = _CUDA_VSTD::forward<_Rhs>(__rhs))>)));
 
-template<class _Lhs, class _Rhs>
+template <class _Lhs, class _Rhs>
 _LIBCUDACXX_CONCEPT assignable_from = _LIBCUDACXX_FRAGMENT(__assignable_from_, _Lhs, _Rhs);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_ASSIGNABLE_H
+#endif  // _LIBCUDACXX___CONCEPTS_ASSIGNABLE_H

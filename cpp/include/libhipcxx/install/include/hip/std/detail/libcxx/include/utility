@@ -579,7 +579,7 @@ private:
 #ifndef _LIBCUDACXX_HAS_NO_DEDUCTION_GUIDES
 template<class _T1, class _T2>
 #if defined(__HIP_PLATFORM_AMD__) || defined(__HIPCC_RTC__)
-__host__ __device__ 
+__host__ __device__
 #endif
 pair(_T1, _T2) -> pair<_T1, _T2>;
 #endif // _LIBCUDACXX_HAS_NO_DEDUCTION_GUIDES

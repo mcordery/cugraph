@@ -20,9 +20,8 @@
 
 #include <raft/util/cudart_utils.hpp>
 
-#include <hip/hip_runtime.h>
-
 #include <execinfo.h>
+#include <hip/hip_runtime.h>
 
 #include <cstdio>
 #include <iostream>
@@ -120,8 +119,7 @@ void updateHost(Type* hPtr, const Type* dPtr, size_t len, hipStream_t stream)
 template <typename Type>
 void copyAsync(Type* dPtr1, const Type* dPtr2, size_t len, hipStream_t stream)
 {
-  RAFT_CUDA_TRY(
-    hipMemcpyAsync(dPtr1, dPtr2, len * sizeof(Type), hipMemcpyDeviceToDevice, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(dPtr1, dPtr2, len * sizeof(Type), hipMemcpyDeviceToDevice, stream));
 }
 /** @} */
 

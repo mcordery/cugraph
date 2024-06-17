@@ -16,8 +16,8 @@
 #pragma once
 
 #include <raft/core/resource/cuda_event.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/detail/stream_sync_event.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/resource_types.hpp>
 #include <raft/core/resources.hpp>
 

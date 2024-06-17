@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/add_lvalue_reference.h"
 #include "../__type_traits/add_rvalue_reference.h"
@@ -25,21 +25,18 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _From, class _To>
-struct __copy_cvref
-{
-    using type = __copy_cv_t<_From, _To>;
+struct __copy_cvref {
+  using type = __copy_cv_t<_From, _To>;
 };
 
 template <class _From, class _To>
-struct __copy_cvref<_From&, _To>
-{
-    using type = __add_lvalue_reference_t<__copy_cv_t<_From, _To> >;
+struct __copy_cvref<_From&, _To> {
+  using type = __add_lvalue_reference_t<__copy_cv_t<_From, _To>>;
 };
 
 template <class _From, class _To>
-struct __copy_cvref<_From&&, _To>
-{
-    using type = __add_rvalue_reference_t<__copy_cv_t<_From, _To> >;
+struct __copy_cvref<_From&&, _To> {
+  using type = __add_rvalue_reference_t<__copy_cv_t<_From, _To>>;
 };
 
 template <class _From, class _To>
@@ -47,4 +44,4 @@ using __copy_cvref_t = typename __copy_cvref<_From, _To>::type;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_COPY_CVREF_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_COPY_CVREF_H

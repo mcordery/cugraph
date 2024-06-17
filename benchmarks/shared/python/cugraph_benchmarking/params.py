@@ -12,15 +12,15 @@
 # limitations under the License.
 
 import pytest
-
 from pylibcugraph.testing.utils import gen_fixture_params
+
 from cugraph.datasets import (
+    cit_patents,
+    email_Eu_core,
+    europe_osm,
+    hollywood,
     karate,
     netscience,
-    email_Eu_core,
-    hollywood,
-    europe_osm,
-    cit_patents,
     soc_livejournal,
 )
 

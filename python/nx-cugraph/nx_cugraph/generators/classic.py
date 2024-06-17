@@ -16,7 +16,6 @@ from numbers import Integral
 import cupy as cp
 import networkx as nx
 import numpy as np
-
 import nx_cugraph as nxcg
 
 from ..utils import _get_int_dtype, index_dtype, networkx_algorithm

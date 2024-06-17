@@ -36,12 +36,10 @@
 
 #include <hipco/detail/utility/cuda.cuh>
 
+#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 #include <hipcub/hipcub.hpp>
 
 #include <hip/atomic>
-
-#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
-
 #include <iterator>
 
 namespace hipco {
@@ -344,7 +342,9 @@ __global__ void rehash(typename ContainerRef::storage_ref_type storage_ref,
       auto const window = storage_ref[idx];
 
       for (auto const& slot : window) {
-        if (is_filled(slot)) { buffer[atomicAdd_system(&buffer_size, 1)] = slot; } //TODO(hip): atomicAdd_block is missing
+        if (is_filled(slot)) {
+          buffer[atomicAdd_system(&buffer_size, 1)] = slot;
+        }  // TODO(hip): atomicAdd_block is missing
       }
     }
     block.sync();

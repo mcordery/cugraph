@@ -14,14 +14,13 @@
 
 import gc
 
-import pytest
-
-import cugraph
 import cugraph.dask as dcg
-from cugraph.datasets import karate, dolphins
+import pytest
 from cudf.testing.testing import assert_frame_equal
 from cugraph.structure.symmetrize import symmetrize_df
 
+import cugraph
+from cugraph.datasets import dolphins, karate
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

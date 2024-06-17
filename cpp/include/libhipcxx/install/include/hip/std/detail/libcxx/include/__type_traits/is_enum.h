@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__type_traits/is_array.h"
@@ -34,8 +34,9 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if defined(_LIBCUDACXX_IS_ENUM) && !defined(_LIBCUDACXX_USE_IS_ENUM_FALLBACK)
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_enum
-    : public integral_constant<bool, _LIBCUDACXX_IS_ENUM(_Tp)> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_enum : public integral_constant<bool, _LIBCUDACXX_IS_ENUM(_Tp)> {
+};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -44,26 +45,22 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_enum_v = _LIBCUDACXX_IS_ENUM(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_enum
-    : public integral_constant<bool, !is_void<_Tp>::value             &&
-                                     !is_integral<_Tp>::value         &&
-                                     !is_floating_point<_Tp>::value   &&
-                                     !is_array<_Tp>::value            &&
-                                     !is_pointer<_Tp>::value          &&
-                                     !is_reference<_Tp>::value        &&
-                                     !is_member_pointer<_Tp>::value   &&
-                                     !is_union<_Tp>::value            &&
-                                     !is_class<_Tp>::value            &&
-                                     !is_function<_Tp>::value         > {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_enum
+  : public integral_constant<bool,
+                             !is_void<_Tp>::value && !is_integral<_Tp>::value &&
+                               !is_floating_point<_Tp>::value && !is_array<_Tp>::value &&
+                               !is_pointer<_Tp>::value && !is_reference<_Tp>::value &&
+                               !is_member_pointer<_Tp>::value && !is_union<_Tp>::value &&
+                               !is_class<_Tp>::value && !is_function<_Tp>::value> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
-_LIBCUDACXX_INLINE_VAR constexpr bool is_enum_v
-    = is_enum<_Tp>::value;
+_LIBCUDACXX_INLINE_VAR constexpr bool is_enum_v = is_enum<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_ENUM) && !defined(_LIBCUDACXX_USE_IS_ENUM_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_ENUM) && !defined(_LIBCUDACXX_USE_IS_ENUM_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_ENUM_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_ENUM_H

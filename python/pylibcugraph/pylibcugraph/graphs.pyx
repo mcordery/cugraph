@@ -14,39 +14,32 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from cython.operator cimport dereference as deref
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-    cugraph_type_erased_device_array_view_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_create_sg,
-    cugraph_graph_create_mg,
-    cugraph_sg_graph_create_from_csr, #FIXME: Remove this once
-    # 'cugraph_graph_create_sg_from_csr' is exposed
-    cugraph_graph_create_sg_from_csr,
-    cugraph_sg_graph_free, #FIXME: Remove this
-    cugraph_graph_free,
-    cugraph_mg_graph_free, #FIXME: Remove this
-)
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graph_properties cimport (
-    GraphProperties,
-)
-from pylibcugraph.utils cimport (
-    assert_success,
-    assert_CAI_type,
-    get_c_type_from_numpy_type,
-    create_cugraph_type_erased_device_array_view_from_py_obj,
-)
 from libc.stdlib cimport malloc
-
+from pylibcugraph._cugraph_c.array cimport (
+    cugraph_type_erased_device_array_view_free,
+    cugraph_type_erased_device_array_view_t,
+)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_mg_graph_free  # FIXME: Remove this
+from pylibcugraph._cugraph_c.graph cimport (
+    cugraph_sg_graph_create_from_csr,  # FIXME: Remove this once
+)
+from pylibcugraph._cugraph_c.graph cimport cugraph_sg_graph_free  # FIXME: Remove this
+from pylibcugraph._cugraph_c.graph cimport (  # 'cugraph_graph_create_sg_from_csr' is exposed
+    cugraph_graph_create_mg,
+    cugraph_graph_create_sg,
+    cugraph_graph_create_sg_from_csr,
+    cugraph_graph_free,
+)
+from pylibcugraph.graph_properties cimport GraphProperties
+from pylibcugraph.resource_handle cimport ResourceHandle
+from pylibcugraph.utils cimport (
+    assert_CAI_type,
+    assert_success,
+    create_cugraph_type_erased_device_array_view_from_py_obj,
+    get_c_type_from_numpy_type,
+)
 
 
 cdef class SGGraph(_GPUGraph):

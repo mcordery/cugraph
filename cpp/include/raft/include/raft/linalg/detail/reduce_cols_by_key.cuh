@@ -20,7 +20,6 @@
 #include <raft/util/cuda_utils.cuh>
 
 #include <hipcub/hipcub.hpp>
-
 #include <stdlib.h>
 
 #include <limits>

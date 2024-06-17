@@ -15,34 +15,22 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_device_array_view_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
+    cugraph_type_erased_device_array_view_t,
 )
 from pylibcugraph._cugraph_c.community_algorithms cimport (
-    cugraph_clustering_result_t,
     cugraph_analyze_clustering_modularity,
+    cugraph_clustering_result_t,
 )
-
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
     assert_success,
-    create_cugraph_type_erased_device_array_view_from_py_obj
+    create_cugraph_type_erased_device_array_view_from_py_obj,
 )
 
 

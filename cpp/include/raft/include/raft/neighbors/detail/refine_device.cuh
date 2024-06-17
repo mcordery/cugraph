@@ -18,7 +18,7 @@
 
 #include <raft/core/device_mdarray.hpp>
 #include <raft/core/host_mdspan.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
@@ -55,8 +55,8 @@ void refine_device(raft::resources const& handle,
                "k must be less than topk::kMaxCapacity (%d).",
                raft::matrix::detail::select::warpsort::kMaxCapacity);
 
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "neighbors::refine(%zu, %u)", size_t(n_queries), uint32_t(n_candidates));
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "neighbors::refine(%zu, %u)", size_t(n_queries), uint32_t(n_candidates));
 
   refine_check_input(dataset.extents(),
                      queries.extents(),

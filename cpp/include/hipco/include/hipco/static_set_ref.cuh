@@ -41,7 +41,6 @@
 #include <hipco/storage.cuh>
 
 #include <hip/std/atomic>
-
 #include <memory>
 
 namespace hipco {

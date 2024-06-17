@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph_pyg.loader.cugraph_node_loader import CuGraphNeighborLoader
-
-from cugraph_pyg.loader.cugraph_node_loader import BulkSampleLoader
+from cugraph_pyg.loader.cugraph_node_loader import (
+    BulkSampleLoader,
+    CuGraphNeighborLoader,
+)

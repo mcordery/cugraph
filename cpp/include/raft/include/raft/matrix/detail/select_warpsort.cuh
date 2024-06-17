@@ -19,9 +19,9 @@
 
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/custom_resource.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/util/bitonic_sort.cuh>
 #include <raft/util/cache.hpp>
 #include <raft/util/cuda_utils.cuh>
@@ -900,8 +900,9 @@ struct warpsort_params_cache {
 };
 
 template <template <int, bool, typename, typename> class WarpSortClass, typename T, typename IdxT>
-static auto calc_optimal_params(raft::resources const& res, int k, int block_size_limit = 0)
-  -> launch_params
+static auto calc_optimal_params(raft::resources const& res,
+                                int k,
+                                int block_size_limit = 0) -> launch_params
 {
   uint64_t key = (static_cast<uint64_t>(k) << 32) | static_cast<uint64_t>(block_size_limit);
   auto& cache =

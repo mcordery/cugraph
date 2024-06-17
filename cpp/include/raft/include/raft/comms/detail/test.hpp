@@ -80,14 +80,12 @@ bool test_collective_broadcast(raft::resources const& handle, int root)
   rmm::device_scalar<int> temp_d(stream);
 
   if (communicator.get_rank() == root)
-    RAFT_CUDA_TRY(
-      hipMemcpyAsync(temp_d.data(), &send, sizeof(int), hipMemcpyHostToDevice, stream));
+    RAFT_CUDA_TRY(hipMemcpyAsync(temp_d.data(), &send, sizeof(int), hipMemcpyHostToDevice, stream));
 
   communicator.bcast(temp_d.data(), 1, root, stream);
   communicator.sync_stream(stream);
   int temp_h = -1;  // Verify more than one byte is being sent
-  RAFT_CUDA_TRY(
-    hipMemcpyAsync(&temp_h, temp_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(&temp_h, temp_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
   resource::sync_stream(handle, stream);
   communicator.barrier();
 
@@ -119,8 +117,7 @@ bool test_collective_reduce(raft::resources const& handle, int root)
   communicator.reduce(temp_d.data(), temp_d.data(), 1, op_t::SUM, root, stream);
   communicator.sync_stream(stream);
   int temp_h = -1;  // Verify more than one byte is being sent
-  RAFT_CUDA_TRY(
-    hipMemcpyAsync(&temp_h, temp_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(&temp_h, temp_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
   resource::sync_stream(handle, stream);
   communicator.barrier();
 
@@ -249,10 +246,10 @@ bool test_collective_gatherv(raft::resources const& handle, int root)
   if (communicator.get_rank() == root) {
     std::vector<int> temp_h(displacements.back(), 0);
     RAFT_CUDA_TRY(hipMemcpyAsync(temp_h.data(),
-                                  recv_d.data(),
-                                  sizeof(int) * displacements.back(),
-                                  hipMemcpyDeviceToHost,
-                                  stream));
+                                 recv_d.data(),
+                                 sizeof(int) * displacements.back(),
+                                 hipMemcpyDeviceToHost,
+                                 stream));
     resource::sync_stream(handle, stream);
 
     for (int i = 0; i < communicator.get_size(); i++) {
@@ -290,8 +287,7 @@ bool test_collective_reducescatter(raft::resources const& handle, int root)
   communicator.reducescatter(temp_d.data(), recv_d.data(), 1, op_t::SUM, stream);
   communicator.sync_stream(stream);
   int temp_h = -1;  // Verify more than one byte is being sent
-  RAFT_CUDA_TRY(
-    hipMemcpyAsync(&temp_h, recv_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(&temp_h, recv_d.data(), sizeof(int), hipMemcpyDeviceToHost, stream));
   resource::sync_stream(handle, stream);
   communicator.barrier();
 
@@ -377,7 +373,7 @@ bool test_pointToPoint_device_send_or_recv(raft::resources const& h, int numTria
 {
   comms_t const& communicator = resource::get_comms(h);
   int const rank              = communicator.get_rank();
-  hipStream_t stream         = resource::get_cuda_stream(h);
+  hipStream_t stream          = resource::get_cuda_stream(h);
 
   bool ret = true;
   for (int i = 0; i < numTrials; i++) {
@@ -419,7 +415,7 @@ bool test_pointToPoint_device_sendrecv(raft::resources const& h, int numTrials)
 {
   comms_t const& communicator = resource::get_comms(h);
   int const rank              = communicator.get_rank();
-  hipStream_t stream         = resource::get_cuda_stream(h);
+  hipStream_t stream          = resource::get_cuda_stream(h);
 
   bool ret = true;
   for (int i = 0; i < numTrials; i++) {
@@ -465,7 +461,7 @@ bool test_pointToPoint_device_multicast_sendrecv(raft::resources const& h, int n
 {
   comms_t const& communicator = resource::get_comms(h);
   int const rank              = communicator.get_rank();
-  hipStream_t stream         = resource::get_cuda_stream(h);
+  hipStream_t stream          = resource::get_cuda_stream(h);
 
   bool ret = true;
   for (int i = 0; i < numTrials; i++) {

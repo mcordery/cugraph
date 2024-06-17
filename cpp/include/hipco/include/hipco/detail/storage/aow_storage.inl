@@ -39,10 +39,9 @@
 #include <hipco/detail/utility/cuda.hpp>
 #include <hipco/extent.cuh>
 
-#include <hip/std/array>
-
 #include <cstddef>
 #include <cstdint>
+#include <hip/std/array>
 #include <iterator>
 #include <memory>
 

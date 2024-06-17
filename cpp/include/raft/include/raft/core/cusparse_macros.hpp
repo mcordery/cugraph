@@ -95,8 +95,8 @@ inline const char* cusparse_error_to_string(hipsparseStatus_t err)
  */
 #define RAFT_CUSPARSE_TRY(call)                                              \
   do {                                                                       \
-    hipsparseStatus_t const status = (call);                                  \
-    if (HIPSPARSE_STATUS_SUCCESS != status) {                                 \
+    hipsparseStatus_t const status = (call);                                 \
+    if (HIPSPARSE_STATUS_SUCCESS != status) {                                \
       std::string msg{};                                                     \
       SET_ERROR_MSG(msg,                                                     \
                     "cuSparse error encountered at: ",                       \
@@ -130,8 +130,8 @@ inline const char* cusparse_error_to_string(hipsparseStatus_t err)
 /** check for cusparse runtime API errors but do not assert */
 #define RAFT_CUSPARSE_TRY_NO_THROW(call)                           \
   do {                                                             \
-    hipsparseStatus_t err = call;                                   \
-    if (err != HIPSPARSE_STATUS_SUCCESS) {                          \
+    hipsparseStatus_t err = call;                                  \
+    if (err != HIPSPARSE_STATUS_SUCCESS) {                         \
       printf("CUSPARSE call='%s' got errorcode=%d err=%s",         \
              #call,                                                \
              err,                                                  \

@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import pylibcugraph as plc
-
 from nx_cugraph.convert import _to_graph
 from nx_cugraph.utils import _seed_to_int, networkx_algorithm
 

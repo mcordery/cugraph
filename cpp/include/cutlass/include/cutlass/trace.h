@@ -44,16 +44,19 @@
 #endif
 
 #if CUTLASS_DEBUG_TRACE_LEVEL
-#include <iostream>
 #include "cutlass/core_io.h"
+
+#include <iostream>
 #if defined(__CUDA_ARCH__)
 #define CUTLASS_TRACE_HOST(x)
 #else
-#define CUTLASS_TRACE_HOST(x) { std::cout << __FILE__ << ":" << __LINE__ << "  " << x << std::endl; }
+#define CUTLASS_TRACE_HOST(x)                                           \
+  {                                                                     \
+    std::cout << __FILE__ << ":" << __LINE__ << "  " << x << std::endl; \
+  }
 #endif
 #else
 #define CUTLASS_TRACE_HOST(x)
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-

@@ -15,14 +15,9 @@
 import warnings
 
 import cudf
-from cugraph.utilities import (
-    ensure_cugraph_obj,
-    is_nx_graph_type,
-)
-from cugraph.utilities import cugraph_to_nx
-
-from pylibcugraph import ego_graph as pylibcugraph_ego_graph
+from cugraph.utilities import cugraph_to_nx, ensure_cugraph_obj, is_nx_graph_type
 from pylibcugraph import ResourceHandle
+from pylibcugraph import ego_graph as pylibcugraph_ego_graph
 
 
 def _convert_graph_to_output_type(G, input_type):

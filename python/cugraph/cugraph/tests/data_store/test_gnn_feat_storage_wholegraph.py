@@ -11,12 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import numpy as np
-
+import pytest
 from cugraph.gnn import FeatureStore
-
-from cugraph.utilities.utils import import_optional, MissingModule
+from cugraph.utilities.utils import MissingModule, import_optional
 
 pylibwholegraph = import_optional("pylibwholegraph")
 wmb = import_optional("pylibwholegraph.binding.wholememory_binding")

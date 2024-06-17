@@ -19,6 +19,7 @@
 #define AMD_COOPERATIVE_GROUPS_EXT
 
 #include "../hip_warp_primitives/amd_warp_primitives.cuh"
+
 #include <hip/device_functions.h>
 #include <hip/hip_cooperative_groups.h>
 #include <hip/hip_runtime.h>
@@ -28,7 +29,8 @@
 #define WAVEFRONT_SIZE __AMDGCN_WAVEFRONT_SIZE
 #endif
 
-#if !(__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__ || __gfx1100__ || __gfx1101__)
+#if !(__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__ || __gfx1100__ || \
+      __gfx1101__)
 #if WAVEFRONT_SIZE != 64
 #error "WAVEFRONT_SIZE 64 required"
 #endif
@@ -135,7 +137,7 @@ class cooperative_group_base {
   {
     auto const block = cooperative_groups::this_thread_block();
     auto const id    = block.thread_rank();
-    return (int)id/size();
+    return (int)id / size();
   }
 
   /**
@@ -167,7 +169,7 @@ class cooperative_group_base {
    */
   __device__ lane_mask get_mask() const { return __group_mask; }
 
-  protected:
+ protected:
   /**
    * @brief Sets the lane mask of the cooperative group.
    * @param lm The lane mask of the cooperative group.

@@ -51,77 +51,66 @@ namespace arch {
 // wmma native instruction sizes supported for cutlass::int4b_t (experimental::s4).
 //
 ////////////////////////////////////////////////////////////////////////////////
-template <
-typename Shape_, 
-typename LayoutA_, 
-typename LayoutB_,
-typename LayoutC_>
-struct Wmma<
-  Shape_,                                   ///< Size of the matrix product (concept: GemmShape)
-  cutlass::int4b_t,                         ///< ElementA
-  LayoutA_,                                 ///< LayoutA
-  cutlass::int4b_t,                         ///< ElementB
-  LayoutB_,                                 ///< LayoutB
-  int32_t,                                  ///< ElementC
-  LayoutC_,                                 ///< LayoutC
-  cutlass::arch::OpMultiplyAdd              ///< Operator (multiply-add, xor.popc)
-> {
+template <typename Shape_,
+          typename LayoutA_,
+          typename LayoutB_,
+          typename LayoutC_>
+struct Wmma<Shape_,                       ///< Size of the matrix product (concept: GemmShape)
+            cutlass::int4b_t,             ///< ElementA
+            LayoutA_,                     ///< LayoutA
+            cutlass::int4b_t,             ///< ElementB
+            LayoutB_,                     ///< LayoutB
+            int32_t,                      ///< ElementC
+            LayoutC_,                     ///< LayoutC
+            cutlass::arch::OpMultiplyAdd  ///< Operator (multiply-add, xor.popc)
+            > {
 #if defined(CUTLASS_ARCH_WMMA_SM75_ENABLED)
-  using Shape = Shape_;
+  using Shape    = Shape_;
   using ElementA = cutlass::int4b_t;
-  using LayoutA = LayoutA_;
+  using LayoutA  = LayoutA_;
   using ElementB = cutlass::int4b_t;
-  using LayoutB = LayoutB_;
+  using LayoutB  = LayoutB_;
   using ElementC = int32_t;
-  using LayoutC = LayoutC_;
+  using LayoutC  = LayoutC_;
   using Operator = cutlass::arch::OpMultiplyAdd;
-  using ArchTag = arch::Sm75;
+  using ArchTag  = arch::Sm75;
 
   // check supported wmma shape for the given multiplicand data types
-  static_assert(
-    platform::is_same<cutlass::gemm::GemmShape<8, 8, 32>, Shape>::value,
-    "Supported list of wmma operator shape for s8 multiplicands is: 8x8x32");
-
+  static_assert(platform::is_same<cutlass::gemm::GemmShape<8, 8, 32>, Shape>::value,
+                "Supported list of wmma operator shape for s8 multiplicands is: 8x8x32");
 
   // Wmma Fragment
-  using FragmentA = nvcuda::wmma::fragment<
-          nvcuda::wmma::matrix_a,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementA>::Type,
-          typename CutlassToWmmaLayout<LayoutA>::Layout>;
+  using FragmentA = nvcuda::wmma::fragment<nvcuda::wmma::matrix_a,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementA>::Type,
+                                           typename CutlassToWmmaLayout<LayoutA>::Layout>;
 
-  using FragmentB = nvcuda::wmma::fragment<
-          nvcuda::wmma::matrix_b,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementB>::Type,
-          typename CutlassToWmmaLayout<LayoutB>::Layout>;
+  using FragmentB = nvcuda::wmma::fragment<nvcuda::wmma::matrix_b,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementB>::Type,
+                                           typename CutlassToWmmaLayout<LayoutB>::Layout>;
 
-  using FragmentC = nvcuda::wmma::fragment<
-          nvcuda::wmma::accumulator,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementC>::Type>;
+  using FragmentC = nvcuda::wmma::fragment<nvcuda::wmma::accumulator,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementC>::Type>;
 
   /// Performs a nvcuda::wmma matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    FragmentA const &A, 
-    FragmentB const &B, 
-    FragmentC const &C) const {
-      nvcuda::wmma::mma_sync(D, A, B, C);
-
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C) const
+  {
+    nvcuda::wmma::mma_sync(D, A, B, C);
   }
 
 #else
-    static_assert(false, "wmma.mma.sync interger type multiplicands is avialable only for SM75 and beyond");
+  static_assert(false,
+                "wmma.mma.sync interger type multiplicands is avialable only for SM75 and beyond");
 #endif
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,78 +119,72 @@ struct Wmma<
 // wmma native instruction sizes supported for cutlass::uint1b_t (experimental::b1).
 //
 ////////////////////////////////////////////////////////////////////////////////
-template <
-typename Shape_, 
-typename LayoutA_, 
-typename LayoutB_,
-typename LayoutC_>
-struct Wmma<
-  Shape_,                                   ///< Size of the matrix product (concept: GemmShape)
-  cutlass::uint1b_t,                        ///< ElementA
-  LayoutA_,                                 ///< LayoutA
-  cutlass::uint1b_t,                        ///< ElementB
-  LayoutB_,                                 ///< LayoutB
-  int32_t,                                  ///< ElementC
-  LayoutC_,                                 ///< LayoutC
-  cutlass::arch::OpXorPopc                  ///< Operator (multiply-add, xor.popc)
-> {
+template <typename Shape_,
+          typename LayoutA_,
+          typename LayoutB_,
+          typename LayoutC_>
+struct Wmma<Shape_,                   ///< Size of the matrix product (concept: GemmShape)
+            cutlass::uint1b_t,        ///< ElementA
+            LayoutA_,                 ///< LayoutA
+            cutlass::uint1b_t,        ///< ElementB
+            LayoutB_,                 ///< LayoutB
+            int32_t,                  ///< ElementC
+            LayoutC_,                 ///< LayoutC
+            cutlass::arch::OpXorPopc  ///< Operator (multiply-add, xor.popc)
+            > {
 #if defined(CUTLASS_ARCH_WMMA_SM75_ENABLED)
-  using Shape = Shape_;
+  using Shape    = Shape_;
   using ElementA = cutlass::uint1b_t;
-  using LayoutA = LayoutA_;
+  using LayoutA  = LayoutA_;
   using ElementB = cutlass::uint1b_t;
-  using LayoutB = LayoutB_;
+  using LayoutB  = LayoutB_;
   using ElementC = int32_t;
-  using LayoutC = LayoutC_;
+  using LayoutC  = LayoutC_;
   using Operator = cutlass::arch::OpXorPopc;
-  using ArchTag = arch::Sm75;
+  using ArchTag  = arch::Sm75;
 
   // check supported wmma shape for the given multiplicand data types
-  static_assert(
-    platform::is_same<cutlass::gemm::GemmShape<8, 8, 128>, Shape>::value,
-    "Supported list of wmma operator shape for b1 multiplicands is: 8x8x128");
-
+  static_assert(platform::is_same<cutlass::gemm::GemmShape<8, 8, 128>, Shape>::value,
+                "Supported list of wmma operator shape for b1 multiplicands is: 8x8x128");
 
   // Wmma Fragment
-  using FragmentA = nvcuda::wmma::fragment<
-          nvcuda::wmma::matrix_a,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementA>::Type,
-          typename CutlassToWmmaLayout<LayoutA>::Layout>;
+  using FragmentA = nvcuda::wmma::fragment<nvcuda::wmma::matrix_a,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementA>::Type,
+                                           typename CutlassToWmmaLayout<LayoutA>::Layout>;
 
-  using FragmentB = nvcuda::wmma::fragment<
-          nvcuda::wmma::matrix_b,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementB>::Type,
-          typename CutlassToWmmaLayout<LayoutB>::Layout>;
+  using FragmentB = nvcuda::wmma::fragment<nvcuda::wmma::matrix_b,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementB>::Type,
+                                           typename CutlassToWmmaLayout<LayoutB>::Layout>;
 
-  using FragmentC = nvcuda::wmma::fragment<
-          nvcuda::wmma::accumulator,
-          Shape::kM,
-          Shape::kN,
-          Shape::kK,
-          typename CutlassToWmmaDataType<ElementC>::Type>;
-  
+  using FragmentC = nvcuda::wmma::fragment<nvcuda::wmma::accumulator,
+                                           Shape::kM,
+                                           Shape::kN,
+                                           Shape::kK,
+                                           typename CutlassToWmmaDataType<ElementC>::Type>;
+
   /// Performs a nvcuda::wmma matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    FragmentA const &A, 
-    FragmentB const &B, 
-    FragmentC const &C) const {
-      nvcuda::wmma::bmma_sync(D, A, B, C, nvcuda::wmma::experimental::bmmaBitOpXOR, 
-                                          nvcuda::wmma::experimental::bmmaAccumulateOpPOPC);
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C) const
+  {
+    nvcuda::wmma::bmma_sync(D,
+                            A,
+                            B,
+                            C,
+                            nvcuda::wmma::experimental::bmmaBitOpXOR,
+                            nvcuda::wmma::experimental::bmmaAccumulateOpPOPC);
   }
 
 #else
-    static_assert(false, "wmma.mma.sync interger type multiplicands is avialable only for SM75 and beyond");
+  static_assert(false,
+                "wmma.mma.sync interger type multiplicands is avialable only for SM75 and beyond");
 #endif
-
 };
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass

@@ -18,11 +18,12 @@ try:
 except ModuleNotFoundError:
     pytest.skip("cugraph_dgl not available", allow_module_level=True)
 
+import tempfile
+
 import dgl
+import numpy as np
 import torch as th
 from cugraph_dgl import cugraph_storage_from_heterograph
-import tempfile
-import numpy as np
 
 
 def sample_dgl_graphs(g, train_nid, fanouts):

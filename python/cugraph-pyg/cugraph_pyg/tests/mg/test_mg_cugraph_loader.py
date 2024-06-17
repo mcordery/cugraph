@@ -12,10 +12,9 @@
 # limitations under the License.
 
 import pytest
-
-from cugraph_pyg.loader import CuGraphNeighborLoader
+from cugraph.utilities.utils import MissingModule, import_optional
 from cugraph_pyg.data import CuGraphStore
-from cugraph.utilities.utils import import_optional, MissingModule
+from cugraph_pyg.loader import CuGraphNeighborLoader
 
 torch = import_optional("torch")
 

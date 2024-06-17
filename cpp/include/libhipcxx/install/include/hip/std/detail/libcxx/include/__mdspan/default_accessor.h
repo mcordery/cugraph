@@ -46,8 +46,8 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#include <cstddef> // size_t
-#endif // __cuda_std__
+#include <cstddef>  // size_t
+#endif              // __cuda_std__
 
 #include "../__mdspan/macros.h"
 
@@ -61,38 +61,32 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _ElementType>
 struct default_accessor {
-
-  using offset_policy = default_accessor;
-  using element_type = _ElementType;
-  using reference = _ElementType&;
+  using offset_policy    = default_accessor;
+  using element_type     = _ElementType;
+  using reference        = _ElementType&;
   using data_handle_type = _ElementType*;
 
   __MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr default_accessor() noexcept = default;
 
-  __MDSPAN_TEMPLATE_REQUIRES(
-    class _OtherElementType,
-    /* requires */ (
-      __MDSPAN_TRAIT(_CUDA_VSTD::is_convertible, _OtherElementType(*)[], element_type(*)[])
-    )
-  )
+  __MDSPAN_TEMPLATE_REQUIRES(class _OtherElementType,
+                             /* requires */ (__MDSPAN_TRAIT(_CUDA_VSTD::is_convertible,
+                                                            _OtherElementType (*)[],
+                                                            element_type (*)[])))
   __MDSPAN_INLINE_FUNCTION
   constexpr default_accessor(default_accessor<_OtherElementType>) noexcept {}
 
   __MDSPAN_INLINE_FUNCTION
-  constexpr data_handle_type
-  offset(data_handle_type __p, size_t __i) const noexcept {
+  constexpr data_handle_type offset(data_handle_type __p, size_t __i) const noexcept
+  {
     return __p + __i;
   }
 
   __MDSPAN_FORCE_INLINE_FUNCTION
-  constexpr reference access(data_handle_type __p, size_t __i) const noexcept {
-    return __p[__i];
-  }
-
+  constexpr reference access(data_handle_type __p, size_t __i) const noexcept { return __p[__i]; }
 };
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___MDSPAN_DEFAULT_ACCESSOR_HPP
+#endif  // _LIBCUDACXX___MDSPAN_DEFAULT_ACCESSOR_HPP

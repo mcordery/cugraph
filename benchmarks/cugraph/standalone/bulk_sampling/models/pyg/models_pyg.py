@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import torch
-
 from torch_geometric.nn import SAGEConv
 
 try:

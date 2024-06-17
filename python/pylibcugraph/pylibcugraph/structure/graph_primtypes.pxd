@@ -19,6 +19,7 @@
 from libcpp cimport bool
 from pylibraft.common.handle cimport *
 
+
 cdef extern from "cugraph/legacy/graph.hpp" namespace "cugraph::legacy":
 
     ctypedef enum PropType:

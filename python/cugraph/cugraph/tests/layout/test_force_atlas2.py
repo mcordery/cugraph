@@ -12,20 +12,15 @@
 # limitations under the License.
 
 import time
+
 import pytest
+import scipy.io
+from cugraph.internals import GraphBasedDimRedCallback
+from cugraph.structure import number_map
+from sklearn.manifold import trustworthiness
 
 import cugraph
-from cugraph.structure import number_map
-from cugraph.internals import GraphBasedDimRedCallback
-from sklearn.manifold import trustworthiness
-import scipy.io
-from cugraph.datasets import (
-    karate,
-    polbooks,
-    dolphins,
-    netscience,
-    dining_prefs,
-)
+from cugraph.datasets import dining_prefs, dolphins, karate, netscience, polbooks
 
 # FIXME Removed the multi column positional due to it being non-deterministic
 # need to replace this coverage. Issue 3890 in cuGraph repo was created.

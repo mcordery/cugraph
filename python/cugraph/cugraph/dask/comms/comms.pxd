@@ -18,6 +18,7 @@
 
 from pylibraft.common.handle cimport *
 
+
 cdef extern from "cugraph/partition_manager.hpp" namespace "cugraph::partition_manager":
    cdef void init_subcomm(handle_t &handle,
                           size_t row_comm_size)

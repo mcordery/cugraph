@@ -12,7 +12,6 @@
 # limitations under the License.
 """Test functions from nx_cugraph/classes/function.py"""
 import networkx as nx
-
 import nx_cugraph as nxcg
 
 

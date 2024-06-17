@@ -14,22 +14,18 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-    cugraph_data_type_id_t,
-    bool_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
     cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_host_array_view_t,
 )
-from pylibcugraph._cugraph_c.random cimport (
-    cugraph_rng_state_t,
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.random cimport cugraph_rng_state_t
+from pylibcugraph._cugraph_c.resource_handle cimport (
+    bool_t,
+    cugraph_data_type_id_t,
+    cugraph_resource_handle_t,
 )
+
 
 cdef extern from "cugraph_c/graph_generators.h":
     ctypedef enum cugraph_generator_distribution_t:

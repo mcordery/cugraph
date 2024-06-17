@@ -19,8 +19,9 @@
 
 
 from libc.stdint cimport uintptr_t
-from numba.cuda.api import from_cuda_array_interface
+
 import numpy as np
+from numba.cuda.api import from_cuda_array_interface
 
 
 cdef extern from "Python.h":

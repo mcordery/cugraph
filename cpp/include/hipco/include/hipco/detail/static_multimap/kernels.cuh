@@ -34,14 +34,13 @@
 
 #pragma once
 
-#include <hipco/pair.cuh>
-
 #include <thrust/type_traits/is_contiguous_iterator.h>
+
+#include <hipco/pair.cuh>
 
 #include <hipcub/block/block_reduce.hpp>
 
 #include <hip/std/atomic>
-
 #include <iterator>
 
 namespace hipco {
@@ -415,22 +414,22 @@ __global__ void retrieve(InputIt first,
       auto key = *(first + idx);
       if constexpr (is_outer) {
         view.template retrieve_outer<buffer_size>(active_flushing_cg,
-                                         probing_cg,
-                                         key,
-                                         &flushing_cg_counter[flushing_cg_id],
-                                         output_buffer[flushing_cg_id],
-                                         num_matches,
-                                         output_begin,
-                                         key_equal);
+                                                  probing_cg,
+                                                  key,
+                                                  &flushing_cg_counter[flushing_cg_id],
+                                                  output_buffer[flushing_cg_id],
+                                                  num_matches,
+                                                  output_begin,
+                                                  key_equal);
       } else {
         view.template retrieve<buffer_size>(active_flushing_cg,
-                                   probing_cg,
-                                   key,
-                                   &flushing_cg_counter[flushing_cg_id],
-                                   output_buffer[flushing_cg_id],
-                                   num_matches,
-                                   output_begin,
-                                   key_equal);
+                                            probing_cg,
+                                            key,
+                                            &flushing_cg_counter[flushing_cg_id],
+                                            output_buffer[flushing_cg_id],
+                                            num_matches,
+                                            output_begin,
+                                            key_equal);
       }
     }
     idx += loop_stride;
@@ -446,7 +445,6 @@ __global__ void retrieve(InputIt first,
                              output_begin);
   }
 }
-
 
 /**
  * @brief Retrieves all pairs matching the input probe pair in the range `[first, last)`.

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include "community/flatten_dendrogram.hpp"
 #include "community/legacy/louvain.cuh"
+
+#include "community/flatten_dendrogram.hpp"
 
 #include <cugraph/graph.hpp>
 

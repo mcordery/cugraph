@@ -12,19 +12,21 @@
 # limitations under the License.
 
 from __future__ import annotations
-from typing import Optional, Sequence, Tuple, Dict, Union
+
 from functools import cached_property
-from cugraph.utilities.utils import import_optional, MissingModule
+from typing import Dict, Optional, Sequence, Tuple, Union
+
+import cudf
+import cupy as cp
+import dask_cudf
 from cugraph.gnn import FeatureStore
 from cugraph.gnn.dgl_extensions.dgl_uniform_sampler import DGLUniformSampler
-import cudf
-import dask_cudf
-import cupy as cp
+from cugraph.utilities.utils import MissingModule, import_optional
 from cugraph_dgl.utils.cugraph_storage_utils import (
     _assert_valid_canonical_etype,
-    backend_dtype_to_np_dtype_dict,
     add_edge_ids_to_edges_dict,
     add_node_offset_to_edges_dict,
+    backend_dtype_to_np_dtype_dict,
 )
 from cugraph_dgl.utils.feature_storage import dgl_FeatureStorage
 

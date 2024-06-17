@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-
 import cudf
-import cugraph
 import cugraph.dask as dcg
+import pytest
 from cugraph.dask.common.mg_utils import is_single_gpu
-from cugraph.datasets import karate_disjoint, dolphins, netscience
 
+import cugraph
+from cugraph.datasets import dolphins, karate_disjoint, netscience
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

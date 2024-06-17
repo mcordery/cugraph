@@ -27,9 +27,8 @@
 #include <raft/util/bitonic_sort.cuh>
 #include <raft/util/cuda_rt_essentials.hpp>
 
-#include <hip/hip_fp16.h>
-
 #include <float.h>
+#include <hip/hip_fp16.h>
 #include <omp.h>
 #include <sys/time.h>
 
@@ -345,15 +344,15 @@ void optimize(raft::resources const& res,
       raft::make_device_matrix<uint8_t, int64_t>(res, graph_size, input_graph_degree);
 
     RAFT_CUDA_TRY(hipMemsetAsync(d_detour_count.data_handle(),
-                                  0xff,
-                                  graph_size * input_graph_degree * sizeof(uint8_t),
-                                  resource::get_cuda_stream(res)));
+                                 0xff,
+                                 graph_size * input_graph_degree * sizeof(uint8_t),
+                                 resource::get_cuda_stream(res)));
 
     auto d_num_no_detour_edges = raft::make_device_vector<uint32_t, int64_t>(res, graph_size);
     RAFT_CUDA_TRY(hipMemsetAsync(d_num_no_detour_edges.data_handle(),
-                                  0x00,
-                                  graph_size * sizeof(uint32_t),
-                                  resource::get_cuda_stream(res)));
+                                 0x00,
+                                 graph_size * sizeof(uint32_t),
+                                 resource::get_cuda_stream(res)));
 
     auto dev_stats  = raft::make_device_vector<uint64_t>(res, 2);
     auto host_stats = raft::make_host_vector<uint64_t>(2);
@@ -465,15 +464,15 @@ void optimize(raft::resources const& res,
 
     device_matrix_view_from_host<IdxT, int64_t> d_rev_graph(res, rev_graph.view());
     RAFT_CUDA_TRY(hipMemsetAsync(d_rev_graph.data_handle(),
-                                  0xff,
-                                  graph_size * output_graph_degree * sizeof(IdxT),
-                                  resource::get_cuda_stream(res)));
+                                 0xff,
+                                 graph_size * output_graph_degree * sizeof(IdxT),
+                                 resource::get_cuda_stream(res)));
 
     auto d_rev_graph_count = raft::make_device_vector<uint32_t, int64_t>(res, graph_size);
     RAFT_CUDA_TRY(hipMemsetAsync(d_rev_graph_count.data_handle(),
-                                  0x00,
-                                  graph_size * sizeof(uint32_t),
-                                  resource::get_cuda_stream(res)));
+                                 0x00,
+                                 graph_size * sizeof(uint32_t),
+                                 resource::get_cuda_stream(res)));
 
     auto dest_nodes   = raft::make_host_vector<IdxT, int64_t>(graph_size);
     auto d_dest_nodes = raft::make_device_vector<IdxT, int64_t>(res, graph_size);

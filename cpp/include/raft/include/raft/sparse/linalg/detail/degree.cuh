@@ -22,7 +22,6 @@
 #include <raft/util/device_atomics.cuh>
 
 #include <hip/hip_runtime.h>
-
 #include <stdio.h>
 
 namespace raft {

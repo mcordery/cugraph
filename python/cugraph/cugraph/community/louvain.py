@@ -11,20 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union, Tuple
+import warnings
+from typing import Tuple, Union
+
+import cudf
 from cugraph.structure import Graph
 from cugraph.utilities import (
-    is_nx_graph_type,
-    ensure_cugraph_obj_for_nx,
     df_score_to_dictionary,
+    ensure_cugraph_obj_for_nx,
+    is_nx_graph_type,
 )
-import cudf
-
-import warnings
-from pylibcugraph import louvain as pylibcugraph_louvain
-from pylibcugraph import ResourceHandle
-
 from cugraph.utilities.utils import import_optional
+from pylibcugraph import ResourceHandle
+from pylibcugraph import louvain as pylibcugraph_louvain
 
 # FIXME: the networkx.Graph type used in type annotations is specified
 # using a string literal to avoid depending on and importing networkx.

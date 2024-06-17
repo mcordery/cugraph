@@ -34,12 +34,11 @@
 
 #pragma once
 
-#include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/functional.h"
-
-#include "cutlass/gemm/gemm.h"
 #include "cutlass/arch/arch.h"
+#include "cutlass/array.h"
+#include "cutlass/functional.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -126,8 +125,7 @@ template <
   /// Layout of C matrix (concept: MatrixLayout)
   typename LayoutC,
   /// Inner product operator
-  typename Operator
->
+  typename Operator>
 struct Mma;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,22 +145,26 @@ template <
   /// Layout of C matrix (concept: MatrixLayout)
   typename LayoutC,
   /// Inner product operator
-  typename Operator_
->
-struct Mma<gemm::GemmShape<1, 1, 1>, 1, ElementA, LayoutA, ElementB, LayoutB, ElementC_, LayoutC, Operator_> {
-
-  using Shape = gemm::GemmShape<1, 1, 1>;
+  typename Operator_>
+struct Mma<gemm::GemmShape<1, 1, 1>,
+           1,
+           ElementA,
+           LayoutA,
+           ElementB,
+           LayoutB,
+           ElementC_,
+           LayoutC,
+           Operator_> {
+  using Shape    = gemm::GemmShape<1, 1, 1>;
   using Operator = Operator_;
   using ElementC = ElementC_;
 
   CUTLASS_HOST_DEVICE
-  void operator()(
-    Array<ElementC, 1> &d,
-    Array<ElementA, 1> const &a,
-    Array<ElementB, 1> const &b,
-    Array<ElementC, 1> const &c
-  ) {
-
+  void operator()(Array<ElementC, 1>& d,
+                  Array<ElementA, 1> const& a,
+                  Array<ElementB, 1> const& b,
+                  Array<ElementC, 1> const& c)
+  {
     multiply_add<ElementA, ElementB, ElementC> op;
 
     d[0] = op(a[0], b[0], c[0]);
@@ -175,9 +177,7 @@ struct Mma<gemm::GemmShape<1, 1, 1>, 1, ElementA, LayoutA, ElementB, LayoutB, El
 
 /// Specifies internal data type for computation
 struct SPFormatType {
-  enum Kind {
-    Thread
-  };
+  enum Kind { Thread };
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,12 +203,11 @@ template <
   /// Inner product operator
   typename Operator,
   /// Specifies meta data format
-  SPFormatType::Kind SPFormat = SPFormatType::Thread
->
+  SPFormatType::Kind SPFormat = SPFormatType::Thread>
 struct SparseMma;
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

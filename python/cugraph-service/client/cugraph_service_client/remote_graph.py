@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import importlib
 
+import numpy as np
 from cugraph_service_client.exceptions import CugraphServiceError
 from cugraph_service_client.remote_graph_utils import (
+    MissingModule,
+    _offsets_to_backend_dtype,
     _transform_to_backend_dtype,
     _transform_to_backend_dtype_1d,
-    _offsets_to_backend_dtype,
-    MissingModule,
 )
 
 try:

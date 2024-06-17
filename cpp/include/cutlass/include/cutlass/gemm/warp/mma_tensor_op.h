@@ -35,25 +35,20 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/array.h"
-#include "cutlass/platform/platform.h"
-
-#include "cutlass/numeric_conversion.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
 #include "cutlass/arch/memory_sm75.h"
-#include "cutlass/arch/mma_sm75.h" 
+#include "cutlass/arch/mma_sm75.h"
 #include "cutlass/arch/mma_sm80.h"
-
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_policy.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/platform/platform.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,11 +62,11 @@ namespace detail {
 
 template <typename T, typename S, int N, FloatRoundStyle Round>
 struct ConvertAndPack {
-
   using Converter = NumericArrayConverter<T, S, N, Round>;
 
   CUTLASS_HOST_DEVICE
-  Array<T, N> operator()(Array<S, N> const &source) {
+  Array<T, N> operator()(Array<S, N> const& source)
+  {
     Converter converter;
 
     return converter(source);
@@ -80,20 +75,17 @@ struct ConvertAndPack {
 
 template <typename T, int N, FloatRoundStyle Round>
 struct ConvertAndPack<T, T, N, Round> {
-
   CUTLASS_HOST_DEVICE
-  Array<T, N> operator()(Array<T, N> const &source) {
-		return source;
-  }
+  Array<T, N> operator()(Array<T, N> const& source) { return source; }
 };
 
 template <int N, FloatRoundStyle Round>
 struct ConvertAndPack<bfloat16_t, float, N, Round> {
-
   using Converter = NumericArrayConverter<bfloat16_t, float, N, Round>;
 
   CUTLASS_HOST_DEVICE
-  Array<bfloat16_t, N> operator()(Array<float, N> const &source) {
+  Array<bfloat16_t, N> operator()(Array<float, N> const& source)
+  {
     Converter converter;
 
     Array<float, N> tmp;
@@ -101,7 +93,7 @@ struct ConvertAndPack<bfloat16_t, float, N, Round> {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < N; ++i) {
       int idx = (((i << 1) & 2) | ((i >> 1) & 1) | (i & 0xfffffffc));
-      tmp[i] = source[idx];
+      tmp[i]  = source[idx];
     }
 
     return converter(tmp);
@@ -110,11 +102,11 @@ struct ConvertAndPack<bfloat16_t, float, N, Round> {
 
 template <int N, FloatRoundStyle Round>
 struct ConvertAndPack<half_t, float, N, Round> {
-
   using Converter = NumericArrayConverter<half_t, float, N, Round>;
 
   CUTLASS_HOST_DEVICE
-  Array<half_t, N> operator()(Array<float, N> const &source) {
+  Array<half_t, N> operator()(Array<float, N> const& source)
+  {
     Converter converter;
 
     Array<float, N> tmp;
@@ -122,7 +114,7 @@ struct ConvertAndPack<half_t, float, N, Round> {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < N; ++i) {
       int idx = (((i << 1) & 2) | ((i >> 1) & 1) | (i & 0xfffffffc));
-      tmp[i] = source[idx];
+      tmp[i]  = source[idx];
     }
 
     return converter(tmp);
@@ -131,10 +123,9 @@ struct ConvertAndPack<half_t, float, N, Round> {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -162,10 +153,9 @@ template <
   /// when output layout is interleaved.
   bool AccumulatorsInRowMajor = false,
   /// Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 class MmaTensorOp {
-public:
+ public:
   /// Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;
 
@@ -193,7 +183,7 @@ public:
   /// Underlying matrix multiply operator (concept: arch::Mma)
   using ArchMmaOperator = typename Policy::Operator;
 
-  /// Indicates math operator 
+  /// Indicates math operator
   using MathOperator = typename ArchMmaOperator::Operator;
 
   /// Architecture tag from underlying instruction
@@ -217,55 +207,61 @@ public:
   /// Number of partitions along K dimension
   static int const kPartitionsK = PartitionsK_;
 
-public:
-
+ public:
   /// Iterates over the A operand in memory
   using IteratorA = MmaTensorOpMultiplicandTileIterator<
-     MatrixShape<Shape::kM, Shape::kK>, Operand::kA, ElementA, LayoutA,
-     MatrixShape<ArchMmaOperator::Shape::kM, ArchMmaOperator::Shape::kK>,
-     Policy::OpDelta::kRow, kThreadCount, kPartitionsK>;
+    MatrixShape<Shape::kM, Shape::kK>,
+    Operand::kA,
+    ElementA,
+    LayoutA,
+    MatrixShape<ArchMmaOperator::Shape::kM, ArchMmaOperator::Shape::kK>,
+    Policy::OpDelta::kRow,
+    kThreadCount,
+    kPartitionsK>;
 
   /// Storage for A tile
   using FragmentA = typename IteratorA::Fragment;
 
   /// Storage for transformed A tile
-  using TransformedFragmentA =
-      Array<typename ArchMmaOperator::ElementA, FragmentA::kElements>;
+  using TransformedFragmentA = Array<typename ArchMmaOperator::ElementA, FragmentA::kElements>;
 
   /// Iterates over the B operand in memory
   using IteratorB = MmaTensorOpMultiplicandTileIterator<
-      MatrixShape<Shape::kK, Shape::kN>, Operand::kB, ElementB, LayoutB,
-      MatrixShape<ArchMmaOperator::Shape::kK, ArchMmaOperator::Shape::kN>,
-      Policy::OpDelta::kRow, kThreadCount, kPartitionsK>;
+    MatrixShape<Shape::kK, Shape::kN>,
+    Operand::kB,
+    ElementB,
+    LayoutB,
+    MatrixShape<ArchMmaOperator::Shape::kK, ArchMmaOperator::Shape::kN>,
+    Policy::OpDelta::kRow,
+    kThreadCount,
+    kPartitionsK>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
 
   /// Storage for transformed B tile
-  using TransformedFragmentB =
-      Array<typename ArchMmaOperator::ElementB, FragmentB::kElements>;
+  using TransformedFragmentB = Array<typename ArchMmaOperator::ElementB, FragmentB::kElements>;
 
   /// Iterates over the C operand in memory
-  using IteratorC = MmaTensorOpAccumulatorTileIterator<
-     MatrixShape<Shape::kM, Shape::kN>, ElementC, LayoutC,
-     typename ArchMmaOperator::Shape, typename Policy::OpDelta>;
+  using IteratorC = MmaTensorOpAccumulatorTileIterator<MatrixShape<Shape::kM, Shape::kN>,
+                                                       ElementC,
+                                                       LayoutC,
+                                                       typename ArchMmaOperator::Shape,
+                                                       typename Policy::OpDelta>;
 
   /// Storage for C tile
   using FragmentC = typename IteratorC::Fragment;
 
   /// Number of mma operations performed
-  using MmaIterations = MatrixShape<
-    (Shape::kM + ArchMmaOperator::Shape::kM - 1) / ArchMmaOperator::Shape::kM,
-    (Shape::kN + ArchMmaOperator::Shape::kN - 1) / ArchMmaOperator::Shape::kN
-  >;
+  using MmaIterations =
+    MatrixShape<(Shape::kM + ArchMmaOperator::Shape::kM - 1) / ArchMmaOperator::Shape::kM,
+                (Shape::kN + ArchMmaOperator::Shape::kN - 1) / ArchMmaOperator::Shape::kN>;
 
-public:
-
+ public:
   /// Underlying matrix multiply operator (concept: arch::Mma)
   ArchMmaOperator mma;
 
-public:
-
+ public:
   //
   // Methods
   //
@@ -276,153 +272,150 @@ public:
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    TransformedFragmentA const &A, 
-    TransformedFragmentB const &B, 
-    FragmentC const &C
-  ) const {
-
+  void operator()(FragmentC& D,
+                  TransformedFragmentA const& A,
+                  TransformedFragmentB const& B,
+                  FragmentC const& C) const
+  {
     using MmaOperandA = typename ArchMmaOperator::FragmentA;
     using MmaOperandB = typename ArchMmaOperator::FragmentB;
     using MmaOperandC = typename ArchMmaOperator::FragmentC;
 
     D = C;
 
-    MmaOperandA const *ptr_A = reinterpret_cast<MmaOperandA const *>(&A);
-    MmaOperandB const *ptr_B = reinterpret_cast<MmaOperandB const *>(&B);
-    MmaOperandC *ptr_D = reinterpret_cast<MmaOperandC *>(&D);
+    MmaOperandA const* ptr_A = reinterpret_cast<MmaOperandA const*>(&A);
+    MmaOperandB const* ptr_B = reinterpret_cast<MmaOperandB const*>(&B);
+    MmaOperandC* ptr_D       = reinterpret_cast<MmaOperandC*>(&D);
 
-    #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 800)
-      // Serpentine visitation order maximizing reuse of Rb
-      // The visitation order is like
-      //      _   
-      //   | | | |
-      //   | | | |
-      //   |_| |_|
-      //
-      // Down Up Down Up
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 800)
+    // Serpentine visitation order maximizing reuse of Rb
+    // The visitation order is like
+    //      _
+    //   | | | |
+    //   | | | |
+    //   |_| |_|
+    //
+    // Down Up Down Up
 
+    CUTLASS_PRAGMA_UNROLL
+    for (int n = 0; n < MmaIterations::kColumn; ++n) {
       CUTLASS_PRAGMA_UNROLL
-      for (int n = 0; n < MmaIterations::kColumn; ++n) {
+      for (int m = 0; m < MmaIterations::kRow; ++m) {
+        int m_serpentine = ((n % 2) ? (MmaIterations::kRow - 1 - m) : m);
 
-        CUTLASS_PRAGMA_UNROLL
-        for (int m = 0; m < MmaIterations::kRow; ++m) {
-
-          int m_serpentine = ((n % 2) ? (MmaIterations::kRow - 1 - m) : m);
-
-          if (AccumulatorsInRowMajor) {  // matrix B is reordered
-            mma(
-              ptr_D[n + m_serpentine * MmaIterations::kColumn],
+        if (AccumulatorsInRowMajor) {  // matrix B is reordered
+          mma(ptr_D[n + m_serpentine * MmaIterations::kColumn],
               ptr_A[m_serpentine],
               ptr_B[n],
               ptr_D[n + m_serpentine * MmaIterations::kColumn]);
-          } else {
-            mma(
-              ptr_D[m_serpentine + n * MmaIterations::kRow],
+        } else {
+          mma(ptr_D[m_serpentine + n * MmaIterations::kRow],
               ptr_A[m_serpentine],
               ptr_B[n],
               ptr_D[m_serpentine + n * MmaIterations::kRow]);
-          }
         }
       }
-    #elif defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800)
-      // Serpentine visitation order maximizing reuse of Ra
-      // The visitation order is like
-      //   _________
-      //   _________|
-      //  |_________
-      //  __________|
-      //
-      // Right Left Right Left 
+    }
+#elif defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800)
+    // Serpentine visitation order maximizing reuse of Ra
+    // The visitation order is like
+    //   _________
+    //   _________|
+    //  |_________
+    //  __________|
+    //
+    // Right Left Right Left
 
+    CUTLASS_PRAGMA_UNROLL
+    for (int m = 0; m < MmaIterations::kRow; ++m) {
       CUTLASS_PRAGMA_UNROLL
-      for (int m = 0; m < MmaIterations::kRow; ++m) {
+      for (int n = 0; n < MmaIterations::kColumn; ++n) {
+        int n_serpentine = ((m % 2) ? (MmaIterations::kColumn - 1 - n) : n);
 
-        CUTLASS_PRAGMA_UNROLL
-        for (int n = 0; n < MmaIterations::kColumn; ++n) {
-
-          int n_serpentine = ((m % 2) ? (MmaIterations::kColumn - 1 - n) : n);
-
-          if (AccumulatorsInRowMajor) {  // matrix B is reordered
-            mma(
-              ptr_D[n_serpentine + m * MmaIterations::kColumn],
+        if (AccumulatorsInRowMajor) {  // matrix B is reordered
+          mma(ptr_D[n_serpentine + m * MmaIterations::kColumn],
               ptr_A[m],
               ptr_B[n_serpentine],
               ptr_D[n_serpentine + m * MmaIterations::kColumn]);
-          } else {
-            mma(ptr_D[m + n_serpentine * MmaIterations::kRow],
-                ptr_A[m],
-                ptr_B[n_serpentine],
-                ptr_D[m + n_serpentine * MmaIterations::kRow]);
-          }
+        } else {
+          mma(ptr_D[m + n_serpentine * MmaIterations::kRow],
+              ptr_A[m],
+              ptr_B[n_serpentine],
+              ptr_D[m + n_serpentine * MmaIterations::kRow]);
         }
       }
-    #else
-      assert(0);
-    #endif
+    }
+#else
+    assert(0);
+#endif
   }
 
   /// Transform the mma operands to the required types
   CUTLASS_DEVICE
-  void transform(TransformedFragmentA &dst_A, TransformedFragmentB &dst_B,
-                 FragmentA const &A, FragmentB const &B) const {
-
+  void transform(TransformedFragmentA& dst_A,
+                 TransformedFragmentB& dst_B,
+                 FragmentA const& A,
+                 FragmentB const& B) const
+  {
     //
     // Define conversions from source type to instruction type
     //
     FloatRoundStyle const kRoundA =
-        PreferredRoundingMode<typename ArchMmaOperator::ElementA,
-                              ElementA>::kRound;
+      PreferredRoundingMode<typename ArchMmaOperator::ElementA, ElementA>::kRound;
     FloatRoundStyle const kRoundB =
-        PreferredRoundingMode<typename ArchMmaOperator::ElementB,
-                              ElementB>::kRound;
-    #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 800)
-      detail::ConvertAndPack<typename ArchMmaOperator::ElementA, ElementA,
-                            FragmentA::kElements, kRoundA>
-          convert_A;
-      NumericArrayConverter<typename ArchMmaOperator::ElementB, ElementB,
-                            FragmentB::kElements / 2, kRoundB>
-          convert_B;
-      Array<ElementB, FragmentB::kElements / 2> const *ptr_B =
-          reinterpret_cast<Array<ElementB, FragmentB::kElements / 2> const *>(&B);
-      Array<typename ArchMmaOperator::ElementB, FragmentB::kElements / 2> *
-          ptr_dst_B = reinterpret_cast<Array<typename ArchMmaOperator::ElementB,
-                                             FragmentB::kElements / 2> *>(&dst_B);
-  
-      dst_A = convert_A(A);
-  
-      ptr_dst_B[0] = convert_B(ptr_B[0]);
-      ptr_dst_B[1] = convert_B(ptr_B[1]);
+      PreferredRoundingMode<typename ArchMmaOperator::ElementB, ElementB>::kRound;
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 800)
+    detail::
+      ConvertAndPack<typename ArchMmaOperator::ElementA, ElementA, FragmentA::kElements, kRoundA>
+        convert_A;
+    NumericArrayConverter<typename ArchMmaOperator::ElementB,
+                          ElementB,
+                          FragmentB::kElements / 2,
+                          kRoundB>
+      convert_B;
+    Array<ElementB, FragmentB::kElements / 2> const* ptr_B =
+      reinterpret_cast<Array<ElementB, FragmentB::kElements / 2> const*>(&B);
+    Array<typename ArchMmaOperator::ElementB, FragmentB::kElements / 2>* ptr_dst_B =
+      reinterpret_cast<Array<typename ArchMmaOperator::ElementB, FragmentB::kElements / 2>*>(
+        &dst_B);
 
-    #elif defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800)
-      detail::ConvertAndPack<typename ArchMmaOperator::ElementA, ElementA,
-                            FragmentA::kElements / 2, kRoundA>
-          convert_A;
-      NumericArrayConverter<typename ArchMmaOperator::ElementB, ElementB,
-                            FragmentB::kElements, kRoundB>
-          convert_B;
-      Array<ElementA, FragmentA::kElements / 2> const *ptr_A =
-          reinterpret_cast<Array<ElementA, FragmentA::kElements / 2> const *>(&A);
-      Array<typename ArchMmaOperator::ElementA, FragmentA::kElements / 2> *
-          ptr_dst_A = reinterpret_cast<Array<typename ArchMmaOperator::ElementA,
-                                             FragmentA::kElements / 2> *>(&dst_A);
-  
-      dst_B = convert_B(B);
-  
-      ptr_dst_A[0] = convert_A(ptr_A[0]);
-      ptr_dst_A[1] = convert_A(ptr_A[1]);
-    #else
-      assert(0);
-    #endif
+    dst_A = convert_A(A);
+
+    ptr_dst_B[0] = convert_B(ptr_B[0]);
+    ptr_dst_B[1] = convert_B(ptr_B[1]);
+
+#elif defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 800)
+    detail::ConvertAndPack<typename ArchMmaOperator::ElementA,
+                           ElementA,
+                           FragmentA::kElements / 2,
+                           kRoundA>
+      convert_A;
+    NumericArrayConverter<typename ArchMmaOperator::ElementB,
+                          ElementB,
+                          FragmentB::kElements,
+                          kRoundB>
+      convert_B;
+    Array<ElementA, FragmentA::kElements / 2> const* ptr_A =
+      reinterpret_cast<Array<ElementA, FragmentA::kElements / 2> const*>(&A);
+    Array<typename ArchMmaOperator::ElementA, FragmentA::kElements / 2>* ptr_dst_A =
+      reinterpret_cast<Array<typename ArchMmaOperator::ElementA, FragmentA::kElements / 2>*>(
+        &dst_A);
+
+    dst_B = convert_B(B);
+
+    ptr_dst_A[0] = convert_A(ptr_A[0]);
+    ptr_dst_A[1] = convert_A(ptr_A[1]);
+#else
+    assert(0);
+#endif
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

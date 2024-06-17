@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/is_referenceable.h"
 #include "../__type_traits/is_same.h"
@@ -32,18 +32,19 @@ template <class _Tp>
 using __add_pointer_t = _LIBCUDACXX_ADD_POINTER(_Tp);
 
 #else
-template <class _Tp,
-          bool = __libcpp_is_referenceable<_Tp>::value || is_void<_Tp>::value>
+template <class _Tp, bool = __libcpp_is_referenceable<_Tp>::value || is_void<_Tp>::value>
 struct __add_pointer_impl {
   typedef _LIBCUDACXX_NODEBUG_TYPE __libcpp_remove_reference_t<_Tp>* type;
 };
-template <class _Tp> struct __add_pointer_impl<_Tp, false>
-    {typedef _LIBCUDACXX_NODEBUG_TYPE _Tp type;};
+template <class _Tp>
+struct __add_pointer_impl<_Tp, false> {
+  typedef _LIBCUDACXX_NODEBUG_TYPE _Tp type;
+};
 
 template <class _Tp>
 using __add_pointer_t = typename __add_pointer_impl<_Tp>::type;
 
-#endif // defined(_LIBCUDACXX_ADD_POINTER) && !defined(_LIBCUDACXX_USE_ADD_POINTER_FALLBACK)
+#endif  // defined(_LIBCUDACXX_ADD_POINTER) && !defined(_LIBCUDACXX_USE_ADD_POINTER_FALLBACK)
 
 template <class _Tp>
 struct add_pointer {
@@ -51,9 +52,10 @@ struct add_pointer {
 };
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using add_pointer_t = __add_pointer_t<_Tp>;
+template <class _Tp>
+using add_pointer_t = __add_pointer_t<_Tp>;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_ADD_POINTER_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_ADD_POINTER_H

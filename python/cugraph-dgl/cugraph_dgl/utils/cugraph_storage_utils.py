@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import numpy as np
-from cugraph.gnn.dgl_extensions.utils.sampling import eid_n, src_n, dst_n
-from cugraph.utilities.utils import import_optional, MissingModule
+from cugraph.gnn.dgl_extensions.utils.sampling import dst_n, eid_n, src_n
+from cugraph.utilities.utils import MissingModule, import_optional
 
 dgl = import_optional("dgl")
 F = import_optional("dgl.backend")

@@ -34,14 +34,14 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hipcub/hipcub.hpp>
-#include <hip/hip_runtime.h>
 #include <thrust/execution_policy.h>
 #include <thrust/fill.h>
 #include <thrust/host_vector.h>
 #include <thrust/mr/allocator.h>
 #include <thrust/mr/device_memory_resource.h>
 
+#include <hip/hip_runtime.h>
+#include <hipcub/hipcub.hpp>
 #include <mma.h>
 #include <omp.h>
 
@@ -99,9 +99,9 @@ class ResultItem<int> {
 
  public:
   __host__ __device__ ResultItem()
-    : id_(std::numeric_limits<Index_t>::max()), dist_(std::numeric_limits<DistData_t>::max()){};
+    : id_(std::numeric_limits<Index_t>::max()), dist_(std::numeric_limits<DistData_t>::max()) {};
   __host__ __device__ ResultItem(const Index_t id_with_flag, const DistData_t dist)
-    : id_(id_with_flag), dist_(dist){};
+    : id_(id_with_flag), dist_(dist) {};
   __host__ __device__ bool is_new() const { return id_ >= 0; }
   __host__ __device__ Index_t& id_with_flag() { return id_; }
   __host__ __device__ Index_t id() const
@@ -1218,8 +1218,8 @@ void GNND<Data_t, Index_t>::build(Data_t* data, const Index_t nrow, Index_t* out
   using input_t = typename std::remove_const<Data_t>::type;
 
   hipStream_t stream = raft::resource::get_cuda_stream(res);
-  nrow_               = nrow;
-  graph_.h_graph      = (InternalID_t<Index_t>*)output_graph;
+  nrow_              = nrow;
+  graph_.h_graph     = (InternalID_t<Index_t>*)output_graph;
 
   hipPointerAttribute_t data_ptr_attr;
   RAFT_CUDA_TRY(hipPointerGetAttributes(&data_ptr_attr, data));

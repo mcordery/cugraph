@@ -32,20 +32,16 @@
 // THE SOFTWARE.
 
 template <typename T1, typename T2>
-struct tuple_size<hipco::pair<T1, T2>> : integral_constant<size_t, 2> {
-};
+struct tuple_size<hipco::pair<T1, T2>> : integral_constant<size_t, 2> {};
 
 template <typename T1, typename T2>
-struct tuple_size<const hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {
-};
+struct tuple_size<const hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_size<volatile hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {
-};
+struct tuple_size<volatile hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_size<const volatile hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {
-};
+struct tuple_size<const volatile hipco::pair<T1, T2>> : tuple_size<hipco::pair<T1, T2>> {};
 
 template <std::size_t I, typename T1, typename T2>
 struct tuple_element<I, hipco::pair<T1, T2>> {
@@ -63,28 +59,24 @@ struct tuple_element<1, hipco::pair<T1, T2>> {
 };
 
 template <typename T1, typename T2>
-struct tuple_element<0, const hipco::pair<T1, T2>> : tuple_element<0, hipco::pair<T1, T2>> {
-};
+struct tuple_element<0, const hipco::pair<T1, T2>> : tuple_element<0, hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_element<1, const hipco::pair<T1, T2>> : tuple_element<1, hipco::pair<T1, T2>> {
-};
+struct tuple_element<1, const hipco::pair<T1, T2>> : tuple_element<1, hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_element<0, volatile hipco::pair<T1, T2>> : tuple_element<0, hipco::pair<T1, T2>> {
-};
+struct tuple_element<0, volatile hipco::pair<T1, T2>> : tuple_element<0, hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_element<1, volatile hipco::pair<T1, T2>> : tuple_element<1, hipco::pair<T1, T2>> {
-};
+struct tuple_element<1, volatile hipco::pair<T1, T2>> : tuple_element<1, hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_element<0, const volatile hipco::pair<T1, T2>> : tuple_element<0, hipco::pair<T1, T2>> {
-};
+struct tuple_element<0, const volatile hipco::pair<T1, T2>>
+  : tuple_element<0, hipco::pair<T1, T2>> {};
 
 template <typename T1, typename T2>
-struct tuple_element<1, const volatile hipco::pair<T1, T2>> : tuple_element<1, hipco::pair<T1, T2>> {
-};
+struct tuple_element<1, const volatile hipco::pair<T1, T2>>
+  : tuple_element<1, hipco::pair<T1, T2>> {};
 
 template <std::size_t I, typename T1, typename T2>
 __host__ __device__ constexpr auto get(hipco::pair<T1, T2>& p) ->

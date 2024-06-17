@@ -12,16 +12,16 @@
 # limitations under the License.
 
 import gc
-
 import random
-import networkx as nx
-import pytest
 
 import cudf
-import cugraph
-from cugraph.testing import utils, UNDIRECTED_DATASETS
-from cugraph.datasets import karate_asymmetric
+import networkx as nx
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS, utils
 from pylibcugraph.testing.utils import gen_fixture_params_product
+
+import cugraph
+from cugraph.datasets import karate_asymmetric
 
 
 # =============================================================================

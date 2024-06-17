@@ -529,11 +529,8 @@ class comms_t {
    * @param stream CUDA stream to synchronize operation
    */
   template <typename value_t>
-  void reducescatter(const value_t* sendbuff,
-                     value_t* recvbuff,
-                     size_t recvcount,
-                     op_t op,
-                     hipStream_t stream) const
+  void reducescatter(
+    const value_t* sendbuff, value_t* recvbuff, size_t recvcount, op_t op, hipStream_t stream) const
   {
     impl_->reducescatter(static_cast<const void*>(sendbuff),
                          static_cast<void*>(recvbuff),

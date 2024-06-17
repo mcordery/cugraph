@@ -12,10 +12,9 @@
 # limitations under the License.
 
 # from time import process_time_ns   # only in 3.7!
-from time import clock_gettime, CLOCK_MONOTONIC_RAW
+from time import CLOCK_MONOTONIC_RAW, clock_gettime
 
 import numpy as np
-
 from gpu_metric_poller import startGpuMetricPolling, stopGpuMetricPolling
 
 

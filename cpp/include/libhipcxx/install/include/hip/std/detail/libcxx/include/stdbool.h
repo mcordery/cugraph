@@ -9,7 +9,6 @@
 #ifndef _LIBCUDACXX_STDBOOL_H
 #define _LIBCUDACXX_STDBOOL_H
 
-
 /*
     stdbool.h synopsis
 

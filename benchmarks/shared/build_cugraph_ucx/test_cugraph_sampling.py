@@ -11,15 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dask_cuda import LocalCUDACluster
-from dask.distributed import Client
-import rmm
-import numpy as np
 from time import perf_counter_ns
-from cugraph.dask.comms import comms as Comms
+
+import numpy as np
+import rmm
 from cugraph.dask import uniform_neighbor_sample as uniform_neighbor_sample_mg
-from cugraph import MultiGraph
+from cugraph.dask.comms import comms as Comms
 from cugraph.generators import rmat
+from dask.distributed import Client
+from dask_cuda import LocalCUDACluster
+
+from cugraph import MultiGraph
 
 _seed = 42
 

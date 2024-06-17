@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__concepts/convertible_to.h"
@@ -31,7 +31,7 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.commonref]
 
-template<class _Tp, class _Up>
+template <class _Tp, class _Up>
 concept common_reference_with =
   same_as<common_reference_t<_Tp, _Up>, common_reference_t<_Up, _Tp>> &&
   convertible_to<_Tp, common_reference_t<_Tp, _Up>> &&
@@ -39,32 +39,29 @@ concept common_reference_with =
 
 #elif _LIBCUDACXX_STD_VER > 11
 
-template<class _Tp, class _Up>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  __common_reference_exists_,
-  requires()(
-    typename(common_reference_t<_Tp, _Up>),
-    typename(common_reference_t<_Up, _Tp>)
-  ));
-   
-template<class _Tp, class _Up>
-_LIBCUDACXX_CONCEPT _Common_reference_exists = _LIBCUDACXX_FRAGMENT(__common_reference_exists_, _Tp, _Up);
+template <class _Tp, class _Up>
+_LIBCUDACXX_CONCEPT_FRAGMENT(__common_reference_exists_,
+                             requires()(typename(common_reference_t<_Tp, _Up>),
+                                        typename(common_reference_t<_Up, _Tp>)));
 
-template<class _Tp, class _Up>
+template <class _Tp, class _Up>
+_LIBCUDACXX_CONCEPT _Common_reference_exists =
+  _LIBCUDACXX_FRAGMENT(__common_reference_exists_, _Tp, _Up);
+
+template <class _Tp, class _Up>
 _LIBCUDACXX_CONCEPT_FRAGMENT(
   __common_reference_with_,
-  requires()(
-    requires(_Common_reference_exists<_Tp, _Up>),
-    requires(same_as<common_reference_t<_Tp, _Up>, common_reference_t<_Up, _Tp>>),
-    requires(convertible_to<_Tp, common_reference_t<_Tp, _Up>>),
-    requires(convertible_to<_Up, common_reference_t<_Tp, _Up>>)
-  ));
+  requires()(requires(_Common_reference_exists<_Tp, _Up>),
+             requires(same_as<common_reference_t<_Tp, _Up>, common_reference_t<_Up, _Tp>>),
+             requires(convertible_to<_Tp, common_reference_t<_Tp, _Up>>),
+             requires(convertible_to<_Up, common_reference_t<_Tp, _Up>>)));
 
-template<class _Tp, class _Up>
-_LIBCUDACXX_CONCEPT common_reference_with = _LIBCUDACXX_FRAGMENT(__common_reference_with_, _Tp, _Up);
+template <class _Tp, class _Up>
+_LIBCUDACXX_CONCEPT common_reference_with =
+  _LIBCUDACXX_FRAGMENT(__common_reference_with_, _Tp, _Up);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_COMMON_REFERENCE_WITH_H
+#endif  // _LIBCUDACXX___CONCEPTS_COMMON_REFERENCE_WITH_H

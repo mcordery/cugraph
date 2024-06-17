@@ -17,7 +17,6 @@ from textwrap import dedent
 
 import networkx as nx
 from networkx.utils.decorators import nodes_or_number, not_implemented_for
-
 from nx_cugraph.interface import BackendInterface
 
 try:

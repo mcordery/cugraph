@@ -13,15 +13,14 @@
 
 import gc
 
-import pytest
 import networkx as nx
 import numpy as np
-
-import cugraph
+import pytest
 from cugraph.testing import utils
-from cugraph.datasets import polbooks, karate_asymmetric
 from numba import cuda
 
+import cugraph
+from cugraph.datasets import karate_asymmetric, polbooks
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

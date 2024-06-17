@@ -15,45 +15,31 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_device_array_view_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
+    cugraph_type_erased_device_array_view_t,
 )
 from pylibcugraph._cugraph_c.centrality_algorithms cimport (
-    cugraph_edge_centrality_result_t,
     cugraph_edge_betweenness_centrality,
-    cugraph_edge_centrality_result_get_src_vertices,
-    cugraph_edge_centrality_result_get_dst_vertices,
-    cugraph_edge_centrality_result_get_values,
-    cugraph_edge_centrality_result_get_edge_ids,
-    cugraph_edge_centrality_result_get_values,
     cugraph_edge_centrality_result_free,
+    cugraph_edge_centrality_result_get_dst_vertices,
+    cugraph_edge_centrality_result_get_edge_ids,
+    cugraph_edge_centrality_result_get_src_vertices,
+    cugraph_edge_centrality_result_get_values,
+    cugraph_edge_centrality_result_t,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
     assert_success,
     copy_to_cupy_array,
     create_cugraph_type_erased_device_array_view_from_py_obj,
 )
-from pylibcugraph.select_random_vertices import (
-    select_random_vertices
-)
+
+from pylibcugraph.select_random_vertices import select_random_vertices
 
 
 def edge_betweenness_centrality(ResourceHandle resource_handle,

@@ -12,18 +12,14 @@
 # limitations under the License.
 
 import warnings
-from typing import Union, Tuple
+from typing import Tuple, Union
 
 import cudf
+from cugraph.structure import Graph
+from cugraph.utilities import cugraph_to_nx, ensure_cugraph_obj_for_nx
+from cugraph.utilities.utils import import_optional
 from pylibcugraph import ResourceHandle
 from pylibcugraph import induced_subgraph as pylibcugraph_induced_subgraph
-
-from cugraph.structure import Graph
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    cugraph_to_nx,
-)
-from cugraph.utilities.utils import import_optional
 
 # FIXME: the networkx.Graph type used in type annotations is specified
 # using a string literal to avoid depending on and importing networkx.

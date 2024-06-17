@@ -14,17 +14,15 @@
 import os
 import warnings
 from math import ceil
+from typing import Dict, List, Tuple, Union
 
-import pylibcugraph
-import numpy as np
-import cupy
 import cudf
-
-from typing import Union, List, Dict, Tuple
-from cugraph.utilities import import_optional
+import cupy
+import numpy as np
+import pylibcugraph
 from cugraph.gnn.comms import cugraph_comms_get_raft_handle
-
 from cugraph.gnn.data_loading.bulk_sampler_io import create_df_from_disjoint_arrays
+from cugraph.utilities import import_optional
 
 # PyTorch is NOT optional but this is required for container builds.
 torch = import_optional("torch")

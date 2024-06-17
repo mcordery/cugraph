@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **************************************************************************************************/
-/*! 
+/*!
   \file
   \brief Defines an unsigned 128b integer with several operators to support 64-bit integer division.
 */
@@ -38,11 +38,11 @@
 #if defined(__CUDACC_RTC__)
 #include <hip/std/cstdint>
 #else
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cmath>
-#include <type_traits>
 #include <stdexcept>
+#include <type_traits>
 #endif
 
 #include "cutlass/cutlass.h"
@@ -69,7 +69,6 @@ namespace cutlass {
 
 ///! Unsigned 128b integer type
 struct uint128_t {
-
   /// Size of one part of the uint's storage in bits
   int const kPartSize = sizeof_bits<uint64_t>::value;
 
@@ -77,16 +76,16 @@ struct uint128_t {
     uint64_t lo;
     uint64_t hi;
 
-    CUTLASS_HOST_DEVICE hilo(uint64_t lo_, uint64_t hi_):lo(lo_), hi(hi_) {}
+    CUTLASS_HOST_DEVICE hilo(uint64_t lo_, uint64_t hi_) : lo(lo_), hi(hi_) {}
   };
 
   // Use a union to store either low and high parts or, if present, a built-in 128b integer type.
   union {
     struct hilo hilo_;
 
-    #if defined(CUTLASS_UINT128_NATIVE)
+#if defined(CUTLASS_UINT128_NATIVE)
     unsigned __int128 native;
-    #endif // defined(CUTLASS_UINT128_NATIVE)
+#endif  // defined(CUTLASS_UINT128_NATIVE)
   };
 
   //
@@ -95,42 +94,40 @@ struct uint128_t {
 
   /// Default ctor
   CUTLASS_HOST_DEVICE
-  uint128_t(): hilo_(0, 0) { }
+  uint128_t() : hilo_(0, 0) {}
 
   /// Constructor from uint64
   CUTLASS_HOST_DEVICE
-  uint128_t(uint64_t lo_): hilo_(lo_, 0) { }
+  uint128_t(uint64_t lo_) : hilo_(lo_, 0) {}
 
   /// Constructor from two 64b unsigned integers
   CUTLASS_HOST_DEVICE
-  uint128_t(uint64_t lo_, uint64_t hi_): hilo_(lo_, hi_) {
+  uint128_t(uint64_t lo_, uint64_t hi_) : hilo_(lo_, hi_) {}
 
-  }
-
-  /// Optional constructor from native value
-  #if defined(CUTLASS_UINT128_NATIVE)
-  uint128_t(unsigned __int128 value): native(value) { }
-  #endif
+/// Optional constructor from native value
+#if defined(CUTLASS_UINT128_NATIVE)
+  uint128_t(unsigned __int128 value) : native(value) {}
+#endif
 
   /// Lossily cast to uint64
   CUTLASS_HOST_DEVICE
-  explicit operator uint64_t() const {
-    return hilo_.lo;
-  }
+  explicit operator uint64_t() const { return hilo_.lo; }
 
   CUTLASS_HOST_DEVICE
-  static void exception() {
+  static void exception()
+  {
 #if defined(__CUDA_ARCH__)
-  asm volatile ("  brkpt;\n");
+    asm volatile("  brkpt;\n");
 #else
-  // throw std::runtime_error("Not yet implemented.");
-  abort();
+    // throw std::runtime_error("Not yet implemented.");
+    abort();
 #endif
   }
 
   /// Add
   CUTLASS_HOST_DEVICE
-  uint128_t operator+(uint128_t const &rhs) const {
+  uint128_t operator+(uint128_t const& rhs) const
+  {
     uint128_t y;
 #if defined(CUTLASS_UINT128_NATIVE)
     y.native = native + rhs.native;
@@ -143,7 +140,8 @@ struct uint128_t {
 
   /// Subtract
   CUTLASS_HOST_DEVICE
-  uint128_t operator-(uint128_t const &rhs) const {
+  uint128_t operator-(uint128_t const& rhs) const
+  {
     uint128_t y;
 #if defined(CUTLASS_UINT128_NATIVE)
     y.native = native - rhs.native;
@@ -156,7 +154,8 @@ struct uint128_t {
 
   /// Multiply by unsigned 64b integer yielding 128b integer
   CUTLASS_HOST_DEVICE
-  uint128_t operator*(uint64_t const &rhs) const {
+  uint128_t operator*(uint64_t const& rhs) const
+  {
     uint128_t y;
 #if defined(CUTLASS_UINT128_NATIVE)
     y.native = native * rhs;
@@ -177,14 +176,15 @@ struct uint128_t {
 
   /// Divide 128b operation by 64b operation yielding a 64b quotient
   CUTLASS_HOST_DEVICE
-  uint64_t operator/(uint64_t const &divisor) const {
+  uint64_t operator/(uint64_t const& divisor) const
+  {
     uint64_t quotient = 0;
 #if defined(CUTLASS_UINT128_NATIVE)
     quotient = uint64_t(native / divisor);
 #elif defined(CUTLASS_INT128_ARITHMETIC_DIV)
     // implemented using MSVC's arithmetic intrinsics
     uint64_t remainder = 0;
-    quotient = _udiv128(hilo_.hi, hilo_.lo, divisor, &remainder);
+    quotient           = _udiv128(hilo_.hi, hilo_.lo, divisor, &remainder);
 #else
     // TODO - not implemented
     CUTLASS_UNUSED(divisor);
@@ -195,7 +195,8 @@ struct uint128_t {
 
   /// Divide 128b operation by 64b operation yielding a 64b quotient
   CUTLASS_HOST_DEVICE
-  uint64_t operator%(uint64_t const &divisor) const {
+  uint64_t operator%(uint64_t const& divisor) const
+  {
     uint64_t remainder = 0;
 #if defined(CUTLASS_UINT128_NATIVE)
     remainder = uint64_t(native % divisor);
@@ -212,10 +213,11 @@ struct uint128_t {
 
   /// Computes the quotient and remainder in a single method.
   CUTLASS_HOST_DEVICE
-  uint64_t divmod(uint64_t &remainder, uint64_t divisor) const {
+  uint64_t divmod(uint64_t& remainder, uint64_t divisor) const
+  {
     uint64_t quotient = 0;
 #if defined(CUTLASS_UINT128_NATIVE)
-    quotient = uint64_t(native / divisor);
+    quotient  = uint64_t(native / divisor);
     remainder = uint64_t(native % divisor);
 #elif defined(CUTLASS_INT128_ARITHMETIC_DIV)
     // implemented using MSVC's arithmetic intrinsics
@@ -230,41 +232,33 @@ struct uint128_t {
 
   /// Left-shifts a 128b unsigned integer
   CUTLASS_HOST_DEVICE
-  uint128_t operator<<(int sh) const {
+  uint128_t operator<<(int sh) const
+  {
     if (sh == 0) {
       return *this;
-    }
-    else if (sh >= kPartSize) {
+    } else if (sh >= kPartSize) {
       return uint128_t(0, hilo_.lo << (sh - kPartSize));
-    }
-    else {
-      return uint128_t(
-        (hilo_.lo << sh),
-        (hilo_.hi << sh) | uint64_t(hilo_.lo >> (kPartSize - sh))
-      );
+    } else {
+      return uint128_t((hilo_.lo << sh), (hilo_.hi << sh) | uint64_t(hilo_.lo >> (kPartSize - sh)));
     }
   }
 
   /// Right-shifts a 128b unsigned integer
   CUTLASS_HOST_DEVICE
-  uint128_t operator>>(int sh) const {
+  uint128_t operator>>(int sh) const
+  {
     if (sh == 0) {
       return *this;
-    }
-    else if (sh >= kPartSize) {
+    } else if (sh >= kPartSize) {
       return uint128_t((hilo_.hi >> (sh - kPartSize)), 0);
-    }
-    else {
-      return uint128_t(
-        (hilo_.lo >> sh) | (hilo_.hi << (kPartSize - sh)),
-        (hilo_.hi >> sh)
-      );
+    } else {
+      return uint128_t((hilo_.lo >> sh) | (hilo_.hi << (kPartSize - sh)), (hilo_.hi >> sh));
     }
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

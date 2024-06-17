@@ -14,7 +14,6 @@
 
 from cugraph_service_client import defaults
 from cugraph_service_client.cugraph_service_thrift import create_server
-
 from cugraph_service_server.cugraph_handler import CugraphHandler
 
 

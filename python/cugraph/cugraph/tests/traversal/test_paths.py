@@ -11,19 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import sys
 from tempfile import NamedTemporaryFile
-import math
-
-import numpy as np
-import pytest
 
 import cudf
 import cupy
-import cugraph
+import numpy as np
+import pytest
 from cugraph.testing import get_resultset, load_resultset
 from cupyx.scipy.sparse import coo_matrix as cupy_coo_matrix
 
+import cugraph
 
 CONNECTED_GRAPH = """1,5,3
 1,4,1

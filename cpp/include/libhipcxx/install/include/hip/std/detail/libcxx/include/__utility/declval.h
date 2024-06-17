@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -23,7 +23,7 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 // Suppress deprecation notice for volatile-qualified return type resulting
 // from volatile-qualified types _Tp.
 _LIBCUDACXX_SUPPRESS_DEPRECATED_PUSH
-template <class _Tp> 
+template <class _Tp>
 _LIBCUDACXX_INLINE_VISIBILITY _Tp&& __declval(int);
 template <class _Tp>
 _LIBCUDACXX_INLINE_VISIBILITY _Tp __declval(long);
@@ -34,4 +34,4 @@ _LIBCUDACXX_INLINE_VISIBILITY decltype(_CUDA_VSTD::__declval<_Tp>(0)) declval() 
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___UTILITY_DECLVAL_H
+#endif  // _LIBCUDACXX___UTILITY_DECLVAL_H

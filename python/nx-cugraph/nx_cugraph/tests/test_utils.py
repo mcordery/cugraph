@@ -12,7 +12,6 @@
 # limitations under the License.
 import numpy as np
 import pytest
-
 from nx_cugraph.utils import _get_int_dtype
 
 

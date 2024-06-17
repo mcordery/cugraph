@@ -167,17 +167,17 @@ auto make_strided_dataset(const raft::resources& res, const SrcT& src, uint32_t 
     owning_dataset<value_type, index_type, out_layout_type, out_container_policy_type>;
 
   RAFT_CUDA_TRY(hipMemsetAsync(out_array.data_handle(),
-                                0,
-                                out_array.size() * sizeof(value_type),
-                                resource::get_cuda_stream(res)));
+                               0,
+                               out_array.size() * sizeof(value_type),
+                               resource::get_cuda_stream(res)));
   RAFT_CUDA_TRY(hipMemcpy2DAsync(out_array.data_handle(),
-                                  sizeof(value_type) * required_stride,
-                                  src.data_handle(),
-                                  sizeof(value_type) * src_stride,
-                                  sizeof(value_type) * src.extent(1),
-                                  src.extent(0),
-                                  hipMemcpyDefault,
-                                  resource::get_cuda_stream(res)));
+                                 sizeof(value_type) * required_stride,
+                                 src.data_handle(),
+                                 sizeof(value_type) * src_stride,
+                                 sizeof(value_type) * src.extent(1),
+                                 src.extent(0),
+                                 hipMemcpyDefault,
+                                 resource::get_cuda_stream(res)));
 
   return std::make_unique<out_owning_type>(std::move(out_array), out_layout);
 }

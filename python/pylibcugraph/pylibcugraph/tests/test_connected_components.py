@@ -13,15 +13,13 @@
 
 from pathlib import Path
 
-import pytest
+import cupy as cp
 import numpy as np
 import pandas as pd
-import cupy as cp
-from scipy.sparse import coo_matrix, csr_matrix
-from pylibcugraph import ResourceHandle, GraphProperties, SGGraph
-
+import pytest
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 from pylibcugraph.testing import utils
-
+from scipy.sparse import coo_matrix, csr_matrix
 
 # =============================================================================
 # Test data
@@ -232,7 +230,7 @@ def _check_labels(vertex_ordered_labels, expected_vertex_comps):
     # Group the vertex_ordered_labels list into components based on labels by
     # creating a dictionary of labels to lists of vertices with that label.
     d = {}
-    for (vertex, label) in enumerate(vertex_ordered_labels):
+    for vertex, label in enumerate(vertex_ordered_labels):
         d.setdefault(label, []).append(vertex)
 
     assert len(d.keys()) == len(

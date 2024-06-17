@@ -15,42 +15,30 @@
 # cython: language_level = 3
 
 from libc.stdint cimport uintptr_t
-
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    data_type_id_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
 from pylibcugraph._cugraph_c.graph_functions cimport (
-    cugraph_degrees_result_t,
     cugraph_degrees,
-    cugraph_in_degrees,
-    cugraph_out_degrees,
-    cugraph_degrees_result_get_vertices,
+    cugraph_degrees_result_free,
     cugraph_degrees_result_get_in_degrees,
     cugraph_degrees_result_get_out_degrees,
-    cugraph_degrees_result_free,
+    cugraph_degrees_result_get_vertices,
+    cugraph_degrees_result_t,
+    cugraph_in_degrees,
+    cugraph_out_degrees,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
+from pylibcugraph._cugraph_c.resource_handle cimport (
+    bool_t,
+    cugraph_resource_handle_t,
+    data_type_id_t,
 )
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
+    assert_CAI_type,
     assert_success,
     copy_to_cupy_array,
-    assert_CAI_type,
     create_cugraph_type_erased_device_array_view_from_py_obj,
 )
 

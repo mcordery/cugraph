@@ -37,7 +37,7 @@ class compressed_structure_t : public sparse_structure<IndptrType, IndicesType, 
    * @param nnz sparsity of matrix
    */
   compressed_structure_t(IndptrType n_rows, IndicesType n_cols, NZType nnz)
-    : sparse_structure<IndptrType, IndicesType, NZType, is_device>(n_rows, n_cols, nnz){};
+    : sparse_structure<IndptrType, IndicesType, NZType, is_device>(n_rows, n_cols, nnz) {};
 
   /**
    * Return span containing underlying indptr array
@@ -144,11 +144,11 @@ class compressed_structure
     std::is_nothrow_move_constructible<indptr_container_type>::value) = default;
 
   constexpr auto operator=(compressed_structure const&) noexcept(
-    std::is_nothrow_copy_assignable<indptr_container_type>::value)
-    -> compressed_structure& = default;
+    std::is_nothrow_copy_assignable<indptr_container_type>::value) -> compressed_structure& =
+                                                                        default;
   constexpr auto operator=(compressed_structure&&) noexcept(
-    std::is_nothrow_move_assignable<indptr_container_type>::value)
-    -> compressed_structure& = default;
+    std::is_nothrow_move_assignable<indptr_container_type>::value) -> compressed_structure& =
+                                                                        default;
 
   /**
    * Return span containing underlying indptr array
@@ -229,7 +229,7 @@ class csr_matrix_view
     compressed_structure_view<IndptrType, IndicesType, NZType, is_device> structure_view)
     : sparse_matrix_view<ElementType,
                          compressed_structure_view<IndptrType, IndicesType, NZType, is_device>,
-                         is_device>(element_span, structure_view){};
+                         is_device>(element_span, structure_view) {};
 };
 
 template <typename ElementType,
@@ -241,9 +241,9 @@ template <typename ElementType,
           typename ContainerPolicy,
           SparsityType sparsity_type = SparsityType::OWNING,
           typename structure_type    = std::conditional_t<
-            sparsity_type == SparsityType::OWNING,
-            compressed_structure<IndptrType, IndicesType, NZType, is_device, ContainerPolicy>,
-            compressed_structure_view<IndptrType, IndicesType, NZType, is_device>>>
+               sparsity_type == SparsityType::OWNING,
+               compressed_structure<IndptrType, IndicesType, NZType, is_device, ContainerPolicy>,
+               compressed_structure_view<IndptrType, IndicesType, NZType, is_device>>>
 class csr_matrix
   : public sparse_matrix<ElementType,
                          structure_type,

@@ -13,7 +13,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cstddef>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -35,20 +35,22 @@ _LIBCUDACXX_INLINE_VAR constexpr size_t rank_v = _LIBCUDACXX_ARRAY_RANK(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS rank
-    : public integral_constant<size_t, 0> {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS rank<_Tp[]>
-    : public integral_constant<size_t, rank<_Tp>::value + 1> {};
-template <class _Tp, size_t _Np> struct _LIBCUDACXX_TEMPLATE_VIS rank<_Tp[_Np]>
-    : public integral_constant<size_t, rank<_Tp>::value + 1> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS rank : public integral_constant<size_t, 0> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS rank<_Tp[]>
+  : public integral_constant<size_t, rank<_Tp>::value + 1> {};
+template <class _Tp, size_t _Np>
+struct _LIBCUDACXX_TEMPLATE_VIS rank<_Tp[_Np]>
+  : public integral_constant<size_t, rank<_Tp>::value + 1> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr size_t rank_v = rank<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_ARRAY_RANK) && !defined(_LIBCUDACXX_USE_ARRAY_RANK_FALLBACK)
+#endif  // defined(_LIBCUDACXX_ARRAY_RANK) && !defined(_LIBCUDACXX_USE_ARRAY_RANK_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_RANK_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_RANK_H

@@ -32,7 +32,7 @@ template <typename RowType, typename ColType, typename NZType, int is_device>
 class coordinate_structure_t : public sparse_structure<RowType, ColType, NZType, is_device> {
  public:
   coordinate_structure_t(RowType n_rows, ColType n_cols, NZType nnz)
-    : sparse_structure<RowType, ColType, NZType, is_device>(n_rows, n_cols, nnz){};
+    : sparse_structure<RowType, ColType, NZType, is_device>(n_rows, n_cols, nnz) {};
 
   /**
    * Return span containing underlying rows array
@@ -230,9 +230,9 @@ template <typename ElementType,
           typename ContainerPolicy,
           SparsityType sparsity_type = SparsityType::OWNING,
           typename structure_type    = std::conditional_t<
-            sparsity_type == SparsityType::OWNING,
-            coordinate_structure<RowType, ColType, NZType, is_device, ContainerPolicy>,
-            coordinate_structure_view<RowType, ColType, NZType, is_device>>>
+               sparsity_type == SparsityType::OWNING,
+               coordinate_structure<RowType, ColType, NZType, is_device, ContainerPolicy>,
+               coordinate_structure_view<RowType, ColType, NZType, is_device>>>
 class coo_matrix
   : public sparse_matrix<ElementType,
                          structure_type,

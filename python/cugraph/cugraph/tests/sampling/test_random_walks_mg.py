@@ -14,15 +14,14 @@
 import gc
 import random
 
-import pytest
-
-import cugraph
-import dask_cudf
 import cugraph.dask as dcg
+import dask_cudf
+import pytest
 from cugraph.testing import SMALL_DATASETS
-from cugraph.datasets import karate_asymmetric
 from pylibcugraph.testing.utils import gen_fixture_params_product
 
+import cugraph
+from cugraph.datasets import karate_asymmetric
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

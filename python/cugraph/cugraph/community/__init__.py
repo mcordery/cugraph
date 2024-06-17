@@ -11,21 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.community.louvain import louvain
-from cugraph.community.leiden import leiden
-
 from cugraph.community.ecg import ecg
+from cugraph.community.egonet import batched_ego_graphs, ego_graph
+from cugraph.community.induced_subgraph import induced_subgraph
+from cugraph.community.ktruss_subgraph import k_truss, ktruss_subgraph
+from cugraph.community.leiden import leiden
+from cugraph.community.louvain import louvain
 from cugraph.community.spectral_clustering import (
+    analyzeClustering_edge_cut,
+    analyzeClustering_modularity,
+    analyzeClustering_ratio_cut,
     spectralBalancedCutClustering,
     spectralModularityMaximizationClustering,
-    analyzeClustering_modularity,
-    analyzeClustering_edge_cut,
-    analyzeClustering_ratio_cut,
 )
 from cugraph.community.subgraph_extraction import subgraph
-from cugraph.community.induced_subgraph import induced_subgraph
 from cugraph.community.triangle_count import triangle_count
-from cugraph.community.ktruss_subgraph import ktruss_subgraph
-from cugraph.community.ktruss_subgraph import k_truss
-from cugraph.community.egonet import ego_graph
-from cugraph.community.egonet import batched_ego_graphs

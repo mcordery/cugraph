@@ -31,6 +31,7 @@ print("Max GPU utilization: %s" % gpuPollObj.maxGpuUtil)
 import os
 import sys
 import threading
+
 from pynvml import smi
 
 

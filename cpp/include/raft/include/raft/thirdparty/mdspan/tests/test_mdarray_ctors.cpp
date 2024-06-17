@@ -41,167 +41,186 @@
 //@HEADER
 */
 
-#include <experimental/mdarray>
-#include <vector>
+#include "offload_utils.hpp"
 
 #include <gtest/gtest.h>
-#include "offload_utils.hpp"
+
+#include <experimental/mdarray>
+#include <vector>
 
 #ifdef __cpp_lib_memory_resource
 #include <memory_resource>
 
-
-//For testing, prints allocs and deallocs to cout
-struct ChatterResource : std::pmr::memory_resource{
+// For testing, prints allocs and deallocs to cout
+struct ChatterResource : std::pmr::memory_resource {
   ChatterResource() = default;
-  ChatterResource(std::pmr::memory_resource* upstream): upstream(upstream){}
-  ChatterResource(const ChatterResource&) = delete;
-  ChatterResource(ChatterResource&&) = delete;
+  ChatterResource(std::pmr::memory_resource* upstream) : upstream(upstream) {}
+  ChatterResource(const ChatterResource&)            = delete;
+  ChatterResource(ChatterResource&&)                 = delete;
   ChatterResource& operator=(const ChatterResource&) = delete;
-  ChatterResource& operator=(ChatterResource&&) = delete;
+  ChatterResource& operator=(ChatterResource&&)      = delete;
 
-  private:
+ private:
+  void* do_allocate(std::size_t bytes, std::size_t alignment) override
+  {
+    std::cout << "Allocation - size: " << bytes << ", alignment: " << alignment << std::endl;
+    return upstream->allocate(bytes, alignment);
+  }
 
-    void* do_allocate( std::size_t bytes, std::size_t alignment ) override{
-        std::cout << "Allocation - size: " << bytes << ", alignment: " << alignment << std::endl;
-        return upstream->allocate(bytes, alignment);
-    }
+  void do_deallocate(void* p, std::size_t bytes, std::size_t alignment) override
+  {
+    std::cout << "Deallocation - size: " << bytes << ", alignment: " << alignment << std::endl;
+    upstream->deallocate(p, bytes, alignment);
+  }
 
-    void do_deallocate( void* p, std::size_t bytes, std::size_t alignment ) override{
-        std::cout << "Deallocation - size: " << bytes << ", alignment: " << alignment << std::endl;
-        upstream->deallocate(p, bytes, alignment);
-    }
+  bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override
+  {
+    return this == &other;
+  };
 
-    bool do_is_equal( const std::pmr::memory_resource& other ) const noexcept override{
-        return this == &other;
-    };
-
-    std::pmr::memory_resource* upstream = std::pmr::get_default_resource();
+  std::pmr::memory_resource* upstream = std::pmr::get_default_resource();
 };
 #endif
 
-namespace stdex = std::experimental;
+namespace stdex                            = std::experimental;
 _MDSPAN_INLINE_VARIABLE constexpr auto dyn = stdex::dynamic_extent;
 
-template<int Rank>
+template <int Rank>
 struct mdarray_values;
 
-template<>
+template <>
 struct mdarray_values<0> {
-  template<class MDA>
-  static void check(const MDA& m) {
+  template <class MDA>
+  static void check(const MDA& m)
+  {
     ASSERT_EQ(__MDSPAN_OP(m), 42);
   }
-  template<class pointer, class extents_type>
-  static void fill(const pointer& ptr, const extents_type&, bool) {
+  template <class pointer, class extents_type>
+  static void fill(const pointer& ptr, const extents_type&, bool)
+  {
     ptr[0] = 42;
   }
 };
 
-template<>
+template <>
 struct mdarray_values<1> {
-  template<class MDA>
-  static void check(const MDA& m) {
+  template <class MDA>
+  static void check(const MDA& m)
+  {
     using index_type = typename MDA::index_type;
-    for(index_type i=0; i<m.extent(0); i++)
-      ASSERT_EQ(__MDSPAN_OP(m,i), 42 + i);
+    for (index_type i = 0; i < m.extent(0); i++)
+      ASSERT_EQ(__MDSPAN_OP(m, i), 42 + i);
   }
-  template<class pointer, class extents_type>
-  static void fill(const pointer& ptr, const extents_type& ext, bool) {
+  template <class pointer, class extents_type>
+  static void fill(const pointer& ptr, const extents_type& ext, bool)
+  {
     using index_type = typename extents_type::index_type;
-    for(index_type i=0; i<ext.extent(0); i++)
+    for (index_type i = 0; i < ext.extent(0); i++)
       ptr[i] = 42 + i;
   }
 };
 
-template<>
+template <>
 struct mdarray_values<2> {
-  template<class MDA>
-  static void check(const MDA& m) {
+  template <class MDA>
+  static void check(const MDA& m)
+  {
     using index_type = typename MDA::index_type;
-    for(index_type i=0; i<m.extent(0); i++)
-      for(index_type j=0; j<m.extent(1); j++) {
-        auto tmp = __MDSPAN_OP(m,i,j);
-        ASSERT_EQ(tmp, 42 + i*1000 + j);
+    for (index_type i = 0; i < m.extent(0); i++)
+      for (index_type j = 0; j < m.extent(1); j++) {
+        auto tmp = __MDSPAN_OP(m, i, j);
+        ASSERT_EQ(tmp, 42 + i * 1000 + j);
       }
   }
-  template<class pointer, class extents_type>
-  static void fill(const pointer& ptr, const extents_type& ext, bool is_layout_right) {
+  template <class pointer, class extents_type>
+  static void fill(const pointer& ptr, const extents_type& ext, bool is_layout_right)
+  {
     using index_type = typename extents_type::index_type;
     using value_type = std::remove_pointer_t<pointer>;
-    for(index_type i=0; i<ext.extent(0); i++)
-      for(index_type j=0; j<ext.extent(1); j++)
-        if(is_layout_right)
-          ptr[i*ext.extent(1)+j] = static_cast<value_type>(42 + i*1000 + j);
+    for (index_type i = 0; i < ext.extent(0); i++)
+      for (index_type j = 0; j < ext.extent(1); j++)
+        if (is_layout_right)
+          ptr[i * ext.extent(1) + j] = static_cast<value_type>(42 + i * 1000 + j);
         else
-          ptr[i+j*ext.extent(0)] = static_cast<value_type>(42 + i*1000 + j);
+          ptr[i + j * ext.extent(0)] = static_cast<value_type>(42 + i * 1000 + j);
   }
 };
 
-template<>
+template <>
 struct mdarray_values<3> {
-  template<class MDA>
-  static void check(const MDA& m) {
-    for(int i=0; i<m.extent(0); i++)
-      for(int j=0; j<m.extent(1); j++)
-        for(int k=0; k<m.extent(2); k++) {
-          auto tmp = __MDSPAN_OP(m,i,j,k);
-          ASSERT_EQ(tmp, 42 + i*1000000 + j*1000 + k);
+  template <class MDA>
+  static void check(const MDA& m)
+  {
+    for (int i = 0; i < m.extent(0); i++)
+      for (int j = 0; j < m.extent(1); j++)
+        for (int k = 0; k < m.extent(2); k++) {
+          auto tmp = __MDSPAN_OP(m, i, j, k);
+          ASSERT_EQ(tmp, 42 + i * 1000000 + j * 1000 + k);
         }
   }
-  template<class pointer, class extents_type>
-  static void fill(const pointer& ptr, const extents_type& ext, bool is_layout_right) {
-    for(int i=0; i<ext.extent(0); i++)
-      for(int j=0; j<ext.extent(1); j++)
-        for(int k=0; k<ext.extent(2); k++)
-          if(is_layout_right)
-            ptr[(i*ext.extent(1)+j)*ext.extent(2)+k] = 42 + i*1000000 + j*1000+k;
+  template <class pointer, class extents_type>
+  static void fill(const pointer& ptr, const extents_type& ext, bool is_layout_right)
+  {
+    for (int i = 0; i < ext.extent(0); i++)
+      for (int j = 0; j < ext.extent(1); j++)
+        for (int k = 0; k < ext.extent(2); k++)
+          if (is_layout_right)
+            ptr[(i * ext.extent(1) + j) * ext.extent(2) + k] = 42 + i * 1000000 + j * 1000 + k;
           else
-            ptr[i+(j+k*ext.extent(1))*ext.extent(0)] = 42 + i*1000000 + j*1000+k;
+            ptr[i + (j + k * ext.extent(1)) * ext.extent(0)] = 42 + i * 1000000 + j * 1000 + k;
   }
 };
 
-template<class MDA>
-void check_correctness(MDA& m, size_t rank, size_t rank_dynamic,
-                       size_t extent_0, size_t extent_1, size_t extent_2,
-                       size_t stride_0, size_t stride_1, size_t stride_2,
-                       typename MDA::pointer ptr, bool ptr_matches,
-                       bool exhaustive) {
+template <class MDA>
+void check_correctness(MDA& m,
+                       size_t rank,
+                       size_t rank_dynamic,
+                       size_t extent_0,
+                       size_t extent_1,
+                       size_t extent_2,
+                       size_t stride_0,
+                       size_t stride_1,
+                       size_t stride_2,
+                       typename MDA::pointer ptr,
+                       bool ptr_matches,
+                       bool exhaustive)
+{
   ASSERT_EQ(m.rank(), rank);
   ASSERT_EQ(m.rank_dynamic(), rank_dynamic);
-  if(rank>0) {
+  if (rank > 0) {
     ASSERT_EQ(m.extent(0), extent_0);
     ASSERT_EQ(m.stride(0), stride_0);
   }
-  if(rank>1) {
+  if (rank > 1) {
     ASSERT_EQ(m.extent(1), extent_1);
     ASSERT_EQ(m.stride(1), stride_1);
   }
-  if(rank>2) {
+  if (rank > 2) {
     ASSERT_EQ(m.extent(2), extent_2);
     ASSERT_EQ(m.stride(2), stride_2);
   }
-  if(ptr_matches)
-    ASSERT_EQ(m.data(),ptr);
+  if (ptr_matches)
+    ASSERT_EQ(m.data(), ptr);
   else
-    ASSERT_NE(m.data(),ptr);
-  ASSERT_EQ(m.is_exhaustive(),exhaustive);
+    ASSERT_NE(m.data(), ptr);
+  ASSERT_EQ(m.is_exhaustive(), exhaustive);
   mdarray_values<MDA::rank()>::check(m);
 }
 
-void test_mdarray_ctor_data_carray() {
+void test_mdarray_ctor_data_carray()
+{
   size_t* errors = allocate_array<size_t>(1);
-  errors[0] = 0;
+  errors[0]      = 0;
 
-  dispatch([=] _MDSPAN_HOST_DEVICE () {
-    stdex::mdarray<int, stdex::extents<size_t,1>> m(stdex::extents<int,1>{});
+  dispatch([=] _MDSPAN_HOST_DEVICE() {
+    stdex::mdarray<int, stdex::extents<size_t, 1>> m(stdex::extents<int, 1>{});
     __MDSPAN_DEVICE_ASSERT_EQ(m.rank(), 1);
     __MDSPAN_DEVICE_ASSERT_EQ(m.rank_dynamic(), 0);
     __MDSPAN_DEVICE_ASSERT_EQ(m.extent(0), 1);
     __MDSPAN_DEVICE_ASSERT_EQ(m.static_extent(0), 1);
     __MDSPAN_DEVICE_ASSERT_EQ(m.stride(0), 1);
     m.data()[0] = {42};
-    auto val = __MDSPAN_OP(m,0);
+    auto val    = __MDSPAN_OP(m, 0);
     __MDSPAN_DEVICE_ASSERT_EQ(val, 42);
     __MDSPAN_DEVICE_ASSERT_EQ(m.is_exhaustive(), true);
   });
@@ -209,300 +228,369 @@ void test_mdarray_ctor_data_carray() {
   free_array(errors);
 }
 
-TEST(TestMdarrayCtorDataCArray, test_mdarray_ctor_data_carray) {
-  __MDSPAN_TESTS_RUN_TEST(test_mdarray_ctor_data_carray())
-}
+TEST(TestMdarrayCtorDataCArray,
+     test_mdarray_ctor_data_carray){__MDSPAN_TESTS_RUN_TEST(test_mdarray_ctor_data_carray())}
 
 // Construct from extents only
-TEST(TestMdarrayCtorFromExtents, 0d_static) {
-  stdex::mdarray<int, stdex::extents<int>, stdex::layout_right, std::array<int,1>> m(stdex::extents<int>{});
+TEST(TestMdarrayCtorFromExtents, 0d_static)
+{
+  stdex::mdarray<int, stdex::extents<int>, stdex::layout_right, std::array<int, 1>> m(
+    stdex::extents<int>{});
   // ptr to fill, extents, is_layout_right
-  mdarray_values<0>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<0>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 0, 0, 0, 0, 0, 0, 0, 0, nullptr, false, true);
 }
 
 // Construct from sizes only
-TEST(TestMdarrayCtorFromSizes, 1d_static) {
-  stdex::mdarray<int, stdex::extents<int,1>, stdex::layout_right, std::array<int,1>> m(1);
+TEST(TestMdarrayCtorFromSizes, 1d_static)
+{
+  stdex::mdarray<int, stdex::extents<int, 1>, stdex::layout_right, std::array<int, 1>> m(1);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 0, 1, 0, 0, 1, 0, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizes, 2d_static) {
-  stdex::mdarray<int, stdex::extents<int,2,3>, stdex::layout_right, std::array<int,6>> m(2,3);
+TEST(TestMdarrayCtorFromSizes, 2d_static)
+{
+  stdex::mdarray<int, stdex::extents<int, 2, 3>, stdex::layout_right, std::array<int, 6>> m(2, 3);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 0, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizes, 1d_dynamic) {
-  stdex::mdarray<int, stdex::dextents<int,1>, stdex::layout_right, std::array<int,1>> m(1);
+TEST(TestMdarrayCtorFromSizes, 1d_dynamic)
+{
+  stdex::mdarray<int, stdex::dextents<int, 1>, stdex::layout_right, std::array<int, 1>> m(1);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizes, 2d_dynamic) {
-  stdex::mdarray<int, stdex::dextents<size_t,2>> m(2,3);
+TEST(TestMdarrayCtorFromSizes, 2d_dynamic)
+{
+  stdex::mdarray<int, stdex::dextents<size_t, 2>> m(2, 3);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizes, 2d_mixed) {
-  stdex::mdarray<int, stdex::extents<unsigned,2,stdex::dynamic_extent>> m(3);
+TEST(TestMdarrayCtorFromSizes, 2d_mixed)
+{
+  stdex::mdarray<int, stdex::extents<unsigned, 2, stdex::dynamic_extent>> m(3);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
 // Construct from container + sizes
-TEST(TestMdarrayCtorFromContainerSizes, 1d_static) {
+TEST(TestMdarrayCtorFromContainerSizes, 1d_static)
+{
   std::array<int, 1> d{42};
-  using mda_t = stdex::mdarray<int, stdex::extents<unsigned,1>, stdex::layout_right, std::array<int,1>>;
+  using mda_t =
+    stdex::mdarray<int, stdex::extents<unsigned, 1>, stdex::layout_right, std::array<int, 1>>;
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(d.data(),stdex::extents<unsigned,1>(),true);
-  mda_t m(d,1);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(d.data(), stdex::extents<unsigned, 1>(), true);
+  mda_t m(d, 1);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 0, 1, 0, 0, 1, 0, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizes, 2d_static) {
-  std::array<int, 6> d{42,43,44,3,4,41};
+TEST(TestMdarrayCtorFromContainerSizes, 2d_static)
+{
+  std::array<int, 6> d{42, 43, 44, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,3>, stdex::layout_right, std::array<int,6>> m(d,2,3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, 3>, stdex::layout_right, std::array<int, 6>> m(
+    d, 2, 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 0, 2, 3, 0, 3, 1, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizes, 1d_dynamic) {
+TEST(TestMdarrayCtorFromContainerSizes, 1d_dynamic)
+{
   std::vector<int> d{42};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(d.data(),stdex::extents<int, 1>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 1>> m(d,1);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(d.data(), stdex::extents<int, 1>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 1>> m(d, 1);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizes, 2d_dynamic) {
-  std::vector<int> d{42,1,2,3,4,41};
+TEST(TestMdarrayCtorFromContainerSizes, 2d_dynamic)
+{
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 2>> m(d,2,3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 2>> m(d, 2, 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizes, 2d_mixed) {
-  std::vector<int> d{42,1,2,3,4,41};
+TEST(TestMdarrayCtorFromContainerSizes, 2d_mixed)
+{
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,stdex::dynamic_extent>> m(d,3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, stdex::dynamic_extent>> m(d, 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, d.data(), false, true);
 }
 
 // Construct from move container + sizes
-TEST(TestMdarrayCtorFromMoveContainerSizes, 1d_static) {
+TEST(TestMdarrayCtorFromMoveContainerSizes, 1d_static)
+{
   std::array<int, 1> d{42};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(d.data(),stdex::extents<int, 1>(),true);
-  stdex::mdarray<int, stdex::extents<int, 1>, stdex::layout_right, std::array<int,1>> m(std::move(d),1);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(d.data(), stdex::extents<int, 1>(), true);
+  stdex::mdarray<int, stdex::extents<int, 1>, stdex::layout_right, std::array<int, 1>> m(
+    std::move(d), 1);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 0, 1, 0, 0, 1, 0, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_static) {
-  std::array<int, 6> d{42,1,2,3,4,41};
+TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_static)
+{
+  std::array<int, 6> d{42, 1, 2, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,3>, stdex::layout_right, std::array<int,6>> m(std::move(d),2,3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, 3>, stdex::layout_right, std::array<int, 6>> m(
+    std::move(d), 2, 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 0, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizes, 1d_dynamic) {
+TEST(TestMdarrayCtorFromMoveContainerSizes, 1d_dynamic)
+{
   std::vector<int> d{42};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(ptr,stdex::extents<int, 1>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 1>> m(std::move(d),1);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(ptr, stdex::extents<int, 1>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 1>> m(std::move(d), 1);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, ptr, true, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_dynamic) {
-  std::vector<int> d{42,1,2,3,4,41};
+TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_dynamic)
+{
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(ptr,stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 2>> m(std::move(d),2,3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(ptr, stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 2>> m(std::move(d), 2, 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, ptr, true, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_mixed) {
-  std::vector<int> d{42,1,2,3,4,41};
+TEST(TestMdarrayCtorFromMoveContainerSizes, 2d_mixed)
+{
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(ptr,stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,stdex::dynamic_extent>> m(std::move(d),3);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(ptr, stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, stdex::dynamic_extent>> m(std::move(d), 3);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, ptr, true, true);
 }
 
 // Construct from extents only
-TEST(TestMdarrayCtorFromExtentsAlloc, 0d_static) {
+TEST(TestMdarrayCtorFromExtentsAlloc, 0d_static)
+{
   std::allocator<int> alloc;
-  stdex::mdarray<int, stdex::extents<unsigned>> m(stdex::extents<unsigned>{},alloc);
+  stdex::mdarray<int, stdex::extents<unsigned>> m(stdex::extents<unsigned>{}, alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<0>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<0>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 0, 0, 0, 0, 0, 0, 0, 0, nullptr, false, true);
 }
 
 // Construct from sizes only
-TEST(TestMdarrayCtorFromSizesAlloc, 1d_static) {
+TEST(TestMdarrayCtorFromSizesAlloc, 1d_static)
+{
   std::allocator<int> alloc;
   stdex::mdarray<int, stdex::extents<int, 1>> m(stdex::extents<int, 1>(), alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 0, 1, 0, 0, 1, 0, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizesAlloc, 2d_static) {
+TEST(TestMdarrayCtorFromSizesAlloc, 2d_static)
+{
   std::allocator<int> alloc;
-  stdex::mdarray<int, stdex::extents<int, 2,3>> m(stdex::extents<int, 2,3>(), alloc);
+  stdex::mdarray<int, stdex::extents<int, 2, 3>> m(stdex::extents<int, 2, 3>(), alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 0, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizesAlloc, 1d_dynamic) {
+TEST(TestMdarrayCtorFromSizesAlloc, 1d_dynamic)
+{
   std::allocator<int> alloc;
   stdex::mdarray<int, stdex::dextents<int, 1>> m(stdex::extents<int, 1>(), alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizesAlloc, 2d_dynamic) {
+TEST(TestMdarrayCtorFromSizesAlloc, 2d_dynamic)
+{
   std::allocator<int> alloc;
-  stdex::mdarray<int, stdex::dextents<int, 2>> m(stdex::extents<int, 2,3>(), alloc);
+  stdex::mdarray<int, stdex::dextents<int, 2>> m(stdex::extents<int, 2, 3>(), alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromSizesAlloc, 2d_mixed) {
+TEST(TestMdarrayCtorFromSizesAlloc, 2d_mixed)
+{
   std::allocator<int> alloc;
-  stdex::mdarray<int, stdex::extents<int, 2,stdex::dynamic_extent>> m(stdex::extents<int, 2,stdex::dynamic_extent>{3}, alloc);
+  stdex::mdarray<int, stdex::extents<int, 2, stdex::dynamic_extent>> m(
+    stdex::extents<int, 2, stdex::dynamic_extent>{3}, alloc);
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(m.data(),m.extents(),true);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(m.data(), m.extents(), true);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, nullptr, false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizesAlloc, 1d_dynamic) {
+TEST(TestMdarrayCtorFromContainerSizesAlloc, 1d_dynamic)
+{
   std::allocator<int> alloc;
   std::vector<int> d{42};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(d.data(),stdex::extents<int, 1>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 1>> m(d,stdex::dextents<int, 1>{1}, alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(d.data(), stdex::extents<int, 1>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 1>> m(d, stdex::dextents<int, 1>{1}, alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizesAlloc, 2d_dynamic) {
+TEST(TestMdarrayCtorFromContainerSizesAlloc, 2d_dynamic)
+{
   std::allocator<int> alloc;
-  std::vector<int> d{42,1,2,3,4,41};
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 2>> m(d,stdex::dextents<int, 2>{2,3}, alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 2>> m(d, stdex::dextents<int, 2>{2, 3}, alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromContainerSizesAlloc, 2d_mixed) {
+TEST(TestMdarrayCtorFromContainerSizesAlloc, 2d_mixed)
+{
   std::allocator<int> alloc;
-  std::vector<int> d{42,1,2,3,4,41};
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(d.data(),stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,stdex::dynamic_extent>> m(d,stdex::extents<int, 2,stdex::dynamic_extent>{3}, alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(d.data(), stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, stdex::dynamic_extent>> m(
+    d, stdex::extents<int, 2, stdex::dynamic_extent>{3}, alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, d.data(), false, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 1d_dynamic) {
+TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 1d_dynamic)
+{
   std::allocator<int> alloc;
   std::vector<int> d{42};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<1>::fill(ptr,stdex::extents<int, 1>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 1>> m(std::move(d),stdex::extents<int, 1>(), alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<1>::fill(ptr, stdex::extents<int, 1>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 1>> m(std::move(d), stdex::extents<int, 1>(), alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 1, 1, 1, 0, 0, 1, 0, 0, ptr, true, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 2d_dynamic) {
+TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 2d_dynamic)
+{
   std::allocator<int> alloc;
-  std::vector<int> d{42,1,2,3,4,41};
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(ptr,stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::dextents<int, 2>> m(std::move(d),stdex::extents<int, 2,3>(), alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(ptr, stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::dextents<int, 2>> m(std::move(d), stdex::extents<int, 2, 3>(), alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 2, 2, 3, 0, 3, 1, 0, ptr, true, true);
 }
 
-TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 2d_mixed) {
+TEST(TestMdarrayCtorFromMoveContainerSizesAlloc, 2d_mixed)
+{
   std::allocator<int> alloc;
-  std::vector<int> d{42,1,2,3,4,41};
+  std::vector<int> d{42, 1, 2, 3, 4, 41};
   auto ptr = d.data();
   // ptr to fill, extents, is_layout_right
-  mdarray_values<2>::fill(ptr,stdex::extents<int, 2,3>(),true);
-  stdex::mdarray<int, stdex::extents<int, 2,stdex::dynamic_extent>> m(std::move(d),stdex::extents<int, 2,stdex::dynamic_extent>(3), alloc);
-  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches, exhaustive
+  mdarray_values<2>::fill(ptr, stdex::extents<int, 2, 3>(), true);
+  stdex::mdarray<int, stdex::extents<int, 2, stdex::dynamic_extent>> m(
+    std::move(d), stdex::extents<int, 2, stdex::dynamic_extent>(3), alloc);
+  // mdarray, rank, rank_dynamic, ext0, ext1, ext2, stride0, stride1, stride2, ptr, ptr_matches,
+  // exhaustive
   check_correctness(m, 2, 1, 2, 3, 0, 3, 1, 0, ptr, true, true);
 }
 // PMR
 
-
 #ifdef __cpp_lib_memory_resource
-TEST(TestMdarrayCtorWithPMR, 2d_mixed) {
-    using array_2d_pmr_dynamic = stdex::mdarray<int, stdex::dextents<int, 2>, stdex::layout_right, std::vector<int, std::pmr::polymorphic_allocator<int>>>;
+TEST(TestMdarrayCtorWithPMR, 2d_mixed)
+{
+  using array_2d_pmr_dynamic =
+    stdex::mdarray<int,
+                   stdex::dextents<int, 2>,
+                   stdex::layout_right,
+                   std::vector<int, std::pmr::polymorphic_allocator<int>>>;
 
-    ChatterResource allocation_logger;
-    constexpr bool test = std::uses_allocator_v<array_2d_pmr_dynamic, std::pmr::polymorphic_allocator<int>>;
-    (void) test;
+  ChatterResource allocation_logger;
+  constexpr bool test =
+    std::uses_allocator_v<array_2d_pmr_dynamic, std::pmr::polymorphic_allocator<int>>;
+  (void)test;
 
-    array_2d_pmr_dynamic a{stdex::dextents<int, 2>{3,3}, &allocation_logger};
-    array_2d_pmr_dynamic b{3,3};
+  array_2d_pmr_dynamic a{stdex::dextents<int, 2>{3, 3}, &allocation_logger};
+  array_2d_pmr_dynamic b{3, 3};
 
-    std::pmr::vector<array_2d_pmr_dynamic> top_container{&allocation_logger};
-    top_container.reserve(4);
+  std::pmr::vector<array_2d_pmr_dynamic> top_container{&allocation_logger};
+  top_container.reserve(4);
 
-    top_container.emplace_back(3,3);
-    top_container.emplace_back(a.mapping());
-    top_container.emplace_back(a.container(), a.mapping());
-    top_container.push_back({a});
+  top_container.emplace_back(3, 3);
+  top_container.emplace_back(a.mapping());
+  top_container.emplace_back(a.container(), a.mapping());
+  top_container.push_back({a});
 }
 #endif
 
 // Construct from container only
-TEST(TestMdarrayCtorDataStdArray, test_mdarray_ctor_data_carray) {
+TEST(TestMdarrayCtorDataStdArray, test_mdarray_ctor_data_carray)
+{
   std::array<int, 1> d = {42};
   stdex::mdarray<int, stdex::extents<int, 1>, stdex::layout_right, std::array<int, 1>> m(d);
   ASSERT_EQ(m.rank(), 1);
@@ -513,7 +601,8 @@ TEST(TestMdarrayCtorDataStdArray, test_mdarray_ctor_data_carray) {
   ASSERT_TRUE(m.is_exhaustive());
 }
 
-TEST(TestMdarrayCtorDataVector, test_mdarray_ctor_data_carray) {
+TEST(TestMdarrayCtorDataVector, test_mdarray_ctor_data_carray)
+{
   std::vector<int> d = {42};
   stdex::mdarray<int, stdex::extents<int, 1>, stdex::layout_right, std::vector<int>> m(d);
   ASSERT_EQ(m.rank(), 1);
@@ -524,7 +613,9 @@ TEST(TestMdarrayCtorDataVector, test_mdarray_ctor_data_carray) {
   ASSERT_TRUE(m.is_exhaustive());
 }
 
-TEST(TestMdarrayCtorExtentsStdArrayConvertibleToSizeT, test_mdarray_ctor_extents_std_array_convertible_to_size_t) {
+TEST(TestMdarrayCtorExtentsStdArrayConvertibleToSizeT,
+     test_mdarray_ctor_extents_std_array_convertible_to_size_t)
+{
   std::vector<int> d{42, 17, 71, 24};
   std::array<int, 2> e{2, 2};
   stdex::mdarray<int, stdex::dextents<int, 2>> m(d, e);
@@ -537,9 +628,9 @@ TEST(TestMdarrayCtorExtentsStdArrayConvertibleToSizeT, test_mdarray_ctor_extents
   ASSERT_TRUE(m.is_exhaustive());
 }
 
-
-TEST(TestMdarrayListInitializationLayoutLeft, test_mdarray_list_initialization_layout_left) {
-  std::vector<int> d(16*32);
+TEST(TestMdarrayListInitializationLayoutLeft, test_mdarray_list_initialization_layout_left)
+{
+  std::vector<int> d(16 * 32);
   auto ptr = d.data();
   stdex::mdarray<int, stdex::extents<int, dyn, dyn>, stdex::layout_left> m{std::move(d), 16, 32};
   ASSERT_EQ(m.data(), ptr);
@@ -552,9 +643,9 @@ TEST(TestMdarrayListInitializationLayoutLeft, test_mdarray_list_initialization_l
   ASSERT_TRUE(m.is_exhaustive());
 }
 
-
-TEST(TestMdarrayListInitializationLayoutRight, test_mdarray_list_initialization_layout_right) {
-  std::vector<int> d(16*32);
+TEST(TestMdarrayListInitializationLayoutRight, test_mdarray_list_initialization_layout_right)
+{
+  std::vector<int> d(16 * 32);
   auto ptr = d.data();
   stdex::mdarray<int, stdex::extents<int, dyn, dyn>, stdex::layout_right> m{std::move(d), 16, 32};
   ASSERT_EQ(m.data(), ptr);
@@ -567,10 +658,12 @@ TEST(TestMdarrayListInitializationLayoutRight, test_mdarray_list_initialization_
   ASSERT_TRUE(m.is_exhaustive());
 }
 
-TEST(TestMdarrayListInitializationLayoutStride, test_mdarray_list_initialization_layout_stride) {
-  std::vector<int> d(32*128);
+TEST(TestMdarrayListInitializationLayoutStride, test_mdarray_list_initialization_layout_stride)
+{
+  std::vector<int> d(32 * 128);
   auto ptr = d.data();
-  stdex::mdarray<int, stdex::extents<int, dyn, dyn>, stdex::layout_stride> m{std::move(d), {stdex::dextents<int, 2>{16, 32}, std::array<std::size_t, 2>{1, 128}}};
+  stdex::mdarray<int, stdex::extents<int, dyn, dyn>, stdex::layout_stride> m{
+    std::move(d), {stdex::dextents<int, 2>{16, 32}, std::array<std::size_t, 2>{1, 128}}};
   ASSERT_EQ(m.data(), ptr);
   ASSERT_EQ(m.rank(), 2);
   ASSERT_EQ(m.rank_dynamic(), 2);
@@ -610,16 +703,16 @@ TEST(TestMdarrayCTAD, ctad_carray) {
   stdex::mdarray m(data);
   static_assert(std::is_same<decltype(m)::element_type,int>::value);
   ASSERT_EQ(m.data(), &data[0]);
-  #ifdef  _MDSPAN_USE_P2554
+#ifdef _MDSPAN_USE_P2554
   ASSERT_EQ(m.rank(), 1);
   ASSERT_EQ(m.rank_dynamic(), 0);
   ASSERT_EQ(m.static_extent(0), 5);
   ASSERT_EQ(m.extent(0), 5);
   ASSERT_EQ(__MDSPAN_OP(m, 2), 3);
-  #else
+#else
   ASSERT_EQ(m.rank(), 0);
   ASSERT_EQ(m.rank_dynamic(), 0);
-  #endif
+#endif
   ASSERT_TRUE(m.is_exhaustive());
 
 
@@ -638,16 +731,16 @@ TEST(TestMdarrayCTAD, ctad_const_carray) {
   stdex::mdarray m(data);
   static_assert(std::is_same<decltype(m)::element_type,const int>::value);
   ASSERT_EQ(m.data(), &data[0]);
-  #ifdef  _MDSPAN_USE_P2554
+#ifdef _MDSPAN_USE_P2554
   ASSERT_EQ(m.rank(), 1);
   ASSERT_EQ(m.rank_dynamic(), 0);
   ASSERT_EQ(m.static_extent(0), 5);
   ASSERT_EQ(m.extent(0), 5);
   ASSERT_EQ(__MDSPAN_OP(m, 2), 3);
-  #else
+#else
   ASSERT_EQ(m.rank(), 0);
   ASSERT_EQ(m.rank_dynamic(), 0);
-  #endif
+#endif
   ASSERT_TRUE(m.is_exhaustive());
 }
 
@@ -740,7 +833,7 @@ TEST(TestMdarrayCTAD, layout_stride) {
   ASSERT_EQ(m0.stride(1), 128);
   ASSERT_FALSE(m0.is_exhaustive());
 
-  /* 
+  /*
   stdex::mdarray m1{d.data(), stdex::layout_stride::mapping{stdex::extents{16, 32}, stdex::extents{1, 128}}};
   ASSERT_EQ(m1.data(), d.data());
   ASSERT_EQ(m1.rank(), 2);

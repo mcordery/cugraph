@@ -451,9 +451,10 @@ template <class Key,
           class ProbingScheme,
           class Allocator,
           class Storage>
-constexpr typename static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::key_type
-static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::empty_key_sentinel()
-  const noexcept
+constexpr
+  typename static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::key_type
+  static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::empty_key_sentinel()
+    const noexcept
 {
   return impl_->empty_key_sentinel();
 }
@@ -465,9 +466,10 @@ template <class Key,
           class ProbingScheme,
           class Allocator,
           class Storage>
-constexpr typename static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::key_type
-static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::erased_key_sentinel()
-  const noexcept
+constexpr
+  typename static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::key_type
+  static_set<Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>::erased_key_sentinel()
+    const noexcept
 {
   return impl_->erased_key_sentinel();
 }

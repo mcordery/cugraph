@@ -17,8 +17,8 @@
 # cython: language_level = 3
 
 
-from pylibraft.common.handle cimport *
 from cugraph.dask.comms.comms cimport init_subcomm as c_init_subcomm
+from pylibraft.common.handle cimport *
 
 
 def init_subcomms(handle, row_comm_size):

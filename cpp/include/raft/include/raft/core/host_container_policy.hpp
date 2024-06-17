@@ -54,8 +54,8 @@ class host_vector_policy {
   {
     return c[n];
   }
-  [[nodiscard]] constexpr auto access(container_type const& c, size_t n) const noexcept
-    -> const_reference
+  [[nodiscard]] constexpr auto access(container_type const& c,
+                                      size_t n) const noexcept -> const_reference
   {
     return c[n];
   }

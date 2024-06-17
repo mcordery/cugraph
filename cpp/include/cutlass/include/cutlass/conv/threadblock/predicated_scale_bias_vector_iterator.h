@@ -61,9 +61,7 @@ namespace threadblock {
 
 /// PredicatedScaleBiasVectorIterator
 ///
-template <typename WarpShape,
-          typename Element,
-          typename Layout>
+template <typename WarpShape, typename Element, typename Layout>
 class PredicatedScaleBiasVectorIterator;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,24 +69,21 @@ class PredicatedScaleBiasVectorIterator;
 /// Specialization of PredicatedTileIterator for wgrad pitch-linear data.
 ///
 template <typename WarpShape_, typename Element_>
-class PredicatedScaleBiasVectorIterator<WarpShape_,
-                                        Element_,
-                                        layout::PitchLinear> {
+class PredicatedScaleBiasVectorIterator<WarpShape_, Element_, layout::PitchLinear> {
  public:
-
   using WarpShape = WarpShape_;
-  using Element = Element_;
-  using Layout = layout::PitchLinear;
+  using Element   = Element_;
+  using Layout    = layout::PitchLinear;
 
-  using Index = typename Layout::Index;
+  using Index     = typename Layout::Index;
   using LongIndex = typename Layout::LongIndex;
 
-  using TensorRef = TensorRef<Element, Layout>;
-  using TensorView = TensorView<Element, Layout>;
+  using TensorRef   = TensorRef<Element, Layout>;
+  using TensorView  = TensorView<Element, Layout>;
   using TensorCoord = typename Layout::TensorCoord;
 
-  using ConstPointer = const Element *;
-  using NonConstPointer = typename platform::remove_const<Element>::type *;
+  using ConstPointer    = const Element*;
+  using NonConstPointer = typename platform::remove_const<Element>::type*;
 
   static int const kElementsPerAccess = 1;
 
@@ -108,7 +103,7 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
   //
 
   /// Parameters object with precomputed internal state
-  Params const &params_;
+  Params const& params_;
 
   /// Internal pointer to first access of tile
   ConstPointer scale_pointer_;
@@ -127,52 +122,52 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
   /// and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedScaleBiasVectorIterator(
-      /// Precomputed parameters object
-      Params const &params,
-      /// Extent of tensor
-      Conv2dProblemSize const &problem_size,
-      /// Pointer to the start of the scale vector
-      ConstPointer scale_pointer,
-      /// Pointer to the start of the bias vector
-      ConstPointer bias_pointer,
-      /// ID of each participating thread
-      int thread_id,
-      /// Initial offset of threadblock
-      TensorCoord const &threadblock_offset)
-      : params_(params),
-        problem_size_(problem_size),
-        scale_pointer_(scale_pointer),
-        bias_pointer_(bias_pointer) {
-
+    /// Precomputed parameters object
+    Params const& params,
+    /// Extent of tensor
+    Conv2dProblemSize const& problem_size,
+    /// Pointer to the start of the scale vector
+    ConstPointer scale_pointer,
+    /// Pointer to the start of the bias vector
+    ConstPointer bias_pointer,
+    /// ID of each participating thread
+    int thread_id,
+    /// Initial offset of threadblock
+    TensorCoord const& threadblock_offset)
+    : params_(params),
+      problem_size_(problem_size),
+      scale_pointer_(scale_pointer),
+      bias_pointer_(bias_pointer)
+  {
     thread_offset_ = threadblock_offset.contiguous() + (thread_id % 32) / 4;
   }
 
   /// Construct a PredicatedTileIterator with zero threadblock offset
   CUTLASS_HOST_DEVICE
   PredicatedScaleBiasVectorIterator(
-      /// Precomputed parameters object
-      Params const &params,
-      /// Extent of tensor
-      Conv2dProblemSize const &problem_size,
-      /// Pointer to start of scale vector
-      ConstPointer scale_pointer,
-      /// Pointer to start of scale vector
-      ConstPointer bias_pointer,
-      ///< ID of each participating thread
-      int thread_id)
-      : PredicatedScaleBiasVectorIterator(params, problem_size,
-                                          scale_pointer, bias_pointer,
-                                          thread_id, make_Coord(0, 0)) {}
+    /// Precomputed parameters object
+    Params const& params,
+    /// Extent of tensor
+    Conv2dProblemSize const& problem_size,
+    /// Pointer to start of scale vector
+    ConstPointer scale_pointer,
+    /// Pointer to start of scale vector
+    ConstPointer bias_pointer,
+    ///< ID of each participating thread
+    int thread_id)
+    : PredicatedScaleBiasVectorIterator(
+        params, problem_size, scale_pointer, bias_pointer, thread_id, make_Coord(0, 0))
+  {
+  }
 
   /// Advances an iterator along logical dimensions of matrix in units of whole warp tiles
   CUTLASS_DEVICE
-  void add_tile_offset(
-      TensorCoord const &tile_offset) {
-
+  void add_tile_offset(TensorCoord const& tile_offset)
+  {
     thread_offset_ += (WarpShape::kContiguous * tile_offset.contiguous());
 
     CUTLASS_PRAGMA_UNROLL
-    for(int c = 0; c < kIterations; ++c) {
+    for (int c = 0; c < kIterations; ++c) {
       int rsc_offset = thread_offset_ + c * 8;
 
       int residual, tmp;
@@ -183,37 +178,23 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     frag.fill(__float2half2_rn(0.0f));
-    __half2 *frag_ptr = reinterpret_cast<__half2 *>(&frag);
+    __half2* frag_ptr = reinterpret_cast<__half2*>(&frag);
 
     // load scale
     CUTLASS_PRAGMA_UNROLL
     for (int c = 0; c < kIterations; ++c) {
-
-      cutlass::arch::global_load<
-        __half,
-        sizeof(AccessType)
-      >(
-        frag_ptr[c * 2].x,
-        scale_pointer_ + filter_c_[c],
-        true
-      );
+      cutlass::arch::global_load<__half, sizeof(AccessType)>(
+        frag_ptr[c * 2].x, scale_pointer_ + filter_c_[c], true);
     }
 
     // load bias
     CUTLASS_PRAGMA_UNROLL
     for (int c = 0; c < kIterations; ++c) {
-
-      cutlass::arch::global_load<
-        __half,
-        sizeof(AccessType)
-      >(
-        frag_ptr[c * 2 + 1].x,
-        bias_pointer_ + filter_c_[c],
-        true 
-      );
+      cutlass::arch::global_load<__half, sizeof(AccessType)>(
+        frag_ptr[c * 2 + 1].x, bias_pointer_ + filter_c_[c], true);
     }
 
     // duplicate scale
@@ -231,9 +212,7 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { load_with_pointer_offset(frag, 0); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,35 +224,31 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
 ///            WriteableContiguousTileIteratorConcept |
 ///            MaskedTileIteratorConcept
 ///
-template <typename WarpShape_,
-          typename Element_>
-class PredicatedScaleBiasVectorIterator<WarpShape_,
-                                        Element_,
-                                        layout::RowMajor> {
+template <typename WarpShape_, typename Element_>
+class PredicatedScaleBiasVectorIterator<WarpShape_, Element_, layout::RowMajor> {
  public:
-
   using WarpShape = WarpShape_;
-  using Element = Element_;
-  using Layout = layout::RowMajor;
+  using Element   = Element_;
+  using Layout    = layout::RowMajor;
 
-  using Index = typename Layout::Index;
+  using Index     = typename Layout::Index;
   using LongIndex = typename Layout::LongIndex;
 
-  using TensorRef = TensorRef<Element, Layout>;
-  using TensorView = TensorView<Element, Layout>;
+  using TensorRef   = TensorRef<Element, Layout>;
+  using TensorView  = TensorView<Element, Layout>;
   using TensorCoord = typename Layout::TensorCoord;
 
-  using ConstPointer = const Element *;
-  using NonConstPointer = typename platform::remove_const<Element>::type *;
+  using ConstPointer    = const Element*;
+  using NonConstPointer = typename platform::remove_const<Element>::type*;
 
-  using UnderlyingIterator = PredicatedScaleBiasVectorIterator<
-      layout::PitchLinearShape<WarpShape::kColumn, WarpShape::kRow>,
-      Element,
-      layout::PitchLinear>;
+  using UnderlyingIterator =
+    PredicatedScaleBiasVectorIterator<layout::PitchLinearShape<WarpShape::kColumn, WarpShape::kRow>,
+                                      Element,
+                                      layout::PitchLinear>;
 
-  using AccessType = typename UnderlyingIterator::AccessType;
+  using AccessType                    = typename UnderlyingIterator::AccessType;
   static int const kElementsPerAccess = UnderlyingIterator::kElementsPerAccess;
-  using Fragment = typename UnderlyingIterator::Fragment;
+  using Fragment                      = typename UnderlyingIterator::Fragment;
 
   /// Parameters object is precomputed state and is host-constructible
   class Params {
@@ -284,15 +259,14 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
     typename UnderlyingIterator::Params params_;
 
    public:
-
     /// Default ctor
     CUTLASS_HOST_DEVICE
-    Params() { }
+    Params() {}
 
     /// Construct the Params object given a pitch-linear tensor's layout
     CUTLASS_HOST_DEVICE
-    Params(Conv2dProblemSize const &problem_size, Layout const &layout)
-        : params_(problem_size, layout::TensorNHWC(0, 0, 0)){};
+    Params(Conv2dProblemSize const& problem_size, Layout const& layout)
+      : params_(problem_size, layout::TensorNHWC(0, 0, 0)) {};
   };
 
  private:
@@ -308,35 +282,40 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
   /// and thread ID
   CUTLASS_HOST_DEVICE
   PredicatedScaleBiasVectorIterator(
-      ///< Precomputed parameters object
-      Params const &params,
-      ///< Extent of tensor
-      Conv2dProblemSize const &problem_size,
-      ///< Pointer to the start of the scale vector
-      ConstPointer scale_pointer,
-      ///< Pointer to the start of the bias vector
-      ConstPointer bias_pointer,
-      ///< ID of each participating thread
-      int thread_id,
-      ///< Initial offset of threadblock
-      TensorCoord const &threadblock_offset)
-      : iterator_(params.params_, problem_size, scale_pointer, bias_pointer,
-                  thread_id,
-                  layout::PitchLinearCoord(threadblock_offset.column(),
-                                           threadblock_offset.row())) {}
+    ///< Precomputed parameters object
+    Params const& params,
+    ///< Extent of tensor
+    Conv2dProblemSize const& problem_size,
+    ///< Pointer to the start of the scale vector
+    ConstPointer scale_pointer,
+    ///< Pointer to the start of the bias vector
+    ConstPointer bias_pointer,
+    ///< ID of each participating thread
+    int thread_id,
+    ///< Initial offset of threadblock
+    TensorCoord const& threadblock_offset)
+    : iterator_(params.params_,
+                problem_size,
+                scale_pointer,
+                bias_pointer,
+                thread_id,
+                layout::PitchLinearCoord(threadblock_offset.column(), threadblock_offset.row()))
+  {
+  }
 
   /// Construct a PredicatedTileIterator with zero threadblock offset
   CUTLASS_HOST_DEVICE
   PredicatedScaleBiasVectorIterator(
-      Params const &params,                   ///< Precomputed parameters object
-      Conv2dProblemSize const &problem_size,  ///< Extent of tensor
-      ConstPointer scale_pointer,  ///< Pointer to the start of the scale vector
-      ConstPointer bias_pointer,   ///< Pointer to the start of the bias vector
-      int thread_id                ///< ID of each participating thread
-      )
-      : PredicatedScaleBiasVectorIterator(params, problem_size,
-                                          scale_pointer, bias_pointer,
-                                          thread_id, make_Coord(0, 0)) {}
+    Params const& params,                   ///< Precomputed parameters object
+    Conv2dProblemSize const& problem_size,  ///< Extent of tensor
+    ConstPointer scale_pointer,             ///< Pointer to the start of the scale vector
+    ConstPointer bias_pointer,              ///< Pointer to the start of the bias vector
+    int thread_id                           ///< ID of each participating thread
+    )
+    : PredicatedScaleBiasVectorIterator(
+        params, problem_size, scale_pointer, bias_pointer, thread_id, make_Coord(0, 0))
+  {
+  }
 
   /// Overrides the internal iteration index
   CUTLASS_HOST_DEVICE
@@ -345,27 +324,27 @@ class PredicatedScaleBiasVectorIterator<WarpShape_,
   /// Advances an iterator along logical dimensions of matrix in units of whole
   /// threadblock tiles
   CUTLASS_HOST_DEVICE
-  void add_tile_offset(TensorCoord const &tile_offset) {
+  void add_tile_offset(TensorCoord const& tile_offset)
+  {
     iterator_.add_tile_offset({tile_offset.column(), tile_offset.row()});
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
-    iterator_.load(frag);
-  }
+  void load(Fragment& frag) { iterator_.load(frag); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 }  // namespace threadblock
-}  // namespace conv 
+}  // namespace conv
 }  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

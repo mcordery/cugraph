@@ -34,13 +34,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-#include "cutlass/gemm/gemm.h"
-
 #include "cutlass/array_planar_complex.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,8 +51,7 @@ namespace warp {
 
 template <typename TileIterator_>
 class TileIteratorPlanarComplex {
-public:
-
+ public:
   /// Underlying iterator over real-valued tiles
   using TileIterator = TileIterator_;
 
@@ -78,34 +76,30 @@ public:
   /// Planar complex fragment
   using Fragment = ArrayPlanarComplex<Element, TileIterator::Fragment::kElements>;
 
-public:
-
+ public:
   /// Underlying tile iterator
   TileIterator tile_iterator_;
 
   /// Offset (in units of bytes) to the imaginary part of the planar complex matrix
   LongIndex imaginary_offset_;
 
-public:
-    /// Default ctor constructs null iterator
+ public:
+  /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  TileIteratorPlanarComplex(): imaginary_offset_(0) { }
+  TileIteratorPlanarComplex() : imaginary_offset_(0) {}
 
   /// Constructor from TensorRef
   CUTLASS_DEVICE
-  TileIteratorPlanarComplex(
-    TensorRef const &ref, 
-    int lane_id,
-    LongIndex imaginary_offset
-  ):
-    tile_iterator_(ref, lane_id),
-    imaginary_offset_((imaginary_offset * sizeof_bits<Element>::value) / 8) { }
-
+  TileIteratorPlanarComplex(TensorRef const& ref, int lane_id, LongIndex imaginary_offset)
+    : tile_iterator_(ref, lane_id),
+      imaginary_offset_((imaginary_offset * sizeof_bits<Element>::value) / 8)
+  {
+  }
 
   /// Adds a pointer offset to internal pointer(s) to advance through memory
   CUTLASS_DEVICE
-  TileIteratorPlanarComplex &add_pointer_offset(LongIndex offset) {
-
+  TileIteratorPlanarComplex& add_pointer_offset(LongIndex offset)
+  {
     tile_iterator_.add_pointer_offset(offset);
 
     return *this;
@@ -113,8 +107,8 @@ public:
 
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  TileIteratorPlanarComplex &add_tile_offset(TensorCoord const &tile_offset) {
-
+  TileIteratorPlanarComplex& add_tile_offset(TensorCoord const& tile_offset)
+  {
     tile_iterator_.add_tile_offset(tile_offset);
 
     return *this;
@@ -122,7 +116,8 @@ public:
 
   /// Advances the iterator along the advance dimension
   CUTLASS_DEVICE
-  TileIteratorPlanarComplex & operator++() {
+  TileIteratorPlanarComplex& operator++()
+  {
     ++tile_iterator_;
     return *this;
   }
@@ -133,29 +128,32 @@ public:
 
   /// Advances the iterator along the opposite of the advance dimension
   CUTLASS_HOST_DEVICE
-  TileIteratorPlanarComplex & operator--() {
+  TileIteratorPlanarComplex& operator--()
+  {
     --tile_iterator_;
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  TileIteratorPlanarComplex & operator+=(TensorCoord const &tile_offset) {
+  TileIteratorPlanarComplex& operator+=(TensorCoord const& tile_offset)
+  {
     tile_iterator_.add_tile_offset(tile_offset);
     return *this;
   }
 
   ///< advances in units of whole tiles along the logical coordinate space of the tensor
   CUTLASS_DEVICE
-  TileIteratorPlanarComplex & operator-=(TensorCoord const &tile_offset) {
+  TileIteratorPlanarComplex& operator-=(TensorCoord const& tile_offset)
+  {
     tile_iterator_.add_tile_offset(-tile_offset);
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-
+  void load(Fragment& frag) const
+  {
     tile_iterator_.load_with_byte_offset(frag.real, 0);
     tile_iterator_.load_with_byte_offset(frag.imag, imaginary_offset_);
   }
@@ -163,11 +161,11 @@ public:
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset in units of bytes
-      Index byte_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset in units of bytes
+    Index byte_offset) const
+  {
     tile_iterator_.load_with_byte_offset(frag.real, byte_offset);
     tile_iterator_.load_with_byte_offset(frag.imag, byte_offset + imaginary_offset_);
   }
@@ -175,12 +173,12 @@ public:
   /// Loads a fragment from memory with additional logical offset
   CUTLASS_DEVICE
   void load_with_pointer_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a linear offset
-      Index pointer_offset) const {
-
-    Index byte_offset = (pointer_offset * sizeof_bits<Element>::value)/8;
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a linear offset
+    Index pointer_offset) const
+  {
+    Index byte_offset = (pointer_offset * sizeof_bits<Element>::value) / 8;
 
     tile_iterator_.load_with_byte_offset(frag.real, byte_offset);
     tile_iterator_.load_with_byte_offset(frag.imag, byte_offset + imaginary_offset_);
@@ -189,11 +187,11 @@ public:
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset) const
+  {
     tile_iterator_.load_with_byte_offset(frag.real, tile_offset, 0);
     tile_iterator_.load_with_byte_offset(frag.imag, tile_offset, imaginary_offset_);
   }
@@ -201,14 +199,14 @@ public:
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index pointer_offset) const {
-
-    Index byte_offset = (pointer_offset * sizeof_bits<Element>::value)/8;
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index pointer_offset) const
+  {
+    Index byte_offset = (pointer_offset * sizeof_bits<Element>::value) / 8;
 
     tile_iterator_.load_with_byte_offset(frag.real, tile_offset, byte_offset);
     tile_iterator_.load_with_byte_offset(frag.real, tile_offset, byte_offset + imaginary_offset_);
@@ -217,13 +215,13 @@ public:
   /// Loads a fragment from memory with logical offset in units of whole tiles.
   CUTLASS_DEVICE
   void load_with_byte_offset(
-      /// fragment to load from the tensor
-      Fragment &frag,
-      /// loads a tile with a logical offset in units of whole tiles
-      TensorCoord const &tile_offset,
-      /// loads a tile with a logical offset AND a pointer offset
-      Index byte_offset) const {
-
+    /// fragment to load from the tensor
+    Fragment& frag,
+    /// loads a tile with a logical offset in units of whole tiles
+    TensorCoord const& tile_offset,
+    /// loads a tile with a logical offset AND a pointer offset
+    Index byte_offset) const
+  {
     tile_iterator_.load_with_byte_offset(frag.real, tile_offset, byte_offset);
     tile_iterator_.load_with_byte_offset(frag.imag, tile_offset, byte_offset + imaginary_offset_);
   }
@@ -236,15 +234,13 @@ public:
   ///
   /// This is used by some nontrivial permuted layouts.
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    tile_iterator_.set_kgroup_index(k_group);
-  }
+  void set_kgroup_index(int k_group) { tile_iterator_.set_kgroup_index(k_group); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

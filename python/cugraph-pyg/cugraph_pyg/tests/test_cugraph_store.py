@@ -11,22 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cugraph
-from cugraph_pyg.data.cugraph_store import (
-    CuGraphTensorAttr,
-    CuGraphEdgeAttr,
-    EdgeLayout,
-)
-from cugraph_pyg.data import CuGraphStore
-
 import cudf
 import cupy
 import numpy as np
-
-from cugraph.utilities.utils import import_optional, MissingModule
-
 import pytest
+from cugraph.utilities.utils import MissingModule, import_optional
+from cugraph_pyg.data import CuGraphStore
+from cugraph_pyg.data.cugraph_store import (
+    CuGraphEdgeAttr,
+    CuGraphTensorAttr,
+    EdgeLayout,
+)
 
+import cugraph
 
 torch = import_optional("torch")
 torch_geometric = import_optional("torch_geometric")

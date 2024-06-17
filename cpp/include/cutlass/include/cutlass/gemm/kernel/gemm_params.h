@@ -30,22 +30,21 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
 */
 
 #pragma once
 
+#include "cutlass/complex.h"
 #include "cutlass/cutlass.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator_params.h"
 #include "cutlass/fast_math.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/matrix_coord.h"
-#include "cutlass/complex.h"
 #include "cutlass/semaphore.h"
-#include "cutlass/transform/threadblock/predicated_tile_iterator.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator_params.h"
-#include "cutlass/transform/threadblock/predicated_tile_access_iterator_params.h"
-
 #include "cutlass/trace.h"
+#include "cutlass/transform/threadblock/predicated_tile_access_iterator_params.h"
+#include "cutlass/transform/threadblock/predicated_tile_iterator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,15 +55,16 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct GemmParams {
-
   //
   // Type definitions
   //
-  using Index = int32_t;
+  using Index     = int32_t;
   using LongIndex = int64_t;
 
-  using MmaIteratorParams = typename cutlass::transform::threadblock::PredicatedTileAccessIteratorParams;  
-  using EpilogueIteratorParams = typename cutlass::epilogue::threadblock::PredicatedTileIteratorParams;
+  using MmaIteratorParams =
+    typename cutlass::transform::threadblock::PredicatedTileAccessIteratorParams;
+  using EpilogueIteratorParams =
+    typename cutlass::epilogue::threadblock::PredicatedTileIteratorParams;
 
   //
   // Data members
@@ -76,25 +76,24 @@ struct GemmParams {
 
   // Data members for Mma::Iterator::Params
   MmaIteratorParams params_itr_a;
-  MmaIteratorParams params_itr_b;  
+  MmaIteratorParams params_itr_b;
 
-  // Data member for Epilogue::OutputTileIterator::Params 
+  // Data member for Epilogue::OutputTileIterator::Params
   EpilogueIteratorParams params_itr_c;
   EpilogueIteratorParams params_itr_d;
-
 
   GemmUniversalMode mode;
   int batch_count;
   int gemm_k_size;
 
-  void * ptr_A;
-  void * ptr_B;
-  void * ptr_C;
-  void * ptr_D;
+  void* ptr_A;
+  void* ptr_B;
+  void* ptr_C;
+  void* ptr_D;
 
-  LongIndex lda; 
-  LongIndex ldb; 
-  LongIndex ldc; 
+  LongIndex lda;
+  LongIndex ldb;
+  LongIndex ldc;
   LongIndex ldd;
 
   LongIndex batch_stride_A;
@@ -102,49 +101,48 @@ struct GemmParams {
   LongIndex batch_stride_C;
   LongIndex batch_stride_D;
 
-  int *semaphore;
+  int* semaphore;
 
   //
   // Methods
   //
 
   CUTLASS_HOST_DEVICE
-  GemmParams()  {}
+  GemmParams() {}
 
   CUTLASS_HOST_DEVICE
-  GemmParams(
-    cutlass::gemm::GemmCoord problem_size_,
-    cutlass::gemm::GemmCoord grid_tiled_shape_,
-    int swizzle_log_tile_,
-    GemmUniversalMode mode_,
-    int batch_count_,
-    int gemm_k_size_,
-    void const * ptr_A_,
-    void const * ptr_B_,
-    void const * ptr_C_,
-    void * ptr_D_,
-    LongIndex lda_,
-    LongIndex ldb_, 
-    LongIndex ldc_, 
-    LongIndex ldd_,
-    int64_t batch_stride_A_,
-    int64_t batch_stride_B_,
-    int64_t batch_stride_C_,
-    int64_t batch_stride_D_,
-    MmaIteratorParams const & params_itr_a_,
-    MmaIteratorParams const & params_itr_b_,
-    EpilogueIteratorParams const & params_itr_c_,
-    EpilogueIteratorParams const & params_itr_d_,
-    void *workspace_ = nullptr) :
-      problem_size(problem_size_),
+  GemmParams(cutlass::gemm::GemmCoord problem_size_,
+             cutlass::gemm::GemmCoord grid_tiled_shape_,
+             int swizzle_log_tile_,
+             GemmUniversalMode mode_,
+             int batch_count_,
+             int gemm_k_size_,
+             void const* ptr_A_,
+             void const* ptr_B_,
+             void const* ptr_C_,
+             void* ptr_D_,
+             LongIndex lda_,
+             LongIndex ldb_,
+             LongIndex ldc_,
+             LongIndex ldd_,
+             int64_t batch_stride_A_,
+             int64_t batch_stride_B_,
+             int64_t batch_stride_C_,
+             int64_t batch_stride_D_,
+             MmaIteratorParams const& params_itr_a_,
+             MmaIteratorParams const& params_itr_b_,
+             EpilogueIteratorParams const& params_itr_c_,
+             EpilogueIteratorParams const& params_itr_d_,
+             void* workspace_ = nullptr)
+    : problem_size(problem_size_),
       grid_tiled_shape(grid_tiled_shape_),
       swizzle_log_tile(swizzle_log_tile_),
       mode(mode_),
       batch_count(batch_count_),
       gemm_k_size(gemm_k_size_),
-      ptr_A(const_cast<void *>(ptr_A_)),
-      ptr_B(const_cast<void *>(ptr_B_)),
-      ptr_C(const_cast<void *>(ptr_C_)),
+      ptr_A(const_cast<void*>(ptr_A_)),
+      ptr_B(const_cast<void*>(ptr_B_)),
+      ptr_C(const_cast<void*>(ptr_C_)),
       ptr_D(ptr_D_),
       lda(lda_),
       ldb(ldb_),
@@ -155,28 +153,27 @@ struct GemmParams {
       batch_stride_C(batch_stride_C_),
       batch_stride_D(batch_stride_D_),
       params_itr_a(params_itr_a_),
-      params_itr_b(params_itr_b_),      
+      params_itr_b(params_itr_b_),
       params_itr_c(params_itr_c_),
       params_itr_d(params_itr_d_),
-      semaphore(static_cast<int *>(workspace_)
-    ) { }
-
+      semaphore(static_cast<int*>(workspace_))
+  {
+  }
 
   CUTLASS_HOST_DEVICE
-  void update(
-    void const * ptr_A_,
-    void const * ptr_B_,
-    void const * ptr_C_,
-    void * ptr_D_,
-    int64_t batch_stride_A_,
-    int64_t batch_stride_B_,
-    int64_t batch_stride_C_,
-    int64_t batch_stride_D_,
-    void *workspace_ = nullptr) {
-
-    ptr_A = const_cast<void *>(ptr_A_);
-    ptr_B = const_cast<void *>(ptr_B_);
-    ptr_C = const_cast<void *>(ptr_C_);
+  void update(void const* ptr_A_,
+              void const* ptr_B_,
+              void const* ptr_C_,
+              void* ptr_D_,
+              int64_t batch_stride_A_,
+              int64_t batch_stride_B_,
+              int64_t batch_stride_C_,
+              int64_t batch_stride_D_,
+              void* workspace_ = nullptr)
+  {
+    ptr_A = const_cast<void*>(ptr_A_);
+    ptr_B = const_cast<void*>(ptr_B_);
+    ptr_C = const_cast<void*>(ptr_C_);
     ptr_D = ptr_D_;
 
     batch_stride_A = batch_stride_A_;
@@ -184,16 +181,15 @@ struct GemmParams {
     batch_stride_C = batch_stride_C_;
     batch_stride_D = batch_stride_D_;
 
-
-    semaphore = static_cast<int *>(workspace_);
+    semaphore = static_cast<int*>(workspace_);
     CUTLASS_TRACE_HOST("GemmParams::update()");
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

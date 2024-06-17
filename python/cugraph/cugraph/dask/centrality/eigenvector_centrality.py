@@ -13,16 +13,14 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
+import warnings
 
-from pylibcugraph import (
-    eigenvector_centrality as pylib_eigen,
-    ResourceHandle,
-)
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
-import warnings
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import eigenvector_centrality as pylib_eigen
 
 
 def _call_plc_eigenvector_centrality(

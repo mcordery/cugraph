@@ -55,7 +55,7 @@
  *   (2) Re-implementations of STL functions and types:
  *       - C++ features that need the \p __device__ annotation.  These are
  *         placed into the \p platform namespace.
- *           - \p abs 
+ *           - \p abs
  *           - \p plus
  *           - \p less
  *           - \p greater
@@ -159,8 +159,8 @@
 /// static_assert
 #if (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1600))
 #ifndef static_assert
-#define __platform_cat_(a, b) a##b
-#define __platform_cat(a, b) __platform_cat_(a, b)
+#define __platform_cat_(a, b)   a##b
+#define __platform_cat(a, b)    __platform_cat_(a, b)
 #define static_assert(__e, __m) typedef int __platform_cat(AsSeRt, __LINE__)[(__e) ? 1 : -1]
 #endif
 #endif
@@ -191,12 +191,8 @@ namespace platform {
 
 #if defined(__CUDACC_RTC__)
 /// std::abs
-CUTLASS_HOST_DEVICE constexpr int abs(int a) {
-    return (a < 0) ? -a : a;
-}
-CUTLASS_HOST_DEVICE constexpr long long abs(long long a) {
-    return (a < 0) ? -a : a;
-}
+CUTLASS_HOST_DEVICE constexpr int abs(int a) { return (a < 0) ? -a : a; }
+CUTLASS_HOST_DEVICE constexpr long long abs(long long a) { return (a < 0) ? -a : a; }
 #else
 using std::abs;
 #endif
@@ -207,13 +203,15 @@ using std::abs;
 
 /// std::min
 template <typename T>
-CUTLASS_HOST_DEVICE constexpr const T& min(const T& a, const T& b) {
+CUTLASS_HOST_DEVICE constexpr const T& min(const T& a, const T& b)
+{
   return (b < a) ? b : a;
 }
 
 /// std::max
 template <typename T>
-CUTLASS_HOST_DEVICE constexpr const T& max(const T& a, const T& b) {
+CUTLASS_HOST_DEVICE constexpr const T& max(const T& a, const T& b)
+{
   return (a < b) ? b : a;
 }
 
@@ -225,40 +223,48 @@ CUTLASS_HOST_DEVICE constexpr const T& max(const T& a, const T& b) {
 using std::pair;
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+CUTLASS_HOST_DEVICE constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
   return (lhs.first == rhs.first) && (lhs.second == rhs.second);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+CUTLASS_HOST_DEVICE constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
   return (lhs.first != rhs.first) && (lhs.second != rhs.second);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
-  return (lhs.first < rhs.first) ? true : (rhs.first < lhs.first) ? false
-                                                                  : (lhs.second < rhs.second);
+CUTLASS_HOST_DEVICE constexpr bool operator<(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
+  return (lhs.first < rhs.first)   ? true
+         : (rhs.first < lhs.first) ? false
+                                   : (lhs.second < rhs.second);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+CUTLASS_HOST_DEVICE constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
   return !(rhs < lhs);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator>(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+CUTLASS_HOST_DEVICE constexpr bool operator>(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
   return (rhs < lhs);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs) {
+CUTLASS_HOST_DEVICE constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+{
   return !(lhs < rhs);
 }
 
 template <class T1, class T2>
-CUTLASS_HOST_DEVICE std::pair<T1, T2> make_pair(T1 t, T2 u) {
+CUTLASS_HOST_DEVICE std::pair<T1, T2> make_pair(T1 t, T2 u)
+{
   std::pair<T1, T2> retval;
-  retval.first = t;
+  retval.first  = t;
   retval.second = u;
   return retval;
 }
@@ -276,7 +282,8 @@ namespace platform {
 // Integral constant helper types <type_traits>
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1500))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1500))
 
 /// std::integral_constant
 template <typename value_t, value_t V>
@@ -308,7 +315,8 @@ typedef integral_constant<bool, true> true_type;
 /// The type used as a compile-time boolean with false value.
 typedef integral_constant<bool, false> false_type;
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus <= 201402L)) || (defined(_MSC_VER) && (_MSC_VER < 1900))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus <= 201402L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1900))
 
 /// std::bool_constant
 template <bool V>
@@ -320,7 +328,8 @@ using std::bool_constant;
 
 #endif
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1700))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1700))
 
 /// std::nullptr_t
 struct nullptr_t {};
@@ -335,7 +344,8 @@ using std::nullptr_t;
 // Conditional metaprogramming <type_traits>
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1600))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1600))
 
 /// std::enable_if (true specialization)
 template <bool C, typename T = void>
@@ -361,8 +371,8 @@ struct conditional<false, T, F> {
 
 #else
 
-using std::enable_if;
 using std::conditional;
+using std::enable_if;
 
 #endif
 
@@ -370,7 +380,8 @@ using std::conditional;
 // Const/volatility specifiers <type_traits>
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1500))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1500))
 
 /// std::remove_const (non-const specialization)
 template <typename T>
@@ -405,8 +416,8 @@ struct remove_cv {
 #else
 
 using std::remove_const;
-using std::remove_volatile;
 using std::remove_cv;
+using std::remove_volatile;
 
 #endif
 
@@ -414,7 +425,8 @@ using std::remove_cv;
 // Type relationships <type_traits>
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1500))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1500))
 
 /// std::is_same (false specialization)
 template <typename A, typename B>
@@ -447,16 +459,16 @@ struct is_base_of_helper {
 /// std::is_base_of
 template <typename BaseT, typename DerivedT>
 struct is_base_of
-    : integral_constant<bool,
-                        (is_base_of_helper<typename remove_cv<BaseT>::type,
-                                           typename remove_cv<DerivedT>::type>::value) ||
-                            (is_same<typename remove_cv<BaseT>::type,
-                                     typename remove_cv<DerivedT>::type>::value)> {};
+  : integral_constant<
+      bool,
+      (is_base_of_helper<typename remove_cv<BaseT>::type,
+                         typename remove_cv<DerivedT>::type>::value) ||
+        (is_same<typename remove_cv<BaseT>::type, typename remove_cv<DerivedT>::type>::value)> {};
 
 #else
 
-using std::is_same;
 using std::is_base_of;
+using std::is_same;
 
 #endif
 
@@ -464,7 +476,8 @@ using std::is_base_of;
 // Type properties <type_traits>
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1500))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1500))
 
 /// std::is_volatile
 template <typename T>
@@ -523,50 +536,50 @@ struct is_integral<const volatile T> : is_integral<T> {};
 /// std::is_floating_point
 template <typename T>
 struct is_floating_point
-    : integral_constant<bool,
-                        (is_same<float, typename remove_cv<T>::type>::value ||
-                         is_same<double, typename remove_cv<T>::type>::value)> {};
+  : integral_constant<bool,
+                      (is_same<float, typename remove_cv<T>::type>::value ||
+                       is_same<double, typename remove_cv<T>::type>::value)> {};
 
 /// std::is_arithmetic
 template <typename T>
 struct is_arithmetic
-    : integral_constant<bool, (is_integral<T>::value || is_floating_point<T>::value)> {};
+  : integral_constant<bool, (is_integral<T>::value || is_floating_point<T>::value)> {};
 
 /// std::is_fundamental
 template <typename T>
 struct is_fundamental
-    : integral_constant<bool,
-                        (is_arithmetic<T>::value || is_void<T>::value ||
-                         is_same<nullptr_t, typename remove_cv<T>::type>::value)> {};
+  : integral_constant<bool,
+                      (is_arithmetic<T>::value || is_void<T>::value ||
+                       is_same<nullptr_t, typename remove_cv<T>::type>::value)> {};
 
 #else
 
-using std::is_volatile;
+using std::is_arithmetic;
+using std::is_floating_point;
+using std::is_fundamental;
+using std::is_integral;
 using std::is_pointer;
 using std::is_void;
-using std::is_integral;
-using std::is_floating_point;
-using std::is_arithmetic;
-using std::is_fundamental;
+using std::is_volatile;
 
 #endif
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1800)) || \
-    (defined(__GNUG__) && (__GNUC__ < 5))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1800)) || (defined(__GNUG__) && (__GNUC__ < 5))
 
 /**
-     * std::is_trivially_copyable
-     *
-     * This implementation only evaluates true if T is fundamental or pointer
-     *
-     * Without help from partial template specializations provided by the user for
-     * a specific class or struct, this trait will never report that the specified
-     * class or struct  is trivially-copyable ; this is always safe,
-     * if possibly sub-optimal.
-     */
+ * std::is_trivially_copyable
+ *
+ * This implementation only evaluates true if T is fundamental or pointer
+ *
+ * Without help from partial template specializations provided by the user for
+ * a specific class or struct, this trait will never report that the specified
+ * class or struct  is trivially-copyable ; this is always safe,
+ * if possibly sub-optimal.
+ */
 template <typename T>
 struct is_trivially_copyable
-    : integral_constant<bool, (is_fundamental<T>::value || is_pointer<T>::value)> {};
+  : integral_constant<bool, (is_fundamental<T>::value || is_pointer<T>::value)> {};
 
 #else
 
@@ -578,7 +591,8 @@ using std::is_trivially_copyable;
 // Alignment and layout utilities
 //-----------------------------------------------------------------------------
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1500))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1500))
 
 /// std::alignment_of
 template <typename value_t>
@@ -652,60 +666,74 @@ struct alignment_of<const value_t> : alignment_of<value_t> {};
 template <typename value_t>
 struct alignment_of<const volatile value_t> : alignment_of<value_t> {};
 
-#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || (defined(_MSC_VER) && (_MSC_VER < 1800))
+#if defined(__CUDACC_RTC__) || (!defined(_MSC_VER) && (__cplusplus < 201103L)) || \
+  (defined(_MSC_VER) && (_MSC_VER < 1800))
 
 template <size_t Align>
 struct aligned_chunk;
 template <>
-struct __align__(1) aligned_chunk<1> {
+struct __align__(1) aligned_chunk<1>
+{
   uint8_t buff;
 };
 template <>
-struct __align__(2) aligned_chunk<2> {
+struct __align__(2) aligned_chunk<2>
+{
   uint16_t buff;
 };
 template <>
-struct __align__(4) aligned_chunk<4> {
+struct __align__(4) aligned_chunk<4>
+{
   uint32_t buff;
 };
 template <>
-struct __align__(8) aligned_chunk<8> {
+struct __align__(8) aligned_chunk<8>
+{
   uint32_t buff[2];
 };
 template <>
-struct __align__(16) aligned_chunk<16> {
+struct __align__(16) aligned_chunk<16>
+{
   uint32_t buff[4];
 };
 template <>
-struct __align__(32) aligned_chunk<32> {
+struct __align__(32) aligned_chunk<32>
+{
   uint32_t buff[8];
 };
 template <>
-struct __align__(64) aligned_chunk<64> {
+struct __align__(64) aligned_chunk<64>
+{
   uint32_t buff[16];
 };
 template <>
-struct __align__(128) aligned_chunk<128> {
+struct __align__(128) aligned_chunk<128>
+{
   uint32_t buff[32];
 };
 template <>
-struct __align__(256) aligned_chunk<256> {
+struct __align__(256) aligned_chunk<256>
+{
   uint32_t buff[64];
 };
 template <>
-struct __align__(512) aligned_chunk<512> {
+struct __align__(512) aligned_chunk<512>
+{
   uint32_t buff[128];
 };
 template <>
-struct __align__(1024) aligned_chunk<1024> {
+struct __align__(1024) aligned_chunk<1024>
+{
   uint32_t buff[256];
 };
 template <>
-struct __align__(2048) aligned_chunk<2048> {
+struct __align__(2048) aligned_chunk<2048>
+{
   uint32_t buff[512];
 };
 template <>
-struct __align__(4096) aligned_chunk<4096> {
+struct __align__(4096) aligned_chunk<4096>
+{
   uint32_t buff[1024];
 };
 
@@ -735,7 +763,7 @@ struct default_delete<T[]> {
 };
 
 /// std::unique_ptr
-template <class T, class Deleter = default_delete<T> >
+template <class T, class Deleter = default_delete<T>>
 class unique_ptr {
  public:
   typedef T* pointer;
@@ -753,28 +781,27 @@ class unique_ptr {
   unique_ptr() : _ptr(nullptr) {}
   unique_ptr(pointer p) : _ptr(p) {}
 
-  ~unique_ptr() {
-    if (_ptr) {
-      _deleter(_ptr);
-    }
+  ~unique_ptr()
+  {
+    if (_ptr) { _deleter(_ptr); }
   }
   /// Returns a pointer to the managed object or nullptr if no object is owned.
   pointer get() const noexcept { return _ptr; }
 
   /// Releases ownership of the managed object, if any
-  pointer release() noexcept {
+  pointer release() noexcept
+  {
     pointer p(_ptr);
     _ptr = nullptr;
     return p;
   }
 
   /// Replaces the managed object, deleting the old object.
-  void reset(pointer p = pointer()) noexcept {
+  void reset(pointer p = pointer()) noexcept
+  {
     pointer old_ptr = _ptr;
-    _ptr = p;
-    if (old_ptr != nullptr) {
-      get_deleter()(old_ptr);
-    }
+    _ptr            = p;
+    if (old_ptr != nullptr) { get_deleter()(old_ptr); }
   }
 
   /// Swaps the managed objects with *this and another unique_ptr
@@ -801,7 +828,8 @@ class unique_ptr {
 
 /// Specializes the swap algorithm
 template <typename T, typename Deleter>
-void swap(unique_ptr<T, Deleter>& lhs, unique_ptr<T, Deleter>& rhs) noexcept {
+void swap(unique_ptr<T, Deleter>& lhs, unique_ptr<T, Deleter>& rhs) noexcept
+{
   lhs.swap(rhs);
 }
 #endif
@@ -813,55 +841,54 @@ struct numeric_limits;
 template <>
 struct numeric_limits<int32_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr int32_t lowest() noexcept { return -2147483647 - 1;}
+  static constexpr int32_t lowest() noexcept { return -2147483647 - 1; }
   CUTLASS_HOST_DEVICE
-  static constexpr int32_t max() noexcept { return 2147483647;}
+  static constexpr int32_t max() noexcept { return 2147483647; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<int16_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr int16_t lowest() noexcept { return -32768;}
+  static constexpr int16_t lowest() noexcept { return -32768; }
   CUTLASS_HOST_DEVICE
-  static constexpr int16_t max() noexcept { return 32767;}
+  static constexpr int16_t max() noexcept { return 32767; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<int8_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr int8_t lowest() noexcept { return -128;}
+  static constexpr int8_t lowest() noexcept { return -128; }
   CUTLASS_HOST_DEVICE
-  static constexpr int8_t max() noexcept { return 127;}
+  static constexpr int8_t max() noexcept { return 127; }
   static constexpr bool is_integer = true;
 };
-
 
 template <>
 struct numeric_limits<uint32_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr uint32_t lowest() noexcept { return 0;}
+  static constexpr uint32_t lowest() noexcept { return 0; }
   CUTLASS_HOST_DEVICE
-  static constexpr uint32_t max() noexcept { return 4294967295U;}
+  static constexpr uint32_t max() noexcept { return 4294967295U; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<uint16_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr uint16_t lowest() noexcept { return 0;}
+  static constexpr uint16_t lowest() noexcept { return 0; }
   CUTLASS_HOST_DEVICE
-  static constexpr uint16_t max() noexcept { return 65535U;}
+  static constexpr uint16_t max() noexcept { return 65535U; }
   static constexpr bool is_integer = true;
 };
 
 template <>
 struct numeric_limits<uint8_t> {
   CUTLASS_HOST_DEVICE
-  static constexpr uint8_t lowest() noexcept { return 0;}
+  static constexpr uint8_t lowest() noexcept { return 0; }
   CUTLASS_HOST_DEVICE
-  static constexpr uint8_t max() noexcept { return 255U;}
+  static constexpr uint8_t max() noexcept { return 255U; }
   static constexpr bool is_integer = true;
 };
 

@@ -780,13 +780,13 @@ void extract_centers(raft::resources const& res,
     "Number of columns in the output buffer for cluster centers and index dim are different");
   auto stream = resource::get_cuda_stream(res);
   RAFT_CUDA_TRY(hipMemcpy2DAsync(cluster_centers.data_handle(),
-                                  sizeof(float) * index.dim(),
-                                  index.centers().data_handle(),
-                                  sizeof(float) * index.dim_ext(),
-                                  sizeof(float) * index.dim(),
-                                  index.n_lists(),
-                                  hipMemcpyDefault,
-                                  stream));
+                                 sizeof(float) * index.dim(),
+                                 index.centers().data_handle(),
+                                 sizeof(float) * index.dim_ext(),
+                                 sizeof(float) * index.dim(),
+                                 index.n_lists(),
+                                 hipMemcpyDefault,
+                                 stream));
 }
 /** @} */
 }  // namespace raft::neighbors::ivf_pq::helpers

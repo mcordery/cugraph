@@ -31,12 +31,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/activation.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
-#include "cutlass/epilogue/thread/activation.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,60 +50,53 @@ namespace thread {
 ///
 /// D = alpha * accumulator + beta * source + uniform
 ///
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  typename ElementCompute_ = ElementOutput_,           ///< Data type used to compute linear combination
-  ScaleType::Kind Scale = ScaleType::Default,          ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
+template <typename ElementOutput_,  ///< Data type used to load and store tensors
+          int Count,                ///< Number of elements computed per operation
+          typename ElementAccumulator_ = ElementOutput_,  ///< Accumulator data type
+          typename ElementCompute_ =
+            ElementOutput_,  ///< Data type used to compute linear combination
+          ScaleType::Kind Scale = ScaleType::Default,  ///< Control Alpha and Beta scaling
+          FloatRoundStyle Round = FloatRoundStyle::round_to_nearest>
 class LinearCombinationLeakyRelu {
-public:
-
-  using ElementOutput = ElementOutput_;
+ public:
+  using ElementOutput      = ElementOutput_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementCompute_;
+  using ElementCompute     = ElementCompute_;
 
-  static int const kCount = Count;
+  static int const kCount             = Count;
   static const ScaleType::Kind kScale = Scale;
 
-  using FragmentOutput = Array<ElementOutput, kCount>;
+  using FragmentOutput      = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using ComputeFragment = Array<ElementCompute, kCount>;
+  using ComputeFragment     = Array<ElementCompute, kCount>;
 
   static FloatRoundStyle const kRound = Round;
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta_bias;              ///< scales bias tensor
-    ElementCompute leaky_alpha;            ///< leaky_alpha
+    ElementCompute alpha;        ///< scales accumulators
+    ElementCompute beta_bias;    ///< scales bias tensor
+    ElementCompute leaky_alpha;  ///< leaky_alpha
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta_bias(ElementCompute(0)),
-      leaky_alpha(ElementCompute(1)) 
-       { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta_bias,
-      ElementCompute leaky_alpha = ElementCompute(1)
-    ): alpha(alpha), beta_bias(beta_bias), leaky_alpha(leaky_alpha) {
-
+    Params()
+      : alpha(ElementCompute(1)), beta_bias(ElementCompute(0)), leaky_alpha(ElementCompute(1))
+    {
     }
 
+    CUTLASS_HOST_DEVICE
+    Params(ElementCompute alpha,
+           ElementCompute beta_bias,
+           ElementCompute leaky_alpha = ElementCompute(1))
+      : alpha(alpha), beta_bias(beta_bias), leaky_alpha(leaky_alpha)
+    {
+    }
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -112,19 +105,20 @@ private:
   ElementCompute beta_bias_;
   ElementCompute leaky_alpha_recip_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  LinearCombinationLeakyRelu(Params const &params) {
-    alpha_ = (params.alpha);
-    beta_bias_ = (params.beta_bias);
-    leaky_alpha_recip_ = (ElementCompute(params.leaky_alpha));    
+  LinearCombinationLeakyRelu(Params const& params)
+  {
+    alpha_             = (params.alpha);
+    beta_bias_         = (params.beta_bias);
+    leaky_alpha_recip_ = (ElementCompute(params.leaky_alpha));
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
+  bool is_source_needed() const
+  {
     if (Scale == ScaleType::NoBetaScaling) return true;
 
     if (Scale == ScaleType::OnlyAlphaScaling) return false;
@@ -136,29 +130,26 @@ public:
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition) {
-    if (k_partition) {
-      beta_bias_ = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition)
+  {
+    if (k_partition) { beta_bias_ = ElementCompute(1); }
   }
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    if (k_partition) {
-      beta_bias_ = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition, int k_partition_count)
+  {
+    if (k_partition) { beta_bias_ = ElementCompute(1); }
   }
-  
+
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator, 
-    FragmentOutput const &source) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentOutput const& source) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementOutput, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
-    ComputeFragment converted_source = source_converter(source);
+    ComputeFragment converted_source      = source_converter(source);
     ComputeFragment converted_accumulator = accumulator_converter(accumulator);
 
     // Perform binary operations
@@ -171,12 +162,14 @@ public:
 
     if (Scale == ScaleType::NoBetaScaling) {
       intermediate = converted_source;
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
-    }  else if (Scale == ScaleType::Nothing) {
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
+    } else if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_add_source(beta_bias_, converted_source);                        // X =  beta * C + uniform
-      intermediate = mul_add_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
+      intermediate = mul_add_source(beta_bias_, converted_source);  // X =  beta * C + uniform
+      intermediate =
+        mul_add_accumulator(alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
     }
     // Compute threshold optionally
     intermediate = leakyrelu(intermediate, leaky_alpha_recip_);
@@ -189,30 +182,28 @@ public:
 
   /// Computes linear scaling: D = alpha * accumulator
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
-    
+
     ComputeFragment converted_accumulator = accumulator_converter(accumulator);
-    
+
     // Perform binary operations
     ComputeFragment intermediate;
 
     multiplies<ComputeFragment> mul_accumulator;
     LeakyReLU<ComputeFragment> leakyrelu;
-    //printf("in doing with bias");
+    // printf("in doing with bias");
     if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_accumulator(alpha_, converted_accumulator);    // D = alpha * Accum
+      intermediate = mul_accumulator(alpha_, converted_accumulator);  // D = alpha * Accum
     }
-    
+
     // Compute threshold optionally
     intermediate = leakyrelu(intermediate, leaky_alpha_recip_);
-    
-    
+
     // Convert to destination numeric type
     NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
 
@@ -222,8 +213,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

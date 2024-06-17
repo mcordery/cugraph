@@ -20,10 +20,8 @@ from libcpp cimport bool
 from libcpp.memory cimport unique_ptr
 from libcpp.utility cimport pair
 from libcpp.vector cimport vector
-
-from rmm._lib.device_buffer cimport device_buffer
-
 from pylibraft.common.handle cimport handle_t
+from rmm._lib.device_buffer cimport device_buffer
 
 
 cdef extern from "<utility>" namespace "std" nogil:

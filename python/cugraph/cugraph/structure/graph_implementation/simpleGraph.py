@@ -11,31 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.structure import graph_primtypes_wrapper
-from cugraph.structure.symmetrize import symmetrize
-from cugraph.structure.number_map import NumberMap
-import cugraph.dask.common.mg_utils as mg_utils
-import cudf
-import dask_cudf
-import cugraph.dask.comms.comms as Comms
-import pandas as pd
-import numpy as np
 import warnings
-from cugraph.dask.structure import replication
-from typing import Union, Dict, Iterable
-from pylibcugraph import (
-    get_two_hop_neighbors as pylibcugraph_get_two_hop_neighbors,
-    select_random_vertices as pylibcugraph_select_random_vertices,
-    degrees as pylibcugraph_degrees,
-    in_degrees as pylibcugraph_in_degrees,
-    out_degrees as pylibcugraph_out_degrees,
-)
+from typing import Dict, Iterable, Union
 
-from pylibcugraph import (
-    ResourceHandle,
-    GraphProperties,
-    SGGraph,
-)
+import cudf
+import cugraph.dask.common.mg_utils as mg_utils
+import cugraph.dask.comms.comms as Comms
+import dask_cudf
+import numpy as np
+import pandas as pd
+from cugraph.dask.structure import replication
+from cugraph.structure import graph_primtypes_wrapper
+from cugraph.structure.number_map import NumberMap
+from cugraph.structure.symmetrize import symmetrize
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
+from pylibcugraph import degrees as pylibcugraph_degrees
+from pylibcugraph import get_two_hop_neighbors as pylibcugraph_get_two_hop_neighbors
+from pylibcugraph import in_degrees as pylibcugraph_in_degrees
+from pylibcugraph import out_degrees as pylibcugraph_out_degrees
+from pylibcugraph import select_random_vertices as pylibcugraph_select_random_vertices
 
 
 # FIXME: Change to consistent camel case naming
@@ -289,9 +283,9 @@ class simpleGraphImpl:
             value_col = {
                 self.edgeWeightCol: value_col[weight] if weight in value_col else None,
                 self.edgeIdCol: value_col[edge_id] if edge_id in value_col else None,
-                self.edgeTypeCol: value_col[edge_type]
-                if edge_type in value_col
-                else None,
+                self.edgeTypeCol: (
+                    value_col[edge_type] if edge_type in value_col else None
+                ),
             }
 
         self.edgelist = simpleGraphImpl.EdgeList(source_col, dest_col, value_col)

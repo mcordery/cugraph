@@ -35,17 +35,16 @@
 
 #pragma once
 
+#include "cutlass/complex.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/fast_math.h"
 #include "cutlass/gemm/gemm.h"
-#include "cutlass/matrix_coord.h"
-#include "cutlass/complex.h"
-#include "cutlass/semaphore.h"
-
-#include "cutlass/layout/matrix.h"
-#include "cutlass/trace.h"
-#include "cutlass/gemm/kernel/gemm_transpose_operands.h"
 #include "cutlass/gemm/kernel/gemm_grouped_problem_visitor.h"
+#include "cutlass/gemm/kernel/gemm_transpose_operands.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_coord.h"
+#include "cutlass/semaphore.h"
+#include "cutlass/trace.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -55,45 +54,40 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename Mma_,                           ///! Threadblock-scoped matrix multiply-accumulate
-  typename Epilogue_,                      ///! Epilogue
-  typename ThreadblockSwizzle_,            ///! Threadblock swizzling function
-  GroupScheduleMode GroupScheduleMode_,    ///! Type of scheduling to perform
-  bool Transposed = false
->
+template <typename Mma_,                         ///! Threadblock-scoped matrix multiply-accumulate
+          typename Epilogue_,                    ///! Epilogue
+          typename ThreadblockSwizzle_,          ///! Threadblock swizzling function
+          GroupScheduleMode GroupScheduleMode_,  ///! Type of scheduling to perform
+          bool Transposed = false>
 struct GemmGroupedSoftmaxMainloopFusion {
-public:
-
-  using Mma = Mma_;
-  using Epilogue = Epilogue_;
-  using EpilogueOutputOp = typename Epilogue::OutputOp;
-  using ThreadblockSwizzle = ThreadblockSwizzle_;
+ public:
+  using Mma                                         = Mma_;
+  using Epilogue                                    = Epilogue_;
+  using EpilogueOutputOp                            = typename Epilogue::OutputOp;
+  using ThreadblockSwizzle                          = ThreadblockSwizzle_;
   static GroupScheduleMode const kGroupScheduleMode = GroupScheduleMode_;
-  static bool const kTransposed = Transposed;
+  static bool const kTransposed                     = Transposed;
 
   // Optional transpose
-  using MapArguments = kernel::detail::MapArguments<
-    typename Mma::IteratorA::Element,
-    typename Mma::IteratorA::Layout,
-    Mma::kTransformA,
-    Mma::IteratorA::AccessType::kElements,
-    typename Mma::IteratorB::Element,
-    typename Mma::IteratorB::Layout,
-    Mma::kTransformB,
-    Mma::IteratorB::AccessType::kElements,
-    typename Mma::LayoutC,
-    kTransposed
-  >;
+  using MapArguments = kernel::detail::MapArguments<typename Mma::IteratorA::Element,
+                                                    typename Mma::IteratorA::Layout,
+                                                    Mma::kTransformA,
+                                                    Mma::IteratorA::AccessType::kElements,
+                                                    typename Mma::IteratorB::Element,
+                                                    typename Mma::IteratorB::Layout,
+                                                    Mma::kTransformB,
+                                                    Mma::IteratorB::AccessType::kElements,
+                                                    typename Mma::LayoutC,
+                                                    kTransposed>;
 
   // Public-facing type definitions related to operand element type, layout, and complex conjugate
   // operation. Must interact with the 'kTransposed' notion.
   using ElementA = typename MapArguments::ElementA;
-  using LayoutA = typename MapArguments::LayoutA;
+  using LayoutA  = typename MapArguments::LayoutA;
   using ElementB = typename MapArguments::ElementB;
-  using LayoutB = typename MapArguments::LayoutB;
+  using LayoutB  = typename MapArguments::LayoutB;
   using ElementC = typename Epilogue::OutputTileIterator::Element;
-  using LayoutC = typename MapArguments::LayoutC;
+  using LayoutC  = typename MapArguments::LayoutC;
 
   using ElementScaleBias = typename Mma::IteratorNormSum::Element;
 
@@ -101,28 +95,27 @@ public:
   static ComplexTransform const kTransformB = MapArguments::kTransformB;
 
   // Type definitions about the mainloop.
-  using Operator = typename Mma::Operator;
-  using OperatorClass = typename Mma::Operator::OperatorClass;
+  using Operator         = typename Mma::Operator;
+  using OperatorClass    = typename Mma::Operator::OperatorClass;
   using ThreadblockShape = typename Mma::Shape;
-  using WarpShape = typename Mma::Operator::Shape;
+  using WarpShape        = typename Mma::Operator::Shape;
   using InstructionShape = typename Mma::Policy::Operator::InstructionShape;
-  using ArchTag = typename Mma::ArchTag;
+  using ArchTag          = typename Mma::ArchTag;
 
-  static int const kStages = Mma::kStages;
+  static int const kStages     = Mma::kStages;
   static int const kAlignmentA = MapArguments::kAlignmentA;
   static int const kAlignmentB = MapArguments::kAlignmentB;
   static int const kAlignmentC = Epilogue::OutputTileIterator::kElementsPerAccess;
 
   /// Warp count (concept: GemmShape)
-  using WarpCount = typename Mma::WarpCount;
+  using WarpCount               = typename Mma::WarpCount;
   static int const kThreadCount = 32 * WarpCount::kCount;
 
-  using ProblemVisitor = GemmGroupedProblemVisitor<
-                            ThreadblockShape,
-                            kGroupScheduleMode,
-                            kThreadCount,
-                            kThreadCount,
-                            kTransposed>;
+  using ProblemVisitor = GemmGroupedProblemVisitor<ThreadblockShape,
+                                                   kGroupScheduleMode,
+                                                   kThreadCount,
+                                                   kThreadCount,
+                                                   kTransposed>;
 
   //
   // Structures
@@ -130,31 +123,30 @@ public:
 
   /// Argument structure
   struct Arguments {
-
     //
     // Data members
     //
 
-    GemmCoord *problem_sizes;
+    GemmCoord* problem_sizes;
     int problem_count;
     int threadblock_count;
 
     typename EpilogueOutputOp::Params output_op;
 
-    ElementA ** ptr_A;
-    ElementB ** ptr_B;
-    ElementC ** ptr_C;
-    ElementC ** ptr_D;
-    void ** ptr_norm;
-    void ** ptr_sum;
+    ElementA** ptr_A;
+    ElementB** ptr_B;
+    ElementC** ptr_C;
+    ElementC** ptr_D;
+    void** ptr_norm;
+    void** ptr_sum;
 
-    typename LayoutA::Stride::LongIndex *lda;
-    typename LayoutB::Stride::LongIndex *ldb;
-    typename LayoutC::Stride::LongIndex *ldc;
-    typename LayoutC::Stride::LongIndex *ldd;
+    typename LayoutA::Stride::LongIndex* lda;
+    typename LayoutB::Stride::LongIndex* ldb;
+    typename LayoutC::Stride::LongIndex* ldc;
+    typename LayoutC::Stride::LongIndex* ldd;
 
     // Only used by device-level operator
-    GemmCoord *host_problem_sizes;
+    GemmCoord* host_problem_sizes;
 
     //
     // Methods
@@ -162,60 +154,56 @@ public:
 
     /// Default ctor
     CUTLASS_HOST_DEVICE
-    Arguments():
-      problem_count(0),
-      threadblock_count(0),
-      ptr_A(nullptr),
-      ptr_B(nullptr),
-      ptr_C(nullptr),
-      ptr_D(nullptr),
-      ptr_norm(nullptr),
-      ptr_sum(nullptr),
-      lda(nullptr),
-      ldb(nullptr),
-      ldc(nullptr),
-      ldd(nullptr),
-      host_problem_sizes(nullptr)
+    Arguments()
+      : problem_count(0),
+        threadblock_count(0),
+        ptr_A(nullptr),
+        ptr_B(nullptr),
+        ptr_C(nullptr),
+        ptr_D(nullptr),
+        ptr_norm(nullptr),
+        ptr_sum(nullptr),
+        lda(nullptr),
+        ldb(nullptr),
+        ldc(nullptr),
+        ldd(nullptr),
+        host_problem_sizes(nullptr)
     {
-
     }
 
     /// Ctor
     CUTLASS_HOST_DEVICE
-    Arguments(
-      GemmCoord *problem_sizes,
-      int problem_count,
-      int threadblock_count,
-      typename EpilogueOutputOp::Params output_op,
-      ElementA ** ptr_A,
-      ElementB ** ptr_B,
-      ElementC ** ptr_C,
-      ElementC ** ptr_D,
-      void ** ptr_norm,
-      void ** ptr_sum,
-      typename LayoutA::Stride::LongIndex *lda,
-      typename LayoutB::Stride::LongIndex *ldb,
-      typename LayoutC::Stride::LongIndex *ldc,
-      typename LayoutC::Stride::LongIndex *ldd,
-      GemmCoord *host_problem_sizes=nullptr
-    ):
-      problem_sizes(problem_sizes),
-      problem_count(problem_count),
-      threadblock_count(threadblock_count),
-      output_op(output_op),
-      ptr_A(ptr_A),
-      ptr_B(ptr_B),
-      ptr_C(ptr_C),
-      ptr_D(ptr_D),
-      ptr_norm(ptr_norm),
-      ptr_sum(ptr_sum),
-      lda(lda),
-      ldb(ldb),
-      ldc(ldc),
-      ldd(ldd),
-      host_problem_sizes(host_problem_sizes)
+    Arguments(GemmCoord* problem_sizes,
+              int problem_count,
+              int threadblock_count,
+              typename EpilogueOutputOp::Params output_op,
+              ElementA** ptr_A,
+              ElementB** ptr_B,
+              ElementC** ptr_C,
+              ElementC** ptr_D,
+              void** ptr_norm,
+              void** ptr_sum,
+              typename LayoutA::Stride::LongIndex* lda,
+              typename LayoutB::Stride::LongIndex* ldb,
+              typename LayoutC::Stride::LongIndex* ldc,
+              typename LayoutC::Stride::LongIndex* ldd,
+              GemmCoord* host_problem_sizes = nullptr)
+      : problem_sizes(problem_sizes),
+        problem_count(problem_count),
+        threadblock_count(threadblock_count),
+        output_op(output_op),
+        ptr_A(ptr_A),
+        ptr_B(ptr_B),
+        ptr_C(ptr_C),
+        ptr_D(ptr_D),
+        ptr_norm(ptr_norm),
+        ptr_sum(ptr_sum),
+        lda(lda),
+        ldb(ldb),
+        ldc(ldc),
+        ldd(ldd),
+        host_problem_sizes(host_problem_sizes)
     {
-
     }
   };
 
@@ -225,84 +213,78 @@ public:
 
   /// Parameters structure
   struct Params {
-
     typename ProblemVisitor::Params problem_visitor;
     int threadblock_count;
 
     typename EpilogueOutputOp::Params output_op;
 
-    ElementA ** ptr_A;
-    ElementB ** ptr_B;
-    ElementC ** ptr_C;
-    ElementC ** ptr_D;
+    ElementA** ptr_A;
+    ElementB** ptr_B;
+    ElementC** ptr_C;
+    ElementC** ptr_D;
 
-    void ** ptr_norm;
-    void ** ptr_sum;
+    void** ptr_norm;
+    void** ptr_sum;
 
-    typename LayoutA::Stride::LongIndex *lda;
-    typename LayoutB::Stride::LongIndex *ldb;
-    typename LayoutC::Stride::LongIndex *ldc;
-    typename LayoutC::Stride::LongIndex *ldd;
+    typename LayoutA::Stride::LongIndex* lda;
+    typename LayoutB::Stride::LongIndex* ldb;
+    typename LayoutC::Stride::LongIndex* ldc;
+    typename LayoutC::Stride::LongIndex* ldd;
 
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params():
-      ptr_A(nullptr),
-      ptr_B(nullptr),
-      ptr_C(nullptr),
-      ptr_D(nullptr),
-      ptr_norm(nullptr),
-      ptr_sum(nullptr),
-      lda(nullptr),
-      ldb(nullptr),
-      ldc(nullptr),
-      ldd(nullptr)
-    { }
-
-    CUTLASS_HOST_DEVICE
-    Params(Arguments const &args,
-          void *workspace = nullptr,
-          int tile_count = 0):
-      problem_visitor(args.problem_sizes, args.problem_count, workspace, tile_count),
-      threadblock_count(args.threadblock_count),
-      output_op(args.output_op),
-      ptr_A(args.ptr_A),
-      ptr_B(args.ptr_B),
-      ptr_C(args.ptr_C),
-      ptr_D(args.ptr_D),
-      ptr_norm(args.ptr_norm),
-      ptr_sum(args.ptr_sum),
-      lda(args.lda),
-      ldb(args.ldb),
-      ldc(args.ldc),
-      ldd(args.ldd)
+    Params()
+      : ptr_A(nullptr),
+        ptr_B(nullptr),
+        ptr_C(nullptr),
+        ptr_D(nullptr),
+        ptr_norm(nullptr),
+        ptr_sum(nullptr),
+        lda(nullptr),
+        ldb(nullptr),
+        ldc(nullptr),
+        ldd(nullptr)
     {
-
     }
 
     CUTLASS_HOST_DEVICE
-    void update(
-      Arguments const &args,
-      void *workspace = nullptr,
-      int tile_count = 0) {
+    Params(Arguments const& args, void* workspace = nullptr, int tile_count = 0)
+      : problem_visitor(args.problem_sizes, args.problem_count, workspace, tile_count),
+        threadblock_count(args.threadblock_count),
+        output_op(args.output_op),
+        ptr_A(args.ptr_A),
+        ptr_B(args.ptr_B),
+        ptr_C(args.ptr_C),
+        ptr_D(args.ptr_D),
+        ptr_norm(args.ptr_norm),
+        ptr_sum(args.ptr_sum),
+        lda(args.lda),
+        ldb(args.ldb),
+        ldc(args.ldc),
+        ldd(args.ldd)
+    {
+    }
 
-      problem_visitor = typename ProblemVisitor::Params(args.problem_sizes, args.problem_count,
-                                                        workspace, tile_count);
+    CUTLASS_HOST_DEVICE
+    void update(Arguments const& args, void* workspace = nullptr, int tile_count = 0)
+    {
+      problem_visitor = typename ProblemVisitor::Params(
+        args.problem_sizes, args.problem_count, workspace, tile_count);
       threadblock_count = args.threadblock_count;
-      output_op = args.output_op;
-      ptr_A = args.ptr_A;
-      ptr_B = args.ptr_B;
-      ptr_C = args.ptr_C;
-      ptr_D = args.ptr_D;
-      ptr_norm = args.ptr_norm;
-      ptr_sum = args.ptr_sum;
-      lda = args.lda;
-      ldb = args.ldb;
-      ldc = args.ldc;
-      ldd = args.ldd;
+      output_op         = args.output_op;
+      ptr_A             = args.ptr_A;
+      ptr_B             = args.ptr_B;
+      ptr_C             = args.ptr_C;
+      ptr_D             = args.ptr_D;
+      ptr_norm          = args.ptr_norm;
+      ptr_sum           = args.ptr_sum;
+      lda               = args.lda;
+      ldb               = args.ldb;
+      ldc               = args.ldc;
+      ldd               = args.ldd;
     }
   };
 
@@ -317,57 +299,51 @@ public:
     typename ProblemVisitor::SharedStorage problem_visitor;
   };
 
-public:
-
+ public:
   //
   // Methods
   //
 
   CUTLASS_DEVICE
-  GemmGroupedSoftmaxMainloopFusion() { }
+  GemmGroupedSoftmaxMainloopFusion() {}
 
   /// Determines whether kernel satisfies alignment
-  static Status can_implement(cutlass::gemm::GemmCoord const & problem_size) {
+  static Status can_implement(cutlass::gemm::GemmCoord const& problem_size)
+  {
     return Status::kSuccess;
   }
 
-  static Status can_implement(Arguments const &args) {
-    return Status::kSuccess;
-  }
+  static Status can_implement(Arguments const& args) { return Status::kSuccess; }
 
-  static size_t get_extra_workspace_size(
-    Arguments const &args,
-    cutlass::gemm::GemmCoord const &grid_tiled_shape) {
-
+  static size_t get_extra_workspace_size(Arguments const& args,
+                                         cutlass::gemm::GemmCoord const& grid_tiled_shape)
+  {
     return 0;
   }
 
   /// Executes one GEMM
   CUTLASS_DEVICE
-  void operator()(Params const &params, SharedStorage &shared_storage) {
-
+  void operator()(Params const& params, SharedStorage& shared_storage)
+  {
     //
     // These types shadow the type-level definitions and support the ability to implement
     // a 'transposed' GEMM that computes the transposed problems.
     //
     using ElementA = typename Mma::IteratorA::Element;
-    using LayoutA = typename Mma::IteratorA::Layout;
+    using LayoutA  = typename Mma::IteratorA::Layout;
     using ElementB = typename Mma::IteratorB::Element;
-    using LayoutB = typename Mma::IteratorB::Layout;
+    using LayoutB  = typename Mma::IteratorB::Layout;
     using ElementC = typename Epilogue::OutputTileIterator::Element;
-    using LayoutC = typename Epilogue::OutputTileIterator::Layout;
+    using LayoutC  = typename Epilogue::OutputTileIterator::Layout;
 
     //
     // Problem visitor.
     //
     ProblemVisitor problem_visitor(
-      params.problem_visitor,
-      shared_storage.problem_visitor,
-      blockIdx.x);
+      params.problem_visitor, shared_storage.problem_visitor, blockIdx.x);
 
     // Outer 'persistent' loop to iterate over tiles
     while (problem_visitor.next_tile()) {
-
       GemmCoord problem_size  = problem_visitor.problem_size();
       int32_t problem_idx     = problem_visitor.problem_index();
       int32_t threadblock_idx = int32_t(problem_visitor.threadblock_idx());
@@ -380,11 +356,15 @@ public:
         0);
 
       // Load element pointers. Exchange pointers and strides if working on the transpose
-      ElementA *ptr_A = reinterpret_cast<ElementA *>((kTransposed ? params.ptr_B[problem_idx] : params.ptr_A[problem_idx]));
-      typename LayoutA::LongIndex ldm_A = (kTransposed ? params.ldb[problem_idx] : params.lda[problem_idx]);
+      ElementA* ptr_A = reinterpret_cast<ElementA*>(
+        (kTransposed ? params.ptr_B[problem_idx] : params.ptr_A[problem_idx]));
+      typename LayoutA::LongIndex ldm_A =
+        (kTransposed ? params.ldb[problem_idx] : params.lda[problem_idx]);
 
-      ElementB *ptr_B = reinterpret_cast<ElementB *>((kTransposed ? params.ptr_A[problem_idx] : params.ptr_B[problem_idx]));
-      typename LayoutB::LongIndex ldm_B = (kTransposed ? params.lda[problem_idx] : params.ldb[problem_idx]);
+      ElementB* ptr_B = reinterpret_cast<ElementB*>(
+        (kTransposed ? params.ptr_A[problem_idx] : params.ptr_B[problem_idx]));
+      typename LayoutB::LongIndex ldm_B =
+        (kTransposed ? params.lda[problem_idx] : params.ldb[problem_idx]);
 
       // Compute initial location in logical coordinates
       cutlass::MatrixCoord tb_offset_A{
@@ -392,37 +372,25 @@ public:
         0,
       };
 
-      cutlass::MatrixCoord tb_offset_B{
-        0,
-        threadblock_offset.n()
-      };
+      cutlass::MatrixCoord tb_offset_B{0, threadblock_offset.n()};
 
       // Compute position within threadblock
       int thread_idx = threadIdx.x;
 
       // Construct iterators to A and B operands
       typename Mma::IteratorA iterator_A(
-        LayoutA(ldm_A),
-        ptr_A,
-        {problem_size.m(), problem_size.k()},
-        thread_idx,
-        tb_offset_A);
+        LayoutA(ldm_A), ptr_A, {problem_size.m(), problem_size.k()}, thread_idx, tb_offset_A);
 
       typename Mma::IteratorB iterator_B(
-        LayoutB(ldm_B),
-        ptr_B,
-        {problem_size.k(), problem_size.n()},
-        thread_idx,
-        tb_offset_B);
+        LayoutB(ldm_B), ptr_B, {problem_size.k(), problem_size.n()}, thread_idx, tb_offset_B);
 
       // Construct iterator to the softmax norm/sum vector
       typename Mma::IteratorNormSum iterator_norm_sum(
         problem_size.m(),
-        static_cast<ElementScaleBias const *>(params.ptr_norm[problem_idx]),
-        static_cast<ElementScaleBias const *>(params.ptr_sum[problem_idx]),
+        static_cast<ElementScaleBias const*>(params.ptr_norm[problem_idx]),
+        static_cast<ElementScaleBias const*>(params.ptr_sum[problem_idx]),
         thread_idx,
-        MatrixCoord(0, threadblock_offset.m())
-      );
+        MatrixCoord(0, threadblock_offset.m()));
 
       typename Mma::FragmentC accumulators;
 
@@ -448,13 +416,7 @@ public:
       __syncthreads();
 
       // Compute threadblock-scoped matrix multiply-add
-      mma(
-        gemm_k_iterations,
-        accumulators,
-        iterator_A,
-        iterator_B,
-        iterator_norm_sum,
-        accumulators);
+      mma(gemm_k_iterations, accumulators, iterator_A, iterator_B, iterator_norm_sum, accumulators);
 
       //
       // Epilogue
@@ -462,8 +424,8 @@ public:
 
       EpilogueOutputOp output_op(params.output_op);
 
-      ElementC *ptr_C = params.ptr_C[problem_idx];
-      ElementC *ptr_D = params.ptr_D[problem_idx];
+      ElementC* ptr_C = params.ptr_C[problem_idx];
+      ElementC* ptr_D = params.ptr_D[problem_idx];
 
       LayoutC layout_C(params.ldc[problem_idx]);
       LayoutC layout_D(params.ldd[problem_idx]);
@@ -473,34 +435,16 @@ public:
 
       // Tile iterator loading from source tensor.
       typename Epilogue::OutputTileIterator iterator_C(
-        params_C,
-        ptr_C,
-        problem_size.mn(),
-        thread_idx,
-        threadblock_offset.mn()
-      );
+        params_C, ptr_C, problem_size.mn(), thread_idx, threadblock_offset.mn());
 
       // Tile iterator writing to destination tensor.
       typename Epilogue::OutputTileIterator iterator_D(
-        params_D,
-        ptr_D,
-        problem_size.mn(),
-        thread_idx,
-        threadblock_offset.mn()
-      );
+        params_D, ptr_D, problem_size.mn(), thread_idx, threadblock_offset.mn());
 
-      Epilogue epilogue(
-        shared_storage.kernel.epilogue,
-        thread_idx,
-        warp_idx,
-        lane_idx);
+      Epilogue epilogue(shared_storage.kernel.epilogue, thread_idx, warp_idx, lane_idx);
 
       // Execute the epilogue operator to update the destination tensor.
-      epilogue(
-        output_op,
-        iterator_D,
-        accumulators,
-        iterator_C);
+      epilogue(output_op, iterator_D, accumulators, iterator_C);
 
       // Next tile
       problem_visitor.advance(gridDim.x);
@@ -510,8 +454,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__utility/declval.h"
@@ -23,14 +23,16 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template<class _Func, class... _Args, class = decltype(std::declval<_Func>()(std::declval<_Args>()...))>
+template <class _Func,
+          class... _Args,
+          class = decltype(std::declval<_Func>()(std::declval<_Args>()...))>
 _LIBCUDACXX_INLINE_VISIBILITY true_type __is_callable_helper(int);
-template<class...>
+template <class...>
 _LIBCUDACXX_INLINE_VISIBILITY false_type __is_callable_helper(...);
 
-template<class _Func, class... _Args>
+template <class _Func, class... _Args>
 struct __is_callable : decltype(__is_callable_helper<_Func, _Args...>(0)) {};
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_CALLABLE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_CALLABLE_H

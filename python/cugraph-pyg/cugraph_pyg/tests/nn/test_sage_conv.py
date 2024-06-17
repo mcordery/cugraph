@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import pytest
-
 from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
 
 ATOL = 1e-6

@@ -19,8 +19,8 @@
 #include <raft/core/device_setter.hpp>
 
 #include <rmm/cuda_device.hpp>
-#include <rmm/hip_stream.hpp>
 #include <rmm/cuda_stream_pool.hpp>
+#include <rmm/hip_stream.hpp>
 #include <rmm/mr/device/cuda_memory_resource.hpp>
 #include <rmm/mr/device/per_device_resource.hpp>
 

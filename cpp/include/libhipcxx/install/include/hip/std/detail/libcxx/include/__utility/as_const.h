@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/add_const.h"
 
@@ -24,7 +24,11 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if _LIBCUDACXX_STD_VER > 11
 template <class _Tp>
-_LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY constexpr add_const_t<_Tp>& as_const(_Tp& __t) noexcept { return __t; }
+_LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY constexpr add_const_t<_Tp>& as_const(
+  _Tp& __t) noexcept
+{
+  return __t;
+}
 
 template <class _Tp>
 void as_const(const _Tp&&) = delete;
@@ -32,4 +36,4 @@ void as_const(const _Tp&&) = delete;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___UTILITY_AS_CONST_H
+#endif  // _LIBCUDACXX___UTILITY_AS_CONST_H

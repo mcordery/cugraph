@@ -31,12 +31,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <thrust/tuple.h>
+#include <thrust/type_traits/is_contiguous_iterator.h>
+
 #include <hipco/detail/bitwise_compare.cuh>
 #include <hipco/detail/static_multimap/kernels.cuh>
 #include <hipco/detail/utils.cuh>
-
-#include <thrust/tuple.h>
-#include <thrust/type_traits/is_contiguous_iterator.h>
 
 // #include <hip/hip_cooperative_groups.h>
 #include "hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
@@ -228,7 +228,7 @@ class static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view_
   probe_sequence_type probe_sequence_;  ///< Probe sequence used to probe the hash map
   Key empty_key_sentinel_{};            ///< Key value that represents an empty slot
   Value empty_value_sentinel_{};        ///< Initial Value of empty slot
-};                                      // class device_view_impl_base
+};  // class device_view_impl_base
 
 template <typename Key,
           typename Value,

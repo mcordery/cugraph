@@ -12,26 +12,26 @@
 # limitations under the License.
 
 import os
+from pathlib import Path
+
+import cudf
+import cupy as cp
+import dask_cudf
+import networkx as nx
+import numpy as np
+import pandas as pd
 
 # Assume test environment has the following dependencies installed
 import pytest
-import pandas as pd
-import networkx as nx
-import numpy as np
-import cupy as cp
+from cugraph.dask.common.mg_utils import get_client
 from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
-from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
 from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
+from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
 from scipy.sparse import coo_matrix as sp_coo_matrix
-from scipy.sparse import csr_matrix as sp_csr_matrix
 from scipy.sparse import csc_matrix as sp_csc_matrix
-from pathlib import Path
-import cudf
-import dask_cudf
+from scipy.sparse import csr_matrix as sp_csr_matrix
 
 import cugraph
-from cugraph.dask.common.mg_utils import get_client
-
 
 CUPY_MATRIX_TYPES = [cp_coo_matrix, cp_csr_matrix, cp_csc_matrix]
 SCIPY_MATRIX_TYPES = [sp_coo_matrix, sp_csr_matrix, sp_csc_matrix]

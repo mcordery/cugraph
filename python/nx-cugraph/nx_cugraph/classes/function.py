@@ -12,7 +12,6 @@
 # limitations under the License.
 import cupy as cp
 import networkx as nx
-
 from nx_cugraph.convert import _to_graph
 from nx_cugraph.utils import networkx_algorithm
 

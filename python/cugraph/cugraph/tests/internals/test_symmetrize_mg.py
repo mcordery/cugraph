@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-import pandas as pd
-
 import dask_cudf
-import cugraph
+import pandas as pd
+import pytest
 from cugraph.testing import utils
 from pylibcugraph.testing.utils import gen_fixture_params_product
 
+import cugraph
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

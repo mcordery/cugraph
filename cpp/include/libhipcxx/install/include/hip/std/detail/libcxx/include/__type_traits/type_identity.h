@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -21,16 +21,22 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _Tp>
-struct __type_identity { typedef _Tp type; };
+struct __type_identity {
+  typedef _Tp type;
+};
 
 template <class _Tp>
 using __type_identity_t _LIBCUDACXX_NODEBUG_TYPE = typename __type_identity<_Tp>::type;
 
 #if _LIBCUDACXX_STD_VER > 11
-template<class _Tp> struct type_identity { typedef _Tp type; };
-template<class _Tp> using type_identity_t = typename type_identity<_Tp>::type;
+template <class _Tp>
+struct type_identity {
+  typedef _Tp type;
+};
+template <class _Tp>
+using type_identity_t = typename type_identity<_Tp>::type;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_TYPE_IDENTITY_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_TYPE_IDENTITY_H

@@ -11,17 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dask.distributed import default_client, wait
-import dask_cudf
-
-from cugraph.dask.comms import comms as Comms
 import cudf
-import numpy as np
 import cupy as cp
-import cugraph
+import dask_cudf
+import numpy as np
+from cugraph.dask.comms import comms as Comms
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
 from pylibcugraph import generate_rmat_edgelist as pylibcugraph_generate_rmat_edgelist
 from pylibcugraph import generate_rmat_edgelists as pylibcugraph_generate_rmat_edgelists
-from pylibcugraph import ResourceHandle
+
+import cugraph
 
 _graph_types = [cugraph.Graph, cugraph.MultiGraph]
 
@@ -275,7 +275,7 @@ def _mg_rmat(
     num_workers = len(worker_list)
     num_edges_list = _calc_num_edges_per_worker(num_workers, num_edges)
     result = []
-    for (i, worker_num_edges) in enumerate(num_edges_list):
+    for i, worker_num_edges in enumerate(num_edges_list):
         unique_worker_seed = seed + i
         future = client.submit(
             _call_rmat,

@@ -14,6 +14,8 @@
 // Author: Alex Fender afender@nvidia.com
 #pragma once
 
+#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
+
 #include <cugraph/utilities/error.hpp>
 
 #include <raft/util/cudart_utils.hpp>
@@ -39,8 +41,6 @@
 #include <thrust/transform_reduce.h>
 
 #include <hip/hip_runtime.h>
-
-#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
 using namespace hip_extensions::hip_warp_primitives;
 
 namespace cugraph {

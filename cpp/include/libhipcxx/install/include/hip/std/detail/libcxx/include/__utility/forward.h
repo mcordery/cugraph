@@ -13,7 +13,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/is_reference.h"
 #include "../__type_traits/remove_reference.h"
@@ -25,18 +25,20 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _Tp>
-_LIBCUDACXX_NODISCARD_EXT inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&&
-forward(__libcpp_remove_reference_t<_Tp>& __t) _NOEXCEPT {
+_LIBCUDACXX_NODISCARD_EXT inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&& forward(
+  __libcpp_remove_reference_t<_Tp>& __t) _NOEXCEPT
+{
   return static_cast<_Tp&&>(__t);
 }
 
 template <class _Tp>
-_LIBCUDACXX_NODISCARD_EXT inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&&
-forward(__libcpp_remove_reference_t<_Tp>&& __t) _NOEXCEPT {
+_LIBCUDACXX_NODISCARD_EXT inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&& forward(
+  __libcpp_remove_reference_t<_Tp>&& __t) _NOEXCEPT
+{
   static_assert(!is_lvalue_reference<_Tp>::value, "cannot forward an rvalue as an lvalue");
   return static_cast<_Tp&&>(__t);
 }
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___UTILITY_FORWARD_H
+#endif  // _LIBCUDACXX___UTILITY_FORWARD_H

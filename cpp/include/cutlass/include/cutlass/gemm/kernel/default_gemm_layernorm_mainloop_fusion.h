@@ -30,10 +30,10 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
       Default kernel-level GEMM definitions combine threadblock-scoped matrix multiply-add with
       the appropriate threadblock-scoped epilogue.
-  
+
       Note, CUTLASS epilogues universally target row-major outputs. Column-major outputs are
       accommodated by exchanging A and B operands and assuming transposed layouts. Partial
       specializations here choose 'device::GemmTransposed' to implement this functionality.
@@ -41,21 +41,17 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
-#include "cutlass/layout/matrix.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/arch/wmma.h"
-
-#include "cutlass/epilogue/threadblock/epilogue.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/thread/linear_combination.h"
-
+#include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
+#include "cutlass/epilogue/threadblock/epilogue.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/kernel/gemm_layernorm_mainloop_fusion.h"
 #include "cutlass/gemm/threadblock/default_mma_layernorm_mainloop_fusion.h"
 #include "cutlass/gemm/threadblock/threadblock_swizzle.h"
-
-#include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/numeric_types.h"
 #include "cutlass/transform/threadblock/predicated_tile_iterator.h"
 
 namespace cutlass {
@@ -65,64 +61,80 @@ namespace kernel {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for Scale/Bias vectors
-    typename ElementScaleBias,
-    /// Layout type for Scale/Bias vectors
-    typename LayoutScaleBias,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Operation performed by GEMM
-    typename Operator,
-    /// Use zfill or predicate for out-of-bound cp.async
-    SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone>
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for Scale/Bias vectors
+  typename ElementScaleBias,
+  /// Layout type for Scale/Bias vectors
+  typename LayoutScaleBias,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Operation performed by GEMM
+  typename Operator,
+  /// Use zfill or predicate for out-of-bound cp.async
+  SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone>
 struct DefaultGemmLayernormMainloopFusion {
-
   /// Define the threadblock-scoped matrix multiply-accumulate
   using Mma = typename cutlass::gemm::threadblock::DefaultMmaLayernormMainloopFusion<
-      ElementA, LayoutA, kAlignmentA, ElementB, LayoutB, kAlignmentB,
-      ElementScaleBias, LayoutScaleBias, ElementAccumulator, layout::RowMajor, arch::OpClassTensorOp, arch::Sm80,
-      ThreadblockShape, WarpShape, InstructionShape, Stages,
-      Operator, false, SharedMemoryClear>::ThreadblockMma;
+    ElementA,
+    LayoutA,
+    kAlignmentA,
+    ElementB,
+    LayoutB,
+    kAlignmentB,
+    ElementScaleBias,
+    LayoutScaleBias,
+    ElementAccumulator,
+    layout::RowMajor,
+    arch::OpClassTensorOp,
+    arch::Sm80,
+    ThreadblockShape,
+    WarpShape,
+    InstructionShape,
+    Stages,
+    Operator,
+    false,
+    SharedMemoryClear>::ThreadblockMma;
 
   static const int kPartitionsK = ThreadblockShape::kK / WarpShape::kK;
 
   /// Define the epilogue
-  using Epilogue =
-      typename cutlass::epilogue::threadblock::DefaultEpilogueTensorOp<
-          ThreadblockShape, typename Mma::Operator, kPartitionsK, EpilogueOutputOp,
-          EpilogueOutputOp::kCount>::Epilogue;
+  using Epilogue = typename cutlass::epilogue::threadblock::DefaultEpilogueTensorOp<
+    ThreadblockShape,
+    typename Mma::Operator,
+    kPartitionsK,
+    EpilogueOutputOp,
+    EpilogueOutputOp::kCount>::Epilogue;
 
   /// Define the kernel-level GEMM operator.
   using GemmKernel = kernel::GemmLayernormMainloopFusion<Mma, Epilogue, ThreadblockSwizzle>;

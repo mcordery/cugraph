@@ -11,45 +11,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import warnings
 import argparse
+import gc
+import json
+import logging
+import os
+import re
 import traceback
+import warnings
+from math import ceil
+from time import perf_counter, sleep
+from typing import Dict, Optional, Union
 
-from cugraph.testing.mg_utils import (
+import cudf
+import cupy
+import dask.dataframe as ddf
+import dask_cudf
+import numpy as np
+import pandas as pd
+from cugraph.dask import get_n_workers
+from cugraph.gnn import BulkSampler
+from cugraph.structure.symmetrize import symmetrize
+from cugraph.testing.mg_utils import (  # get_allocation_counts_dask_persist,
+    enable_spilling,
     generate_edgelist_rmat,
-    # get_allocation_counts_dask_persist,
     get_allocation_counts_dask_lazy,
-    sizeof_fmt,
     get_peak_output_ratio_across_workers,
+    sizeof_fmt,
     start_dask_client,
     stop_dask_client,
-    enable_spilling,
 )
-
-from cugraph.structure.symmetrize import symmetrize
-from cugraph.gnn import BulkSampler
+from dask.distributed import default_client
 
 import cugraph
-
-import json
-import re
-import os
-import gc
-from time import sleep, perf_counter
-from math import ceil
-
-import pandas as pd
-import numpy as np
-import cupy
-import cudf
-
-import dask_cudf
-import dask.dataframe as ddf
-from dask.distributed import default_client
-from cugraph.dask import get_n_workers
-
-from typing import Optional, Union, Dict
 
 
 def construct_graph(dask_dataframe):
@@ -828,10 +822,12 @@ if __name__ == "__main__":
     time_dask_start = time.localtime()
 
     logger.info(f"{time.asctime(time_dask_start)}: starting dask client")
-    from dask_cuda.initialize import initialize
-    from dask.distributed import Client
+    import os
+    import time
+
     from cugraph.dask.comms import comms as Comms
-    import os, time
+    from dask.distributed import Client
+    from dask_cuda.initialize import initialize
 
     client = Client(scheduler_file=os.environ["SCHEDULER_FILE"], timeout=360)
     time.sleep(30)

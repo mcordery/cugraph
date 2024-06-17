@@ -35,8 +35,8 @@
 
 #include <hipco/detail/probing_scheme_base.cuh>
 
-#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 #include <hip/hip_cooperative_groups.h>
+#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 
 namespace hipco {
 namespace experimental {

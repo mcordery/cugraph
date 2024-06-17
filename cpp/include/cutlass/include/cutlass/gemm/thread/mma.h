@@ -34,11 +34,11 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/gemm/gemm.h"
 #include "cutlass/arch/mma.h"
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,15 +67,14 @@ template <
   /// Concept: arch::OpMultiplyAdd or arch::Mma<>
   typename Operator = arch::OpMultiplyAdd,
   /// Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 struct Mma;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace gemm
-} // namespace cutlass
+}  // namespace thread
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

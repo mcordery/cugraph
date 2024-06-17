@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import cudf
-
 import warnings
+
+import cudf
+import numpy as np
 
 
 def _get_feasibility(G, sources, components=None, depth_limit=None):

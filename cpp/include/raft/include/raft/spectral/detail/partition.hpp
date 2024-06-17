@@ -23,11 +23,11 @@
 #include <raft/spectral/eigen_solvers.cuh>
 #include <raft/spectral/matrix_wrappers.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
 #include <thrust/transform.h>
 
+#include <hip/hip_runtime.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -77,7 +77,7 @@ std::tuple<vertex_t, weight_t, vertex_t> partition(
   RAFT_EXPECTS(eigVals != nullptr, "Null eigVals buffer.");
   RAFT_EXPECTS(eigVecs != nullptr, "Null eigVecs buffer.");
 
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
   auto hipblas.h = resource::get_cublas_handle(handle);
 
   std::tuple<vertex_t, weight_t, vertex_t>
@@ -145,7 +145,7 @@ void analyzePartition(raft::resources const& handle,
   vertex_t i;
   vertex_t n = csr_m.nrows_;
 
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
   auto hipblas.h = resource::get_cublas_handle(handle);
 
   weight_t partEdgesCut, clustersize;

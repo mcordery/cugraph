@@ -69,7 +69,7 @@ namespace detail {
 template <int32_t CGSize, int32_t BlockSize, typename InputIterator, typename Ref>
 __global__ void insert_or_assign(InputIterator first, hipco::detail::index_type n, Ref ref)
 {
-  namespace cg = hip_extensions::hip_cooperative_groups_ext;
+  namespace cg           = hip_extensions::hip_cooperative_groups_ext;
   auto const loop_stride = hipco::detail::grid_stride() / CGSize;
   auto idx               = hipco::detail::global_thread_id() / CGSize;
 
@@ -78,8 +78,7 @@ __global__ void insert_or_assign(InputIterator first, hipco::detail::index_type 
     if constexpr (CGSize == 1) {
       ref.insert_or_assign(insert_pair);
     } else {
-      auto const tile =
-        cg::tiled_partition<CGSize>(cg::this_thread_block());
+      auto const tile = cg::tiled_partition<CGSize>(cg::this_thread_block());
       ref.insert_or_assign(tile, insert_pair);
     }
     idx += loop_stride;

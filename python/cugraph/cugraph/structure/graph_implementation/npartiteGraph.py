@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .simpleGraph import simpleGraphImpl
 import cudf
+
+from .simpleGraph import simpleGraphImpl
 
 
 class npartiteGraphImpl(simpleGraphImpl):

@@ -414,8 +414,8 @@ mdspan_copyable_t<DstType, SrcType> copy(resources const& res, DstType&& dst, Sr
     // Copy to intermediate source on device, then perform necessary
     // changes in layout on device, directly into final destination
     using mdarray_t   = device_mdarray<typename config::src_value_type,
-                                     typename config::src_extents_type,
-                                     typename config::src_layout_type>;
+                                       typename config::src_extents_type,
+                                       typename config::src_layout_type>;
     auto intermediate = mdarray_t(res,
                                   typename mdarray_t::mapping_type{src.extents()},
                                   typename mdarray_t::container_policy_type{});
@@ -431,8 +431,8 @@ mdspan_copyable_t<DstType, SrcType> copy(resources const& res, DstType&& dst, Sr
     // Perform necessary changes in layout on device, then copy to final
     // destination on host
     using mdarray_t   = device_mdarray<typename config::dst_value_type,
-                                     typename config::dst_extents_type,
-                                     typename config::dst_layout_type>;
+                                       typename config::dst_extents_type,
+                                       typename config::dst_layout_type>;
     auto intermediate = mdarray_t(res,
                                   typename mdarray_t::mapping_type{dst.extents()},
                                   typename mdarray_t::container_policy_type{});

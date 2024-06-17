@@ -20,8 +20,8 @@
 #include <raft/core/math.hpp>
 #include <raft/distance/distance_types.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <hip_pipeline.h>
+#include <hipcub/hipcub.hpp>
 
 namespace raft {
 namespace sparse {

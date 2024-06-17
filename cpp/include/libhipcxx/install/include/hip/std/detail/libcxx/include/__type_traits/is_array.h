@@ -13,7 +13,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cstddef>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -28,9 +28,8 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 #if defined(_LIBCUDACXX_IS_ARRAY) && !defined(_LIBCUDACXX_USE_IS_ARRAY_FALLBACK)
 
 template <class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_array 
-    : public integral_constant<bool, _LIBCUDACXX_IS_ARRAY(_Tp)>
-    {};
+struct _LIBCUDACXX_TEMPLATE_VIS is_array
+  : public integral_constant<bool, _LIBCUDACXX_IS_ARRAY(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -39,20 +38,20 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_array_v = _LIBCUDACXX_IS_ARRAY(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_array
-    : public false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_array<_Tp[]>
-    : public true_type {};
-template <class _Tp, size_t _Np> struct _LIBCUDACXX_TEMPLATE_VIS is_array<_Tp[_Np]>
-    : public true_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_array : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_array<_Tp[]> : public true_type {};
+template <class _Tp, size_t _Np>
+struct _LIBCUDACXX_TEMPLATE_VIS is_array<_Tp[_Np]> : public true_type {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_array_v = is_array<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_ARRAY) && !defined(_LIBCUDACXX_USE_IS_ARRAY_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_ARRAY) && !defined(_LIBCUDACXX_USE_IS_ARRAY_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_ARRAY_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_ARRAY_H

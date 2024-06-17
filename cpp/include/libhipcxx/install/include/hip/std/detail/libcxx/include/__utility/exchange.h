@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/is_nothrow_assignable.h"
 #include "../__type_traits/is_nothrow_move_constructible.h"
@@ -26,17 +26,17 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if _LIBCUDACXX_STD_VER > 11
-template<class _T1, class _T2 = _T1>
-inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR_AFTER_CXX11
-_T1 exchange(_T1& __obj, _T2&& __new_value)
-    noexcept(is_nothrow_move_constructible<_T1>::value && is_nothrow_assignable<_T1&, _T2>::value)
+template <class _T1, class _T2 = _T1>
+inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR_AFTER_CXX11 _T1
+exchange(_T1& __obj, _T2&& __new_value) noexcept(is_nothrow_move_constructible<_T1>::value &&
+                                                 is_nothrow_assignable<_T1&, _T2>::value)
 {
-    _T1 __old_value = _CUDA_VSTD::move(__obj);
-    __obj = _CUDA_VSTD::forward<_T2>(__new_value);
-    return __old_value;
+  _T1 __old_value = _CUDA_VSTD::move(__obj);
+  __obj           = _CUDA_VSTD::forward<_T2>(__new_value);
+  return __old_value;
 }
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___UTILITY_EXCHANGE_H
+#endif  // _LIBCUDACXX___UTILITY_EXCHANGE_H

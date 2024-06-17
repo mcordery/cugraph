@@ -34,6 +34,10 @@
 
 #pragma once
 
+#include "../hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
+
+#include <thrust/functional.h>
+
 #include <hipco/cuda_stream_ref.hpp>
 #include <hipco/detail/__config>
 #include <hipco/detail/open_addressing/open_addressing_impl.cuh>
@@ -44,10 +48,6 @@
 #include <hipco/static_map_ref.cuh>
 #include <hipco/utility/allocator.hpp>
 #include <hipco/utility/traits.hpp>
-
-#include <thrust/functional.h>
-
-#include "../hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
 
 #include <hip/std/atomic>
 
@@ -117,12 +117,12 @@ namespace experimental {
  */
 template <class Key,
           class T,
-          class Extent             = hipco::experimental::extent<std::size_t>,
+          class Extent            = hipco::experimental::extent<std::size_t>,
           hip::thread_scope Scope = hip::thread_scope_device,
-          class KeyEqual           = thrust::equal_to<Key>,
+          class KeyEqual          = thrust::equal_to<Key>,
           class ProbingScheme =
             hipco::experimental::double_hashing<HIPCO_TILE_SIZE,  // CG size
-                                               hipco::default_hash_function<Key>>,
+                                                hipco::default_hash_function<Key>>,
           class Allocator = hipco::cuda_allocator<hipco::pair<Key, T>>,
           class Storage   = hipco::experimental::storage<1>>
 class static_map {
@@ -163,14 +163,14 @@ class static_map {
   template <typename... Operators>
   using ref_type =
     hipco::experimental::static_map_ref<key_type,
-                                       mapped_type,
-                                       thread_scope,
-                                       key_equal,
-                                       probing_scheme_type,
-                                       storage_ref_type,
-                                       Operators...>;  ///< Non-owning container ref type
+                                        mapped_type,
+                                        thread_scope,
+                                        key_equal,
+                                        probing_scheme_type,
+                                        storage_ref_type,
+                                        Operators...>;  ///< Non-owning container ref type
 
-  static_map(static_map const&) = delete;
+  static_map(static_map const&)            = delete;
   static_map& operator=(static_map const&) = delete;
 
   static_map(static_map&&) = default;  ///< Move constructor
@@ -842,8 +842,8 @@ template <typename Key,
           typename Value,
           hip::thread_scope Scope = hip::thread_scope_device,
           typename Allocator      = hipco::cuda_allocator<char>,
-          uint32_t TileSize  = HIPCO_TILE_SIZE,
-          uint32_t BlockSize = HIPCO_BLOCK_SIZE>
+          uint32_t TileSize       = HIPCO_TILE_SIZE,
+          uint32_t BlockSize      = HIPCO_BLOCK_SIZE>
 class static_map {
   static_assert(
     hipco::is_bitwise_comparable_v<Key>,
@@ -856,21 +856,21 @@ class static_map {
                 "hipco::is_bitwise_comparable_v<Value>.");
 
  public:
-  using value_type         = hipco::pair<Key, Value>;            ///< Type of key/value pairs
-  using key_type           = Key;                               ///< Key type
-  using mapped_type        = Value;                             ///< Type of mapped values
+  using value_type         = hipco::pair<Key, Value>;          ///< Type of key/value pairs
+  using key_type           = Key;                              ///< Key type
+  using mapped_type        = Value;                            ///< Type of mapped values
   using atomic_key_type    = hip::atomic<key_type, Scope>;     ///< Type of atomic keys
   using atomic_mapped_type = hip::atomic<mapped_type, Scope>;  ///< Type of atomic mapped values
   using pair_atomic_type =
     hipco::pair<atomic_key_type,
-                    atomic_mapped_type>;  ///< Pair type of atomic key and atomic mapped value
+                atomic_mapped_type>;  ///< Pair type of atomic key and atomic mapped value
   using slot_type           = pair_atomic_type;                 ///< Type of hash map slots
   using atomic_ctr_type     = hip::atomic<std::size_t, Scope>;  ///< Atomic counter type
   using allocator_type      = Allocator;                        ///< Allocator type
   using slot_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<
     pair_atomic_type>;  ///< Type of the allocator to (de)allocate slots
   using counter_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<
-    atomic_ctr_type>;   ///< Type of the allocator to (de)allocate atomic counters
+    atomic_ctr_type>;  ///< Type of the allocator to (de)allocate atomic counters
 
 #if !defined(HIPCO_HAS_INDEPENDENT_THREADS)
   static_assert(atomic_key_type::is_always_lock_free,
@@ -883,7 +883,7 @@ class static_map {
   static_map(static_map&&)      = delete;
 
   static_map& operator=(static_map const&) = delete;
-  static_map& operator=(static_map&&) = delete;
+  static_map& operator=(static_map&&)      = delete;
 
   /**
    * @brief Indicates if concurrent insert/find is supported for the key/value types.
@@ -974,8 +974,8 @@ class static_map {
             typename KeyEqual = thrust::equal_to<key_type>>
   void insert(InputIt first,
               InputIt last,
-              Hash hash           = Hash{},
-              KeyEqual key_equal  = KeyEqual{},
+              Hash hash          = Hash{},
+              KeyEqual key_equal = KeyEqual{},
               hipStream_t stream = 0);
 
   /**
@@ -1010,8 +1010,8 @@ class static_map {
                  InputIt last,
                  StencilIt stencil,
                  Predicate pred,
-                 Hash hash           = Hash{},
-                 KeyEqual key_equal  = KeyEqual{},
+                 Hash hash          = Hash{},
+                 KeyEqual key_equal = KeyEqual{},
                  hipStream_t stream = 0);
 
   /**
@@ -1046,8 +1046,8 @@ class static_map {
             typename KeyEqual = thrust::equal_to<key_type>>
   void erase(InputIt first,
              InputIt last,
-             Hash hash           = Hash{},
-             KeyEqual key_equal  = KeyEqual{},
+             Hash hash          = Hash{},
+             KeyEqual key_equal = KeyEqual{},
              hipStream_t stream = 0);
 
   /**
@@ -1190,7 +1190,8 @@ class static_map {
     // FIXME(HIP): Need __attribute__((noinline)) as workaround for invalid modulo results.
     // SWDEV-436805.
     template <typename ProbeKey, typename Hash>
-    __attribute__((noinline)) __device__ iterator initial_slot(ProbeKey const& k, Hash hash) noexcept
+    __attribute__((noinline)) __device__ iterator initial_slot(ProbeKey const& k,
+                                                               Hash hash) noexcept
     {
       return &slots_[hash(k) % capacity_];
     }
@@ -1208,7 +1209,8 @@ class static_map {
     // FIXME(HIP): Need __attribute__((noinline)) as workaround for invalid modulo results.
     // SWDEV-436805.
     template <typename ProbeKey, typename Hash>
-    __attribute__((noinline)) __device__ const_iterator initial_slot(ProbeKey const& k, Hash hash) const noexcept
+    __attribute__((noinline)) __device__ const_iterator initial_slot(ProbeKey const& k,
+                                                                     Hash hash) const noexcept
     {
       return &slots_[hash(k) % capacity_];
     }

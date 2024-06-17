@@ -13,9 +13,9 @@
 
 
 import cudf
-import cugraph
 import numpy as np
 
+import cugraph
 
 # TRIM Process:
 #   - removed single vertex componenets

@@ -12,9 +12,8 @@
 # limitations under the License.
 import cupy as cp
 import networkx as nx
-import pytest
-
 import nx_cugraph as nxcg
+import pytest
 from nx_cugraph import interface
 
 

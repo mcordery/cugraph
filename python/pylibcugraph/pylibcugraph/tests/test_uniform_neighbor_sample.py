@@ -13,17 +13,16 @@
 
 import gc
 
-import pytest
+import cudf
 import cupy as cp
 import numpy as np
-import cudf
-
+import pytest
 from pylibcugraph import (
-    SGGraph,
-    ResourceHandle,
     GraphProperties,
+    ResourceHandle,
+    SGGraph,
+    uniform_neighbor_sample,
 )
-from pylibcugraph import uniform_neighbor_sample
 
 # Set to True to disable memory leak assertions. This may be necessary when
 # running in environments that share a GPU (pytest-xdist), are using memory

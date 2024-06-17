@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__type_traits/is_floating_point.h"
@@ -24,9 +24,9 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_arithmetic
-    : public integral_constant<bool, is_integral<_Tp>::value      ||
-                                     is_floating_point<_Tp>::value> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_arithmetic
+  : public integral_constant<bool, is_integral<_Tp>::value || is_floating_point<_Tp>::value> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -35,4 +35,4 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_arithmetic_v = is_arithmetic<_Tp>::valu
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_ARITHMETIC_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_ARITHMETIC_H

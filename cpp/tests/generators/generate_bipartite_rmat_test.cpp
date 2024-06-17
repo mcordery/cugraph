@@ -223,7 +223,7 @@ struct GenerateBipartiteRmat_Usecase {
       src_edge_factor(src_edge_factor),
       a(a),
       b(b),
-      c(c){};
+      c(c) {};
 };
 
 class Tests_GenerateBipartiteRmat : public ::testing::TestWithParam<GenerateBipartiteRmat_Usecase> {

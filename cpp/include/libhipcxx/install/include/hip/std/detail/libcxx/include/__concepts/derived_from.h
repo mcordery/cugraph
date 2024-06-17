@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__type_traits/add_pointer.h"
@@ -29,26 +29,24 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.derived]
 
-template<class _Dp, class _Bp>
+template <class _Dp, class _Bp>
 concept derived_from =
-  is_base_of_v<_Bp, _Dp> &&
-  is_convertible_v<const volatile _Dp*, const volatile _Bp*>;
+  is_base_of_v<_Bp, _Dp> && is_convertible_v<const volatile _Dp*, const volatile _Bp*>;
 
 #elif _LIBCUDACXX_STD_VER > 11
 
-template<class _Dp, class _Bp>
+template <class _Dp, class _Bp>
 _LIBCUDACXX_CONCEPT_FRAGMENT(
   __derived_from_,
-  requires()(
-    requires(is_base_of_v<_Bp, _Dp>),
-    requires(is_convertible_v<add_pointer_t<const volatile _Dp>, add_pointer_t<const volatile _Bp>>)
-  ));
+  requires()(requires(is_base_of_v<_Bp, _Dp>),
+             requires(is_convertible_v<add_pointer_t<const volatile _Dp>,
+                                       add_pointer_t<const volatile _Bp>>)));
 
-template<class _Dp, class _Bp>
+template <class _Dp, class _Bp>
 _LIBCUDACXX_CONCEPT derived_from = _LIBCUDACXX_FRAGMENT(__derived_from_, _Dp, _Bp);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_DERIVED_FROM_H
+#endif  // _LIBCUDACXX___CONCEPTS_DERIVED_FROM_H

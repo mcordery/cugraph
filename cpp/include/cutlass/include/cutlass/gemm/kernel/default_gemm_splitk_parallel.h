@@ -30,10 +30,10 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
       Default kernel-level GEMM definitions combine threadblock-scoped matrix multiply-add with
       the appropriate threadblock-scoped epilogue.
-  
+
       Note, CUTLASS epilogues universally target row-major outputs. Column-major outputs are
       accommodated by exchanging A and B operands and assuming transposed layouts. Partial
       specializations here choose 'device::GemmTransposed' to implement this functionality.
@@ -89,33 +89,29 @@ template <
   /// Number of stages used in the pipelined mainloop
   int Stages,
   /// Operation performed by GEMM
-  typename Operator
->
+  typename Operator>
 struct DefaultGemmSplitKParallel {
-
   /// Define the threadblock-scoped matrix multiply-accumulate using the basic GEMM's
   /// mainloop.
-  using Default = DefaultGemm<
-    ElementA_,
-    LayoutA_,
-    kAlignmentA,
-    ElementB_,
-    LayoutB_,
-    kAlignmentB,
-    ElementAccumulator,
-    LayoutC_,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    false,
-    Operator
-  >;
+  using Default = DefaultGemm<ElementA_,
+                              LayoutA_,
+                              kAlignmentA,
+                              ElementB_,
+                              LayoutB_,
+                              kAlignmentB,
+                              ElementAccumulator,
+                              LayoutC_,
+                              ElementAccumulator,
+                              OperatorClass,
+                              ArchTag,
+                              ThreadblockShape,
+                              WarpShape,
+                              InstructionShape,
+                              EpilogueOutputOp,
+                              ThreadblockSwizzle,
+                              Stages,
+                              false,
+                              Operator>;
 
   /// Define the matrix multiply operator
   using Mma = typename Default::Mma;

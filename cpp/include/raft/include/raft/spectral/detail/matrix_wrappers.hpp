@@ -16,8 +16,8 @@
 #pragma once
 
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/detail/cublas_wrappers.hpp>
@@ -26,13 +26,13 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/functional>
 #include <thrust/execution_policy.h>
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
 #include <thrust/system/cuda/execution_policy.h>
 
 #include <algorithm>
+#include <hip/functional>
 
 // =========================================================
 // Useful macros
@@ -203,10 +203,10 @@ struct sparse_matrix_t {
     RAFT_EXPECTS(y != nullptr, "Null y buffer.");
 
     auto hipsparse.h = resource::get_cusparse_handle(handle_);
-    auto stream     = resource::get_cuda_stream(handle_);
+    auto stream      = resource::get_cuda_stream(handle_);
 
     hipsparseOperation_t trans = transpose ? HIPSPARSE_OPERATION_TRANSPOSE :  // transpose
-                                  HIPSPARSE_OPERATION_NON_TRANSPOSE;         // non-transpose
+                                   HIPSPARSE_OPERATION_NON_TRANSPOSE;         // non-transpose
 
 #if not defined CUDA_ENFORCE_LOWER and CUDA_VER_10_1_UP
     auto size_x = transpose ? nrows_ : ncols_;
@@ -249,8 +249,16 @@ struct sparse_matrix_t {
 
     // finally perform SpMV:
     //
-    RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsespmv(
-      hipsparse.h, trans, &alpha, matA, vecX, &beta, vecY, spmv_alg, external_buffer.raw(), stream));
+    RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsespmv(hipsparse.h,
+                                                         trans,
+                                                         &alpha,
+                                                         matA,
+                                                         vecX,
+                                                         &beta,
+                                                         vecY,
+                                                         spmv_alg,
+                                                         external_buffer.raw(),
+                                                         stream));
 
     // FIXME: This is a workaround for a cusparse issue being encountered in CUDA 12
     raft::copy(y, y_tmp.data(), size_y, stream);
@@ -261,8 +269,8 @@ struct sparse_matrix_t {
     RAFT_CUSPARSE_TRY(hipsparseDestroyDnVec(vecX));
     RAFT_CUSPARSE_TRY(hipsparseDestroySpMat(matA));
 #else
-    RAFT_CUSPARSE_TRY(
-      raft::sparse::detail::cusparsesetpointermode(cusparse_h, HIPSPARSE_POINTER_MODE_HOST, stream));
+    RAFT_CUSPARSE_TRY(raft::sparse::detail::cusparsesetpointermode(
+      cusparse_h, HIPSPARSE_POINTER_MODE_HOST, stream));
     hipsparseMatDescr_t descr = 0;
     RAFT_CUSPARSE_TRY(hipsparseCreateMatDescr(&descr));
     if (symmetric) {
@@ -359,9 +367,9 @@ struct laplacian_matrix_t : sparse_matrix_t<index_type, value_type> {
     constexpr int BLOCK_SIZE = 1024;
     auto n                   = sparse_matrix_t<index_type, value_type>::nrows_;
 
-    auto handle   = sparse_matrix_t<index_type, value_type>::get_handle();
+    auto handle    = sparse_matrix_t<index_type, value_type>::get_handle();
     auto hipblas.h = resource::get_cublas_handle(handle);
-    auto stream   = resource::get_cuda_stream(handle);
+    auto stream    = resource::get_cuda_stream(handle);
 
     // scales y by beta:
     //
@@ -421,9 +429,9 @@ struct modularity_matrix_t : laplacian_matrix_t<index_type, value_type> {
   {
     auto n = sparse_matrix_t<index_type, value_type>::nrows_;
 
-    auto handle   = sparse_matrix_t<index_type, value_type>::get_handle();
+    auto handle    = sparse_matrix_t<index_type, value_type>::get_handle();
     auto hipblas.h = resource::get_cublas_handle(handle);
-    auto stream   = resource::get_cuda_stream(handle);
+    auto stream    = resource::get_cuda_stream(handle);
 
     // y = A*x
     //

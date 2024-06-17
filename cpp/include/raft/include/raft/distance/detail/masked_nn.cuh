@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/distance/detail/compress_to_bits.cuh>
 #include <raft/distance/detail/fused_distance_nn/fused_l2_nn.cuh>
 #include <raft/distance/detail/masked_distance_base.cuh>
@@ -291,13 +291,13 @@ void masked_l2_nn_impl(raft::resources const& handle,
   auto fin_op      = raft::identity_op{};
 
   auto kernel               = masked_l2_nn_kernel<DataT,
-                                    OutT,
-                                    IdxT,
-                                    P,
-                                    ReduceOpT,
-                                    KVPReduceOpT,
-                                    decltype(core_lambda),
-                                    decltype(fin_op)>;
+                                                  OutT,
+                                                  IdxT,
+                                                  P,
+                                                  ReduceOpT,
+                                                  KVPReduceOpT,
+                                                  decltype(core_lambda),
+                                                  decltype(fin_op)>;
   constexpr size_t smemSize = P::SmemSize + ((P::Mblk + P::Nblk) * sizeof(DataT));
   dim3 block(P::Nthreads);
   dim3 grid = launchConfigGenerator<P>(m, n, smemSize, kernel);

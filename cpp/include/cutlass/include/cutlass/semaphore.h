@@ -34,15 +34,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
 #include "cutlass/aligned_buffer.h"
 #include "cutlass/array.h"
-
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,47 +48,43 @@ namespace cutlass {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// CTA-wide semaphore for inter-CTA synchronization.
-class Semaphore { 
-public:
-
-  int *lock;
+class Semaphore {
+ public:
+  int* lock;
   bool wait_thread;
   int state;
 
-public:
-
+ public:
   /// Implements a semaphore to wait for a flag to reach a given value
   CUTLASS_HOST_DEVICE
-  Semaphore(int *lock_, int thread_id): 
-    lock(lock_), 
-    wait_thread(thread_id < 0 || thread_id == 0),
-    state(-1) {
-
+  Semaphore(int* lock_, int thread_id)
+    : lock(lock_), wait_thread(thread_id < 0 || thread_id == 0), state(-1)
+  {
   }
 
   /// Permit fetching the synchronization mechanism early
   CUTLASS_DEVICE
-  void fetch() {
+  void fetch()
+  {
     if (wait_thread) {
-      #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
-      asm volatile ("ld.global.acquire.gpu.b32 %0, [%1];\n" : "=r"(state) : "l"(lock));  
-      #else
-      asm volatile ("ld.global.cg.b32 %0, [%1];\n" : "=r"(state) : "l"(lock));  
-      #endif
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
+      asm volatile("ld.global.acquire.gpu.b32 %0, [%1];\n" : "=r"(state) : "l"(lock));
+#else
+      asm volatile("ld.global.cg.b32 %0, [%1];\n" : "=r"(state) : "l"(lock));
+#endif
     }
   }
 
   /// Gets the internal state
   CUTLASS_DEVICE
-  int get_state() const {
-    return state;
-  }
+  int get_state() const { return state; }
 
   /// Waits until the semaphore is equal to the given value
   CUTLASS_DEVICE
-  void wait(int status = 0) {
+  void wait(int status = 0)
+  {
 #if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__)) || defined(__CUDACC_RTC__)
-    while( __syncthreads_and(state != status) ) {
+    while (__syncthreads_and(state != status)) {
       fetch();
     }
 
@@ -101,16 +94,17 @@ public:
 
   /// Updates the lock with the given result
   CUTLASS_DEVICE
-  void release(int status = 0) {
+  void release(int status = 0)
+  {
 #if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__)) || defined(__CUDACC_RTC__)
     __syncthreads();
 
     if (wait_thread) {
-      #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
-      asm volatile ("st.global.release.gpu.b32 [%0], %1;\n" : : "l"(lock), "r"(status));
-      #else
-      asm volatile ("st.global.cg.b32 [%0], %1;\n" : : "l"(lock), "r"(status));
-      #endif
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
+      asm volatile("st.global.release.gpu.b32 [%0], %1;\n" : : "l"(lock), "r"(status));
+#else
+      asm volatile("st.global.cg.b32 [%0], %1;\n" : : "l"(lock), "r"(status));
+#endif
     }
 #endif
   }
@@ -118,6 +112,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

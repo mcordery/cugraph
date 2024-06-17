@@ -14,13 +14,14 @@
 # A graphsage GNN model using dgl for node classification
 # with three layers and mean aggregation
 import time
+
 import dgl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics.functional as MF
-from cugraph_dgl.nn import SAGEConv
 import tqdm
+from cugraph_dgl.nn import SAGEConv
 
 
 class Sage(nn.Module):

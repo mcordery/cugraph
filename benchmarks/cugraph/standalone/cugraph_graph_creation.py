@@ -11,26 +11,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+from time import sleep
+
+import cudf
+import pandas as pd
+from cugraph.structure.symmetrize import symmetrize_ddf
 from cugraph.testing.mg_utils import (
+    enable_spilling,
     generate_edgelist_rmat,
-    get_allocation_counts_dask_persist,
     get_allocation_counts_dask_lazy,
-    sizeof_fmt,
+    get_allocation_counts_dask_persist,
     get_peak_output_ratio_across_workers,
     restart_client,
-)
-
-from cugraph.testing.mg_utils import (
+    sizeof_fmt,
     start_dask_client,
     stop_dask_client,
-    enable_spilling,
 )
-from cugraph.structure.symmetrize import symmetrize_ddf
+
 import cugraph
-import cudf
-from time import sleep
-import pandas as pd
-import time
 
 
 @get_allocation_counts_dask_lazy(return_allocations=True, logging=True)

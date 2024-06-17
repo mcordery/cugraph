@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -31,10 +31,11 @@ template <class _Tp, class _Up, class = void>
 struct __is_core_convertible : public false_type {};
 
 template <class _Tp, class _Up>
-struct __is_core_convertible<_Tp, _Up, decltype(
-    static_cast<void(*)(_Up)>(0) ( static_cast<_Tp(*)()>(0)() )
-)> : public true_type {};
+struct __is_core_convertible<_Tp,
+                             _Up,
+                             decltype(static_cast<void (*)(_Up)>(0)(static_cast<_Tp (*)()>(0)()))>
+  : public true_type {};
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_CORE_CONVERTIBLE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_CORE_CONVERTIBLE_H

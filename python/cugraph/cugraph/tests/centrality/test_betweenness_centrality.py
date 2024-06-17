@@ -12,18 +12,17 @@
 # limitations under the License.
 
 import gc
-
-import pytest
 import random
-import numpy as np
-import networkx as nx
 
 import cudf
 import cupy
+import networkx as nx
+import numpy as np
+import pytest
+from cugraph.testing import SMALL_DATASETS, utils
+
 import cugraph
 from cugraph.datasets import karate_disjoint
-from cugraph.testing import utils, SMALL_DATASETS
-
 
 # =============================================================================
 # Parameters

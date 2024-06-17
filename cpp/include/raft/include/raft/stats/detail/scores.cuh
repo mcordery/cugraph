@@ -188,23 +188,23 @@ void regression_metrics(const T* predictions,
   char* temp_storage = nullptr;
   size_t temp_storage_bytes;
   RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortKeys((void*)temp_storage,
-                                               temp_storage_bytes,
-                                               abs_diffs_array.data(),
-                                               sorted_abs_diffs.data(),
-                                               n,
-                                               0,
-                                               8 * sizeof(double),
-                                               stream));
+                                                  temp_storage_bytes,
+                                                  abs_diffs_array.data(),
+                                                  sorted_abs_diffs.data(),
+                                                  n,
+                                                  0,
+                                                  8 * sizeof(double),
+                                                  stream));
   rmm::device_uvector<char> temp_storage_v(temp_storage_bytes, stream);
   temp_storage = temp_storage_v.data();
   RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortKeys((void*)temp_storage,
-                                               temp_storage_bytes,
-                                               abs_diffs_array.data(),
-                                               sorted_abs_diffs.data(),
-                                               n,
-                                               0,
-                                               8 * sizeof(double),
-                                               stream));
+                                                  temp_storage_bytes,
+                                                  abs_diffs_array.data(),
+                                                  sorted_abs_diffs.data(),
+                                                  n,
+                                                  0,
+                                                  8 * sizeof(double),
+                                                  stream));
 
   raft::update_host(h_sorted_abs_diffs.data(), sorted_abs_diffs.data(), n, stream);
   raft::interruptible::synchronize(stream);

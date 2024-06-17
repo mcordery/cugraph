@@ -33,33 +33,30 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Describes the size of a matrix tile
-template <
-  int Row_,     ///< rows of a matrix
-  int Column_      ///< columns of a matrix
->
+template <int Row_,    ///< rows of a matrix
+          int Column_  ///< columns of a matrix
+          >
 struct MatrixShape {
-  static int const kRow = Row_;           ///< rows of a matrix
-  static int const kColumn = Column_;           ///< columns of a matrix
-  static int const kCount = Row_ * Column_;  ///< total number of elements in a matrix
+  static int const kRow    = Row_;            ///< rows of a matrix
+  static int const kColumn = Column_;         ///< columns of a matrix
+  static int const kCount  = Row_ * Column_;  ///< total number of elements in a matrix
 
   //
   // Static member functions
   //
 
   CUTLASS_HOST_DEVICE
-  static Coord<2> toCoord() {
-    return make_Coord(kRow, kColumn);
-  }
+  static Coord<2> toCoord() { return make_Coord(kRow, kColumn); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass

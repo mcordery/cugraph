@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import path
 import csv
+from os import path
 
 import numpy as np
 
@@ -24,7 +24,7 @@ def __namify_dict(d):
     """
     strings = []
 
-    for (key, val) in d.items():
+    for key, val in d.items():
         if type(val) in [float, np.float64, np.float32]:
             val = f"{val:.6}"
         strings.append(f"{key}:{val}")

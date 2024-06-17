@@ -62,7 +62,7 @@ public:
 #endif
     }
   }
-  
+
   [[nodiscard]] bool ready() const
   {
     const auto __result = ::hipStreamQuery(get());

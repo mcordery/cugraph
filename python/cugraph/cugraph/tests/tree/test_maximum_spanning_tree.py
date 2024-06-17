@@ -11,19 +11,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import gc
-
-import rmm
-import pytest
-import numpy as np
-import networkx as nx
+import time
 
 import cudf
-import cugraph
+import networkx as nx
+import numpy as np
+import pytest
+import rmm
 from cugraph.testing import utils
-from cugraph.datasets import netscience
 
+import cugraph
+from cugraph.datasets import netscience
 
 print("Networkx version : {} ".format(nx.__version__))
 

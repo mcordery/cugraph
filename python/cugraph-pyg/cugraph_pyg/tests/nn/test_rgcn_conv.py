@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import pytest
-
 from cugraph_pyg.nn import RGCNConv as CuGraphRGCNConv
 
 ATOL = 1e-6

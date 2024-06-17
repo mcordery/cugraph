@@ -36,8 +36,8 @@
 #include <hipco/operator.hpp>
 
 #include <hip/atomic>
-//Todo(HIP): replace once cg extension is part of rocm
-// #include <cooperative_groups.h>
+// Todo(HIP): replace once cg extension is part of rocm
+//  #include <cooperative_groups.h>
 #include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 namespace hipco {
 namespace experimental {
@@ -166,7 +166,8 @@ template <typename Key,
           typename StorageRef,
           typename... Operators>
 template <typename... NewOperators>
-__host__ __device__ auto static_map_ref<Key, T, Scope, KeyEqual, ProbingScheme, StorageRef, Operators...>::with(
+__host__ __device__ auto
+static_map_ref<Key, T, Scope, KeyEqual, ProbingScheme, StorageRef, Operators...>::with(
   NewOperators...) && noexcept
 {
   return static_map_ref<Key, T, Scope, KeyEqual, ProbingScheme, StorageRef, NewOperators...>(
@@ -196,11 +197,11 @@ class operator_impl<
  public:
   /**
    * @brief Inserts an element.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param value The element to insert
-*
+   *
    * @return True if the given element is successfully inserted
    */
   template <typename Value>
@@ -212,15 +213,16 @@ class operator_impl<
 
   /**
    * @brief Inserts an element.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param group The Cooperative Group used to perform group insert
    * @param value The element to insert
-*
+   *
    * @return True if the given element is successfully inserted
    */
-  // template <typename Value> //Todo(HIP): re-enable and use Value instead of value_type in func. sig.?
+  // template <typename Value> //Todo(HIP): re-enable and use Value instead of value_type in func.
+  // sig.?
   __device__ bool insert(cg::thread_block_tile<cg_size> const& group,
                          value_type const& value) noexcept
   {
@@ -254,7 +256,7 @@ class operator_impl<
   /**
    * @brief Inserts a key-value pair `{k, v}` if it's not present in the map. Otherwise, assigns `v`
    * to the mapped_type corresponding to the key `k`.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param value The element to insert
@@ -302,7 +304,7 @@ class operator_impl<
    *
    * @brief Inserts a key-value pair `{k, v}` if it's not present in the map. Otherwise, assigns `v`
    * to the mapped_type corresponding to the key `k`.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param group The Cooperative Group used to perform group insert
@@ -331,7 +333,7 @@ class operator_impl<
               return detail::window_probing_results{detail::equal_result::EQUAL, i};
             default: {
               if (hipco::detail::bitwise_compare(window_slots[i].first,
-                                                ref_.impl_.erased_key_sentinel())) {
+                                                 ref_.impl_.erased_key_sentinel())) {
                 return window_probing_results{detail::equal_result::ERASED, i};
               } else {
                 continue;
@@ -380,7 +382,7 @@ class operator_impl<
    *
    * @brief Inserts a key-value pair `{k, v}` if it's not present in the map. Otherwise, assigns `v`
    * to the mapped_type corresponding to the key `k`.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param group The Cooperative Group used to perform group insert
@@ -388,9 +390,8 @@ class operator_impl<
    *
    * @return Returns `true` if the given `value` is inserted or `value` has a match in the map.
    */
-  template <typename Value> 
-  __device__ constexpr bool attempt_insert_or_assign(value_type* slot, 
-                                                     Value const& value) noexcept
+  template <typename Value>
+  __device__ constexpr bool attempt_insert_or_assign(value_type* slot, Value const& value) noexcept
   {
     ref_type& ref_          = static_cast<ref_type&>(*this);
     auto const expected_key = ref_.impl_.empty_slot_sentinel().first;
@@ -463,7 +464,7 @@ class operator_impl<
    * @note This API returns a pair consisting of an iterator to the inserted element (or to the
    * element that prevented the insertion) and a `bool` denoting whether the insertion took place or
    * not.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param value The element to insert
@@ -484,7 +485,7 @@ class operator_impl<
    * @note This API returns a pair consisting of an iterator to the inserted element (or to the
    * element that prevented the insertion) and a `bool` denoting whether the insertion took place or
    * not.
-*
+   *
    * @tparam Value Input type which is implicitly convertible to 'value_type'
    *
    * @param group The Cooperative Group used to perform group insert_and_find
@@ -493,7 +494,7 @@ class operator_impl<
    * @return a pair consisting of an iterator to the element and a bool indicating whether the
    * insertion is successful or not.
    */
-template <typename Value>
+  template <typename Value>
   __device__ thrust::pair<iterator, bool> insert_and_find(
     cg::thread_block_tile<cg_size> const& group, Value const& value) noexcept
   {
@@ -548,8 +549,7 @@ class operator_impl<
    * @return True if the given element is successfully erased
    */
   template <typename ProbeKey>
-  __device__ bool erase(cg::thread_block_tile<cg_size> const& group,
-                        ProbeKey const& key) noexcept
+  __device__ bool erase(cg::thread_block_tile<cg_size> const& group, ProbeKey const& key) noexcept
   {
     auto& ref_ = static_cast<ref_type&>(*this);
     return ref_.impl_.erase(group, key);
@@ -609,8 +609,8 @@ class operator_impl<
    * @return A boolean indicating whether the probe key is present
    */
   template <typename ProbeKey>
-  [[nodiscard]] __device__ bool contains(
-    cg::thread_block_tile<cg_size> const& group, ProbeKey const& key) const noexcept
+  [[nodiscard]] __device__ bool contains(cg::thread_block_tile<cg_size> const& group,
+                                         ProbeKey const& key) const noexcept
   {
     auto const& ref_ = static_cast<ref_type const&>(*this);
     return ref_.impl_.contains(group, key);
@@ -698,8 +698,8 @@ class operator_impl<
    * @return An iterator to the position at which the equivalent key is stored
    */
   template <typename ProbeKey>
-  [[nodiscard]] __device__ const_iterator find(
-    cg::thread_block_tile<cg_size> const& group, ProbeKey const& key) const noexcept
+  [[nodiscard]] __device__ const_iterator find(cg::thread_block_tile<cg_size> const& group,
+                                               ProbeKey const& key) const noexcept
   {
     auto const& ref_ = static_cast<ref_type const&>(*this);
     return ref_.impl_.find(group, key);

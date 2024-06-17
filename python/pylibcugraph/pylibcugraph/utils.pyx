@@ -16,22 +16,19 @@
 
 from libc.stdint cimport uintptr_t
 
-import numpy
 import cupy
+import numpy
 
 from pylibcugraph._cugraph_c.array cimport (
+    cugraph_type_erased_device_array_view_copy,
+    cugraph_type_erased_device_array_view_create,
+    cugraph_type_erased_device_array_view_free,
+    cugraph_type_erased_device_array_view_pointer,
     cugraph_type_erased_device_array_view_size,
     cugraph_type_erased_device_array_view_type,
-    cugraph_type_erased_device_array_view_pointer,
-    cugraph_type_erased_device_array_view_create,
-    cugraph_type_erased_device_array_view_copy,
-    cugraph_type_erased_device_array_view_free,
 )
+from pylibcugraph._cugraph_c.error cimport cugraph_error_free, cugraph_error_message
 
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_message,
-    cugraph_error_free
-)
 
 # FIXME: add tests for this
 cdef assert_success(cugraph_error_code_t code,

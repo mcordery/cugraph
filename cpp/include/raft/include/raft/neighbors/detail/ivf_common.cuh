@@ -37,7 +37,7 @@ struct dummy_block_sort_t {
   using queue_t =
     matrix::detail::select::warpsort::warp_sort_distributed<WarpSize, Ascending, T, IdxT>;
   template <typename... Args>
-  __device__ dummy_block_sort_t(int k, Args...){};
+  __device__ dummy_block_sort_t(int k, Args...) {};
 };
 
 /**
@@ -295,22 +295,22 @@ void recompute_internal_state(const raft::resources& res, Index& index)
   int end_bit               = sizeof(uint32_t) * 8;
   size_t cub_workspace_size = 0;
   hipcub::DeviceRadixSort::SortKeysDescending(nullptr,
-                                           cub_workspace_size,
-                                           index.list_sizes().data_handle(),
-                                           sorted_sizes.data(),
-                                           index.n_lists(),
-                                           begin_bit,
-                                           end_bit,
-                                           stream);
+                                              cub_workspace_size,
+                                              index.list_sizes().data_handle(),
+                                              sorted_sizes.data(),
+                                              index.n_lists(),
+                                              begin_bit,
+                                              end_bit,
+                                              stream);
   rmm::device_buffer cub_workspace(cub_workspace_size, stream, tmp_res);
   hipcub::DeviceRadixSort::SortKeysDescending(cub_workspace.data(),
-                                           cub_workspace_size,
-                                           index.list_sizes().data_handle(),
-                                           sorted_sizes.data(),
-                                           index.n_lists(),
-                                           begin_bit,
-                                           end_bit,
-                                           stream);
+                                              cub_workspace_size,
+                                              index.list_sizes().data_handle(),
+                                              sorted_sizes.data(),
+                                              index.n_lists(),
+                                              begin_bit,
+                                              end_bit,
+                                              stream);
   // copy the results to CPU
   std::vector<uint32_t> sorted_sizes_host(index.n_lists());
   copy(sorted_sizes_host.data(), sorted_sizes.data(), index.n_lists(), stream);

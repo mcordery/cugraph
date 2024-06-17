@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Templates implementing storing of tiles from pitch-linear rank=2 tensors. 
+    \brief Templates implementing storing of tiles from pitch-linear rank=2 tensors.
 */
 
 #pragma once
@@ -45,18 +45,16 @@ namespace threadblock {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename Shape,
-  typename Element,
-  typename Layout,
-  int AdvanceRank,
-  typename ThreadMap,
-  int Alignment = sizeof_bits<Element>::value * ThreadMap::kElementsPerAccess / 8
->
+template <typename Shape,
+          typename Element,
+          typename Layout,
+          int AdvanceRank,
+          typename ThreadMap,
+          int Alignment = sizeof_bits<Element>::value * ThreadMap::kElementsPerAccess / 8>
 class RegularTileIterator;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace transform
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace transform
+}  // namespace cutlass

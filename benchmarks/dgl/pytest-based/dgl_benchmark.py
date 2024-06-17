@@ -11,12 +11,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
 import os
-import pytest_benchmark
-import pytest
-import torch
+
 import dgl
+import pandas as pd
+import pytest
+import pytest_benchmark
+import torch
 
 
 def get_edgelist(scale, edgefactor, dataset_dir="../datasets"):

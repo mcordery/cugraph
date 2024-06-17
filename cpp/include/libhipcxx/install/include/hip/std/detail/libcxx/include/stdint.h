@@ -13,7 +13,7 @@
 // case the header guard macro is defined.
 #if !defined(_AIX) || !defined(_STD_TYPES_T)
 #define _LIBCUDACXX_STDINT_H
-#endif // _STD_TYPES_T
+#endif  // _STD_TYPES_T
 
 /*
     stdint.h synopsis
@@ -104,7 +104,6 @@ Macros:
 */
 
 #include <__config>
-
 #include <__pragma_push>
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
@@ -116,10 +115,10 @@ Macros:
    are defined
 */
 #if defined(__cplusplus) && !defined(__STDC_LIMIT_MACROS)
-#   define __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
 #endif
 #if defined(__cplusplus) && !defined(__STDC_CONSTANT_MACROS)
-#   define __STDC_CONSTANT_MACROS
+#define __STDC_CONSTANT_MACROS
 #endif
 
 #include_next <stdint.h>

@@ -35,25 +35,21 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/arch/wmma.h"
+#include "cutlass/cutlass.h"
 
 #if defined(CUTLASS_ARCH_WMMA_ENABLED)
-
-#include "cutlass/wmma_array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
 
 #include "cutlass/arch/memory_sm75.h"
 #include "cutlass/arch/mma_sm75.h"
 #include "cutlass/arch/mma_sm80.h"
-
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_policy.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_wmma.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/wmma_array.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +60,7 @@ namespace warp {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///< Structure to compute the matrix product targeting CUDA cores via WMMA.
-template < 
+template <
   ///< Size of the Gemm problem - concept: gemm::GemmShape<>
   typename Shape_,
   ///< Data type of A elements
@@ -84,10 +80,9 @@ template <
   ///< Number of partitions along K dimension
   int PartitionsK_ = 1,
   ///< Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 class MmaTensorOpWmma {
-public:
+ public:
   ///< Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;
 
@@ -118,9 +113,9 @@ public:
   /// Underlying matrix multiply operator (concept: arch::Mma)
   using ArchMmaOperator = typename Policy::Operator;
 
-  /// Indicates math operator 
+  /// Indicates math operator
   using MathOperator = typename ArchMmaOperator::Operator;
-  
+
   /// Underlying architecture tag
   using ArchTag = typename Policy::Operator::ArchTag;
 
@@ -139,52 +134,55 @@ public:
   /// Number of partitions along K dimension
   static int const kPartitionsK = PartitionsK_;
 
-public:
-
+ public:
   /// Iterates over the A operand in memory
-  using IteratorA = MmaTensorOpWmmaMultiplicandTileIterator<
-     MatrixShape<Shape::kM, Shape::kK>, Operand::kA, ElementA, LayoutA,
-     Policy::OpDelta::kRow, kThreadCount, Policy>;
+  using IteratorA = MmaTensorOpWmmaMultiplicandTileIterator<MatrixShape<Shape::kM, Shape::kK>,
+                                                            Operand::kA,
+                                                            ElementA,
+                                                            LayoutA,
+                                                            Policy::OpDelta::kRow,
+                                                            kThreadCount,
+                                                            Policy>;
 
   /// Storage for A tile
   using FragmentA = typename IteratorA::Fragment;
 
   /// Iterates over the B operand in memory
-  using IteratorB = MmaTensorOpWmmaMultiplicandTileIterator<
-     MatrixShape<Shape::kK, Shape::kN>, Operand::kB, ElementB, LayoutB,
-     Policy::OpDelta::kRow, kThreadCount, Policy>;
+  using IteratorB = MmaTensorOpWmmaMultiplicandTileIterator<MatrixShape<Shape::kK, Shape::kN>,
+                                                            Operand::kB,
+                                                            ElementB,
+                                                            LayoutB,
+                                                            Policy::OpDelta::kRow,
+                                                            kThreadCount,
+                                                            Policy>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
 
   /// Iterates over the C operand in memory
-  using IteratorC = MmaTensorOpWmmaAccumulatorTileIterator<
-     MatrixShape<Shape::kM, Shape::kN>, ElementC, LayoutC,
-    typename Policy::OpDelta, Policy>;
+  using IteratorC = MmaTensorOpWmmaAccumulatorTileIterator<MatrixShape<Shape::kM, Shape::kN>,
+                                                           ElementC,
+                                                           LayoutC,
+                                                           typename Policy::OpDelta,
+                                                           Policy>;
 
   /// Storage for C tile
   using FragmentC = typename IteratorC::Fragment;
 
-private:
-
-  static_assert(
-    !(Shape::kM % Policy::Operator::Shape::kM) && 
-    !(Shape::kN % Policy::Operator::Shape::kN),
-    "Shape of warp-level Wmma must be divisible by operator shape (wmma native size)");
+ private:
+  static_assert(!(Shape::kM % Policy::Operator::Shape::kM) &&
+                  !(Shape::kN % Policy::Operator::Shape::kN),
+                "Shape of warp-level Wmma must be divisible by operator shape (wmma native size)");
 
   /// Number of wmma operations performed
-  using WmmaIterations = MatrixShape<
-    Shape::kM / Policy::Operator::Shape::kM,
-    Shape::kN / Policy::Operator::Shape::kN 
-  >;
+  using WmmaIterations =
+    MatrixShape<Shape::kM / Policy::Operator::Shape::kM, Shape::kN / Policy::Operator::Shape::kN>;
 
-public:
-
+ public:
   /// Underlying matrix multiply operator (concept: cutlass::arch::Wmma)
   typename Policy::Operator wmma;
 
-public:
-
+ public:
   //
   // Methods
   //
@@ -195,29 +193,23 @@ public:
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    FragmentA const &A, 
-    FragmentB const &B, 
-    FragmentC const &C) const {
-
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C) const
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int n = 0; n < WmmaIterations::kColumn; ++n) {
       CUTLASS_PRAGMA_UNROLL
       for (int m = 0; m < WmmaIterations::kRow; ++m) {
-
         // accumulate wmma mma
         wmma(D[m * WmmaIterations::kColumn + n], A[m], B[n], C[m * WmmaIterations::kColumn + n]);
       }
-    }  
+    }
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass
 
-#endif // if defined(CUTLASS_ARCH_WMMA_ENABLED)
-
+#endif  // if defined(CUTLASS_ARCH_WMMA_ENABLED)

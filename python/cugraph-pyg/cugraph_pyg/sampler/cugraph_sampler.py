@@ -12,12 +12,11 @@
 # limitations under the License.
 
 
-from typing import Sequence, Dict, Tuple
+from typing import Dict, Sequence, Tuple
 
-from cugraph_pyg.data import CuGraphStore
-
-from cugraph.utilities.utils import import_optional
 import cudf
+from cugraph.utilities.utils import import_optional
+from cugraph_pyg.data import CuGraphStore
 
 dask_cudf = import_optional("dask_cudf")
 torch_geometric = import_optional("torch_geometric")

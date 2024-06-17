@@ -30,18 +30,16 @@
  **************************************************************************************************/
 
 /*! \file
-  \brief 
+  \brief
     Defines a GEMM with Reduction based on an existing UniversalGemm kernel.
 
 */
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
 #include "cutlass/conv/kernel/default_conv2d_fprop.h"
 #include "cutlass/conv/kernel/implicit_gemm_convolution_with_fused_epilogue.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_with_broadcast.h"
 #include "cutlass/epilogue/threadblock/epilogue_with_broadcast.h"
 
@@ -53,51 +51,49 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ElementA,
-  typename LayoutA,
-  typename ElementB,
-  typename LayoutB,
-  typename ElementC,
-  typename LayoutC,
-  typename ElementAccumulator,
-  typename OperatorClass,
-  typename ArchTag,
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename EpilogueOutputOp,
-  typename ThreadblockSwizzle,
-  int Stages,
-  typename MathOperatorTag,
-  conv::IteratorAlgorithm IteratorAlgorithm = IteratorAlgorithm::kOptimized,
-  conv::StrideSupport StrideSupport = StrideSupport::kStrided,
-  /// Access granularity of A matrix in units of elements
-  int AlignmentA = 128 / cutlass::sizeof_bits<ElementA>::value,
-  /// Access granularity of B matrix in units of elements
-  int AlignmentB = 128 / cutlass::sizeof_bits<ElementB>::value
->
+template <typename ElementA,
+          typename LayoutA,
+          typename ElementB,
+          typename LayoutB,
+          typename ElementC,
+          typename LayoutC,
+          typename ElementAccumulator,
+          typename OperatorClass,
+          typename ArchTag,
+          typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename EpilogueOutputOp,
+          typename ThreadblockSwizzle,
+          int Stages,
+          typename MathOperatorTag,
+          conv::IteratorAlgorithm IteratorAlgorithm = IteratorAlgorithm::kOptimized,
+          conv::StrideSupport StrideSupport         = StrideSupport::kStrided,
+          /// Access granularity of A matrix in units of elements
+          int AlignmentA = 128 / cutlass::sizeof_bits<ElementA>::value,
+          /// Access granularity of B matrix in units of elements
+          int AlignmentB = 128 / cutlass::sizeof_bits<ElementB>::value>
 struct DefaultConv2dFpropWithBroadcast {
-
-  using ImplicitGemmBase = typename DefaultConv2dFprop<
-    ElementA, LayoutA,
-    ElementB, LayoutB,
-    ElementC, LayoutC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    MathOperatorTag,
-    IteratorAlgorithm,
-    StrideSupport,
-    AlignmentA,
-    AlignmentB
-  >::Kernel;
+  using ImplicitGemmBase = typename DefaultConv2dFprop<ElementA,
+                                                       LayoutA,
+                                                       ElementB,
+                                                       LayoutB,
+                                                       ElementC,
+                                                       LayoutC,
+                                                       ElementAccumulator,
+                                                       OperatorClass,
+                                                       ArchTag,
+                                                       ThreadblockShape,
+                                                       WarpShape,
+                                                       InstructionShape,
+                                                       EpilogueOutputOp,
+                                                       ThreadblockSwizzle,
+                                                       Stages,
+                                                       MathOperatorTag,
+                                                       IteratorAlgorithm,
+                                                       StrideSupport,
+                                                       AlignmentA,
+                                                       AlignmentB>::Kernel;
 
   // Replace epilogue
   using Epilogue = typename cutlass::conv::kernel::detail::DefaultConvEpilogueWithBroadcastTensorOp<
@@ -109,16 +105,14 @@ struct DefaultConv2dFpropWithBroadcast {
     typename EpilogueOutputOp::ElementT,
     ElementC,
     EpilogueOutputOp,
-    ImplicitGemmBase::Epilogue::kElementsPerAccess
-  >::Epilogue;
+    ImplicitGemmBase::Epilogue::kElementsPerAccess>::Epilogue;
 
   // Define the kernel
-  using Kernel = cutlass::conv::kernel::ImplicitGemmConvolutionWithFusedEpilogue<
-    typename ImplicitGemmBase::Mma,
-    Epilogue,
-    ThreadblockSwizzle,
-    conv::Operator::kFprop
-  >;
+  using Kernel =
+    cutlass::conv::kernel::ImplicitGemmConvolutionWithFusedEpilogue<typename ImplicitGemmBase::Mma,
+                                                                    Epilogue,
+                                                                    ThreadblockSwizzle,
+                                                                    conv::Operator::kFprop>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

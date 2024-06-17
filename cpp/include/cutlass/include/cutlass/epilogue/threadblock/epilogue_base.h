@@ -49,17 +49,15 @@
 #include <assert.h>
 #endif
 
+#include "cutlass/aligned_buffer.h"
+#include "cutlass/array.h"
 #include "cutlass/cutlass.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/layout/tensor.h"
+#include "cutlass/layout/vector.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_types.h"
-#include "cutlass/array.h"
-#include "cutlass/layout/vector.h"
-#include "cutlass/layout/tensor.h"
 #include "cutlass/tensor_coord.h"
-#include "cutlass/aligned_buffer.h"
-
-#include "cutlass/gemm/gemm.h"
-
 #include "cutlass/transform/pitch_linear_thread_map.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +69,7 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 //
-// This is used for metaprogramming epilogue functors. If they define 
+// This is used for metaprogramming epilogue functors. If they define
 // `static bool const kIsHeavy = true;`, then the epilogue functor itself is
 // not inlined. This results in smaller code and is advantageous if the epilogue
 // functor consists of many instructions.
@@ -81,40 +79,43 @@ namespace threadblock {
 // unrolled and inlined.
 //
 
-template<class> 
-struct TypeSink {  typedef void type; };
+template <class>
+struct TypeSink {
+  typedef void type;
+};
 
-template<class T> using TypeSinkT = typename TypeSink<T>::type;
+template <class T>
+using TypeSinkT = typename TypeSink<T>::type;
 
-template<class T, class=void> struct IsEpilogueFunctorHeavy {
+template <class T, class = void>
+struct IsEpilogueFunctorHeavy {
   static bool const value = false;
 };
 
-template<class T> struct IsEpilogueFunctorHeavy<T, TypeSinkT< decltype( T::kIsHeavy ) > > {
+template <class T>
+struct IsEpilogueFunctorHeavy<T, TypeSinkT<decltype(T::kIsHeavy)>> {
   static bool const value = T::kIsHeavy;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// Base class for epilogues defining warp-level 
-template <
-  typename Shape_,                          ///< Shape of threadblock tile (concept: GemmShape)
-  typename WarpShape_,                      ///< Warp-level MMA operator (concept: gemm::warp::MmaTensorOp)
-  int PartitionsK,                          ///< Number of partitions of the K dimension
-  typename AccumulatorFragmentIterator_,    ///< Fragment iterator selecting accumulators
-  typename WarpTileIterator_,               ///< Warp-scoped tile iterator writing accumulators to SMEM
-  typename Padding_,                        ///< Padding added to SMEM allocation to avoid bank conflicts (concept: MatrixShape)
-  int FragmentsPerIteration = 1
->
+/// Base class for epilogues defining warp-level
+template <typename Shape_,      ///< Shape of threadblock tile (concept: GemmShape)
+          typename WarpShape_,  ///< Warp-level MMA operator (concept: gemm::warp::MmaTensorOp)
+          int PartitionsK,      ///< Number of partitions of the K dimension
+          typename AccumulatorFragmentIterator_,  ///< Fragment iterator selecting accumulators
+          typename WarpTileIterator_,  ///< Warp-scoped tile iterator writing accumulators to SMEM
+          typename Padding_,           ///< Padding added to SMEM allocation to avoid bank conflicts
+                                       ///< (concept: MatrixShape)
+          int FragmentsPerIteration = 1>
 class EpilogueBase {
-public:
-
-  using Shape = Shape_;
-  using WarpShape = WarpShape_;
-  static int const kPartitionsK = PartitionsK;
+ public:
+  using Shape                       = Shape_;
+  using WarpShape                   = WarpShape_;
+  static int const kPartitionsK     = PartitionsK;
   using AccumulatorFragmentIterator = AccumulatorFragmentIterator_;
-  using WarpTileIterator = WarpTileIterator_;
-  using Padding = Padding_;
+  using WarpTileIterator            = WarpTileIterator_;
+  using Padding                     = Padding_;
 
   /// Output layout is always row-major
   using Layout = layout::RowMajor;
@@ -126,20 +127,15 @@ public:
   using ElementAccumulator = typename AccumulatorTile::Element;
 
   /// Number of warps
-  using WarpCount = gemm::GemmShape<
-    Shape::kM / WarpShape::kM,
-    Shape::kN / WarpShape::kN,
-    kPartitionsK
-  >;
+  using WarpCount =
+    gemm::GemmShape<Shape::kM / WarpShape::kM, Shape::kN / WarpShape::kN, kPartitionsK>;
 
   /// Use this to control the granularity of one epilogue 'iteration'
   static int const kFragmentsPerIteration = FragmentsPerIteration;
 
-public:
-
+ public:
   /// Shared storage allocation needed by the epilogue
   struct SharedStorage {
-    
     //
     // Type definitions
     //
@@ -152,18 +148,14 @@ public:
 
     /// Layout of shared memory allocation
     using Layout = typename WarpTileIterator::Layout;
-    
-    /// Logical shape of the shared memory tile written to by all warps.
-    using Shape = MatrixShape<
-      WarpCount::kM * WarpTileIterator::Shape::kRow * WarpCount::kK,
-      WarpCount::kN * WarpTileIterator::Shape::kColumn
-    >;
 
-    /// Shape of the shared memory allocation for the epilogue    
-    using StorageShape = MatrixShape<
-      (Shape::kRow + Padding::kRow) * kFragmentsPerIteration, 
-      Shape::kColumn + Padding::kColumn
-    >;
+    /// Logical shape of the shared memory tile written to by all warps.
+    using Shape = MatrixShape<WarpCount::kM * WarpTileIterator::Shape::kRow * WarpCount::kK,
+                              WarpCount::kN * WarpTileIterator::Shape::kColumn>;
+
+    /// Shape of the shared memory allocation for the epilogue
+    using StorageShape = MatrixShape<(Shape::kRow + Padding::kRow) * kFragmentsPerIteration,
+                                     Shape::kColumn + Padding::kColumn>;
 
     //
     // Data members
@@ -177,53 +169,46 @@ public:
 
     /// Returns a pointer to the shared memory buffer
     CUTLASS_DEVICE
-    Element *data() {
-      return storage.data();
-    }
+    Element* data() { return storage.data(); }
 
     /// Returns a tensor reference to the shared memory buffer
     CUTLASS_DEVICE
-    TensorRef reference() {
-      return TensorRef(
-        storage.data(), 
-        Layout::packed({StorageShape::kRow, StorageShape::kColumn}));
+    TensorRef reference()
+    {
+      return TensorRef(storage.data(), Layout::packed({StorageShape::kRow, StorageShape::kColumn}));
     }
   };
 
-protected:
-
+ protected:
   //
   // Data members
   //
 
-  SharedStorage &shared_storage_;
+  SharedStorage& shared_storage_;
 
   /// Stores a warp's fragment of accumulators to SMEM
   WarpTileIterator warp_tile_iterator_;
 
-public:
-
+ public:
   /// Constructor
   CUTLASS_DEVICE
-  EpilogueBase(
-    SharedStorage &shared_storage,    ///< Shared storage object    
-    int thread_idx,                   ///< ID of a thread within the threadblock
-    int warp_idx,                     ///< ID of warp within threadblock
-    int lane_idx                      ///< Id of thread within warp
-  ):
-    shared_storage_(shared_storage),
-    warp_tile_iterator_(shared_storage.reference(), lane_idx) {
-
+  EpilogueBase(SharedStorage& shared_storage,  ///< Shared storage object
+               int thread_idx,                 ///< ID of a thread within the threadblock
+               int warp_idx,                   ///< ID of warp within threadblock
+               int lane_idx                    ///< Id of thread within warp
+               )
+    : shared_storage_(shared_storage), warp_tile_iterator_(shared_storage.reference(), lane_idx)
+  {
     // Compute warp location within threadblock tile by mapping the warp_id to three coordinates:
     //
     //   _m: the warp's position within the threadblock along the M dimension
     //   _n: the warp's position within the threadblock along the N dimension
     //   _k: the warp's position within the threadblock along the K dimension
 
-    int warp_k = warp_idx / (WarpCount::kM * WarpCount::kN);
+    int warp_k  = warp_idx / (WarpCount::kM * WarpCount::kN);
     int warp_mn = warp_idx % (WarpCount::kM * WarpCount::kN);
-    int warp_m = warp_mn % WarpCount::kM;
-    int warp_n = warp_mn / WarpCount::kM;
+    int warp_m  = warp_mn % WarpCount::kM;
+    int warp_n  = warp_mn / WarpCount::kM;
 
     MatrixCoord warp_offset{warp_k * WarpCount::kM + warp_m, warp_n};
 
@@ -233,8 +218,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

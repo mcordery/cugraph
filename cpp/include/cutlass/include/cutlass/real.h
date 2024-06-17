@@ -45,17 +45,14 @@ struct RealType {
   /// Number of elements
   static int const kExtent = 1;
 
-CUTLASS_HOST_DEVICE
-  static T from_real(double x) {
-    return static_cast<T>(x);
-  }
+  CUTLASS_HOST_DEVICE
+  static T from_real(double x) { return static_cast<T>(x); }
 };
 
 template <typename T>
-CUTLASS_HOST_DEVICE
-static T from_real(double r) {
+CUTLASS_HOST_DEVICE static T from_real(double r)
+{
   return T(r);
 }
 
-
-} // namespace cutlass
+}  // namespace cutlass

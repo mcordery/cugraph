@@ -13,28 +13,21 @@
 
 # Have cython use python 3 syntax
 # cython: language_level = 3
+
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
 from pylibcugraph._cugraph_c.random cimport (
     cugraph_rng_state_create,
     cugraph_rng_state_free,
     cugraph_rng_state_t,
 )
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph.utils cimport (
-    assert_success,
-)
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle
-)
+from pylibcugraph._cugraph_c.resource_handle cimport cugraph_resource_handle_t
+from pylibcugraph.resource_handle cimport ResourceHandle
+from pylibcugraph.utils cimport assert_success
 
-import time
 import os
 import socket
+import time
+
 
 def generate_default_seed():
     h = hash(

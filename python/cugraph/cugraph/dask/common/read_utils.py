@@ -32,9 +32,9 @@ def get_chunksize(input_path):
 
     """
 
+    import math
     import os
     from glob import glob
-    import math
 
     input_files = sorted(glob(str(input_path)))
     if len(input_files) == 1:

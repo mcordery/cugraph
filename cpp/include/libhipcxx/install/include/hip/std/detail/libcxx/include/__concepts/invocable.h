@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__functional/invoke.h"
@@ -28,32 +28,35 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.invocable]
 
-template<class _Fn, class... _Args>
-concept invocable = requires(_Fn&& __fn, _Args&&... __args) {
-  _CUDA_VSTD::__invoke(_CUDA_VSTD::forward<_Fn>(__fn), _CUDA_VSTD::forward<_Args>(__args)...); // not required to be equality preserving
+template <class _Fn, class... _Args>
+concept invocable = requires(_Fn && __fn, _Args&&... __args)
+{
+  _CUDA_VSTD::__invoke(
+    _CUDA_VSTD::forward<_Fn>(__fn),
+    _CUDA_VSTD::forward<_Args>(__args)...);  // not required to be equality preserving
 };
 
 // [concept.regular.invocable]
 
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 concept regular_invocable = invocable<_Fn, _Args...>;
 
 #elif _LIBCUDACXX_STD_VER > 11
 
-template<class _Fn, class... _Args>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  _Invocable_,
-  requires(_Fn&& __fn, _Args&&... __args) //
-  (_CUDA_VSTD::__invoke(_CUDA_VSTD::forward<_Fn>(__fn), _CUDA_VSTD::forward<_Args>(__args)...)));
+template <class _Fn, class... _Args>
+_LIBCUDACXX_CONCEPT_FRAGMENT(_Invocable_,
+                             requires(_Fn&& __fn, _Args&&... __args)  //
+                             (_CUDA_VSTD::__invoke(_CUDA_VSTD::forward<_Fn>(__fn),
+                                                   _CUDA_VSTD::forward<_Args>(__args)...)));
 
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 _LIBCUDACXX_CONCEPT invocable = _LIBCUDACXX_FRAGMENT(_Invocable_, _Fn, _Args...);
 
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 _LIBCUDACXX_CONCEPT regular_invocable = invocable<_Fn, _Args...>;
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_INVOCABLE_H
+#endif  // _LIBCUDACXX___CONCEPTS_INVOCABLE_H

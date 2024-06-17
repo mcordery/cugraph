@@ -20,9 +20,9 @@
  */
 
 #ifndef RAFT_HIDE_DEPRECATION_WARNINGS
-#pragma message(__FILE__                                                    \
-                  " is deprecated and will be removed in a future release." \
-                  " Please use versions in individual header files instead.")
+#pragma message(__FILE__                                                  \
+                " is deprecated and will be removed in a future release." \
+                " Please use versions in individual header files instead.")
 #endif
 
 #ifndef __MATRIX_H
@@ -33,7 +33,7 @@
 #include "detail/linewise_op.cuh"
 #include "detail/matrix.cuh"
 
-//#include <raft/common/nvtx.hpp>
+// #include <raft/common/nvtx.hpp>
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/resource/hip_stream.hpp>
 
@@ -162,8 +162,8 @@ template <typename m_t, typename idx_t = int>
 void print(const m_t* in,
            idx_t n_rows,
            idx_t n_cols,
-           char h_separator    = ' ',
-           char v_separator    = '\n',
+           char h_separator   = ' ',
+           char v_separator   = '\n',
            hipStream_t stream = rmm::cuda_stream_default)
 {
   detail::print(in, n_rows, n_cols, h_separator, v_separator, stream);
@@ -231,8 +231,7 @@ void copyUpperTriangular(m_t* src, m_t* dst, idx_t n_rows, idx_t n_cols, hipStre
  * @param stream: cuda stream
  */
 template <typename m_t, typename idx_t = int>
-void initializeDiagonalMatrix(
-  m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, hipStream_t stream)
+void initializeDiagonalMatrix(m_t* vec, m_t* matrix, idx_t n_rows, idx_t n_cols, hipStream_t stream)
 {
   detail::initializeDiagonalMatrix(vec, matrix, n_rows, n_cols, false, stream);
 }
@@ -296,11 +295,11 @@ void linewiseOp(m_t* out,
                 hipStream_t stream,
                 const Vecs*... vecs)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("linewiseOp-%c-%zu (%zu, %zu)",
-//                                                            alongLines ? 'l' : 'x',
-//                                                            sizeof...(Vecs),
-//                                                            size_t(lineLen),
-//                                                            size_t(nLines));
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("linewiseOp-%c-%zu (%zu, %zu)",
+  //                                                            alongLines ? 'l' : 'x',
+  //                                                            sizeof...(Vecs),
+  //                                                            size_t(lineLen),
+  //                                                            size_t(nLines));
   detail::MatrixLinewiseOp<16, 256>::run<m_t, idx_t, Lambda, Vecs...>(
     out, in, lineLen, nLines, alongLines, op, stream, vecs...);
 }

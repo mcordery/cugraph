@@ -12,35 +12,27 @@
 # limitations under the License.
 
 import gc
-from typing import Union, Iterable
 import warnings
+from typing import Iterable, Union
 
 import cudf
+import cugraph.dask.comms.comms as Comms
 import cupy as cp
 import dask
 import dask_cudf
-from dask import delayed
-from dask.distributed import wait, default_client
 import numpy as np
-from pylibcugraph import (
-    MGGraph,
-    ResourceHandle,
-    GraphProperties,
-    get_two_hop_neighbors as pylibcugraph_get_two_hop_neighbors,
-    select_random_vertices as pylibcugraph_select_random_vertices,
-    degrees as pylibcugraph_degrees,
-    in_degrees as pylibcugraph_in_degrees,
-    out_degrees as pylibcugraph_out_degrees,
-)
-
-from cugraph.structure.number_map import NumberMap
-from cugraph.structure.symmetrize import symmetrize
-from cugraph.dask.common.part_utils import (
-    persist_dask_df_equal_parts_per_worker,
-)
 from cugraph.dask.common.mg_utils import run_gc_on_dask_cluster
-import cugraph.dask.comms.comms as Comms
-from cugraph.structure.symmetrize import _memory_efficient_drop_duplicates
+from cugraph.dask.common.part_utils import persist_dask_df_equal_parts_per_worker
+from cugraph.structure.number_map import NumberMap
+from cugraph.structure.symmetrize import _memory_efficient_drop_duplicates, symmetrize
+from dask import delayed
+from dask.distributed import default_client, wait
+from pylibcugraph import GraphProperties, MGGraph, ResourceHandle
+from pylibcugraph import degrees as pylibcugraph_degrees
+from pylibcugraph import get_two_hop_neighbors as pylibcugraph_get_two_hop_neighbors
+from pylibcugraph import in_degrees as pylibcugraph_in_degrees
+from pylibcugraph import out_degrees as pylibcugraph_out_degrees
+from pylibcugraph import select_random_vertices as pylibcugraph_select_random_vertices
 
 
 class simpleDistributedGraphImpl:
@@ -140,15 +132,21 @@ class simpleDistributedGraphImpl:
             graph_properties=graph_props,
             src_array=src_array if src_array else cudf.Series(dtype=vertex_type),
             dst_array=dst_array if dst_array else cudf.Series(dtype=vertex_type),
-            weight_array=weights
-            if weights
-            else ([cudf.Series(dtype=weight_type)] if weight_type else None),
-            edge_id_array=edge_ids
-            if edge_ids
-            else ([cudf.Series(dtype=edge_id_type)] if edge_id_type else None),
-            edge_type_array=edge_types
-            if edge_types
-            else ([cudf.Series(dtype=edge_type_id)] if edge_type_id else None),
+            weight_array=(
+                weights
+                if weights
+                else ([cudf.Series(dtype=weight_type)] if weight_type else None)
+            ),
+            edge_id_array=(
+                edge_ids
+                if edge_ids
+                else ([cudf.Series(dtype=edge_id_type)] if edge_id_type else None)
+            ),
+            edge_type_array=(
+                edge_types
+                if edge_types
+                else ([cudf.Series(dtype=edge_type_id)] if edge_type_id else None)
+            ),
             num_arrays=num_arrays,
             store_transposed=store_transposed,
             do_expensive_check=False,
@@ -1241,7 +1239,10 @@ class simpleDistributedGraphImpl:
 
                 del self.edgelist
 
-            (renumbered_ddf, number_map,) = NumberMap.renumber_and_segment(
+            (
+                renumbered_ddf,
+                number_map,
+            ) = NumberMap.renumber_and_segment(
                 self.input_df,
                 self.source_columns,
                 self.destination_columns,

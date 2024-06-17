@@ -12,10 +12,7 @@
 # limitations under the License.
 
 
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
 
 
 def degree_centrality(G, normalized=True):

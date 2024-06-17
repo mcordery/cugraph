@@ -27,7 +27,8 @@
 #define WAVEFRONT_SIZE __AMDGCN_WAVEFRONT_SIZE
 #endif
 
-#if !(__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__ || __gfx1100__ || __gfx1101__)
+#if !(__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__ || __gfx1100__ || \
+      __gfx1101__)
 #if WAVEFRONT_SIZE != 64
 #error "WAVEFRONT_SIZE 64 required"
 #endif
@@ -328,5 +329,5 @@ __device__ inline lane_mask __match_all_sync(lane_mask mask, T value, int* pred)
 
 }  // namespace hip_warp_primitives
 
-} // namespace hip_extensions
+}  // namespace hip_extensions
 #endif

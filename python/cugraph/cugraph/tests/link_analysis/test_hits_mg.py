@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-
-import dask_cudf
-import cugraph
 import cugraph.dask as dcg
+import dask_cudf
+import pytest
 from cugraph.testing import utils
 from pylibcugraph.testing.utils import gen_fixture_params_product
 
+import cugraph
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

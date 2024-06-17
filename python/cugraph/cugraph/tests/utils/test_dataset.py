@@ -11,29 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import gc
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import cudf
+import dask_cudf
 import pandas
 import pytest
-
-import cudf
-import cugraph
-import dask_cudf
-from cugraph import datasets
 from cugraph.dask.common.mg_utils import is_single_gpu
-from cugraph.datasets import karate
 from cugraph.structure import Graph
 from cugraph.testing import (
-    RAPIDS_DATASET_ROOT_DIR_PATH,
     ALL_DATASETS,
-    WEIGHTED_DATASETS,
-    SMALL_DATASETS,
     BENCHMARKING_DATASETS,
+    RAPIDS_DATASET_ROOT_DIR_PATH,
+    SMALL_DATASETS,
+    WEIGHTED_DATASETS,
 )
 
+import cugraph
+from cugraph import datasets
+from cugraph.datasets import karate
 
 # Add the sg marker to all tests in this module.
 pytestmark = pytest.mark.sg

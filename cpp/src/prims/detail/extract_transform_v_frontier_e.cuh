@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
 #include "prims/detail/optional_dataframe_buffer.hpp"
 #include "prims/detail/prim_functors.cuh"
 #include "prims/property_op_utils.cuh"
@@ -38,7 +39,6 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -50,6 +50,8 @@
 #include <thrust/sort.h>
 #include <thrust/tuple.h>
 
+#include <hipcub/hipcub.hpp>
+
 #include <algorithm>
 #include <cstdlib>
 #include <limits>
@@ -57,8 +59,6 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
 using namespace hip_extensions::hip_warp_primitives;
 
 namespace cugraph {

@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -20,16 +20,15 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-struct __nat
-{
+struct __nat {
 #ifndef _LIBCUDACXX_CXX03_LANG
-    __nat() = delete;
-    __nat(const __nat&) = delete;
-    __nat& operator=(const __nat&) = delete;
-    ~__nat() = delete;
+  __nat()                        = delete;
+  __nat(const __nat&)            = delete;
+  __nat& operator=(const __nat&) = delete;
+  ~__nat()                       = delete;
 #endif
 };
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_NAT_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_NAT_H

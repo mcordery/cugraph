@@ -36,24 +36,24 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/gemm/threadblock/default_mma.h"
-#include "cutlass/gemm/threadblock/threadblock_swizzle.h"
+#include "cutlass/conv/convolution.h"
+#include "cutlass/conv/kernel/implicit_gemm_convolution.h"
+#include "cutlass/conv/kernel/implicit_gemm_convolution_fusion.h"
+#include "cutlass/conv/kernel/implicit_gemm_convolution_strided_dgrad.h"
+#include "cutlass/conv/threadblock/conv2d_tile_iterator.h"
+#include "cutlass/conv/threadblock/implicit_gemm_fprop_fusion_multistage.h"
+#include "cutlass/conv/threadblock/implicit_gemm_multistage.h"
+#include "cutlass/conv/threadblock/implicit_gemm_pipelined.h"
+#include "cutlass/conv/threadblock/implicit_gemm_wgrad_fusion_multistage.h"
 #include "cutlass/conv/threadblock/threadblock_swizzle.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_simt.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_volta_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_with_broadcast.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_with_reduction.h"
-#include "cutlass/conv/convolution.h"
-#include "cutlass/conv/threadblock/conv2d_tile_iterator.h"
-#include "cutlass/conv/threadblock/implicit_gemm_pipelined.h"
-#include "cutlass/conv/threadblock/implicit_gemm_multistage.h"
-#include "cutlass/conv/threadblock/implicit_gemm_fprop_fusion_multistage.h"
-#include "cutlass/conv/threadblock/implicit_gemm_wgrad_fusion_multistage.h"
-#include "cutlass/conv/kernel/implicit_gemm_convolution.h"
-#include "cutlass/conv/kernel/implicit_gemm_convolution_fusion.h"
-#include "cutlass/conv/kernel/implicit_gemm_convolution_strided_dgrad.h"
+#include "cutlass/gemm/threadblock/default_mma.h"
+#include "cutlass/gemm/threadblock/threadblock_swizzle.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -65,59 +65,35 @@ namespace kernel {
 
 namespace detail {
 
-template <
-  typename ArchTag,
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename OutputOp
->
+template <typename ArchTag,
+          typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename OutputOp>
 struct DefaultConvEpilogue {
-  using Epilogue = typename epilogue::threadblock::DefaultEpilogueTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    OutputOp::kCount
-  >::Epilogue;
+  using Epilogue = typename epilogue::threadblock::
+    DefaultEpilogueTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, OutputOp::kCount>::
+      Epilogue;
 };
 
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename OutputOp
->
-struct DefaultConvEpilogue<
-  arch::Sm70,
-  Shape,
-  WarpMmaTensorOp,
-  PartitionsK,
-  OutputOp
-> {
-
-  using Epilogue = typename epilogue::threadblock::DefaultEpilogueVoltaTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    OutputOp::kCount
-  >::Epilogue;
+template <typename Shape, typename WarpMmaTensorOp, int PartitionsK, typename OutputOp>
+struct DefaultConvEpilogue<arch::Sm70, Shape, WarpMmaTensorOp, PartitionsK, OutputOp> {
+  using Epilogue = typename epilogue::threadblock::
+    DefaultEpilogueVoltaTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, OutputOp::kCount>::
+      Epilogue;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ArchTag,
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename ElementTensor,
-  typename ElementVector,
-  typename OutputOp,
-  int ElementsPerAccess
->
+template <typename ArchTag,
+          typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename ElementTensor,
+          typename ElementVector,
+          typename OutputOp,
+          int ElementsPerAccess>
 struct DefaultConvEpilogueWithBroadcastTensorOp {
   using Epilogue = typename epilogue::threadblock::DefaultEpilogueWithBroadcastTensorOp<
     Shape,
@@ -127,31 +103,26 @@ struct DefaultConvEpilogueWithBroadcastTensorOp {
     ElementTensor,
     ElementVector,
     OutputOp,
-    ElementsPerAccess
-  >::Epilogue;
+    ElementsPerAccess>::Epilogue;
 };
 
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename ElementTensor,
-  typename ElementVector,
-  typename OutputOp,
-  int ElementsPerAccess
->
-struct DefaultConvEpilogueWithBroadcastTensorOp<
-  arch::Sm70,
-  Shape,
-  WarpMmaTensorOp,
-  PartitionsK,
-  ElementOutput,
-  ElementTensor,
-  ElementVector,
-  OutputOp,
-  ElementsPerAccess
-  > {
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename ElementTensor,
+          typename ElementVector,
+          typename OutputOp,
+          int ElementsPerAccess>
+struct DefaultConvEpilogueWithBroadcastTensorOp<arch::Sm70,
+                                                Shape,
+                                                WarpMmaTensorOp,
+                                                PartitionsK,
+                                                ElementOutput,
+                                                ElementTensor,
+                                                ElementVector,
+                                                OutputOp,
+                                                ElementsPerAccess> {
   using Epilogue = typename epilogue::threadblock::DefaultEpilogueWithBroadcastVoltaTensorOp<
     Shape,
     WarpMmaTensorOp,
@@ -160,22 +131,19 @@ struct DefaultConvEpilogueWithBroadcastTensorOp<
     ElementTensor,
     ElementVector,
     OutputOp,
-    ElementsPerAccess
-  >::Epilogue;
+    ElementsPerAccess>::Epilogue;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ArchTag,
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename OutputOp,
-  typename ReductionOp,
-  int ElementsPerAccess
->
+template <typename ArchTag,
+          typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename OutputOp,
+          typename ReductionOp,
+          int ElementsPerAccess>
 struct DefaultConvEpilogueWithReductionTensorOp {
   using Epilogue = typename epilogue::threadblock::DefaultEpilogueWithReductionTensorOp<
     Shape,
@@ -184,29 +152,24 @@ struct DefaultConvEpilogueWithReductionTensorOp {
     ElementOutput,
     OutputOp,
     ReductionOp,
-    ElementsPerAccess
-  >::Epilogue;
+    ElementsPerAccess>::Epilogue;
 };
 
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename OutputOp,
-  typename ReductionOp,
-  int ElementsPerAccess
->
-struct DefaultConvEpilogueWithReductionTensorOp<
-  arch::Sm70,
-  Shape,
-  WarpMmaTensorOp,
-  PartitionsK,
-  ElementOutput,
-  OutputOp,
-  ReductionOp,
-  ElementsPerAccess
-  > {
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename OutputOp,
+          typename ReductionOp,
+          int ElementsPerAccess>
+struct DefaultConvEpilogueWithReductionTensorOp<arch::Sm70,
+                                                Shape,
+                                                WarpMmaTensorOp,
+                                                PartitionsK,
+                                                ElementOutput,
+                                                OutputOp,
+                                                ReductionOp,
+                                                ElementsPerAccess> {
   using Epilogue = typename epilogue::threadblock::DefaultEpilogueWithReductionVoltaTensorOp<
     Shape,
     WarpMmaTensorOp,
@@ -214,59 +177,42 @@ struct DefaultConvEpilogueWithReductionTensorOp<
     ElementOutput,
     OutputOp,
     ReductionOp,
-    ElementsPerAccess
-  >::Epilogue;
+    ElementsPerAccess>::Epilogue;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Defaults for strided Dgrad
-template <
-  typename ArchTag,
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename OutputOp
->
+template <typename ArchTag,
+          typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename OutputOp>
 struct DefaultConvEpilogueStridedDgrad {
-  using Epilogue = typename epilogue::threadblock::DefaultEpilogueTensorOpStridedDgrad<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    OutputOp::kCount
-  >::Epilogue;
+  using Epilogue =
+    typename epilogue::threadblock::DefaultEpilogueTensorOpStridedDgrad<Shape,
+                                                                        WarpMmaTensorOp,
+                                                                        PartitionsK,
+                                                                        OutputOp,
+                                                                        OutputOp::kCount>::Epilogue;
 };
 
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename OutputOp
->
-struct DefaultConvEpilogueStridedDgrad<
-  arch::Sm70,
-  Shape,
-  WarpMmaTensorOp,
-  PartitionsK,
-  OutputOp
-> {
-
+template <typename Shape, typename WarpMmaTensorOp, int PartitionsK, typename OutputOp>
+struct DefaultConvEpilogueStridedDgrad<arch::Sm70, Shape, WarpMmaTensorOp, PartitionsK, OutputOp> {
   using Epilogue = typename epilogue::threadblock::DefaultEpilogueVoltaTensorOpStridedDgrad<
     Shape,
     WarpMmaTensorOp,
     PartitionsK,
     OutputOp,
-    OutputOp::kCount
-  >::Epilogue;
+    OutputOp::kCount>::Epilogue;
 };
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace conv
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace conv
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

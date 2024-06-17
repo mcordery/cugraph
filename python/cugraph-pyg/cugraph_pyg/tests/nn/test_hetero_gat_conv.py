@@ -12,9 +12,8 @@
 # limitations under the License.
 
 import pytest
-
+from cugraph.utilities.utils import MissingModule, import_optional
 from cugraph_pyg.nn import HeteroGATConv as CuGraphHeteroGATConv
-from cugraph.utilities.utils import import_optional, MissingModule
 
 torch = import_optional("torch")
 torch_geometric = import_optional("torch_geometric")
@@ -36,7 +35,7 @@ def test_hetero_gat_conv_equality(sample_pyg_hetero_data, aggr, heads):
         pytest.skip("Skipping HeteroGATConv test")
 
     from torch_geometric.data import HeteroData
-    from torch_geometric.nn import HeteroConv, GATConv
+    from torch_geometric.nn import GATConv, HeteroConv
 
     device = torch.device("cuda:0")
     data = HeteroData(sample_pyg_hetero_data).to(device)

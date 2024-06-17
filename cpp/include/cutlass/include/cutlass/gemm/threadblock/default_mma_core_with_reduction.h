@@ -42,22 +42,18 @@
 
 #include "cutlass/array.h"
 #include "cutlass/cutlass.h"
-
-#include "cutlass/layout/tensor_op_multiplicand_sm75.h"
-#include "cutlass/layout/tensor_op_multiplicand_sm80.h"
-
+#include "cutlass/gemm/threadblock/default_mma_core.h"
+#include "cutlass/gemm/threadblock/mma_with_reduction_multistage.h"
 #include "cutlass/gemm/warp/default_mma_with_reduction_tensor_op.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
-
-#include "cutlass/gemm/threadblock/default_mma_core.h"
-
+#include "cutlass/layout/tensor_op_multiplicand_sm75.h"
+#include "cutlass/layout/tensor_op_multiplicand_sm80.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_types.h"
 #include "cutlass/transform/pitch_linear_thread_map.h"
+#include "cutlass/transform/threadblock/regular_tile_access_iterator_pitch_linear.h"
 #include "cutlass/transform/threadblock/regular_tile_access_iterator_tensor_op.h"
 #include "cutlass/transform/threadblock/regular_tile_access_iterator_tensor_op_sm80.h"
-#include "cutlass/transform/threadblock/regular_tile_access_iterator_pitch_linear.h"
-#include "cutlass/gemm/threadblock/mma_with_reduction_multistage.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,94 +66,97 @@ namespace threadblock {
 /// Template defininng default matrix multiply operators inferred from threadblock tile size,
 /// global memory data layout, and target math instruction.
 template <
-    /// Shape of threadblock-scoped matrix multiply operator
-    typename Shape_,
-    /// Shape of warp-level matrix multiply operator
-    typename WarpShape,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape,
-    /// Element data type of A operand
-    typename ElementA,
-    /// Layout of operand A
-    typename LayoutA,
-    /// Element data type of B operand
-    typename ElementB,
-    /// Layout of operand B
-    typename LayoutB,
-    /// Data type of accumulator
-    typename ElementC,
-    /// Layout of accumulator
-    typename LayoutC,
-    /// Indicates type of math operator (arch::OpClassSimt or arch::OpClassTensorOp)
-    typename OperatorClass,
-    ///                                                                                               
-    bool ReduceKForA_,
-    /// Number of stages
-    int Stages = 2,
-    /// Operation performed by MMA
-    typename Operator = typename platform::conditional<
-        (platform::is_same<OperatorClass,
-                           cutlass::arch::OpClassTensorOp>::value) &&
-            (platform::is_same<ElementA, int8_t>::value ||
-             platform::is_same<ElementA, int4b_t>::value ||
-             platform::is_same<ElementA, uint8_t>::value ||
-             platform::is_same<ElementA, uint4b_t>::value),
-        cutlass::arch::OpMultiplyAddSaturate,
-        cutlass::arch::OpMultiplyAdd>::type,
-    /// Store the accumulators in row major or column major.  Row major is used
-    /// when output layout is interleaved.
-    bool AccumulatorsInRowMajor = false,
-    /// Cache operation of operand A
-    cutlass::arch::CacheOperation::Kind CacheOpA =
-        cutlass::arch::CacheOperation::Global,
-    /// Cache operation of operand B
-    cutlass::arch::CacheOperation::Kind CacheOpB =
-        cutlass::arch::CacheOperation::Global,
-    /// per-element transformation for elements of A
-    ComplexTransform TransformA = ComplexTransform::kNone,
-    /// per-element transformation for elements of B
-    ComplexTransform TransformB = ComplexTransform::kNone,
-    bool IsComplex = false// (is_complex<ElementA>::value || is_complex<ElementB>::value)
->
+  /// Shape of threadblock-scoped matrix multiply operator
+  typename Shape_,
+  /// Shape of warp-level matrix multiply operator
+  typename WarpShape,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape,
+  /// Element data type of A operand
+  typename ElementA,
+  /// Layout of operand A
+  typename LayoutA,
+  /// Element data type of B operand
+  typename ElementB,
+  /// Layout of operand B
+  typename LayoutB,
+  /// Data type of accumulator
+  typename ElementC,
+  /// Layout of accumulator
+  typename LayoutC,
+  /// Indicates type of math operator (arch::OpClassSimt or arch::OpClassTensorOp)
+  typename OperatorClass,
+  ///
+  bool ReduceKForA_,
+  /// Number of stages
+  int Stages = 2,
+  /// Operation performed by MMA
+  typename Operator = typename platform::conditional<
+    (platform::is_same<OperatorClass, cutlass::arch::OpClassTensorOp>::value) &&
+      (platform::is_same<ElementA, int8_t>::value || platform::is_same<ElementA, int4b_t>::value ||
+       platform::is_same<ElementA, uint8_t>::value || platform::is_same<ElementA, uint4b_t>::value),
+    cutlass::arch::OpMultiplyAddSaturate,
+    cutlass::arch::OpMultiplyAdd>::type,
+  /// Store the accumulators in row major or column major.  Row major is used
+  /// when output layout is interleaved.
+  bool AccumulatorsInRowMajor = false,
+  /// Cache operation of operand A
+  cutlass::arch::CacheOperation::Kind CacheOpA = cutlass::arch::CacheOperation::Global,
+  /// Cache operation of operand B
+  cutlass::arch::CacheOperation::Kind CacheOpB = cutlass::arch::CacheOperation::Global,
+  /// per-element transformation for elements of A
+  ComplexTransform TransformA = ComplexTransform::kNone,
+  /// per-element transformation for elements of B
+  ComplexTransform TransformB = ComplexTransform::kNone,
+  bool IsComplex = false  // (is_complex<ElementA>::value || is_complex<ElementB>::value)
+  >
 struct DefaultMmaWithReductionCore {
-  using Base = DefaultMmaCore<Shape_,
-                              WarpShape,
-                              InstructionShape,
-                              ElementA,
-                              LayoutA,
-                              ElementB,
-                              LayoutB,
-                              ElementC,
-                              LayoutC,
-                              OperatorClass,
-                              Stages,
-                              Operator,
-                              AccumulatorsInRowMajor,
-                              CacheOpA,
-                              CacheOpB,
-                              TransformA,
-                              TransformB,
-                              IsComplex>;
-  using Shape = Shape_;
+  using Base               = DefaultMmaCore<Shape_,
+                                            WarpShape,
+                                            InstructionShape,
+                                            ElementA,
+                                            LayoutA,
+                                            ElementB,
+                                            LayoutB,
+                                            ElementC,
+                                            LayoutC,
+                                            OperatorClass,
+                                            Stages,
+                                            Operator,
+                                            AccumulatorsInRowMajor,
+                                            CacheOpA,
+                                            CacheOpB,
+                                            TransformA,
+                                            TransformB,
+                                            IsComplex>;
+  using Shape              = Shape_;
   using IteratorThreadMapA = typename Base::IteratorThreadMapA;
   using IteratorThreadMapB = typename Base::IteratorThreadMapB;
-  using SmemIteratorA = typename Base::SmemIteratorA;
-  using SmemIteratorB = typename Base::SmemIteratorB;
-  using SmemLayoutA = typename Base::SmemLayoutA;
-  using SmemLayoutB = typename Base::SmemLayoutB;
-  using WarpCount = typename Base::WarpCount;
+  using SmemIteratorA      = typename Base::SmemIteratorA;
+  using SmemIteratorB      = typename Base::SmemIteratorB;
+  using SmemLayoutA        = typename Base::SmemLayoutA;
+  using SmemLayoutB        = typename Base::SmemLayoutB;
+  using WarpCount          = typename Base::WarpCount;
 
   static cutlass::arch::CacheOperation::Kind const kCacheOpA = CacheOpA;
   static cutlass::arch::CacheOperation::Kind const kCacheOpB = CacheOpB;
-   
+
   // Define the warp-level tensor op
-  using MmaTensorOp = typename cutlass::gemm::warp::DefaultMmaWithReductionTensorOp<
-      WarpShape, InstructionShape, ElementA, SmemLayoutA, ElementB, SmemLayoutB,
-      ElementC, LayoutC, Operator, ReduceKForA_, WarpCount::kK>::Type;
+  using MmaTensorOp =
+    typename cutlass::gemm::warp::DefaultMmaWithReductionTensorOp<WarpShape,
+                                                                  InstructionShape,
+                                                                  ElementA,
+                                                                  SmemLayoutA,
+                                                                  ElementB,
+                                                                  SmemLayoutB,
+                                                                  ElementC,
+                                                                  LayoutC,
+                                                                  Operator,
+                                                                  ReduceKForA_,
+                                                                  WarpCount::kK>::Type;
 
   /// Policy used to define MmaPipelined
-  using MmaPolicy = MmaPolicy<MmaTensorOp, MatrixShape<0, 0>,
-                                        MatrixShape<0, 0>, WarpCount::kK>;
+  using MmaPolicy = MmaPolicy<MmaTensorOp, MatrixShape<0, 0>, MatrixShape<0, 0>, WarpCount::kK>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

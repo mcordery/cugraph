@@ -32,7 +32,6 @@
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/device_atomics.cuh>
 
-#include <hip/hip_runtime.h>
 #include <thrust/binary_search.h>
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
@@ -47,6 +46,8 @@
 #include <thrust/sequence.h>
 #include <thrust/sort.h>
 #include <thrust/transform.h>
+
+#include <hip/hip_runtime.h>
 
 #include <algorithm>
 #include <cmath>
@@ -427,10 +428,10 @@ static int chooseNewCentroid(raft::resources const& handle,
 
   // Record new centroid position
   RAFT_CUDA_TRY(hipMemcpyAsync(centroid,
-                                obs + IDX(0, obsIndex, d),
-                                d * sizeof(value_type_t),
-                                hipMemcpyDeviceToDevice,
-                                stream));
+                               obs + IDX(0, obsIndex, d),
+                               d * sizeof(value_type_t),
+                               hipMemcpyDeviceToDevice,
+                               stream));
 
   return 0;
 }
@@ -665,7 +666,7 @@ static int updateCentroids(raft::resources const& handle,
   constexpr unsigned grid_lower_bound{65535};
 
   auto stream             = resource::get_cuda_stream(handle);
-  auto hipblas.h           = resource::get_cublas_handle(handle);
+  auto hipblas.h          = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   // Device memory
@@ -823,7 +824,7 @@ int kmeans(raft::resources const& handle,
   // -------------------------------------------------------
 
   auto stream             = resource::get_cuda_stream(handle);
-  auto hipblas.h           = resource::get_cublas_handle(handle);
+  auto hipblas.h          = resource::get_cublas_handle(handle);
   auto thrust_exec_policy = resource::get_thrust_policy(handle);
 
   // Trivial cases

@@ -14,8 +14,7 @@
 import platform
 
 import psutil
-
-from asvdb import BenchmarkInfo, BenchmarkResult, ASVDb
+from asvdb import ASVDb, BenchmarkInfo, BenchmarkResult
 from utils import getCommitInfo, getRepoInfo
 
 
@@ -66,8 +65,8 @@ def cugraph_update_asv(
 
     validKeys = set(list(prefixDict.keys()) + list(unitsDict.keys()))
 
-    for (funcName, metricsDict) in algoRunResults.items():
-        for (metricName, val) in metricsDict.items():
+    for funcName, metricsDict in algoRunResults.items():
+        for metricName, val in metricsDict.items():
             # If an invalid metricName is present (likely due to a benchmark
             # run error), skip
             if metricName in validKeys:

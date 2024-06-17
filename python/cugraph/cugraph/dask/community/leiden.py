@@ -15,18 +15,18 @@
 
 from __future__ import annotations
 
-from dask.distributed import wait, default_client
-import cugraph.dask.comms.comms as Comms
-import dask_cudf
-import dask
-from dask import delayed
-import cudf
+from typing import TYPE_CHECKING, Tuple
 
+import cudf
+import cugraph.dask.comms.comms as Comms
+import cupy as cp
+import dask
+import dask_cudf
+import numpy
+from dask import delayed
+from dask.distributed import default_client, wait
 from pylibcugraph import ResourceHandle
 from pylibcugraph import leiden as pylibcugraph_leiden
-import numpy
-import cupy as cp
-from typing import Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cugraph import Graph

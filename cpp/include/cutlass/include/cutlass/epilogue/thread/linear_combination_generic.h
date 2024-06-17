@@ -34,12 +34,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/scale_type.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
-#include "cutlass/epilogue/thread/scale_type.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,44 +49,42 @@ namespace thread {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Applies a linear combination operator followed by an activation function to an array of elements.
+/// Applies a linear combination operator followed by an activation function to an array of
+/// elements.
 ///
 /// D = activation(alpha * accumulator + beta * source + uniform)
 ///
-template <
-  template<typename T> class ActivationFunctor,
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-                                                       ///< Usually it is 128/sizeof_bits<ElementOutput_>,
-                                                       ///< but we use 64 or 32 sometimes when there are not enough data to store
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  typename ElementCompute_ = ElementOutput_,           ///< Data type used to compute linear combination
-  ScaleType::Kind Scale = ScaleType::Default,          ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest,
-  bool IsHeavy = false
->
+template <template <typename T> class ActivationFunctor,
+          typename ElementOutput_,  ///< Data type used to load and store tensors
+          int Count,                ///< Number of elements computed per operation
+                                    ///< Usually it is 128/sizeof_bits<ElementOutput_>,
+          ///< but we use 64 or 32 sometimes when there are not enough data to store
+          typename ElementAccumulator_ = ElementOutput_,  ///< Accumulator data type
+          typename ElementCompute_ =
+            ElementOutput_,  ///< Data type used to compute linear combination
+          ScaleType::Kind Scale = ScaleType::Default,  ///< Control Alpha and Beta scaling
+          FloatRoundStyle Round = FloatRoundStyle::round_to_nearest,
+          bool IsHeavy          = false>
 class LinearCombinationGeneric {
-public:
-
-  using ElementOutput = ElementOutput_;
+ public:
+  using ElementOutput      = ElementOutput_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementCompute_;
+  using ElementCompute     = ElementCompute_;
 
-  static bool const kIsHeavy = IsHeavy;
-  static int const kCount = Count;
+  static bool const kIsHeavy          = IsHeavy;
+  static int const kCount             = Count;
   static const ScaleType::Kind kScale = Scale;
 
-  using FragmentOutput = Array<ElementOutput, kCount>;
+  using FragmentOutput      = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using FragmentCompute = Array<ElementCompute, kCount>;
+  using FragmentCompute     = Array<ElementCompute, kCount>;
 
   static FloatRoundStyle const kRound = Round;
 
   /// Host-constructable parameters structure
   using Params = typename ActivationFunctor<FragmentCompute>::Params;
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -94,20 +92,21 @@ private:
   Params params_;
   bool skip_elementwise_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  LinearCombinationGeneric(Params const &params) {
-    params_ = params;
-    params_.alpha = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    params_.beta = (params.beta_ptr ? *params.beta_ptr : params.beta);
+  LinearCombinationGeneric(Params const& params)
+  {
+    params_           = params;
+    params_.alpha     = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
+    params_.beta      = (params.beta_ptr ? *params.beta_ptr : params.beta);
     skip_elementwise_ = false;
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
+  bool is_source_needed() const
+  {
     if (Scale == ScaleType::NoBetaScaling) return true;
 
     if (Scale == ScaleType::OnlyAlphaScaling) return false;
@@ -119,27 +118,23 @@ public:
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    if (k_partition) {
-      params_.beta = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition, int k_partition_count)
+  {
+    if (k_partition) { params_.beta = ElementCompute(1); }
 
-    if (k_partition != k_partition_count - 1) {
-      skip_elementwise_ = true;
-    }
+    if (k_partition != k_partition_count - 1) { skip_elementwise_ = true; }
   }
 
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator,
-    FragmentOutput const &source) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentOutput const& source) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementOutput, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
-    FragmentCompute converted_source = source_converter(source);
+    FragmentCompute converted_source      = source_converter(source);
     FragmentCompute converted_accumulator = accumulator_converter(accumulator);
 
     // Perform binary operations
@@ -152,12 +147,14 @@ public:
 
     if (Scale == ScaleType::NoBetaScaling) {
       intermediate = converted_source;
-      intermediate = mul_add_accumulator(params_.alpha, converted_accumulator, intermediate);    // D = alpha * Accum + X
-    }  else if (Scale == ScaleType::Nothing) {
+      intermediate = mul_add_accumulator(
+        params_.alpha, converted_accumulator, intermediate);  // D = alpha * Accum + X
+    } else if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_add_source(params_.beta, converted_source);                             // X =  beta * C + uniform
-      intermediate = mul_add_accumulator(params_.alpha, converted_accumulator, intermediate);    // D = alpha * Accum + X
+      intermediate = mul_add_source(params_.beta, converted_source);  // X =  beta * C + uniform
+      intermediate = mul_add_accumulator(
+        params_.alpha, converted_accumulator, intermediate);  // D = alpha * Accum + X
     }
 
     intermediate = skip_elementwise_ ? intermediate : activation(intermediate, params_);
@@ -170,9 +167,8 @@ public:
 
   /// Computes linear scaling: D = alpha * accumulator
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -188,7 +184,8 @@ public:
     if (Scale == ScaleType::Nothing) {
       intermediate = converted_accumulator;
     } else {
-      intermediate = mul_add_accumulator(params_.alpha, converted_accumulator);    // D = alpha * Accum
+      intermediate =
+        mul_add_accumulator(params_.alpha, converted_accumulator);  // D = alpha * Accum
     }
 
     intermediate = skip_elementwise_ ? intermediate : activation(intermediate, params_);
@@ -202,6 +199,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass

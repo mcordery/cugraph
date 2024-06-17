@@ -33,15 +33,15 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 namespace layout {
 
 /// Tensor layout for densely packed vectors.
 class PackedVectorLayout {
-public:
+ public:
   /// Logical rank of tensor
   static int const kRank = 1;
 
@@ -60,45 +60,35 @@ public:
   /// Stride vector
   using Stride = Coord<kStrideRank, Index>;
 
-private:
-
+ private:
   //
   // No actual stride vector stored
   //
 
-public:
-
+ public:
   //
   // Methods
   //
 
   CUTLASS_HOST_DEVICE
-  PackedVectorLayout() { }
+  PackedVectorLayout() {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static PackedVectorLayout packed(TensorCoord const &size) {
-    return PackedVectorLayout();
-  }
+  static PackedVectorLayout packed(TensorCoord const& size) { return PackedVectorLayout(); }
 
   /// Returns the offset of a coordinate in linear memory
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-    return coord[0];
-  }
+  LongIndex operator()(TensorCoord const& coord) const { return coord[0]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return make_Coord(1);
-  }
+  Stride stride() const { return make_Coord(1); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &size) const {
-    return size[0];
-  }
+  LongIndex capacity(TensorCoord const& size) const { return size[0]; }
 };
 
-} // namespace layout
-} // namespace cutlass
+}  // namespace layout
+}  // namespace cutlass

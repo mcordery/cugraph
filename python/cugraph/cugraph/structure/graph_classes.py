@@ -11,16 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-from .graph_implementation import (
-    simpleGraphImpl,
-    simpleDistributedGraphImpl,
-    npartiteGraphImpl,
-)
 import cudf
 import dask_cudf
-
+import numpy as np
 from cugraph.utilities.utils import import_optional
+
+from .graph_implementation import (
+    npartiteGraphImpl,
+    simpleDistributedGraphImpl,
+    simpleGraphImpl,
+)
 
 pd = import_optional("pandas")
 

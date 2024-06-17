@@ -51,9 +51,9 @@
 
 #pragma once
 
+#include "cutlass/array.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/numeric_types.h"
-#include "cutlass/array.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,17 +62,15 @@ namespace epilogue {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename Shape_,      ///< shape of accumulator tile (concept: MatrixShape)
-  int WarpCount,        ///< number of warps
-  typename FragmentC_   ///< warp-level GEMM operator (concept: gemm::warp::Mma)
->
+template <typename Shape_,     ///< shape of accumulator tile (concept: MatrixShape)
+          int WarpCount,       ///< number of warps
+          typename FragmentC_  ///< warp-level GEMM operator (concept: gemm::warp::Mma)
+          >
 class EpilogueWorkspace {
-public:
-
-  using Shape = Shape_;
+ public:
+  using Shape     = Shape_;
   using FragmentC = FragmentC_;
-  using ElementC = typename FragmentC::value_type;
+  using ElementC  = typename FragmentC::value_type;
 
   static int const kWarpCount = WarpCount;
 
@@ -83,15 +81,13 @@ public:
   static int const kWarpSize = 32;
 
   /// Vector length of accesses
-  static int const kElementsPerAccess = 
-    kAccessSizeInBits / sizeof_bits<ElementC>::value;
+  static int const kElementsPerAccess = kAccessSizeInBits / sizeof_bits<ElementC>::value;
 
   /// Number of stores per thread
   static int const kIterations = FragmentC::kElements / kElementsPerAccess;
 
-  static_assert(
-    !(FragmentC::kElements % kElementsPerAccess), 
-    "The number of accumulators must be divisible by the access size.");
+  static_assert(!(FragmentC::kElements % kElementsPerAccess),
+                "The number of accumulators must be divisible by the access size.");
 
   /// Total number of vectorized accesses in warp (in units of vector)
   static int const kWarpAccesses = kIterations * kWarpSize;
@@ -101,9 +97,8 @@ public:
 
   /// Parameters structure
   struct Params {
-
     /// Pointer to C matrix
-    ElementC *ptr_C;
+    ElementC* ptr_C;
 
     /// Stride between tiles along the GEMM N dimension (in units of vectors)
     int stride_n;
@@ -117,12 +112,14 @@ public:
 
     CUTLASS_HOST_DEVICE
     Params(
-      ElementC *ptr_C,   ///< Pointer to C matrix
-      int stride_n_,      ///< Stride between tiles along the GEMM N dimension (in units of ElementC)
-      int stride_k_       ///< Stride between tiles along the GEMM K dimension (in units of ElementC)
-    ):
-      ptr_C(ptr_C), stride_n(stride_n_ / kElementsPerAccess), stride_k(stride_k_ / kElementsPerAccess) {
-
+      ElementC* ptr_C,  ///< Pointer to C matrix
+      int stride_n_,    ///< Stride between tiles along the GEMM N dimension (in units of ElementC)
+      int stride_k_     ///< Stride between tiles along the GEMM K dimension (in units of ElementC)
+      )
+      : ptr_C(ptr_C),
+        stride_n(stride_n_ / kElementsPerAccess),
+        stride_k(stride_k_ / kElementsPerAccess)
+    {
     }
   };
 
@@ -131,14 +128,13 @@ public:
     // Intentionally empty
   };
 
-private:
-
+ private:
   struct alignas((kAccessSizeInBits / 8)) AccessType {
     Array<ElementC, kElementsPerAccess> storage;
   };
 
   /// Constant reference to parameters object
-  AccessType *pointer_;
+  AccessType* pointer_;
 
   /// Stride between tiles along the n dimension (in vectors)
   int stride_n_;
@@ -146,21 +142,19 @@ private:
   /// Stride between tiles along the k dimension (in vectors)
   int stride_k_;
 
-public:
-
+ public:
   /// Constructor
   CUTLASS_DEVICE
-  EpilogueWorkspace(
-    Params const &params,     ///< Host-constructable params object
-    SharedStorage &,          ///< Shared storage object
-    int warp_idx,             ///< ID of warp within threadblock
-    int lane_idx              ///< Id of thread within warp
+  EpilogueWorkspace(Params const& params,  ///< Host-constructable params object
+                    SharedStorage&,        ///< Shared storage object
+                    int warp_idx,          ///< ID of warp within threadblock
+                    int lane_idx           ///< Id of thread within warp
 
-  ):
-    pointer_(reinterpret_cast<AccessType *>(params.ptr_C)),
-    stride_n_(params.stride_n), 
-    stride_k_(params.stride_k) {
-
+                    )
+    : pointer_(reinterpret_cast<AccessType*>(params.ptr_C)),
+      stride_n_(params.stride_n),
+      stride_k_(params.stride_k)
+  {
     // Add per-thread offset
     pointer_ += lane_idx + warp_idx * kWarpAccesses;
   }
@@ -168,18 +162,18 @@ public:
   /// Streams the result to global memory
   CUTLASS_DEVICE
   void operator()(
-    cutlass::gemm::GemmCoord problem_size,       ///< Problem size of GEMM (units of ElementC)
-    cutlass::gemm::GemmCoord tb_tile_coord,      ///< Threadblock tile coordinate in GEMM (in units of threadblock tiles)
-    FragmentC const &accum) {     ///< Accumulator tile
-    
+    cutlass::gemm::GemmCoord problem_size,  ///< Problem size of GEMM (units of ElementC)
+    cutlass::gemm::GemmCoord
+      tb_tile_coord,  ///< Threadblock tile coordinate in GEMM (in units of threadblock tiles)
+    FragmentC const& accum)
+  {  ///< Accumulator tile
+
     // Compute offset for entire threadblock (note, per-thread offset has been folded in already)
-    AccessType *pointer = pointer_ + 
-      tb_tile_coord.m() * kThreadblockAccesses + 
-      tb_tile_coord.n() * stride_n_ +
-      tb_tile_coord.k() * stride_k_;
+    AccessType* pointer = pointer_ + tb_tile_coord.m() * kThreadblockAccesses +
+                          tb_tile_coord.n() * stride_n_ + tb_tile_coord.k() * stride_k_;
 
     // Cast to vectorized view of accumulator fragments
-    AccessType const * src_pointer = reinterpret_cast<AccessType const *>(&accum);
+    AccessType const* src_pointer = reinterpret_cast<AccessType const*>(&accum);
 
     // Write out accumulators at full speed
     CUTLASS_PRAGMA_UNROLL
@@ -191,7 +185,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

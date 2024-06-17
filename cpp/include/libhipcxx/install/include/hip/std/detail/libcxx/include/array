@@ -506,12 +506,12 @@ namespace std {
 #endif
 
     template <class _Tp, size_t _Size>
-    struct tuple_size<_CUDA_VSTD::array<_Tp, _Size>> 
+    struct tuple_size<_CUDA_VSTD::array<_Tp, _Size>>
       : _CUDA_VSTD::tuple_size<_CUDA_VSTD::array<_Tp, _Size>>
     {};
 
     template<size_t _Ip, class _Tp, size_t _Size>
-    struct tuple_element<_Ip, _CUDA_VSTD::array<_Tp, _Size>> 
+    struct tuple_element<_Ip, _CUDA_VSTD::array<_Tp, _Size>>
       : _CUDA_VSTD::tuple_element<_Ip, _CUDA_VSTD::array<_Tp, _Size>>
     {};
 }

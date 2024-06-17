@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .louvain import louvain
-from .triangle_count import triangle_count
 from .induced_subgraph import induced_subgraph
 from .leiden import leiden
+from .louvain import louvain
+from .triangle_count import triangle_count

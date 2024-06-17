@@ -30,19 +30,18 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
 */
 
 #pragma once
 
+#include "cutlass/complex.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/fast_math.h"
-#include "cutlass/matrix_coord.h"
-#include "cutlass/complex.h"
-#include "cutlass/tensor_ref.h"
-
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_coord.h"
+#include "cutlass/tensor_ref.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,35 +51,32 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ElementA_,
-  typename LayoutA_,
-  typename ElementB_,
-  typename ElementC_,
-  typename ElementAccumulator_,
-  typename EpilogueOutputOp_
->
+template <typename ElementA_,
+          typename LayoutA_,
+          typename ElementB_,
+          typename ElementC_,
+          typename ElementAccumulator_,
+          typename EpilogueOutputOp_>
 struct Gemv {
-public:
-
-  using ElementA = ElementA_;
-  using LayoutA = layout::ColumnMajor;
+ public:
+  using ElementA   = ElementA_;
+  using LayoutA    = layout::ColumnMajor;
   using TensorRefA = TensorRef<ElementA, LayoutA>;
 
-  static_assert(platform::is_same<LayoutA, LayoutA_>::value, 
-    "Only supported for column-major A matrix");
+  static_assert(platform::is_same<LayoutA, LayoutA_>::value,
+                "Only supported for column-major A matrix");
 
   using ElementB = ElementB_;
   using ElementC = ElementC_;
 
   using ElementAccumulator = ElementAccumulator_;
-  using EpilogueOutputOp = EpilogueOutputOp_;
+  using EpilogueOutputOp   = EpilogueOutputOp_;
 
   static ComplexTransform const kTransformA = ComplexTransform::kNone;
   static ComplexTransform const kTransformB = ComplexTransform::kNone;
 
   static int const kThreadCount = 32;
-  static int const kStages = 1;
+  static int const kStages      = 1;
 
   static int const kAlignmentA = 1;
   static int const kAlignmentB = 1;
@@ -92,97 +88,83 @@ public:
 
   /// Argument structure
   struct Arguments {
-    MatrixCoord     problem_size;
-    int32_t         batch_count;
+    MatrixCoord problem_size;
+    int32_t batch_count;
     typename EpilogueOutputOp::Params output_op;
 
-    TensorRefA      ref_A;
+    TensorRefA ref_A;
 
-    ElementB const *ptr_B;
-    ElementC const *ptr_C;
-    ElementC       *ptr_D;
+    ElementB const* ptr_B;
+    ElementC const* ptr_C;
+    ElementC* ptr_D;
 
-    int64_t         inc_B;
-    int64_t         inc_C;
-    int64_t         inc_D;
+    int64_t inc_B;
+    int64_t inc_C;
+    int64_t inc_D;
 
-    int64_t         batch_stride_A;
-    int64_t         batch_stride_B;
-    int64_t         batch_stride_C;
-    int64_t         batch_stride_D;
+    int64_t batch_stride_A;
+    int64_t batch_stride_B;
+    int64_t batch_stride_C;
+    int64_t batch_stride_D;
 
     //
     // Methods
     //
 
-    Arguments(): batch_count(0) { }
+    Arguments() : batch_count(0) {}
 
-    Arguments(
-      MatrixCoord problem_size,
-      int batch_count,
-      typename EpilogueOutputOp::Params output_op,
-      TensorRefA   ref_A,
-      void const * ptr_B,
-      void const * ptr_C,
-      void * ptr_D,
-      int64_t  inc_B,
-      int64_t  inc_C,
-      int64_t  inc_D,
-      int64_t batch_stride_A,
-      int64_t batch_stride_B,
-      int64_t batch_stride_C,
-      int64_t batch_stride_D
-    ): 
-      problem_size(problem_size),
-      batch_count(batch_count),
-      output_op(output_op),
-      ref_A(ref_A),
-      ptr_B(static_cast<ElementB const *>(ptr_B)),
-      ptr_C(static_cast<ElementC const *>(ptr_C)),
-      ptr_D(static_cast<ElementC       *>(ptr_D)),
-      inc_B(inc_B),
-      inc_C(inc_C),
-      inc_D(inc_D),
-      batch_stride_A(batch_stride_A),
-      batch_stride_B(batch_stride_B),
-      batch_stride_C(batch_stride_C),
-      batch_stride_D(batch_stride_D)
-    { }
+    Arguments(MatrixCoord problem_size,
+              int batch_count,
+              typename EpilogueOutputOp::Params output_op,
+              TensorRefA ref_A,
+              void const* ptr_B,
+              void const* ptr_C,
+              void* ptr_D,
+              int64_t inc_B,
+              int64_t inc_C,
+              int64_t inc_D,
+              int64_t batch_stride_A,
+              int64_t batch_stride_B,
+              int64_t batch_stride_C,
+              int64_t batch_stride_D)
+      : problem_size(problem_size),
+        batch_count(batch_count),
+        output_op(output_op),
+        ref_A(ref_A),
+        ptr_B(static_cast<ElementB const*>(ptr_B)),
+        ptr_C(static_cast<ElementC const*>(ptr_C)),
+        ptr_D(static_cast<ElementC*>(ptr_D)),
+        inc_B(inc_B),
+        inc_C(inc_C),
+        inc_D(inc_D),
+        batch_stride_A(batch_stride_A),
+        batch_stride_B(batch_stride_B),
+        batch_stride_C(batch_stride_C),
+        batch_stride_D(batch_stride_D)
+    {
+    }
 
-    Arguments(
-      MatrixCoord problem_size,
-      typename EpilogueOutputOp::Params output_op,
-      TensorRefA   ref_A,
-      void const * ptr_B,
-      void const * ptr_C,
-      void       * ptr_D,
-      int64_t  inc_B,
-      int64_t  inc_C,
-      int64_t  inc_D
-    ): 
-      Arguments(
-        problem_size, 
-        1, 
-        output_op, 
-        ref_A, 
-        ptr_B, 
-        ptr_C, 
-        ptr_D,
-        inc_B, 
-        inc_C, 
-        inc_D, 
-        1, 
-        1, 
-        1, 
-        1)
-    { }
+    Arguments(MatrixCoord problem_size,
+              typename EpilogueOutputOp::Params output_op,
+              TensorRefA ref_A,
+              void const* ptr_B,
+              void const* ptr_C,
+              void* ptr_D,
+              int64_t inc_B,
+              int64_t inc_C,
+              int64_t inc_D)
+      : Arguments(
+          problem_size, 1, output_op, ref_A, ptr_B, ptr_C, ptr_D, inc_B, inc_C, inc_D, 1, 1, 1, 1)
+    {
+    }
 
-    Status update(Arguments const &args) {
+    Status update(Arguments const& args)
+    {
       output_op = args.output_op;
-      ref_A = ref_A;
-      ptr_B = args.ptr_B;
-      ptr_C = args.ptr_C;
-      ptr_D = args.ptr_D;
+      ref_A     = ref_A;
+      ptr_B     = args.ptr_B;
+      ptr_C     = args.ptr_C;
+      ptr_D     = args.ptr_D;
 
       return Status::kSuccess;
     }
@@ -192,39 +174,31 @@ public:
 
   /// Shared memory storage structure
   union SharedStorage {
-
   };
 
-public:
-
+ public:
   //
   // Methods
   //
 
   CUTLASS_DEVICE
-  Gemv() { } 
+  Gemv() {}
 
   /// Determines whether kernel satisfies alignment
-  static Status can_implement(cutlass::MatrixCoord const & problem_size) {
+  static Status can_implement(cutlass::MatrixCoord const& problem_size) { return Status::kSuccess; }
 
-    return Status::kSuccess;
-  }
+  static Status can_implement(Arguments const& args) { return can_implement(args.problem_size); }
 
-  static Status can_implement(Arguments const &args) {
-    return can_implement(args.problem_size);
-  }
- 
   /// Executes one GEMM
   CUTLASS_DEVICE
-  void operator()(Params const &params, SharedStorage &shared_storage) {
-
+  void operator()(Params const& params, SharedStorage& shared_storage)
+  {
     // Loop over batch indices
     for (int batch_idx = blockIdx.z; batch_idx < params.batch_count; batch_idx += gridDim.z) {
-
       int i = blockIdx.x * kThreadCount + threadIdx.x;
 
-      ElementA const *ptr_A = params.ref_A.data() + i;
-      ElementB const *ptr_B = params.ptr_B;
+      ElementA const* ptr_A = params.ref_A.data() + i;
+      ElementB const* ptr_B = params.ptr_B;
 
       ptr_A += batch_idx * params.batch_stride_A;
       ptr_B += batch_idx * params.batch_stride_B;
@@ -234,12 +208,9 @@ public:
       // Compute inner product
       CUTLASS_PRAGMA_NO_UNROLL
       for (int k = 0; k < params.problem_size.column(); ++k) {
-
         // Fetch from A
         ElementA a = ElementA();
-        if (i < params.problem_size.row()) {
-          a = *ptr_A;
-        }
+        if (i < params.problem_size.row()) { a = *ptr_A; }
         ptr_A += params.ref_A.stride(0);
 
         // Fetch from B
@@ -254,23 +225,22 @@ public:
       // Epilogue phase
       //
 
-      ElementC const *ptr_C = params.ptr_C + i * params.inc_C + batch_idx * params.batch_stride_C;
-      ElementC       *ptr_D = params.ptr_D + i * params.inc_D + batch_idx * params.batch_stride_D;
+      ElementC const* ptr_C = params.ptr_C + i * params.inc_C + batch_idx * params.batch_stride_C;
+      ElementC* ptr_D       = params.ptr_D + i * params.inc_D + batch_idx * params.batch_stride_D;
 
       EpilogueOutputOp output_op(params.output_op);
 
       typename EpilogueOutputOp::FragmentAccumulator accum_fragment;
-      typename EpilogueOutputOp::FragmentOutput      source_fragment;
-      typename EpilogueOutputOp::FragmentOutput      output_fragment;
-      
+      typename EpilogueOutputOp::FragmentOutput source_fragment;
+      typename EpilogueOutputOp::FragmentOutput output_fragment;
+
       accum_fragment[0] = accum;
 
       if (i < params.problem_size.row()) {
         if (output_op.is_source_needed()) {
           source_fragment[0] = *ptr_C;
-          output_fragment = output_op(accum_fragment, source_fragment);
-        }
-        else {
+          output_fragment    = output_op(accum_fragment, source_fragment);
+        } else {
           output_fragment = output_op(accum_fragment);
         }
 
@@ -282,8 +252,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

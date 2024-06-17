@@ -16,7 +16,6 @@
 # cython: embedsignature = True
 # cython: language_level = 3
 
-from libc.stdint cimport uintptr_t
 from cugraph.structure cimport utils as c_utils
 from cugraph.structure.graph_primtypes cimport *
 from libc.stdint cimport uintptr_t

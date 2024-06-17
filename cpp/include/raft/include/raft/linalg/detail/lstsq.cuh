@@ -16,9 +16,9 @@
 
 #pragma once
 
-//#include <common/nvtx.hpp>
+// #include <common/nvtx.hpp>
 
-//#include <raft/common/nvtx.hpp>
+// #include <raft/common/nvtx.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
@@ -129,9 +129,9 @@ void lstsqSvdQR(raft::resources const& handle,
                 math_t* w,
                 hipStream_t stream)
 {
-  const int minmn              = min(n_rows, n_cols);
+  const int minmn             = min(n_rows, n_cols);
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  int cusolverWorkSetSize      = 0;
+  int cusolverWorkSetSize     = 0;
   // #TODO: Call from public API when ready
   RAFT_CUSOLVER_TRY(raft::linalg::detail::cusolverDngesvd_bufferSize<math_t>(
     cusolverH, n_rows, n_cols, &cusolverWorkSetSize));
@@ -192,7 +192,7 @@ void lstsqSvdJacobi(raft::resources const& handle,
   const int minmn = min(n_rows, n_cols);
   hipsolverGesvdjInfo_t gesvdj_params;
   RAFT_CUSOLVER_TRY(hipsolverDnCreateGesvdjInfo(&gesvdj_params));
-  int cusolverWorkSetSize      = 0;
+  int cusolverWorkSetSize     = 0;
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
   // #TODO: Call from public API when ready
   RAFT_CUSOLVER_TRY(
@@ -311,9 +311,9 @@ void lstsqEig(raft::resources const& handle,
   multAbDone.record(multAbStream);
 
   // Q S Q* <- covA
-//  raft::common::nvtx::push_range("raft::linalg::eigDC");
+  //  raft::common::nvtx::push_range("raft::linalg::eigDC");
   raft::linalg::eigDC(handle, covA, n_cols, n_cols, Q, S, mainStream);
-//  raft::common::nvtx::pop_range();
+  //  raft::common::nvtx::pop_range();
 
   // QS  <- Q invS
   raft::linalg::matrixVectorOp(
@@ -364,7 +364,7 @@ void lstsqQR(raft::resources const& handle,
              math_t* w,
              hipStream_t stream)
 {
-  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH     = resource::get_cublas_handle(handle);
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   int m = n_rows;

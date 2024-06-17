@@ -43,17 +43,19 @@ namespace arch {
 
 /// Computes laneId within a warp
 CUTLASS_DEVICE
-int LaneId() {
+int LaneId()
+{
   int ret;
-  asm ("mov.u32 %0, %%laneid;" : "=r"(ret) : );
+  asm("mov.u32 %0, %%laneid;" : "=r"(ret) :);
   return ret;
 }
 
 /// Computes SM number the thread is running on
 CUTLASS_DEVICE
-int SmId() {
+int SmId()
+{
   int ret;
-  asm ("mov.u32 %0, %%smid;" : "=r"(ret) : );
+  asm("mov.u32 %0, %%smid;" : "=r"(ret) :);
   return ret;
 }
 
@@ -62,10 +64,10 @@ int SmId() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 struct Sm50 {
   static int const kMinComputeCapability = 50;
-}; 
+};
 struct Sm60 {
   static int const kMinComputeCapability = 60;
-}; 
+};
 struct Sm61 {
   static int const kMinComputeCapability = 61;
 };
@@ -79,7 +81,7 @@ struct Sm75 {
   static int const kMinComputeCapability = 75;
 };
 struct Sm80 {
-  static int const kMinComputeCapability = 80; 
+  static int const kMinComputeCapability = 80;
 };
 struct Sm86 {
   static int const kMinComputeCapability = 86;
@@ -87,15 +89,16 @@ struct Sm86 {
 
 /// Triggers a breakpoint on the device
 CUTLASS_DEVICE
-void device_breakpoint() {
+void device_breakpoint()
+{
 #if defined(__CUDA_ARCH__)
-  asm volatile ("  brkpt;\n");
+  asm volatile("  brkpt;\n");
 #endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

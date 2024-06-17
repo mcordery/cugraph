@@ -128,7 +128,7 @@ void sssp(raft::handle_t const& handle,
     thrust::make_counting_iterator(push_graph_view.local_vertex_partition_range_first()),
     thrust::make_counting_iterator(push_graph_view.local_vertex_partition_range_last()),
     val_first,
-    [source_vertex,invalid_vertex] __device__(auto val) {
+    [source_vertex, invalid_vertex] __device__(auto val) {
       auto distance = invalid_distance;
       if (val == source_vertex) { distance = weight_t{0.0}; }
       return thrust::make_tuple(distance, invalid_vertex);

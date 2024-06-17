@@ -11,11 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
+import time
+
 import dgl
 import torch as th
 import torch.nn.functional as F
-import time
-import argparse
 
 ## DGL Specific Import
 from cugraph_dgl import c
@@ -72,9 +73,9 @@ if __name__ == "__main__":
         )
     else:
         #### Dask Cluster
-        from dask_cuda import LocalCUDACluster
         from cugraph.dask.comms import comms as Comms
         from dask.distributed import Client
+        from dask_cuda import LocalCUDACluster
 
         # Change according to your GPUS
         # Client at GPU-0

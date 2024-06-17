@@ -15,17 +15,17 @@
 import importlib
 import random
 
-import pytest
-import pandas as pd
-import numpy as np
-import cupy
 import cudf
-import cugraph
+import cupy
+import numpy as np
+import pandas as pd
+import pytest
 from cugraph.experimental import PropertyGraph
-
 from cugraph_service_client import RemoteGraph
-from . import data
 
+import cugraph
+
+from . import data
 
 # FIXME: Remove this once these pass in the CI environment.
 pytest.skip(

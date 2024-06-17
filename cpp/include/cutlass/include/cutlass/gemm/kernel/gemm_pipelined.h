@@ -35,15 +35,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
 #include "cutlass/aligned_buffer.h"
 #include "cutlass/array.h"
-
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,16 +51,14 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename Mma, typename Epilogue, typename ThreadblockSwizzle>
-__global__ void GemmPipelined(
-  cutlass::gemm::GemmCoord problem_size,
-  cutlass::gemm::GemmCoord grid_tiled_shape,
-  typename Mma::IteratorA::Params params_A,
-  typename Mma::IteratorA::TensorRef ref_A,
-  typename Mma::IteratorB::Params params_B,
-  typename Mma::IteratorB::TensorRef ref_B,
-  typename Epilogue::Params params_epilogue
-  ) {
-
+__global__ void GemmPipelined(cutlass::gemm::GemmCoord problem_size,
+                              cutlass::gemm::GemmCoord grid_tiled_shape,
+                              typename Mma::IteratorA::Params params_A,
+                              typename Mma::IteratorA::TensorRef ref_A,
+                              typename Mma::IteratorB::Params params_B,
+                              typename Mma::IteratorB::TensorRef ref_B,
+                              typename Epilogue::Params params_epilogue)
+{
   // Shared storage needed by threadblock-scoped matrix multiply-accumulate
   __shared__ union {
     typename Mma::SharedStorage main_loop;
@@ -77,40 +72,24 @@ __global__ void GemmPipelined(
 
   cutlass::gemm::GemmCoord tb_tile_offset = threadblock_swizzle.get_tile_offset(swizzle_log_tile);
 
-  if (grid_tiled_shape.m() <= tb_tile_offset.m() ||
-    grid_tiled_shape.n() <= tb_tile_offset.n()) {
-
+  if (grid_tiled_shape.m() <= tb_tile_offset.m() || grid_tiled_shape.n() <= tb_tile_offset.n()) {
     return;
   }
 
   // Compute initial location in logical coordinates
-  cutlass::MatrixCoord tb_offset_A{
-    tb_tile_offset.m() * Mma::Shape::kM,
-    tb_tile_offset.k()
-  };
+  cutlass::MatrixCoord tb_offset_A{tb_tile_offset.m() * Mma::Shape::kM, tb_tile_offset.k()};
 
-  cutlass::MatrixCoord tb_offset_B{
-    tb_tile_offset.k(),
-    tb_tile_offset.n() * Mma::Shape::kN
-  };
+  cutlass::MatrixCoord tb_offset_B{tb_tile_offset.k(), tb_tile_offset.n() * Mma::Shape::kN};
 
   // Compute position within threadblock
   int tb_thread_id = threadIdx.x;
 
   // Construct iterators to A and B operands
   typename Mma::IteratorA iterator_A(
-    params_A,
-    ref_A.data(),
-    {problem_size.m(), problem_size.k()},
-    tb_thread_id,
-    tb_offset_A);
+    params_A, ref_A.data(), {problem_size.m(), problem_size.k()}, tb_thread_id, tb_offset_A);
 
   typename Mma::IteratorB iterator_B(
-    params_B,
-    ref_B.data(),
-    {problem_size.k(), problem_size.n()},
-    tb_thread_id,
-    tb_offset_B);
+    params_B, ref_B.data(), {problem_size.k(), problem_size.n()}, tb_thread_id, tb_offset_B);
 
   int warp_id = __shfl_sync(0xffffffff, threadIdx.x / 32, 0);
   int lane_id = threadIdx.x % 32;
@@ -133,20 +112,13 @@ __global__ void GemmPipelined(
   // Epilogue
   //
 
-  Epilogue epilogue(
-    params_epilogue, 
-    shared_storage.epilogue, 
-    tb_thread_id, 
-    warp_id, 
-    lane_id);
+  Epilogue epilogue(params_epilogue, shared_storage.epilogue, tb_thread_id, warp_id, lane_id);
 
   tb_tile_offset = threadblock_swizzle.get_tile_offset(swizzle_log_tile);
 
-  //assume identity swizzle
-  MatrixCoord threadblock_offset(
-    tb_tile_offset.m() * Mma::Shape::kM,
-    tb_tile_offset.n() * Mma::Shape::kN
-  );
+  // assume identity swizzle
+  MatrixCoord threadblock_offset(tb_tile_offset.m() * Mma::Shape::kM,
+                                 tb_tile_offset.n() * Mma::Shape::kN);
 
   // run efficient epilogue
   epilogue({problem_size.m(), problem_size.n()}, accumulators, threadblock_offset);
@@ -154,6 +126,6 @@ __global__ void GemmPipelined(
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass

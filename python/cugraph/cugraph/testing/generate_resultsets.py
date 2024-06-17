@@ -11,23 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tempfile import NamedTemporaryFile
 import random
-
-import numpy as np
-import networkx as nx
+from tempfile import NamedTemporaryFile
 
 import cudf
-import cugraph
-from cugraph.datasets import dolphins, netscience, karate_disjoint, karate
+import networkx as nx
+import numpy as np
 
 # from cugraph.testing import utils, Resultset, SMALL_DATASETS, results_dir_path
 from cugraph.testing import (
-    utils,
-    Resultset,
     SMALL_DATASETS,
+    Resultset,
     default_resultset_download_dir,
+    utils,
 )
+
+import cugraph
+from cugraph.datasets import dolphins, karate, karate_disjoint, netscience
 
 _resultsets = {}
 

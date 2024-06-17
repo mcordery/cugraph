@@ -34,11 +34,11 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,24 +50,21 @@ namespace thread {
 
 /// Converts the result without other operations
 ///
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
+template <typename ElementOutput_,  ///< Data type used to load and store tensors
+          int Count,                ///< Number of elements computed per operation
+          typename ElementAccumulator_ = ElementOutput_,  ///< Accumulator data type
+          FloatRoundStyle Round        = FloatRoundStyle::round_to_nearest>
 class Convert {
-public:
-
-  using ElementOutput = ElementOutput_;
+ public:
+  using ElementOutput      = ElementOutput_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementAccumulator_;
+  using ElementCompute     = ElementAccumulator_;
 
   static int const kCount = Count;
 
-  using FragmentOutput = Array<ElementOutput, kCount>;
+  using FragmentOutput      = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using ComputeFragment = FragmentAccumulator;
+  using ComputeFragment     = FragmentAccumulator;
 
   static FloatRoundStyle const kRound = Round;
 
@@ -75,7 +72,6 @@ public:
 
   /// Host-constructable parameters structure
   struct Params {
-
     //
     // Methods
     //
@@ -84,40 +80,30 @@ public:
     Params() {}
   };
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  Convert(Params const &params = Params()) {
-
-  }
+  Convert(Params const& params = Params()) {}
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-
-  }
+  void set_k_partition(int k_partition, int k_partition_count) {}
 
   /// Returns true if source is needed based on state of runtime arguments
   CUTLASS_HOST_DEVICE
-  constexpr bool is_source_needed() const {
-    return false;
-  }
+  constexpr bool is_source_needed() const { return false; }
 
   /// Constexpr function to enable the compiler to optimize away the source loading if it is
   /// never needed.
   CUTLASS_HOST_DEVICE
-  constexpr bool is_source_ever_needed() const {
-    return false;
-  }
+  constexpr bool is_source_ever_needed() const { return false; }
 
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentOutput operator()(
-    FragmentAccumulator const &accumulator, 
-    FragmentOutput const &source = FragmentOutput(),
-    ElementCompute uniform = ElementCompute(0)) const {
-
+  FragmentOutput operator()(FragmentAccumulator const& accumulator,
+                            FragmentOutput const& source = FragmentOutput(),
+                            ElementCompute uniform       = ElementCompute(0)) const
+  {
     // Convert to destination numeric type
     NumericArrayConverter<ElementOutput, ElementAccumulator, kCount, Round> destination_converter;
 
@@ -127,6 +113,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass

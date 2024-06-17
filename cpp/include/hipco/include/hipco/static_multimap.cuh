@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include <thrust/functional.h>
+
 #include <hipco/detail/__config>
 #include <hipco/detail/prime.hpp>
 #include <hipco/hash_functions.cuh>
@@ -41,10 +43,9 @@
 #include <hipco/utility/allocator.hpp>
 #include <hipco/utility/traits.hpp>
 
-#include <thrust/functional.h>
+#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 
 #include <hip/std/atomic>
-#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 #if defined(HIPCO_HAS_CUDA_BARRIER)
 #include <hip/barrier>
 #endif
@@ -150,8 +151,9 @@ namespace cooperative_groups = hip_extensions::hip_cooperative_groups_ext;
 template <typename Key,
           typename Value,
           hip::thread_scope Scope = hip::thread_scope_device,
-          typename Allocator       = hipco::cuda_allocator<char>,
-          class ProbeSequence      = hipco::double_hashing<HIPCO_CG_SIZE, hipco::default_hash_function<Key>>>
+          typename Allocator      = hipco::cuda_allocator<char>,
+          class ProbeSequence =
+            hipco::double_hashing<HIPCO_CG_SIZE, hipco::default_hash_function<Key>>>
 class static_multimap {
   static_assert(
     hipco::is_bitwise_comparable_v<Key>,
@@ -169,16 +171,16 @@ class static_multimap {
     "hipco::linear_probing.");
 
  public:
-  using value_type         = hipco::pair<Key, Value>;            ///< Type of key/value pairs
-  using key_type           = Key;                               ///< Key type
-  using mapped_type        = Value;                             ///< Type of mapped values
+  using value_type         = hipco::pair<Key, Value>;          ///< Type of key/value pairs
+  using key_type           = Key;                              ///< Key type
+  using mapped_type        = Value;                            ///< Type of mapped values
   using atomic_key_type    = hip::atomic<key_type, Scope>;     ///< Type of atomic keys
   using atomic_mapped_type = hip::atomic<mapped_type, Scope>;  ///< Type of atomic mapped values
   using pair_atomic_type =
     hipco::pair<atomic_key_type,
-               atomic_mapped_type>;  ///< Pair type of atomic key and atomic mapped value
+                atomic_mapped_type>;  ///< Pair type of atomic key and atomic mapped value
   using atomic_ctr_type     = hip::atomic<std::size_t, Scope>;  ///< Atomic counter type
-  using allocator_type      = Allocator;                         ///< Allocator type
+  using allocator_type      = Allocator;                        ///< Allocator type
   using slot_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<
     pair_atomic_type>;  ///< Type of the allocator to (de)allocate slots
   using counter_allocator_type = typename std::allocator_traits<Allocator>::template rebind_alloc<
@@ -186,7 +188,7 @@ class static_multimap {
   using probe_sequence_type =
     detail::probe_sequence<ProbeSequence, Key, Value, Scope>;  ///< Probe scheme type
 
-  static_multimap(static_multimap const&) = delete;
+  static_multimap(static_multimap const&)            = delete;
   static_multimap& operator=(static_multimap const&) = delete;
 
   static_multimap(static_multimap&&) = default;  ///< Move constructor
@@ -717,7 +719,7 @@ class static_multimap {
     using key_type    = typename view_base_type::key_type;     ///< Key type
     using mapped_type = typename view_base_type::mapped_type;  ///< Type of the mapped values
     using iterator =
-      typename view_base_type::iterator;        ///< Type of the forward iterator to `value_type`
+      typename view_base_type::iterator;  ///< Type of the forward iterator to `value_type`
     using const_iterator =
       typename view_base_type::const_iterator;  ///< Type of the forward iterator to `const
                                                 ///< value_type`
@@ -777,7 +779,7 @@ class static_multimap {
     using key_type       = typename view_base_type::key_type;     ///< Key type
     using mapped_type    = typename view_base_type::mapped_type;  ///< Type of the mapped values
     using iterator =
-      typename view_base_type::iterator;        ///< Type of the forward iterator to `value_type`
+      typename view_base_type::iterator;  ///< Type of the forward iterator to `value_type`
     using const_iterator =
       typename view_base_type::const_iterator;  ///< Type of the forward iterator to `const
                                                 ///< value_type`
@@ -1458,7 +1460,7 @@ class static_multimap {
 
    private:
     using device_view_base<device_view_impl>::impl_;  ///< Implementation detail of `device_view`
-  };                                                  // class device_view
+  };  // class device_view
 
   /**
    * @brief Return the raw pointer of the hash map slots.
@@ -1559,7 +1561,7 @@ class static_multimap {
   slot_deleter delete_slots_;                   ///< Custom slots deleter
   std::unique_ptr<atomic_ctr_type, counter_deleter> d_counter_{};  ///< Preallocated device counter
   std::unique_ptr<pair_atomic_type, slot_deleter> slots_{};  ///< Pointer to flat slots storage
-};                                                           // class static_multimap
+};  // class static_multimap
 
 }  // namespace hipco
 

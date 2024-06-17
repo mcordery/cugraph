@@ -10,6 +10,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from networkx.algorithms import *
-from cugraph.experimental.compat.nx.algorithms.link_analysis import *
 from cugraph.experimental.compat.nx.algorithms import link_analysis
+from cugraph.experimental.compat.nx.algorithms.link_analysis import *
+from networkx.algorithms import *

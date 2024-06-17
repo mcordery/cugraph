@@ -11,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
+from typing import List, Union
 
-from typing import Union, List
+import torch
 
 
 def extend_tensor(t: Union[List[int], torch.Tensor], l: int):

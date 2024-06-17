@@ -10,11 +10,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import argparse
 import os
 import time
-from scipy.io import mmread
-import argparse
 
+from scipy.io import mmread
 
 parser = argparse.ArgumentParser(
     description="Convert the sparsity pattern \

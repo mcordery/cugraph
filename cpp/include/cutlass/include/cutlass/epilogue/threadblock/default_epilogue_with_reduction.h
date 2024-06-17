@@ -39,18 +39,15 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/gemm/gemm.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_volta_tensor_op.h"
 #include "cutlass/epilogue/threadblock/epilogue.h"
 #include "cutlass/epilogue/threadblock/epilogue_with_reduction.h"
-
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,117 +58,93 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename OutputOp,
-  typename ReductionOp,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename OutputOp,
+          typename ReductionOp,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueWithReductionTensorOp {
-
   /// Use defaults related to the existing epilogue
-  using Base = DefaultEpilogueTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    ElementsPerAccess
-  >;
+  using Base =
+    DefaultEpilogueTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, ElementsPerAccess>;
 
   /// Additional tensor tile iterator
-  using TensorTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    typename OutputOp::ElementTensor
-  >;
+  using TensorTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           typename OutputOp::ElementTensor>;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementOutput,
+                                                           ScatterD,
+                                                           PermuteDLayout>;
 
   /// Define the epilogue
-  using Epilogue = EpilogueWithReduction<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputTileIterator,
-    TensorTileIterator,
-    typename WarpMmaTensorOp::ElementC,
-    typename Base::AccumulatorFragmentIterator,
-    typename Base::WarpTileIterator,
-    typename Base::SharedLoadIterator,
-    typename Base::OutputOp,
-    ReductionOp,
-    typename Base::Padding
-  >;
+  using Epilogue = EpilogueWithReduction<Shape,
+                                         WarpMmaTensorOp,
+                                         PartitionsK,
+                                         OutputTileIterator,
+                                         TensorTileIterator,
+                                         typename WarpMmaTensorOp::ElementC,
+                                         typename Base::AccumulatorFragmentIterator,
+                                         typename Base::WarpTileIterator,
+                                         typename Base::SharedLoadIterator,
+                                         typename Base::OutputOp,
+                                         ReductionOp,
+                                         typename Base::Padding>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  typename Shape,
-  typename WarpMmaTensorOp,
-  int PartitionsK,
-  typename ElementOutput,
-  typename OutputOp,
-  typename ReductionOp,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape,
+          typename WarpMmaTensorOp,
+          int PartitionsK,
+          typename ElementOutput,
+          typename OutputOp,
+          typename ReductionOp,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueWithReductionVoltaTensorOp {
-
   /// Use defaults related to the existing epilogue
-  using Base = DefaultEpilogueVoltaTensorOp<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputOp,
-    ElementsPerAccess
-  >;
+  using Base =
+    DefaultEpilogueVoltaTensorOp<Shape, WarpMmaTensorOp, PartitionsK, OutputOp, ElementsPerAccess>;
 
   /// Additional tensor tile iterator
-  using TensorTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    typename OutputOp::ElementTensor
-  >;
+  using TensorTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           typename OutputOp::ElementTensor>;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    typename Base::OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<typename Base::OutputTileThreadMap,
+                                                           ElementOutput,
+                                                           ScatterD,
+                                                           PermuteDLayout>;
 
   /// Define the epilogue
-  using Epilogue = EpilogueWithReduction<
-    Shape,
-    WarpMmaTensorOp,
-    PartitionsK,
-    OutputTileIterator,
-    TensorTileIterator,
-    typename WarpMmaTensorOp::ElementC,
-    typename Base::AccumulatorFragmentIterator,
-    typename Base::WarpTileIterator,
-    typename Base::SharedLoadIterator,
-    typename Base::OutputOp,
-    ReductionOp,
-    typename Base::Padding
-  >;
+  using Epilogue = EpilogueWithReduction<Shape,
+                                         WarpMmaTensorOp,
+                                         PartitionsK,
+                                         OutputTileIterator,
+                                         TensorTileIterator,
+                                         typename WarpMmaTensorOp::ElementC,
+                                         typename Base::AccumulatorFragmentIterator,
+                                         typename Base::WarpTileIterator,
+                                         typename Base::SharedLoadIterator,
+                                         typename Base::OutputOp,
+                                         ReductionOp,
+                                         typename Base::Padding>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

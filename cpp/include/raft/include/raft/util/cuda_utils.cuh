@@ -22,7 +22,6 @@
 
 #include <hip/hip_fp16.h>
 #include <hip/hip_math_constants.h>
-
 #include <stdint.h>
 
 #include <type_traits>
@@ -664,9 +663,9 @@ DI auto dp4a(unsigned int a, unsigned int b, unsigned int c) -> unsigned int
  * @param idx the index for which to query the stream
  */
 inline hipStream_t select_stream(hipStream_t user_stream,
-                                  hipStream_t* int_streams,
-                                  int n_int_streams,
-                                  int idx)
+                                 hipStream_t* int_streams,
+                                 int n_int_streams,
+                                 int idx)
 {
   return n_int_streams > 0 ? int_streams[idx % n_int_streams] : user_stream;
 }

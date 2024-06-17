@@ -11,13 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
 from collections import defaultdict
 from typing import Sequence, Union
+
 import cudf
 import cupy as cp
 import numpy as np
 import pandas as pd
-from cugraph.utilities.utils import import_optional, MissingModule
+from cugraph.utilities.utils import MissingModule, import_optional
 
 torch = import_optional("torch")
 wgth = import_optional("pylibwholegraph.torch")

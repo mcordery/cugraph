@@ -19,9 +19,8 @@ from typing import TYPE_CHECKING
 import cupy as cp
 import networkx as nx
 import numpy as np
-import pylibcugraph as plc
-
 import nx_cugraph as nxcg
+import pylibcugraph as plc
 
 from ..utils import index_dtype
 

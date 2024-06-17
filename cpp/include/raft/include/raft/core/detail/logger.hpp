@@ -16,9 +16,9 @@
 #pragma once
 
 #ifndef RAFT_HIDE_DEPRECATION_WARNINGS
-#pragma message(__FILE__                                                   \
-                  " is deprecated and will be removed in future releases." \
-                  " Please use the <raft/core/logger.hpp> version instead.")
+#pragma message(__FILE__                                                 \
+                " is deprecated and will be removed in future releases." \
+                " Please use the <raft/core/logger.hpp> version instead.")
 #endif
 
 #include <raft/core/logger.hpp>

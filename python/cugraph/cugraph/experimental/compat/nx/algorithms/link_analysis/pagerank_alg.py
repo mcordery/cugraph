@@ -11,10 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cugraph
-import cugraph.utilities
 import cudf
+import cugraph.utilities
 import numpy as np
+
+import cugraph
 
 
 def create_cudf_from_dict(dict_in):
@@ -50,7 +51,6 @@ def pagerank(
     weight="weight",
     dangling=None,
 ):
-
     """
     Calls the cugraph pagerank algorithm taking in a networkX object.
     In future releases it will maintain compatibility but will migrate more

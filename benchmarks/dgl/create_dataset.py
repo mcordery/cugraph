@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import os
+
 import rmm
 from cugraph.generators import rmat
 

@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **************************************************************************************************/
-/*! 
+/*!
     \file
     \brief Top-level include for all CUTLASS numeric types.
 */
@@ -83,11 +83,9 @@ using make_index_sequence = typename index_sequence_helper<N>::type;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "cutlass/integer_subbyte.h"
-
-#include "cutlass/half.h"
 #include "cutlass/bfloat16.h"
+#include "cutlass/half.h"
+#include "cutlass/integer_subbyte.h"
 #include "cutlass/tfloat32.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-

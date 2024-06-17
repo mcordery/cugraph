@@ -11,19 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+import tempfile
+
+import cudf
 import dask_cudf
+import numpy as np
+from cugraph.dask.common.mg_utils import get_visible_devices
+from cugraph.dask.comms import comms as Comms
+from cugraph.structure.symmetrize import symmetrize_ddf
+from cugraph.testing.mg_utils import generate_edgelist
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster
-from cugraph.structure.symmetrize import symmetrize_ddf
-from cugraph.dask.common.mg_utils import get_visible_devices
 from dask_cuda.initialize import initialize
-import cudf
 
 import cugraph
-from cugraph.dask.comms import comms as Comms
-import tempfile
-from cugraph.testing.mg_utils import generate_edgelist
 
 
 def read_csv(input_csv_file, scale):

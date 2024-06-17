@@ -13,29 +13,28 @@
 
 import gc
 
-import pytest
+import cudf
+import cupy as cp
+import cupyx
 import numpy as np
 import pandas as pd
-
-import cudf
-import cupyx
-import cugraph
-import cupy as cp
-from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
-from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
-from scipy.sparse import coo_matrix as sp_coo_matrix
-from scipy.sparse import csr_matrix as sp_csr_matrix
-from scipy.sparse import csc_matrix as sp_csc_matrix
-from pylibcugraph.testing.utils import gen_fixture_params_product
+import pytest
 from cugraph.testing import (
-    utils,
+    SMALL_DATASETS,
+    UNDIRECTED_DATASETS,
     get_resultset,
     load_resultset,
-    UNDIRECTED_DATASETS,
-    SMALL_DATASETS,
+    utils,
 )
+from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
+from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
+from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+from pylibcugraph.testing.utils import gen_fixture_params_product
+from scipy.sparse import coo_matrix as sp_coo_matrix
+from scipy.sparse import csc_matrix as sp_csc_matrix
+from scipy.sparse import csr_matrix as sp_csr_matrix
 
+import cugraph
 
 # Map of cuGraph input types to the expected output type for cuGraph
 # connected_components calls.

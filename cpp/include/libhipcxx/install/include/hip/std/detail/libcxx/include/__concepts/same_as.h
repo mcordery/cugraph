@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__type_traits/is_same.h"
@@ -27,14 +27,14 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.same]
 
-template<class _Tp, class _Up>
+template <class _Tp, class _Up>
 _LIBCUDACXX_CONCEPT __same_as_impl = _IsSame<_Tp, _Up>::value;
 
-template<class _Tp, class _Up>
+template <class _Tp, class _Up>
 _LIBCUDACXX_CONCEPT same_as = __same_as_impl<_Tp, _Up> && __same_as_impl<_Up, _Tp>;
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_SAME_AS_H
+#endif  // _LIBCUDACXX___CONCEPTS_SAME_AS_H

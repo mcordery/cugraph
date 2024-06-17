@@ -22,4 +22,3 @@
 #include "libcxx/include/__functional_base"
 
 #endif //_CUDA___FUNCTIONAL_BASE
-

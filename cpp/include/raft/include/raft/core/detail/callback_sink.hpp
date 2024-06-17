@@ -68,5 +68,4 @@ class CallbackSink : public base_sink<Mutex> {
 using callback_sink_mt = CallbackSink<std::mutex>;
 using callback_sink_st = CallbackSink<details::null_mutex>;
 
-
 }  // end namespace spdlog::sinks

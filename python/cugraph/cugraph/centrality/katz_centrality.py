@@ -11,13 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pylibcugraph import katz_centrality as pylibcugraph_katz, ResourceHandle
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
-import cudf
 import warnings
+
+import cudf
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import katz_centrality as pylibcugraph_katz
 
 
 def katz_centrality(

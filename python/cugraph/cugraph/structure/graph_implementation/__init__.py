@@ -11,6 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .simpleGraph import simpleGraphImpl
-from .simpleDistributedGraph import simpleDistributedGraphImpl
 from .npartiteGraph import npartiteGraphImpl
+from .simpleDistributedGraph import simpleDistributedGraphImpl
+from .simpleGraph import simpleGraphImpl

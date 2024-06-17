@@ -11,17 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
+import cudf
 import cupy as cp
 import numpy as np
-import cudf
+import pytest
 from pylibcugraph import (
-    SGGraph,
+    GraphProperties,
     MGGraph,
     ResourceHandle,
-    GraphProperties,
+    SGGraph,
+    triangle_count,
 )
-from pylibcugraph import triangle_count
 
 
 def check_results(d_result):

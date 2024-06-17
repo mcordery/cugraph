@@ -12,17 +12,8 @@
 # limitations under the License.
 
 import importlib
-from types import ModuleType
 import sys
-
-# FIXME: only perform the NetworkX imports below if NetworkX is installed. If
-# it's determined that NetworkX is required to use nx compat, then the contents
-# of this entire namespace may have to be optional, or packaged separately with
-# a hard dependency on NetworkX.
-
-# Start by populating this namespace with the same contents as
-# networkx/__init__.py
-from networkx import *
+from types import ModuleType
 
 # Override the individual NetworkX objects loaded above with the cugraph.nx
 # compat equivalents. This means if an equivalent compat obj is not available,
@@ -41,9 +32,18 @@ from networkx import *
 # modules to ensure the same paths and used and namespaces are populated.
 from cugraph.experimental.compat.nx import algorithms
 from cugraph.experimental.compat.nx.algorithms import *
-
 from cugraph.experimental.compat.nx.algorithms import link_analysis
 from cugraph.experimental.compat.nx.algorithms.link_analysis import *
+
+# Start by populating this namespace with the same contents as
+# networkx/__init__.py
+from networkx import *
+
+# FIXME: only perform the NetworkX imports below if NetworkX is installed. If
+# it's determined that NetworkX is required to use nx compat, then the contents
+# of this entire namespace may have to be optional, or packaged separately with
+# a hard dependency on NetworkX.
+
 
 # Recursively import all of the NetworkX modules into equivalent submodules
 # under this package. The above "from networkx import *" handles names in this

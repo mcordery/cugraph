@@ -24,10 +24,10 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/for_each.h>
 #include <thrust/iterator/counting_iterator.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsolver.h>
 
 #include <algorithm>

@@ -13,4 +13,4 @@
 
 #include "cxx_atomic.h"
 
-#endif // _LIBCUDACXX_ATOMIC_NVRTC_H
+#endif  // _LIBCUDACXX_ATOMIC_NVRTC_H

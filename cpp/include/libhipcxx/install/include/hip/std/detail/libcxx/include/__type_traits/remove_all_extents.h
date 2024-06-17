@@ -13,7 +13,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cstddef>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -32,22 +32,30 @@ using __remove_all_extents_t = _LIBCUDACXX_REMOVE_ALL_EXTENTS(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents
-    {typedef _Tp type;};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents<_Tp[]>
-    {typedef typename remove_all_extents<_Tp>::type type;};
-template <class _Tp, size_t _Np> struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents<_Tp[_Np]>
-    {typedef typename remove_all_extents<_Tp>::type type;};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents {
+  typedef _Tp type;
+};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents<_Tp[]> {
+  typedef typename remove_all_extents<_Tp>::type type;
+};
+template <class _Tp, size_t _Np>
+struct _LIBCUDACXX_TEMPLATE_VIS remove_all_extents<_Tp[_Np]> {
+  typedef typename remove_all_extents<_Tp>::type type;
+};
 
 template <class _Tp>
 using __remove_all_extents_t = typename remove_all_extents<_Tp>::type;
 
-#endif // defined(_LIBCUDACXX_REMOVE_ALL_EXTENTS) && !defined(_LIBCUDACXX_USE_REMOVE_ALL_EXTENTS_FALLBACK)
+#endif  // defined(_LIBCUDACXX_REMOVE_ALL_EXTENTS) &&
+        // !defined(_LIBCUDACXX_USE_REMOVE_ALL_EXTENTS_FALLBACK)
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using remove_all_extents_t = __remove_all_extents_t<_Tp>;
+template <class _Tp>
+using remove_all_extents_t = __remove_all_extents_t<_Tp>;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_REMOVE_ALL_EXTENTS_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_REMOVE_ALL_EXTENTS_H

@@ -16,18 +16,17 @@
 # cython: embedsignature = True
 # cython: language_level = 3
 
-from libc.stdint cimport uintptr_t
 from cugraph.structure cimport utils as c_utils
 from cugraph.structure.graph_primtypes cimport *
 from libc.stdint cimport uintptr_t
 
 import cudf
-import dask.distributed as dd
-from cugraph.dask.common.input_utils import get_mg_batch_data
-import dask_cudf
-import cugraph.dask.comms.comms as Comms
 import cugraph.dask.common.mg_utils as mg_utils
+import cugraph.dask.comms.comms as Comms
+import dask.distributed as dd
+import dask_cudf
 import numpy as np
+from cugraph.dask.common.input_utils import get_mg_batch_data
 
 
 def replicate_cudf_dataframe(cudf_dataframe, client=None, comms=None):

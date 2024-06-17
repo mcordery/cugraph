@@ -13,18 +13,16 @@
 
 import cudf
 import dask_cudf
-
-from pylibcugraph import ResourceHandle
-from pylibcugraph import bfs as pylibcugraph_bfs
-
 from cugraph.structure.graph_classes import Graph
+from cugraph.utilities import cupy_package as cp
 from cugraph.utilities import (
     ensure_cugraph_obj,
-    is_matrix_type,
     is_cp_matrix_type,
+    is_matrix_type,
     is_nx_graph_type,
-    cupy_package as cp,
 )
+from pylibcugraph import ResourceHandle
+from pylibcugraph import bfs as pylibcugraph_bfs
 
 
 def _ensure_args(G, start, i_start, directed):

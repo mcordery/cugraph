@@ -36,7 +36,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
 #include <thrust/gather.h>
@@ -47,6 +46,8 @@
 #include <thrust/sort.h>
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <cstdint>
 #include <limits>
@@ -66,7 +67,7 @@ struct FixConnectivitiesRedOp {
   // default constructor for cutlass
   DI FixConnectivitiesRedOp() : m(0) {}
 
-  FixConnectivitiesRedOp(value_idx m_) : m(m_){};
+  FixConnectivitiesRedOp(value_idx m_) : m(m_) {};
 
   typedef typename raft::KeyValuePair<value_idx, value_t> KVP;
   DI void operator()(value_idx rit, KVP* out, const KVP& other) const

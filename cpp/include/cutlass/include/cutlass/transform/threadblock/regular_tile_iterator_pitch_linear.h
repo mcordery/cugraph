@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Templates implementing loading of tiles from pitch-linear rank=2 tensors. 
+    \brief Templates implementing loading of tiles from pitch-linear rank=2 tensors.
 
     This iterator uses masks to guard out-of-bounds accesses and visits the last "residue" tile
     first, with the objective of minimizing predicate mask updates during steady-state operation.
@@ -41,10 +41,9 @@
 #pragma once
 
 #include "cutlass/cutlass.h"
-#include "cutlass/tensor_ref.h"
 #include "cutlass/layout/matrix.h"
 #include "cutlass/layout/pitch_linear.h"
-
+#include "cutlass/tensor_ref.h"
 #include "regular_tile_iterator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,39 +56,36 @@ namespace threadblock {
 
 /// Regular tile iterator specialized for pitch-linear.  This one is used by 2-stage SIMT kernels
 /// and sparse tensor core meta data.
-template <
-  typename Shape_,
-  typename Element_,
-  int AdvanceRank,
-  typename ThreadMap_,
-  int Alignment
->
-class RegularTileIterator<Shape_, Element_, layout::PitchLinear, AdvanceRank, ThreadMap_, Alignment> {
-public:
-
-  using Shape = Shape_;
-  using Element = Element_;
-  using Layout = layout::PitchLinear;
+template <typename Shape_, typename Element_, int AdvanceRank, typename ThreadMap_, int Alignment>
+class RegularTileIterator<Shape_,
+                          Element_,
+                          layout::PitchLinear,
+                          AdvanceRank,
+                          ThreadMap_,
+                          Alignment> {
+ public:
+  using Shape                   = Shape_;
+  using Element                 = Element_;
+  using Layout                  = layout::PitchLinear;
   static int const kAdvanceRank = AdvanceRank;
-  using ThreadMap = ThreadMap_;
-  static int const kAlignment = Alignment;
+  using ThreadMap               = ThreadMap_;
+  static int const kAlignment   = Alignment;
 
-  using Index = typename Layout::Index;
-  using LongIndex = typename Layout::LongIndex;
+  using Index       = typename Layout::Index;
+  using LongIndex   = typename Layout::LongIndex;
   using StrideIndex = typename Layout::Stride::Index;
 
-  using TensorRef = TensorRef<Element, Layout>;
+  using TensorRef   = TensorRef<Element, Layout>;
   using TensorCoord = typename Layout::TensorCoord;
 
   using Fragment = Array<Element, ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
-  
+
   using AccessType = AlignedArray<Element, ThreadMap::kElementsPerAccess, kAlignment>;
 
-  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1, 
-    "Advance rank may only be along the contiguous or strided dimensions.");
+  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1,
+                "Advance rank may only be along the contiguous or strided dimensions.");
 
-private:
-
+ private:
   //
   // Types
   //
@@ -99,7 +95,7 @@ private:
   //
 
   /// Pointer to memory
-  uint8_t *pointer_;
+  uint8_t* pointer_;
 
   /// Stride quantity
   StrideIndex stride_;
@@ -110,133 +106,120 @@ private:
   /// Amount to advance pointer between tiles
   Index increment_advance_;
 
-public:
+ public:
+  CUTLASS_DEVICE
+  RegularTileIterator() : pointer_(nullptr), increment_strided_(0), increment_advance_(0) {}
 
   CUTLASS_DEVICE
-  RegularTileIterator(): pointer_(nullptr), increment_strided_(0), increment_advance_(0) { }
-
-  CUTLASS_DEVICE
-  RegularTileIterator(
-    TensorRef const &ref, 
-    int thread_idx
-  ): 
-    pointer_(reinterpret_cast<uint8_t *>(ref.data()) + (ref.offset(ThreadMap::initial_offset(thread_idx)) * sizeof_bits<Element>::value / 8)) {
-    
+  RegularTileIterator(TensorRef const& ref, int thread_idx)
+    : pointer_(
+        reinterpret_cast<uint8_t*>(ref.data()) +
+        (ref.offset(ThreadMap::initial_offset(thread_idx)) * sizeof_bits<Element>::value / 8))
+  {
     stride_ = ref.stride()[0];
-    increment_strided_ = (ref.stride()[0] * sizeof_bits<Element>::value) * ThreadMap::Delta::kStrided / 8;
-    
-    increment_advance_ = 
-      (kAdvanceRank == 0 ? 
-        Shape::kContiguous * sizeof_bits<Element>::value / 8 : 
-        Shape::kStrided * (ref.stride()[0] * sizeof_bits<Element>::value / 8));
+    increment_strided_ =
+      (ref.stride()[0] * sizeof_bits<Element>::value) * ThreadMap::Delta::kStrided / 8;
+
+    increment_advance_ =
+      (kAdvanceRank == 0 ? Shape::kContiguous * sizeof_bits<Element>::value / 8
+                         : Shape::kStrided * (ref.stride()[0] * sizeof_bits<Element>::value / 8));
   }
 
   /// Loads a fragment
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
-    uint8_t const *byte_pointer = pointer_ + pointer_offset * sizeof_bits<Element>::value / 8;
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
+    AccessType* frag_ptr        = reinterpret_cast<AccessType*>(&frag);
+    uint8_t const* byte_pointer = pointer_ + pointer_offset * sizeof_bits<Element>::value / 8;
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
-
-      AccessType const *access_ptr = reinterpret_cast<AccessType const *>(byte_pointer);
+      AccessType const* access_ptr = reinterpret_cast<AccessType const*>(byte_pointer);
 
       CUTLASS_PRAGMA_UNROLL
       for (int c = 0; c < ThreadMap::Iterations::kContiguous; ++c) {
-
         int idx = c + s * ThreadMap::Iterations::kContiguous;
-        frag_ptr[idx] = access_ptr[c * ThreadMap::Delta::kContiguous /
-                                   ThreadMap::kElementsPerAccess];
+        frag_ptr[idx] =
+          access_ptr[c * ThreadMap::Delta::kContiguous / ThreadMap::kElementsPerAccess];
       }
 
-      if (s + 1 < ThreadMap::Iterations::kStrided) {
-        byte_pointer += increment_strided_;
-      }
+      if (s + 1 < ThreadMap::Iterations::kStrided) { byte_pointer += increment_strided_; }
     }
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, TensorCoord const & tile_offset) {
+  void load(Fragment& frag, TensorCoord const& tile_offset)
+  {
     load_with_pointer_offset(
-      frag, 
-      tile_offset.contiguous() * Shape::kContiguous / ThreadMap::kElementsPerAccess + 
-        tile_offset.strided() * Shape::kStrided * stride_
-    );
+      frag,
+      tile_offset.contiguous() * Shape::kContiguous / ThreadMap::kElementsPerAccess +
+        tile_offset.strided() * Shape::kStrided * stride_);
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) {
-    load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { load_with_pointer_offset(frag, 0); }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store_with_pointer_offset(Fragment const &frag, Index pointer_offset) {
-
-    AccessType const *frag_ptr = reinterpret_cast<AccessType const*>(&frag);
-    uint8_t *byte_pointer = pointer_ + pointer_offset * sizeof_bits<Element>::value / 8;
+  void store_with_pointer_offset(Fragment const& frag, Index pointer_offset)
+  {
+    AccessType const* frag_ptr = reinterpret_cast<AccessType const*>(&frag);
+    uint8_t* byte_pointer      = pointer_ + pointer_offset * sizeof_bits<Element>::value / 8;
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
-
-      AccessType *access_ptr = reinterpret_cast<AccessType *>(byte_pointer);
+      AccessType* access_ptr = reinterpret_cast<AccessType*>(byte_pointer);
 
       CUTLASS_PRAGMA_UNROLL
       for (int c = 0; c < ThreadMap::Iterations::kContiguous; ++c) {
-
         int idx = c + s * ThreadMap::Iterations::kContiguous;
-        access_ptr[c * ThreadMap::Delta::kContiguous /
-                   ThreadMap::kElementsPerAccess] = frag_ptr[idx];
+        access_ptr[c * ThreadMap::Delta::kContiguous / ThreadMap::kElementsPerAccess] =
+          frag_ptr[idx];
       }
 
-      if (s + 1 < ThreadMap::Iterations::kStrided) {
-        byte_pointer += increment_strided_;
-      }
+      if (s + 1 < ThreadMap::Iterations::kStrided) { byte_pointer += increment_strided_; }
     }
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag, TensorCoord const & tile_offset) {
-    store_with_pointer_offset(
-      frag,
-      tile_offset.contiguous() * Shape::kContiguous + tile_offset.strided() * Shape::kStrided * stride_
-    );
+  void store(Fragment const& frag, TensorCoord const& tile_offset)
+  {
+    store_with_pointer_offset(frag,
+                              tile_offset.contiguous() * Shape::kContiguous +
+                                tile_offset.strided() * Shape::kStrided * stride_);
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag) {
-    store_with_pointer_offset(frag, 0);
-  }
+  void store(Fragment const& frag) { store_with_pointer_offset(frag, 0); }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator++() {
+  RegularTileIterator& operator++()
+  {
     pointer_ += increment_advance_;
     return *this;
   }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator--() {
+  RegularTileIterator& operator--()
+  {
     pointer_ -= increment_advance_;
     return *this;
   }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
-    pointer_ += pointer_offset;
-  }
+  void add_pointer_offset(LongIndex pointer_offset) { pointer_ += pointer_offset; }
 
   /// Adds a tile offset in the unit of tile.
   /// In GEMM/Conv implementation, this is used to move in the k dimension in the shared memory.
-  /// Below layouts are the shared memory layouts.  Current SM50 SIMT kernels only use col major A and row major B.
+  /// Below layouts are the shared memory layouts.  Current SM50 SIMT kernels only use col major A
+  /// and row major B.
   ///   For row major A operand, k dimension is contiguous dimension;
   ///   For col major A operand, k dimension is strided dimension;
   ///   For row major B operand, k dimension is strided dimension;
@@ -244,20 +227,22 @@ public:
   /// Below two classes map col/row major to the pitch linear coordinates used
   /// in this base class.
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &coord) {
-    int offset = sizeof_bits<Element>::value *
-        (coord.contiguous() * Shape::kContiguous + coord.strided() * Shape::kStrided * stride_) / 8;
+  void add_tile_offset(TensorCoord const& coord)
+  {
+    int offset =
+      sizeof_bits<Element>::value *
+      (coord.contiguous() * Shape::kContiguous + coord.strided() * Shape::kStrided * stride_) / 8;
     add_pointer_offset(offset);
   }
 
   /// Overrides the internal iteration index
   CUTLASS_HOST_DEVICE
-  void set_iteration_index(int index) {
-  }
+  void set_iteration_index(int index) {}
 
-    /// Returns a pointer
+  /// Returns a pointer
   CUTLASS_HOST_DEVICE
-  AccessType *get() const {
+  AccessType* get() const
+  {
 #if 0
     AccessType *access_ptr = pointer_[iteration_strided_ & 1];
     int stride_idx = (iteration_strided_ & ~1);
@@ -270,283 +255,258 @@ public:
         reinterpret_cast<char *>(access_ptr + access_offset);
     return reinterpret_cast<AccessType *>(access_byte_ptr + byte_offset_);
 #endif
-    return reinterpret_cast<AccessType *>(pointer_);
+    return reinterpret_cast<AccessType*>(pointer_);
   }
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Regular tile iterator specialized for pitch-linear
-template <
-  typename Shape_,
-  typename Element_,
-  int AdvanceRank,
-  typename ThreadMap_,
-  int Alignment
->
+template <typename Shape_, typename Element_, int AdvanceRank, typename ThreadMap_, int Alignment>
 class RegularTileIterator<Shape_, Element_, layout::RowMajor, AdvanceRank, ThreadMap_, Alignment> {
-public:
-
-  using Shape = Shape_;
-  using Element = Element_;
-  using Layout = layout::RowMajor;
+ public:
+  using Shape                   = Shape_;
+  using Element                 = Element_;
+  using Layout                  = layout::RowMajor;
   static int const kAdvanceRank = AdvanceRank;
-  using ThreadMap = ThreadMap_;
-  static int const kAlignment = Alignment;
+  using ThreadMap               = ThreadMap_;
+  static int const kAlignment   = Alignment;
 
-  using Index = typename Layout::Index;
+  using Index     = typename Layout::Index;
   using LongIndex = typename Layout::LongIndex;
 
-  using TensorRef = TensorRef<Element, Layout>;
+  using TensorRef   = TensorRef<Element, Layout>;
   using TensorCoord = typename Layout::TensorCoord;
 
   using Fragment = Array<Element, ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
 
-  using Underlying = RegularTileIterator<
-    layout::PitchLinearShape<Shape::kColumn, Shape::kRow>,
-    Element,
-    layout::PitchLinear,
-    (kAdvanceRank == 0 ? 1 : 0),
-    ThreadMap,
-    kAlignment
-  >;
+  using Underlying = RegularTileIterator<layout::PitchLinearShape<Shape::kColumn, Shape::kRow>,
+                                         Element,
+                                         layout::PitchLinear,
+                                         (kAdvanceRank == 0 ? 1 : 0),
+                                         ThreadMap,
+                                         kAlignment>;
 
   using AccessType = typename Underlying::AccessType;
 
-  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1, 
-    "Advance rank may only be along the row or column dimensions.");
+  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1,
+                "Advance rank may only be along the row or column dimensions.");
 
-private:
-
+ private:
   Underlying iterator_;
 
-public:
+ public:
+  CUTLASS_DEVICE
+  RegularTileIterator() {}
 
   CUTLASS_DEVICE
-  RegularTileIterator() { }
-
-  CUTLASS_DEVICE
-  RegularTileIterator(
-    TensorRef const &ref, 
-    int thread_idx
-  ):
-    iterator_({ref.data(), ref.stride()}, thread_idx) {
-
+  RegularTileIterator(TensorRef const& ref, int thread_idx)
+    : iterator_({ref.data(), ref.stride()}, thread_idx)
+  {
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, TensorCoord const & tile_offset) {
+  void load(Fragment& frag, TensorCoord const& tile_offset)
+  {
     iterator_.load_with_pointer_offset(frag, {tile_offset.column(), tile_offset.row()});
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) {
-    iterator_.load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { iterator_.load_with_pointer_offset(frag, 0); }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store_with_pointer_offset(Fragment const &frag, Index pointer_offset) {
+  void store_with_pointer_offset(Fragment const& frag, Index pointer_offset)
+  {
     iterator_.store_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag, TensorCoord const & tile_offset) {
+  void store(Fragment const& frag, TensorCoord const& tile_offset)
+  {
     iterator_.store_with_pointer_offset(frag, {tile_offset.column(), tile_offset.row()});
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag) {
-    iterator_.store_with_pointer_offset(frag, 0);
-  }
+  void store(Fragment const& frag) { iterator_.store_with_pointer_offset(frag, 0); }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator++() {
+  RegularTileIterator& operator++()
+  {
     ++iterator_;
     return *this;
   }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator--() {
+  RegularTileIterator& operator--()
+  {
     --iterator_;
     return *this;
   }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     iterator_.add_pointer_offset(pointer_offset);
   }
 
   /// Adds a tile offset
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &coord) {
+  void add_tile_offset(TensorCoord const& coord)
+  {
     iterator_.add_tile_offset({coord.column(), coord.row()});
   }
 
   /// Overrides the internal iteration index
   CUTLASS_HOST_DEVICE
-  void set_iteration_index(int index) {
-  }
+  void set_iteration_index(int index) {}
 
   /// Returns a pointer
   CUTLASS_HOST_DEVICE
-  AccessType *get() const {
-    return iterator_.get();
-  }
-
+  AccessType* get() const { return iterator_.get(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Regular tile iterator specialized for pitch-linear
-template <
-  typename Shape_,
-  typename Element_,
-  int AdvanceRank,
-  typename ThreadMap_,
-  int Alignment
->
-class RegularTileIterator<Shape_, Element_, layout::ColumnMajor, AdvanceRank, ThreadMap_, Alignment> {
-public:
-
-  using Shape = Shape_;
-  using Element = Element_;
-  using Layout = layout::ColumnMajor;
+template <typename Shape_, typename Element_, int AdvanceRank, typename ThreadMap_, int Alignment>
+class RegularTileIterator<Shape_,
+                          Element_,
+                          layout::ColumnMajor,
+                          AdvanceRank,
+                          ThreadMap_,
+                          Alignment> {
+ public:
+  using Shape                   = Shape_;
+  using Element                 = Element_;
+  using Layout                  = layout::ColumnMajor;
   static int const kAdvanceRank = AdvanceRank;
-  using ThreadMap = ThreadMap_;
-  static int const kAlignment = Alignment;
+  using ThreadMap               = ThreadMap_;
+  static int const kAlignment   = Alignment;
 
-  using Index = typename Layout::Index;
+  using Index     = typename Layout::Index;
   using LongIndex = typename Layout::LongIndex;
 
-  using TensorRef = TensorRef<Element, Layout>;
+  using TensorRef   = TensorRef<Element, Layout>;
   using TensorCoord = typename Layout::TensorCoord;
 
   using Fragment = Array<Element, ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
 
-  using Underlying = RegularTileIterator<
-    layout::PitchLinearShape<Shape::kRow, Shape::kColumn>,
-    Element,
-    layout::PitchLinear,
-    (kAdvanceRank == 0 ? 0 : 1),
-    ThreadMap
-  >;
+  using Underlying = RegularTileIterator<layout::PitchLinearShape<Shape::kRow, Shape::kColumn>,
+                                         Element,
+                                         layout::PitchLinear,
+                                         (kAdvanceRank == 0 ? 0 : 1),
+                                         ThreadMap>;
 
   using AccessType = typename Underlying::AccessType;
 
-  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1, 
-    "Advance rank may only be along the row or column dimensions.");
+  static_assert(kAdvanceRank == 0 || kAdvanceRank == 1,
+                "Advance rank may only be along the row or column dimensions.");
 
-private:
-
+ private:
   Underlying iterator_;
 
-public:
+ public:
+  CUTLASS_DEVICE
+  RegularTileIterator() {}
 
   CUTLASS_DEVICE
-  RegularTileIterator() { }
-
-  CUTLASS_DEVICE
-  RegularTileIterator(
-    TensorRef const &ref, 
-    int thread_idx
-  ):
-    iterator_({ref.data(), ref.stride()}, thread_idx) {
-
+  RegularTileIterator(TensorRef const& ref, int thread_idx)
+    : iterator_({ref.data(), ref.stride()}, thread_idx)
+  {
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     iterator_.load_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, TensorCoord const & tile_offset) {
+  void load(Fragment& frag, TensorCoord const& tile_offset)
+  {
     iterator_.load_with_pointer_offset(frag, {tile_offset.row(), tile_offset.column()});
   }
 
   /// Loads a fragment
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) {
-    iterator_.load_with_pointer_offset(frag, 0);
-  }
+  void load(Fragment& frag) { iterator_.load_with_pointer_offset(frag, 0); }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store_with_pointer_offset(Fragment const &frag, Index pointer_offset) {
+  void store_with_pointer_offset(Fragment const& frag, Index pointer_offset)
+  {
     iterator_.store_with_pointer_offset(frag, pointer_offset);
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag, TensorCoord const & tile_offset) {
+  void store(Fragment const& frag, TensorCoord const& tile_offset)
+  {
     iterator_.store_with_pointer_offset(frag, {tile_offset.row(), tile_offset.column()});
   }
 
   /// Stores a fragment
   CUTLASS_HOST_DEVICE
-  void store(Fragment const &frag) {
-    iterator_.store_with_pointer_offset(frag, 0);
-  }
+  void store(Fragment const& frag) { iterator_.store_with_pointer_offset(frag, 0); }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator++() {
+  RegularTileIterator& operator++()
+  {
     ++iterator_;
     return *this;
   }
 
   /// Advances the pointer
   CUTLASS_HOST_DEVICE
-  RegularTileIterator &operator--() {
+  RegularTileIterator& operator--()
+  {
     --iterator_;
     return *this;
   }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     iterator_.add_pointer_offset(pointer_offset);
   }
 
   /// Adds a tile offset
   CUTLASS_DEVICE
-  void add_tile_offset(TensorCoord const &coord) {
+  void add_tile_offset(TensorCoord const& coord)
+  {
     iterator_.add_tile_offset({coord.row(), coord.column()});
   }
 
   /// Overrides the internal iteration index
   CUTLASS_HOST_DEVICE
-  void set_iteration_index(int index) {
-  }
+  void set_iteration_index(int index) {}
 
   /// Returns a pointer
   CUTLASS_HOST_DEVICE
-  AccessType *get() const {
-    return iterator_.get();
-  }
-
+  AccessType* get() const { return iterator_.get(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace transform
-} // namespace cutlass
-
+}  // namespace threadblock
+}  // namespace transform
+}  // namespace cutlass

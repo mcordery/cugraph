@@ -11,11 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
-from typing import Tuple, Dict, Union
-import cugraph
+
+from typing import Dict, Tuple, Union
+
 import cudf
 import dask_cudf
 import numpy as np
+
+import cugraph
 
 
 def create_cugraph_graph_from_edges_dict(

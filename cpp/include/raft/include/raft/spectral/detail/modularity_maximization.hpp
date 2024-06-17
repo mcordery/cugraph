@@ -25,11 +25,11 @@
 #include <raft/spectral/eigen_solvers.cuh>
 #include <raft/spectral/matrix_wrappers.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/fill.h>
 #include <thrust/reduce.h>
 #include <thrust/transform.h>
 
+#include <hip/hip_runtime.h>
 #include <math.h>
 #include <stdio.h>
 
@@ -78,7 +78,7 @@ std::tuple<vertex_t, weight_t, vertex_t> modularity_maximization(
   RAFT_EXPECTS(eigVals != nullptr, "Null eigVals buffer.");
   RAFT_EXPECTS(eigVecs != nullptr, "Null eigVecs buffer.");
 
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
   auto hipblas.h = resource::get_cublas_handle(handle);
 
   std::tuple<vertex_t, weight_t, vertex_t>
@@ -139,14 +139,15 @@ void analyzeModularity(raft::resources const& handle,
   weight_t partModularity, clustersize;
 
   auto hipblas.h = resource::get_cublas_handle(handle);
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
 
   // Device memory
   raft::spectral::matrix::vector_t<weight_t> part_i(handle, n);
   raft::spectral::matrix::vector_t<weight_t> Bx(handle, n);
 
   // Initialize cuBLAS
-  RAFT_CUBLAS_TRY(linalg::detail::cublassetpointermode(cublas_h, HIPBLAS_POINTER_MODE_HOST, stream));
+  RAFT_CUBLAS_TRY(
+    linalg::detail::cublassetpointermode(cublas_h, HIPBLAS_POINTER_MODE_HOST, stream));
 
   // Initialize Modularity
   raft::spectral::matrix::modularity_matrix_t<vertex_t, weight_t> B{handle, csr_m};

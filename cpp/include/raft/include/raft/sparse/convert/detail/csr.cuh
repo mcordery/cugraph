@@ -16,8 +16,8 @@
 
 #pragma once
 
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusparse_handle.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/sparse/coo.hpp>
 #include <raft/sparse/detail/cusparse_wrappers.h>
@@ -29,10 +29,10 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 #include <stdio.h>
 

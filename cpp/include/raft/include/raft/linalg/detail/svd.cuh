@@ -19,10 +19,10 @@
 #include "cublas_wrappers.hpp"
 #include "cusolver_wrappers.hpp"
 
-//#include <raft/common/nvtx.hpp>
+// #include <raft/common/nvtx.hpp>
 #include <raft/core/resource/cublas_handle.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cusolver_dn_handle.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/linalg/eig.cuh>
 #include <raft/linalg/gemm.cuh>
@@ -54,10 +54,10 @@ void svdQR(raft::resources const& handle,
            bool gen_right_vec,
            hipStream_t stream)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "raft::linalg::svdQR(%d, %d)", n_rows, n_cols);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "raft::linalg::svdQR(%d, %d)", n_rows, n_cols);
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH     = resource::get_cublas_handle(handle);
 
   const int m = n_rows;
   const int n = n_cols;
@@ -119,10 +119,10 @@ void svdEig(raft::resources const& handle,
             bool gen_left_vec,
             hipStream_t stream)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "raft::linalg::svdEig(%d, %d)", n_rows, n_cols);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "raft::linalg::svdEig(%d, %d)", n_rows, n_cols);
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
-  hipblasHandle_t cublasH       = resource::get_cublas_handle(handle);
+  hipblasHandle_t cublasH     = resource::get_cublas_handle(handle);
 
   auto len = n_cols * n_cols;
   rmm::device_uvector<math_t> in_cross_mult(len, stream);
@@ -184,8 +184,8 @@ void svdJacobi(raft::resources const& handle,
                int max_sweeps,
                hipStream_t stream)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "raft::linalg::svdJacobi(%d, %d)", n_rows, n_cols);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "raft::linalg::svdJacobi(%d, %d)", n_rows, n_cols);
   hipsolverHandle_t cusolverH = resource::get_cusolver_dn_handle(handle);
 
   hipsolverGesvdjInfo_t gesvdj_params = NULL;

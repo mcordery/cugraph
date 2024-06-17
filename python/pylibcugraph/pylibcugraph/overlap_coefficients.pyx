@@ -15,45 +15,32 @@
 # cython: language_level = 3
 
 from libc.stdint cimport uintptr_t
-
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
+    cugraph_type_erased_device_array_view_free,
     cugraph_type_erased_device_array_view_t,
-    cugraph_type_erased_device_array_view_free
 )
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
 from pylibcugraph._cugraph_c.graph_functions cimport (
-    cugraph_vertex_pairs_t,
+    cugraph_create_vertex_pairs,
+    cugraph_vertex_pairs_free,
     cugraph_vertex_pairs_get_first,
     cugraph_vertex_pairs_get_second,
-    cugraph_vertex_pairs_free,
-    cugraph_create_vertex_pairs
+    cugraph_vertex_pairs_t,
 )
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
 from pylibcugraph._cugraph_c.similarity_algorithms cimport (
     cugraph_overlap_coefficients,
-    cugraph_similarity_result_t,
+    cugraph_similarity_result_free,
     cugraph_similarity_result_get_similarity,
-    cugraph_similarity_result_free
+    cugraph_similarity_result_t,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
     assert_success,
     copy_to_cupy_array,
-    create_cugraph_type_erased_device_array_view_from_py_obj
+    create_cugraph_type_erased_device_array_view_from_py_obj,
 )
 
 

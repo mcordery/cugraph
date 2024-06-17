@@ -16,7 +16,7 @@
 
 #pragma once
 
-//#include <raft/core/detail/nvtx.hpp>
+// #include <raft/core/detail/nvtx.hpp>
 
 #include <optional>
 
@@ -65,21 +65,21 @@
 // * }
 // * \endcode
 // */
-//namespace raft::common::nvtx {
+// namespace raft::common::nvtx {
 //
-//namespace domain {
+// namespace domain {
 //
 ///** @brief The default NVTX domain. */
-//struct app {
-//  static constexpr char const* name{"application"};
-//};
+// struct app {
+//   static constexpr char const* name{"application"};
+// };
 //
 ///** @brief This NVTX domain is supposed to be used within raft.  */
-//struct raft {
-//  static constexpr char const* name{"raft"};
-//};
+// struct raft {
+//   static constexpr char const* name{"raft"};
+// };
 //
-//}  // namespace domain
+// }  // namespace domain
 //
 ///**
 // * @brief Push a named NVTX range.
@@ -93,8 +93,8 @@
 // * @param format range name format (accepts printf-style arguments)
 // * @param args the arguments for the printf-style formatting
 // */
-//template <typename Domain = domain::app, typename... Args>
-//inline void push_range(const char* format, Args... args)
+// template <typename Domain = domain::app, typename... Args>
+// inline void push_range(const char* format, Args... args)
 //{
 //  detail::push_range<Domain, Args...>(format, args...);
 }

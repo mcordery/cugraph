@@ -15,9 +15,8 @@ from itertools import repeat
 import cupy as cp
 import networkx as nx
 import numpy as np
-import pylibcugraph as plc
-
 import nx_cugraph as nxcg
+import pylibcugraph as plc
 from nx_cugraph.convert import _to_graph
 from nx_cugraph.utils import _groupby, index_dtype, networkx_algorithm
 

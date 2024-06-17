@@ -28,7 +28,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 #include <thrust/for_each.h>
@@ -37,6 +36,8 @@
 #include <thrust/optional.h>
 #include <thrust/reduce.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 #include <ctime>
@@ -237,7 +238,7 @@ struct biased_selector_t {
         prev_col_indx = col_indx;
       }
       return thrust::optional{
-       thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
+        thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
     }
 
    private:

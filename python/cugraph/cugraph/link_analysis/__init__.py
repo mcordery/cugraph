@@ -11,5 +11,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.link_analysis.pagerank import pagerank
 from cugraph.link_analysis.hits import hits
+from cugraph.link_analysis.pagerank import pagerank

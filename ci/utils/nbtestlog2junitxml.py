@@ -14,11 +14,10 @@
 # Generate a junit-xml file from parsing a nbtest log
 
 import re
-from xml.etree.ElementTree import Element, ElementTree
-from os import path
 import string
 from enum import Enum
-
+from os import path
+from xml.etree.ElementTree import Element, ElementTree
 
 startingPatt = re.compile("^STARTING: ([\w\.\-]+)$")
 skippingPatt = re.compile("^SKIPPING: ([\w\.\-]+)\s*(\(([\w\.\-\ \,]+)\))?\s*$")
@@ -49,12 +48,8 @@ def makeFailureElement(outputLines):
 
 
 def setFileNameAttr(attrDict, fileName):
-    attrDict.update(file=fileName,
-                    classname="",
-                    line="",
-                    name="",
-                    time=""
-                   )
+    attrDict.update(file=fileName, classname="", line="", name="", time="")
+
 
 def setClassNameAttr(attrDict, className):
     attrDict["classname"] = className
@@ -88,11 +83,12 @@ def parseLog(logFile, testSuiteElement):
         testSuiteElement.attrib["timestamp"] = ""
 
         attrDict = {}
-        #setFileNameAttr(attrDict, logFile)
+        # setFileNameAttr(attrDict, logFile)
         setFileNameAttr(attrDict, "nbtest")
 
-        parserStateEnum = Enum("parserStateEnum",
-                               "newTest startingLine finishLine exitCode")
+        parserStateEnum = Enum(
+            "parserStateEnum", "newTest startingLine finishLine exitCode"
+        )
         parserState = parserStateEnum.newTest
 
         testOutput = ""
@@ -172,4 +168,4 @@ if __name__ == "__main__":
     testSuiteElement = Element("testsuite", name="nbtest", hostname="")
     parseLog(sys.argv[1], testSuiteElement)
     testSuitesElement.append(testSuiteElement)
-    ElementTree(testSuitesElement).write(sys.argv[1]+".xml", xml_declaration=True)
+    ElementTree(testSuitesElement).write(sys.argv[1] + ".xml", xml_declaration=True)

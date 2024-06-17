@@ -34,12 +34,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/tensor_ref.h"
-#include "cutlass/layout/matrix.h"
 #include "cutlass/arch/mma.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/thread/mma.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/tensor_ref.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -66,10 +66,8 @@ template <
   /// Layout of C matrix (concept: layout::MapFunc)
   typename LayoutC_,
   /// Operator used to compute GEMM
-  typename Operator_
->
+  typename Operator_>
 struct MmaGeneric {
-
   /// Size of the Gemm problem - concept: gemm::GemmShape<>
   using Shape = Shape_;
 
@@ -104,13 +102,15 @@ struct MmaGeneric {
   using FragmentC = Array<ElementC, Shape::kMN>;
 
   /// Instruction
-  using MmaOp = arch::Mma<
-    gemm::GemmShape<1,1,1>,
-    1,
-    ElementA, LayoutA,
-    ElementB, LayoutB,
-    ElementC, LayoutC,
-    Operator>;
+  using MmaOp = arch::Mma<gemm::GemmShape<1, 1, 1>,
+                          1,
+                          ElementA,
+                          LayoutA,
+                          ElementB,
+                          LayoutB,
+                          ElementC,
+                          LayoutC,
+                          Operator>;
 
   static bool const kMultipleOf2 = ((Shape::kM % 2 == 0) && (Shape::kN % 2 == 0));
 
@@ -120,20 +120,16 @@ struct MmaGeneric {
 
   /// Computes a matrix product D = A * B + C
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentC & D,
-    FragmentA const & A,
-    FragmentB const & B,
-    FragmentC const & C) {
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C)
+  {
+    TensorRef<ElementA const, LayoutA> a_ref(reinterpret_cast<ElementA const*>(&A),
+                                             LayoutA::packed({Shape::kM, Shape::kK}));
 
-    TensorRef<ElementA const, LayoutA> a_ref(
-      reinterpret_cast<ElementA const *>(&A), LayoutA::packed({Shape::kM, Shape::kK}));
+    TensorRef<ElementB const, LayoutB> b_ref(reinterpret_cast<ElementB const*>(&B),
+                                             LayoutB::packed({Shape::kK, Shape::kN}));
 
-    TensorRef<ElementB const, LayoutB> b_ref(
-      reinterpret_cast<ElementB const *>(&B), LayoutB::packed({Shape::kK, Shape::kN}));
-
-    TensorRef<ElementC, LayoutC> d_ref(
-      reinterpret_cast<ElementC *>(&D), LayoutC::packed(make_Coord(Shape::kM, Shape::kN)));
+    TensorRef<ElementC, LayoutC> d_ref(reinterpret_cast<ElementC*>(&D),
+                                       LayoutC::packed(make_Coord(Shape::kM, Shape::kN)));
 
     MmaOp mma_op;
 
@@ -143,19 +139,18 @@ struct MmaGeneric {
     // Compute matrix product
     CUTLASS_PRAGMA_UNROLL
     for (int k = 0; k < Shape::kK; ++k) {
-      #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 860)
-      if (kMultipleOf2 && platform::is_same<ElementA, float>::value && platform::is_same<ElementB, float>::value && platform::is_same<ElementC, float>::value) {
-
-        //2x2 zigzag - m and n loops to increment by 2. Inner loop to process 4 multiply-adds in a 2x2 tile.
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 860)
+      if (kMultipleOf2 && platform::is_same<ElementA, float>::value &&
+          platform::is_same<ElementB, float>::value && platform::is_same<ElementC, float>::value) {
+        // 2x2 zigzag - m and n loops to increment by 2. Inner loop to process 4 multiply-adds in a
+        // 2x2 tile.
         CUTLASS_PRAGMA_UNROLL
-        for (int n = 0; n < Shape::kN; n+=2) {
-  
+        for (int n = 0; n < Shape::kN; n += 2) {
           CUTLASS_PRAGMA_UNROLL
-          for (int m = 0; m < Shape::kM; m+=2) {
-  
+          for (int m = 0; m < Shape::kM; m += 2) {
             int m_serpentine = (n % 4) ? (Shape::kM - 2 - m) : m;
-  
-            //top-left element in 2x2 tile
+
+            // top-left element in 2x2 tile
             {
               MatrixCoord mn(m_serpentine, n);
               MatrixCoord mk(m_serpentine, k);
@@ -169,11 +164,11 @@ struct MmaGeneric {
               mma_op(d, a, b, d);
               d_ref.at(mn) = d[0];
             }
-  
-            //bottom-left element in 2x2 tile
+
+            // bottom-left element in 2x2 tile
             {
-              MatrixCoord mn(m_serpentine+1, n);
-              MatrixCoord mk(m_serpentine+1, k);
+              MatrixCoord mn(m_serpentine + 1, n);
+              MatrixCoord mk(m_serpentine + 1, k);
               MatrixCoord kn(k, n);
               Array<ElementC, 1> d;
               Array<ElementA, 1> a;
@@ -184,12 +179,12 @@ struct MmaGeneric {
               mma_op(d, a, b, d);
               d_ref.at(mn) = d[0];
             }
-  
-            //bottom-right element in 2x2 tile
+
+            // bottom-right element in 2x2 tile
             {
-              MatrixCoord mn(m_serpentine+1, n+1);
-              MatrixCoord mk(m_serpentine+1, k);
-              MatrixCoord kn(k, n+1);
+              MatrixCoord mn(m_serpentine + 1, n + 1);
+              MatrixCoord mk(m_serpentine + 1, k);
+              MatrixCoord kn(k, n + 1);
               Array<ElementC, 1> d;
               Array<ElementA, 1> a;
               Array<ElementB, 1> b;
@@ -199,12 +194,12 @@ struct MmaGeneric {
               mma_op(d, a, b, d);
               d_ref.at(mn) = d[0];
             }
-  
-            //top-right element in 2x2 tile
+
+            // top-right element in 2x2 tile
             {
-              MatrixCoord mn(m_serpentine, n+1);
+              MatrixCoord mn(m_serpentine, n + 1);
               MatrixCoord mk(m_serpentine, k);
-              MatrixCoord kn(k, n+1);
+              MatrixCoord kn(k, n + 1);
               Array<ElementC, 1> d;
               Array<ElementA, 1> a;
               Array<ElementB, 1> b;
@@ -216,31 +211,29 @@ struct MmaGeneric {
             }
           }
         }
-      } else 
-      #endif
+      } else
+#endif
       {
         CUTLASS_PRAGMA_UNROLL
         for (int n = 0; n < Shape::kN; ++n) {
-  
           CUTLASS_PRAGMA_UNROLL
           for (int m = 0; m < Shape::kM; ++m) {
-  
             int m_serpentine = (n % 2) ? (Shape::kM - 1 - m) : m;
-  
+
             MatrixCoord mn(m_serpentine, n);
             MatrixCoord mk(m_serpentine, k);
             MatrixCoord kn(k, n);
-  
+
             Array<ElementC, 1> d;
             Array<ElementA, 1> a;
             Array<ElementB, 1> b;
-  
+
             d[0] = d_ref.at(mn);
             a[0] = a_ref.at(mk);
             b[0] = b_ref.at(kn);
-  
+
             mma_op(d, a, b, d);
-  
+
             d_ref.at(mn) = d[0];
           }
         }
@@ -248,7 +241,6 @@ struct MmaGeneric {
     }
   }
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -267,19 +259,16 @@ template <
   /// Element type of C matrix
   typename ElementC_,
   /// Layout of C matrix (concept: layout::MapFunc)
-  typename LayoutC_
->
-struct Mma<
-  Shape_,
-  ElementA_,
-  LayoutA_,
-  ElementB_,
-  LayoutB_,
-  ElementC_,
-  LayoutC_,
-  arch::OpMultiplyAdd,
-  bool> {
-
+  typename LayoutC_>
+struct Mma<Shape_,
+           ElementA_,
+           LayoutA_,
+           ElementB_,
+           LayoutB_,
+           ElementC_,
+           LayoutC_,
+           arch::OpMultiplyAdd,
+           bool> {
   /// Size of the Gemm problem - concept: gemm::GemmShape<>
   using Shape = Shape_;
 
@@ -314,36 +303,18 @@ struct Mma<
   using FragmentC = Array<ElementC, Shape::kMN>;
 
   /// Underlying matrix multiply operator (concept: arch::Mma)
-  using ArchMmaOperator = typename MmaGeneric<
-                                    Shape,
-                                    ElementA,
-                                    LayoutA,
-                                    ElementB,
-                                    LayoutB,
-                                    ElementC,
-                                    LayoutC,
-                                    Operator>::MmaOp;
+  using ArchMmaOperator =
+    typename MmaGeneric<Shape, ElementA, LayoutA, ElementB, LayoutB, ElementC, LayoutC, Operator>::
+      MmaOp;
   //
   // Methods
   //
 
   /// Computes a matrix product D = A * B + C
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentC & D,
-    FragmentA const & A,
-    FragmentB const & B,
-    FragmentC const & C) {
-
-    MmaGeneric<
-      Shape,
-      ElementA,
-      LayoutA,
-      ElementB,
-      LayoutB,
-      ElementC,
-      LayoutC,
-      Operator> mma;
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C)
+  {
+    MmaGeneric<Shape, ElementA, LayoutA, ElementB, LayoutB, ElementC, LayoutC, Operator> mma;
 
     mma(D, A, B, C);
   }
@@ -351,8 +322,8 @@ struct Mma<
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace gemm
-} // namespace cutlass
+}  // namespace thread
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

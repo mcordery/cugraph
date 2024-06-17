@@ -35,12 +35,11 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,14 +50,13 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Structure to compute the matrix-vector product using SIMT math instructions.
-template <
-  class Core_ //< GemvCore
->
+template <class Core_  //< GemvCore
+          >
 class Gemv {
-public:
+ public:
   using Shape = typename Core_::Shape;
 
-  /// The MMA operator that computes GEMV 
+  /// The MMA operator that computes GEMV
   using Operator = typename Core_::Operator;
 
   /// Iterates over A in global memory
@@ -82,17 +80,17 @@ public:
   /// Shape of the per-thread GEMV operation
   using ThreadShape = typename Core_::ThreadShape;
 
-public:
+ public:
   CUTLASS_DEVICE
-  Gemv() { }
+  Gemv() {}
 
   CUTLASS_DEVICE
-  void operator()(
-    GemmCoord const &problem_size,    ///< problem size of batched GEMV
-    FragmentC &accum,                 ///< destination accumulator tile
-    IteratorA iterator_A,             ///< iterator over A operand in global memory
-    IteratorB iterator_B,             ///< iterator over B operand in global memory
-    FragmentC const &src_accum) {     ///< source accumualtor tile
+  void operator()(GemmCoord const& problem_size,  ///< problem size of batched GEMV
+                  FragmentC& accum,               ///< destination accumulator tile
+                  IteratorA iterator_A,           ///< iterator over A operand in global memory
+                  IteratorB iterator_B,           ///< iterator over B operand in global memory
+                  FragmentC const& src_accum)
+  {  ///< source accumualtor tile
 
     //
     // Prologue
@@ -114,8 +112,7 @@ public:
     Operator thread_mma;
     int gemm_k = problem_size.k();
 
-    if (gemm_k < Shape::kK)
-    {
+    if (gemm_k < Shape::kK) {
       iterator_A.clear_mask();
       iterator_B.clear_mask();
     }
@@ -130,18 +127,16 @@ public:
       ++iterator_A;
       ++iterator_B;
 
-      if (gemm_k < Shape::kK)
-      {
+      if (gemm_k < Shape::kK) {
         iterator_A.clear_mask();
         iterator_B.clear_mask();
       }
     }
-
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace gemm
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace gemm
+}  // namespace cutlass

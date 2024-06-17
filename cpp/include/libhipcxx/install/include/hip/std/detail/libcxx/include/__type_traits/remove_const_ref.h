@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/remove_const.h"
 #include "../__type_traits/remove_reference.h"
@@ -24,8 +24,8 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _Tp>
-using __remove_const_ref_t = __remove_const_t<__libcpp_remove_reference_t<_Tp> >;
+using __remove_const_ref_t = __remove_const_t<__libcpp_remove_reference_t<_Tp>>;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_REMOVE_CONST_REF_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_REMOVE_CONST_REF_H

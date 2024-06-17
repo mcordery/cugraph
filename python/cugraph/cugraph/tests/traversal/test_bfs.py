@@ -13,27 +13,26 @@
 
 import gc
 
-import pytest
+import cudf
 import cupy as cp
 import numpy as np
-from scipy.sparse import coo_matrix as sp_coo_matrix
-from scipy.sparse import csr_matrix as sp_csr_matrix
-from scipy.sparse import csc_matrix as sp_csc_matrix
-
-import cudf
-import cugraph
-from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
-from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
-from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
-from pylibcugraph.testing.utils import gen_fixture_params_product
+import pytest
 from cugraph.testing import (
-    utils,
-    get_resultset,
-    load_resultset,
     DEFAULT_DATASETS,
     SMALL_DATASETS,
+    get_resultset,
+    load_resultset,
+    utils,
 )
+from cupyx.scipy.sparse import coo_matrix as cp_coo_matrix
+from cupyx.scipy.sparse import csc_matrix as cp_csc_matrix
+from cupyx.scipy.sparse import csr_matrix as cp_csr_matrix
+from pylibcugraph.testing.utils import gen_fixture_params_product
+from scipy.sparse import coo_matrix as sp_coo_matrix
+from scipy.sparse import csc_matrix as sp_csc_matrix
+from scipy.sparse import csr_matrix as sp_csr_matrix
 
+import cugraph
 
 # =============================================================================
 # Parameters
@@ -175,7 +174,7 @@ def compare_bfs(benchmark_callable, G, golden_values, start_vertex, depth_limit)
         benchmark_callable(func_to_benchmark)
 
         compare_func = _compare_bfs
-        for (i, sv) in enumerate(start_vertex):
+        for i, sv in enumerate(start_vertex):
             cugraph_df = convert_output_to_cudf(G, all_cugraph_distances[i])
 
             compare_func(cugraph_df, all_golden_values[i], sv)

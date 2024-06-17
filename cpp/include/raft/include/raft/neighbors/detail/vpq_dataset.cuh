@@ -61,13 +61,13 @@ auto subsample(raft::resources const& res,
   auto result = raft::make_device_matrix<value_type, index_type>(res, n_samples, dataset.extent(1));
 
   RAFT_CUDA_TRY(hipMemcpy2DAsync(result.data_handle(),
-                                  sizeof(value_type) * dim,
-                                  dataset.data_handle(),
-                                  sizeof(value_type) * dim * trainset_ratio,
-                                  sizeof(value_type) * dim,
-                                  n_samples,
-                                  hipMemcpyDefault,
-                                  raft::resource::get_cuda_stream(res)));
+                                 sizeof(value_type) * dim,
+                                 dataset.data_handle(),
+                                 sizeof(value_type) * dim * trainset_ratio,
+                                 sizeof(value_type) * dim,
+                                 n_samples,
+                                 hipMemcpyDefault,
+                                 raft::resource::get_cuda_stream(res)));
   return result;
 }
 
@@ -121,8 +121,9 @@ auto transform_data(const raft::resources& res, DatasetT dataset)
 using ix_t = int64_t;
 
 template <typename MathT, typename DatasetT>
-auto train_vq(const raft::resources& res, const vpq_params& params, const DatasetT& dataset)
-  -> device_matrix<MathT, uint32_t, row_major>
+auto train_vq(const raft::resources& res,
+              const vpq_params& params,
+              const DatasetT& dataset) -> device_matrix<MathT, uint32_t, row_major>
 {
   const ix_t n_rows       = dataset.extent(0);
   const ix_t vq_n_centers = params.vq_n_centers;
@@ -383,8 +384,8 @@ auto process_and_fill_codes(const raft::resources& res,
 }
 
 template <typename NewMathT, typename OldMathT, typename IdxT>
-auto vpq_convert_math_type(const raft::resources& res, vpq_dataset<OldMathT, IdxT>&& src)
-  -> vpq_dataset<NewMathT, IdxT>
+auto vpq_convert_math_type(const raft::resources& res,
+                           vpq_dataset<OldMathT, IdxT>&& src) -> vpq_dataset<NewMathT, IdxT>
 {
   auto vq_code_book = make_device_mdarray<NewMathT>(res, src.vq_code_book.extents());
   auto pq_code_book = make_device_mdarray<NewMathT>(res, src.pq_code_book.extents());
@@ -402,8 +403,9 @@ auto vpq_convert_math_type(const raft::resources& res, vpq_dataset<OldMathT, Idx
 }
 
 template <typename DatasetT, typename MathT, typename IdxT>
-auto vpq_build(const raft::resources& res, const vpq_params& params, const DatasetT& dataset)
-  -> vpq_dataset<MathT, IdxT>
+auto vpq_build(const raft::resources& res,
+               const vpq_params& params,
+               const DatasetT& dataset) -> vpq_dataset<MathT, IdxT>
 {
   // Use a heuristic to impute missing parameters.
   auto ps = fill_missing_params_heuristics(params, dataset);

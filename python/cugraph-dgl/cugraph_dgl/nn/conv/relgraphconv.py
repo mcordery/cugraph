@@ -14,8 +14,8 @@
 import math
 from typing import Optional, Union
 
-from cugraph_dgl.nn.conv.base import BaseConv, SparseGraph
 from cugraph.utilities.utils import import_optional
+from cugraph_dgl.nn.conv.base import BaseConv, SparseGraph
 
 dgl = import_optional("dgl")
 torch = import_optional("torch")

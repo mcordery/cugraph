@@ -14,7 +14,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cassert>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__iterator/advance.h"
 #include "../__iterator/iterator_traits.h"
@@ -28,20 +28,15 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _InputIter>
 inline _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR_AFTER_CXX14
-__enable_if_t
-<
-    __is_cpp17_input_iterator<_InputIter>::value,
-    _InputIter
->
-prev(_InputIter __x,
-     typename iterator_traits<_InputIter>::difference_type __n = 1)
+  __enable_if_t<__is_cpp17_input_iterator<_InputIter>::value, _InputIter>
+  prev(_InputIter __x, typename iterator_traits<_InputIter>::difference_type __n = 1)
 {
-    _LIBCUDACXX_ASSERT(__n <= 0 || __is_cpp17_bidirectional_iterator<_InputIter>::value,
-                       "Attempt to prev(it, +n) on a non-bidi iterator");
-    _CUDA_VSTD::advance(__x, -__n);
-    return __x;
+  _LIBCUDACXX_ASSERT(__n <= 0 || __is_cpp17_bidirectional_iterator<_InputIter>::value,
+                     "Attempt to prev(it, +n) on a non-bidi iterator");
+  _CUDA_VSTD::advance(__x, -__n);
+  return __x;
 }
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___ITERATOR_PREV_H
+#endif  // _LIBCUDACXX___ITERATOR_PREV_H

@@ -32,7 +32,6 @@
 
 #include <raft/random/rng_device.cuh>
 
-#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/distance.h>
 #include <thrust/execution_policy.h>
@@ -47,6 +46,8 @@
 #include <thrust/transform.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
+
+#include <hip/functional>
 
 HIPCO_DECLARE_BITWISE_COMPARABLE(float)
 HIPCO_DECLARE_BITWISE_COMPARABLE(double)
@@ -247,7 +248,7 @@ refine_clustering(
                     wcut_deg_and_cluster_vol_triple_end,
                     singleton_and_connected_flags.begin(),
                     hip::proclaim_return_type<uint8_t>([resolution, total_edge_weight] __device__(
-                                                          auto wcut_wdeg_and_louvain_volume) {
+                                                         auto wcut_wdeg_and_louvain_volume) {
                       auto wcut           = thrust::get<0>(wcut_wdeg_and_louvain_volume);
                       auto wdeg           = thrust::get<1>(wcut_wdeg_and_louvain_volume);
                       auto louvain_volume = thrust::get<2>(wcut_wdeg_and_louvain_volume);
@@ -593,17 +594,18 @@ refine_clustering(
                          thrust::get<1>(gain_and_dst_last.get_iterator_tuple()),
                          thrust::get<0>(gain_and_dst_last.get_iterator_tuple())));
 
-    thrust::copy_if(handle.get_thrust_policy(),
-                    edge_begin,
-                    edge_end,
-                    d_src_dst_gain_iterator,
-                    [POSITIVE_GAIN] __device__(thrust::tuple<vertex_t, vertex_t, weight_t> src_dst_gain) {
-                      vertex_t src  = thrust::get<0>(src_dst_gain);
-                      vertex_t dst  = thrust::get<1>(src_dst_gain);
-                      weight_t gain = thrust::get<2>(src_dst_gain);
+    thrust::copy_if(
+      handle.get_thrust_policy(),
+      edge_begin,
+      edge_end,
+      d_src_dst_gain_iterator,
+      [POSITIVE_GAIN] __device__(thrust::tuple<vertex_t, vertex_t, weight_t> src_dst_gain) {
+        vertex_t src  = thrust::get<0>(src_dst_gain);
+        vertex_t dst  = thrust::get<1>(src_dst_gain);
+        weight_t gain = thrust::get<2>(src_dst_gain);
 
-                      return (gain > POSITIVE_GAIN) && (dst >= 0);
-                    });
+        return (gain > POSITIVE_GAIN) && (dst >= 0);
+      });
 
     //
     // Create decision graph from edgelist

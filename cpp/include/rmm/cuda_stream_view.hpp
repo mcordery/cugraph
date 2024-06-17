@@ -18,15 +18,14 @@
 
 #include <rmm/detail/error.hpp>
 
-#include <hip/stream_ref>
 #include <hip/hip_runtime_api.h>
 
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <hip/stream_ref>
 
 constexpr hipStream_t defaultStream = 0;
-
 
 namespace rmm {
 /**
@@ -133,8 +132,8 @@ static constexpr cuda_stream_view cuda_stream_default{};
  */
 
 static const cuda_stream_view cuda_stream_legacy{
-defaultStream
-	  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
+  defaultStream
+  // NOLINT(cppcoreguidelines-pro-type-cstyle-cast)
 };
 
 /**

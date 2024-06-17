@@ -13,18 +13,13 @@
 
 import gc
 
-import pytest
-import networkx as nx
-
 import cudf
-import cugraph
-from cugraph.testing import (
-    utils,
-    DEFAULT_DATASETS,
-    UNDIRECTED_DATASETS,
-)
-from cugraph.datasets import toy_graph_undirected, karate
+import networkx as nx
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, UNDIRECTED_DATASETS, utils
 
+import cugraph
+from cugraph.datasets import karate, toy_graph_undirected
 
 # This toy graph is used in multiple tests throughout libcugraph_c and pylib.
 TOY = toy_graph_undirected

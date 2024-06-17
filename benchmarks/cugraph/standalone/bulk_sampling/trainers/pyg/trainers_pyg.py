@@ -12,25 +12,22 @@
 # limitations under the License.
 
 
-from trainers import Trainer
-from trainers import extend_tensor
-from datasets import OGBNPapers100MDataset
-from models.pyg import GraphSAGE
-
-import torch
-import numpy as np
-
-import torch.distributed as td
-from torch.nn.parallel import DistributedDataParallel as ddp
-import torch.nn.functional as F
-
-from torch_geometric.utils.sparse import index2ptr
-from torch_geometric.data import HeteroData
-from torch_geometric.loader import NeighborLoader
-
 import gc
 import os
 import time
+
+import numpy as np
+import torch
+import torch.distributed as td
+import torch.nn.functional as F
+from models.pyg import GraphSAGE
+from torch.nn.parallel import DistributedDataParallel as ddp
+from torch_geometric.data import HeteroData
+from torch_geometric.loader import NeighborLoader
+from torch_geometric.utils.sparse import index2ptr
+from trainers import Trainer, extend_tensor
+
+from datasets import OGBNPapers100MDataset
 
 
 def pyg_num_workers(world_size: int) -> int:

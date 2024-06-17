@@ -31,14 +31,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+#include <thrust/iterator/transform_iterator.h>
+#include <thrust/iterator/zip_iterator.h>
+#include <thrust/tuple.h>
+
 #include <hipco/detail/bitwise_compare.cuh>
 #include <hipco/detail/error.hpp>
 #include <hipco/detail/utils.cuh>
 #include <hipco/detail/utils.hpp>
-
-#include <thrust/iterator/transform_iterator.h>
-#include <thrust/iterator/zip_iterator.h>
-#include <thrust/tuple.h>
 
 #include <hipcub/device/device_select.hpp>
 
@@ -50,16 +50,12 @@ template <typename Key,
           typename Allocator,
           uint32_t TileSize,
           uint32_t BlockSize>
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::static_map(std::size_t capacity,
-                                  empty_key<Key> empty_key_sentinel,
-                                  empty_value<Value> empty_value_sentinel,
-                                  Allocator const& alloc,
-                                  hipStream_t stream)
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::static_map(
+  std::size_t capacity,
+  empty_key<Key> empty_key_sentinel,
+  empty_value<Value> empty_value_sentinel,
+  Allocator const& alloc,
+  hipStream_t stream)
   : capacity_{std::max(capacity, std::size_t{1})},  // to avoid dereferencing a nullptr (Issue #72)
     empty_key_sentinel_{empty_key_sentinel.value},
     empty_value_sentinel_{empty_value_sentinel.value},
@@ -84,17 +80,13 @@ template <typename Key,
           typename Allocator,
           uint32_t TileSize,
           uint32_t BlockSize>
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::static_map(std::size_t capacity,
-                                  empty_key<Key> empty_key_sentinel,
-                                  empty_value<Value> empty_value_sentinel,
-                                  erased_key<Key> erased_key_sentinel,
-                                  Allocator const& alloc,
-                                  hipStream_t stream)
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::static_map(
+  std::size_t capacity,
+  empty_key<Key> empty_key_sentinel,
+  empty_value<Value> empty_value_sentinel,
+  erased_key<Key> erased_key_sentinel,
+  Allocator const& alloc,
+  hipStream_t stream)
   : capacity_{std::max(capacity, std::size_t{1})},  // to avoid dereferencing a nullptr (Issue #72)
     empty_key_sentinel_{empty_key_sentinel.value},
     empty_value_sentinel_{empty_value_sentinel.value},
@@ -103,8 +95,8 @@ static_map<Key,
     counter_allocator_{alloc}
 {
   HIPCO_EXPECTS(empty_key_sentinel_ != erased_key_sentinel_,
-               "The empty key sentinel and erased key sentinel cannot be the same value.",
-               std::runtime_error);
+                "The empty key sentinel and erased key sentinel cannot be the same value.",
+                std::runtime_error);
 
   slots_         = std::allocator_traits<slot_allocator_type>::allocate(slot_allocator_, capacity_);
   num_successes_ = std::allocator_traits<counter_allocator_type>::allocate(counter_allocator_, 1);
@@ -123,12 +115,7 @@ template <typename Key,
           typename Allocator,
           uint32_t TileSize,
           uint32_t BlockSize>
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::~static_map()
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::~static_map()
 {
   std::allocator_traits<slot_allocator_type>::deallocate(slot_allocator_, slots_, capacity_);
   std::allocator_traits<counter_allocator_type>::deallocate(counter_allocator_, num_successes_, 1);
@@ -141,16 +128,8 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename InputIt, typename Hash, typename KeyEqual>
-void static_map<Key,
-                Value,
-                Scope,
-                Allocator,
-                TileSize,
-                BlockSize>::insert(InputIt first,
-                                   InputIt last,
-                                   Hash hash,
-                                   KeyEqual key_equal,
-                                   hipStream_t stream)
+void static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::insert(
+  InputIt first, InputIt last, Hash hash, KeyEqual key_equal, hipStream_t stream)
 {
   auto const num_keys = hipco::detail::distance(first, last);
   if (num_keys == 0) { return; }
@@ -191,18 +170,13 @@ template <typename InputIt,
           typename Predicate,
           typename Hash,
           typename KeyEqual>
-void static_map<Key,
-                Value,
-                Scope,
-                Allocator,
-                TileSize,
-                BlockSize>::insert_if(InputIt first,
-                                      InputIt last,
-                                      StencilIt stencil,
-                                      Predicate pred,
-                                      Hash hash,
-                                      KeyEqual key_equal,
-                                      hipStream_t stream)
+void static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::insert_if(InputIt first,
+                                                                              InputIt last,
+                                                                              StencilIt stencil,
+                                                                              Predicate pred,
+                                                                              Hash hash,
+                                                                              KeyEqual key_equal,
+                                                                              hipStream_t stream)
 {
   auto const num_keys = hipco::detail::distance(first, last);
   if (num_keys == 0) { return; }
@@ -239,20 +213,12 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename InputIt, typename Hash, typename KeyEqual>
-void static_map<Key,
-                Value,
-                Scope,
-                Allocator,
-                TileSize,
-                BlockSize>::erase(InputIt first,
-                                  InputIt last,
-                                  Hash hash,
-                                  KeyEqual key_equal,
-                                  hipStream_t stream)
+void static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::erase(
+  InputIt first, InputIt last, Hash hash, KeyEqual key_equal, hipStream_t stream)
 {
   HIPCO_EXPECTS(get_empty_key_sentinel() != get_erased_key_sentinel(),
-               "You must provide a unique erased key sentinel value at map construction.",
-               std::runtime_error);
+                "You must provide a unique erased key sentinel value at map construction.",
+                std::runtime_error);
 
   auto const num_keys = hipco::detail::distance(first, last);
   if (num_keys == 0) { return; }
@@ -290,17 +256,12 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename InputIt, typename OutputIt, typename Hash, typename KeyEqual>
-void static_map<Key,
-                Value,
-                Scope,
-                Allocator,
-                TileSize,
-                BlockSize>::find(InputIt first,
-                                 InputIt last,
-                                 OutputIt output_begin,
-                                 Hash hash,
-                                 KeyEqual key_equal,
-                                 hipStream_t stream)
+void static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::find(InputIt first,
+                                                                         InputIt last,
+                                                                         OutputIt output_begin,
+                                                                         Hash hash,
+                                                                         KeyEqual key_equal,
+                                                                         hipStream_t stream)
 {
   auto const num_keys = hipco::detail::distance(first, last);
   if (num_keys == 0) { return; }
@@ -327,14 +288,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename KeyOut, typename ValueOut>
-std::pair<KeyOut, ValueOut> static_map<Key,
-                                       Value,
-                                       Scope,
-                                       Allocator,
-                                       TileSize,
-                                       BlockSize>::retrieve_all(KeyOut keys_out,
-                                                                ValueOut values_out,
-                                                                hipStream_t stream) const
+std::pair<KeyOut, ValueOut>
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::retrieve_all(
+  KeyOut keys_out, ValueOut values_out, hipStream_t stream) const
 {
   static_assert(sizeof(pair_atomic_type) == sizeof(value_type));
   auto slots_begin = reinterpret_cast<value_type*>(slots_);
@@ -350,26 +306,26 @@ std::pair<KeyOut, ValueOut> static_map<Key,
   auto d_num_out      = reinterpret_cast<std::size_t*>(
     std::allocator_traits<temp_allocator_type>::allocate(temp_allocator, sizeof(std::size_t)));
   HIPCO_HIP_TRY(hipcub::DeviceSelect::If(nullptr,
-                        temp_storage_bytes,
-                        begin,
-                        zipped_out_begin,
-                        d_num_out,
-                        get_capacity(),
-                        filled,
-                        stream));
+                                         temp_storage_bytes,
+                                         begin,
+                                         zipped_out_begin,
+                                         d_num_out,
+                                         get_capacity(),
+                                         filled,
+                                         stream));
 
   // Allocate temporary storage
   auto d_temp_storage =
     std::allocator_traits<temp_allocator_type>::allocate(temp_allocator, temp_storage_bytes);
 
   HIPCO_HIP_TRY(hipcub::DeviceSelect::If(d_temp_storage,
-                        temp_storage_bytes,
-                        begin,
-                        zipped_out_begin,
-                        d_num_out,
-                        get_capacity(),
-                        filled,
-                        stream));
+                                         temp_storage_bytes,
+                                         begin,
+                                         zipped_out_begin,
+                                         d_num_out,
+                                         get_capacity(),
+                                         filled,
+                                         stream));
 
   std::size_t h_num_out;
   HIPCO_HIP_TRY(
@@ -390,17 +346,13 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename InputIt, typename OutputIt, typename Hash, typename KeyEqual>
-void static_map<Key,
-                Value,
-                Scope,
-                Allocator,
-                TileSize,
-                BlockSize>::contains(InputIt first,
-                                     InputIt last,
-                                     OutputIt output_begin,
-                                     Hash hash,
-                                     KeyEqual key_equal,
-                                     hipStream_t stream) const
+void static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::contains(
+  InputIt first,
+  InputIt last,
+  OutputIt output_begin,
+  Hash hash,
+  KeyEqual key_equal,
+  hipStream_t stream) const
 {
   auto const num_keys = hipco::detail::distance(first, last);
   if (num_keys == 0) { return; }
@@ -427,21 +379,13 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_mutable_view::insert_result
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_mutable_view::packed_cas(iterator current_slot,
-                                                       value_type const& insert_pair,
-                                                       KeyEqual key_equal,
-                                                       Key expected_key) noexcept
+__device__ typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::
+  device_mutable_view::insert_result
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::packed_cas(
+    iterator current_slot,
+    value_type const& insert_pair,
+    KeyEqual key_equal,
+    Key expected_key) noexcept
 {
   auto expected_value = this->get_empty_value_sentinel();
 
@@ -473,21 +417,13 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_mutable_view::insert_result
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_mutable_view::back_to_back_cas(iterator current_slot,
-                                                             value_type const& insert_pair,
-                                                             KeyEqual key_equal,
-                                                             Key expected_key) noexcept
+__device__ typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::
+  device_mutable_view::insert_result
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::
+    back_to_back_cas(iterator current_slot,
+                     value_type const& insert_pair,
+                     KeyEqual key_equal,
+                     Key expected_key) noexcept
 {
   using hip::std::memory_order_relaxed;
 
@@ -527,21 +463,13 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_mutable_view::insert_result
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_mutable_view::cas_dependent_write(iterator current_slot,
-                                                                value_type const& insert_pair,
-                                                                KeyEqual key_equal,
-                                                                Key expected_key) noexcept
+__device__ typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::
+  device_mutable_view::insert_result
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::
+    cas_dependent_write(iterator current_slot,
+                        value_type const& insert_pair,
+                        KeyEqual key_equal,
+                        Key expected_key) noexcept
 {
   using hip::std::memory_order_relaxed;
 
@@ -569,14 +497,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename Hash, typename KeyEqual>
-__device__ bool static_map<Key,
-                           Value,
-                           Scope,
-                           Allocator,
-                           TileSize,
-                           BlockSize>::device_mutable_view::insert(value_type const& insert_pair,
-                                                                   Hash hash,
-                                                                   KeyEqual key_equal) noexcept
+__device__ bool
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::insert(
+  value_type const& insert_pair, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot{this->initial_slot(insert_pair.first, hash)};
 
@@ -626,21 +549,11 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename Hash, typename KeyEqual>
-__device__ thrust::pair<typename static_map<Key,
-                                            Value,
-                                            Scope,
-                                            Allocator,
-                                            TileSize,
-                                            BlockSize>::device_mutable_view::iterator,
+__device__ thrust::pair<typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::
+                          device_mutable_view::iterator,
                         bool>
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_mutable_view::insert_and_find(value_type const& insert_pair,
-                                                            Hash hash,
-                                                            KeyEqual key_equal) noexcept
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::insert_and_find(
+  value_type const& insert_pair, Hash hash, KeyEqual key_equal) noexcept
 {
 #if __CUDA_ARCH__ < 700
   // Spinning to ensure that the write to the value part took place requires
@@ -731,15 +644,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename CG, typename Hash, typename KeyEqual>
-__device__ bool static_map<Key,
-                           Value,
-                           Scope,
-                           Allocator,
-                           TileSize,
-                           BlockSize>::device_mutable_view::insert(CG const& g,
-                                                                   value_type const& insert_pair,
-                                                                   Hash hash,
-                                                                   KeyEqual key_equal) noexcept
+__device__ bool
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::insert(
+  CG const& g, value_type const& insert_pair, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot = this->initial_slot(g, insert_pair.first, hash);
 
@@ -807,14 +714,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename Hash, typename KeyEqual>
-__device__ bool static_map<Key,
-                           Value,
-                           Scope,
-                           Allocator,
-                           TileSize,
-                           BlockSize>::device_mutable_view::erase(key_type const& k,
-                                                                  Hash hash,
-                                                                  KeyEqual key_equal) noexcept
+__device__ bool
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::erase(
+  key_type const& k, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot{this->initial_slot(k, hash)};
 
@@ -864,15 +766,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename CG, typename Hash, typename KeyEqual>
-__device__ bool static_map<Key,
-                           Value,
-                           Scope,
-                           Allocator,
-                           TileSize,
-                           BlockSize>::device_mutable_view::erase(CG const& g,
-                                                                  key_type const& k,
-                                                                  Hash hash,
-                                                                  KeyEqual key_equal) noexcept
+__device__ bool
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_mutable_view::erase(
+  CG const& g, key_type const& k, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot = this->initial_slot(g, k, hash);
   value_type const insert_pair =
@@ -934,18 +830,10 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename Hash, typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_view::iterator
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_view::find(Key const& k, Hash hash, KeyEqual key_equal) noexcept
+__device__
+  typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::iterator
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::find(
+    Key const& k, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot = this->initial_slot(k, hash);
 
@@ -970,18 +858,10 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename Hash, typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_view::const_iterator
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_view::find(Key const& k, Hash hash, KeyEqual key_equal) const noexcept
+__device__ typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::
+  const_iterator
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::find(
+    Key const& k, Hash hash, KeyEqual key_equal) const noexcept
 {
   auto current_slot = this->initial_slot(k, hash);
 
@@ -1006,18 +886,10 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename CG, typename Hash, typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_view::iterator
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_view::find(CG g, Key const& k, Hash hash, KeyEqual key_equal) noexcept
+__device__
+  typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::iterator
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::find(
+    CG g, Key const& k, Hash hash, KeyEqual key_equal) noexcept
 {
   auto current_slot = this->initial_slot(g, k, hash);
 
@@ -1056,21 +928,10 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename CG, typename Hash, typename KeyEqual>
-__device__ typename static_map<Key,
-                               Value,
-                               Scope,
-                               Allocator,
-                               TileSize,
-                               BlockSize>::device_view::const_iterator
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_view::find(CG g,
-                                         Key const& k,
-                                         Hash hash,
-                                         KeyEqual key_equal) const noexcept
+__device__ typename static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::
+  const_iterator
+  static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::find(
+    CG g, Key const& k, Hash hash, KeyEqual key_equal) const noexcept
 {
   auto current_slot = initial_slot(g, k, hash);
 
@@ -1111,14 +972,9 @@ template <typename Key,
           uint32_t TileSize,
           uint32_t BlockSize>
 template <typename ProbeKey, typename Hash, typename KeyEqual>
-__device__ bool static_map<Key,
-                           Value,
-                           Scope,
-                           Allocator,
-                           TileSize,
-                           BlockSize>::device_view::contains(ProbeKey const& k,
-                                                             Hash hash,
-                                                             KeyEqual key_equal) const noexcept
+__device__ bool
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::contains(
+  ProbeKey const& k, Hash hash, KeyEqual key_equal) const noexcept
 {
   auto current_slot = this->initial_slot(k, hash);
 
@@ -1141,15 +997,8 @@ template <typename Key,
           uint32_t BlockSize>
 template <typename CG, typename ProbeKey, typename Hash, typename KeyEqual>
 __device__ std::enable_if_t<std::is_invocable_v<KeyEqual, ProbeKey, Key>, bool>
-static_map<Key,
-           Value,
-           Scope,
-           Allocator,
-           TileSize,
-           BlockSize>::device_view::contains(CG const& g,
-                                             ProbeKey const& k,
-                                             Hash hash,
-                                             KeyEqual key_equal) const noexcept
+static_map<Key, Value, Scope, Allocator, TileSize, BlockSize>::device_view::contains(
+  CG const& g, ProbeKey const& k, Hash hash, KeyEqual key_equal) const noexcept
 {
   auto current_slot = this->initial_slot(g, k, hash);
 

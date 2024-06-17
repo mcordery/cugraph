@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 */
 
 #pragma once
@@ -47,29 +47,26 @@ struct LinearCombinationParams {
   uint64_t beta_data[2];
 
   CUTLASS_HOST_DEVICE
-  LinearCombinationParams()
-  : alpha_data {0lu, 0lu}, beta_data {0lu, 0lu} 
-  { }
+  LinearCombinationParams() : alpha_data{0lu, 0lu}, beta_data{0lu, 0lu} {}
 
   template <typename ElementCompute>
-  CUTLASS_HOST_DEVICE 
-  LinearCombinationParams(ElementCompute alpha, ElementCompute beta) 
-  : alpha_data {0lu, 0lu}, beta_data {0lu, 0lu} 
+  CUTLASS_HOST_DEVICE LinearCombinationParams(ElementCompute alpha, ElementCompute beta)
+    : alpha_data{0lu, 0lu}, beta_data{0lu, 0lu}
   {
-    #if defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__)
     reinterpret_cast<ElementCompute&>(alpha_data) = alpha;
-    reinterpret_cast<ElementCompute&>(beta_data) = beta;
-    #else
-    memcpy( alpha_data, &alpha, sizeof(ElementCompute) ); 
-    memcpy( beta_data, &beta, sizeof(ElementCompute) ); 
-    #endif
+    reinterpret_cast<ElementCompute&>(beta_data)  = beta;
+#else
+    memcpy(alpha_data, &alpha, sizeof(ElementCompute));
+    memcpy(beta_data, &beta, sizeof(ElementCompute));
+#endif
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

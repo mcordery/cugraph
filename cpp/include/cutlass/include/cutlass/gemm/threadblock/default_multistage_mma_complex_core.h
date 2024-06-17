@@ -39,26 +39,21 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
 #include "cutlass/complex.h"
-
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/threadblock/default_mma_core.h"
+#include "cutlass/gemm/warp/default_mma_tensor_op.h"
+#include "cutlass/gemm/warp/mma_simt.h"
+#include "cutlass/gemm/warp/mma_simt_policy.h"
+#include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
 #include "cutlass/layout/tensor_op_multiplicand_sm75.h"
 #include "cutlass/layout/tensor_op_multiplicand_sm80.h"
-
-#include "cutlass/gemm/warp/mma_simt_policy.h"
-#include "cutlass/gemm/warp/mma_simt.h"
-#include "cutlass/gemm/warp/default_mma_tensor_op.h"
-#include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm80.h"
-
-#include "cutlass/gemm/threadblock/default_mma_core.h"
-
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_types.h"
 #include "cutlass/transform/pitch_linear_thread_map.h"
-
-#include "cutlass/transform/threadblock/regular_tile_access_iterator_tensor_op.h"
 #include "cutlass/transform/threadblock/regular_tile_access_iterator_pitch_linear.h"
+#include "cutlass/transform/threadblock/regular_tile_access_iterator_tensor_op.h"
 #include "cutlass/transform/threadblock/regular_tile_access_iterator_tensor_op_sm80.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,42 +68,39 @@ namespace threadblock {
 /// threadblock tile size, global memory data layout, and target math
 /// instruction.
 template <
-    /// Shape of threadblock-scoped matrix multiply operator
-    typename Shape,
-    /// Shape of warp-level matrix multiply operator
-    typename WarpShape,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape,
-    /// Element data type of A operand
-    typename ElementA,
-    /// Layout of operand A
-    typename LayoutA,
-    /// Element data type of B operand
-    typename ElementB,
-    /// Layout of operand B
-    typename LayoutB,
-    /// Data type of accumulator
-    typename ElementC,
-    /// Layout of accumulator
-    typename LayoutC,
-    /// Indicates type of math operator (arch::OpClassSimt or arch::OpClassTensorOp)
-    typename OperatorClass,
-    /// Number of stages
-    int Stages,
-    /// Complex transformation on operand A
-    ComplexTransform TransformA,
-    /// Complex transformation on operand B
-    ComplexTransform TransformB,
-    /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
-    typename Operator = arch::OpMultiplyAddComplex,
-    /// Cache operation of operand A
-    cutlass::arch::CacheOperation::Kind CacheOpA =
-        cutlass::arch::CacheOperation::Global,
-    /// Cache operation of operand B
-    cutlass::arch::CacheOperation::Kind CacheOpB =
-        cutlass::arch::CacheOperation::Global>
+  /// Shape of threadblock-scoped matrix multiply operator
+  typename Shape,
+  /// Shape of warp-level matrix multiply operator
+  typename WarpShape,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape,
+  /// Element data type of A operand
+  typename ElementA,
+  /// Layout of operand A
+  typename LayoutA,
+  /// Element data type of B operand
+  typename ElementB,
+  /// Layout of operand B
+  typename LayoutB,
+  /// Data type of accumulator
+  typename ElementC,
+  /// Layout of accumulator
+  typename LayoutC,
+  /// Indicates type of math operator (arch::OpClassSimt or arch::OpClassTensorOp)
+  typename OperatorClass,
+  /// Number of stages
+  int Stages,
+  /// Complex transformation on operand A
+  ComplexTransform TransformA,
+  /// Complex transformation on operand B
+  ComplexTransform TransformB,
+  /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
+  typename Operator = arch::OpMultiplyAddComplex,
+  /// Cache operation of operand A
+  cutlass::arch::CacheOperation::Kind CacheOpA = cutlass::arch::CacheOperation::Global,
+  /// Cache operation of operand B
+  cutlass::arch::CacheOperation::Kind CacheOpB = cutlass::arch::CacheOperation::Global>
 struct DefaultMultistageMmaComplexCore;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

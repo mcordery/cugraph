@@ -29,15 +29,15 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 
 */
 
 #pragma once
 
-#include "predicated_tile_iterator.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/pitch_linear.h"
+#include "predicated_tile_iterator.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,21 +48,18 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the optimal thread map for Wmma TensorOp accumulator layouts
-template <
-  typename ThreadblockShape_,
-  typename WarpShape_,
-  typename InstructionShape_,
-  int PartitionsK,
-  typename Element_,
-  int ElementsPerAccess
->
+template <typename ThreadblockShape_,
+          typename WarpShape_,
+          typename InstructionShape_,
+          int PartitionsK,
+          typename Element_,
+          int ElementsPerAccess>
 struct DefaultThreadMapWmmaTensorOp {
-
-  using ThreadblockShape = ThreadblockShape_;
-  using WarpShape = WarpShape_;
-  using InstructionShape = InstructionShape_;
-  static int const kPartitionsK = PartitionsK;
-  using Element = Element_;
+  using ThreadblockShape              = ThreadblockShape_;
+  using WarpShape                     = WarpShape_;
+  using InstructionShape              = InstructionShape_;
+  static int const kPartitionsK       = PartitionsK;
+  using Element                       = Element_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
   //
@@ -70,21 +67,18 @@ struct DefaultThreadMapWmmaTensorOp {
   //
 
   struct Detail {
-
     /// Wmma Tensor Operations fundamentally perform operations on InstructionShape::kM rows
     static int const kTensorOpRows = InstructionShape::kM;
-    static int const kWarpSize = 32;
+    static int const kWarpSize     = 32;
 
-    static_assert(
-      !(ThreadblockShape::kM % WarpShape::kM) &&
-      !(ThreadblockShape::kN % WarpShape::kN), "Divisibility");
+    static_assert(!(ThreadblockShape::kM % WarpShape::kM) &&
+                    !(ThreadblockShape::kN % WarpShape::kN),
+                  "Divisibility");
 
     /// Number of warps
-    using WarpCount = gemm::GemmShape<
-      ThreadblockShape::kM / WarpShape::kM,
-      ThreadblockShape::kN / WarpShape::kN,
-      kPartitionsK
-    >;
+    using WarpCount = gemm::GemmShape<ThreadblockShape::kM / WarpShape::kM,
+                                      ThreadblockShape::kN / WarpShape::kN,
+                                      kPartitionsK>;
 
     /// Number of participating threads
     static int const kThreads = WarpCount::kCount * kWarpSize;
@@ -93,21 +87,25 @@ struct DefaultThreadMapWmmaTensorOp {
   //
   // ThreadMap
   //
-  
-  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept OutputTileThreadMap
-  using Type = OutputTileOptimalThreadMap <
+
+  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept
+  /// OutputTileThreadMap
+  using Type = OutputTileOptimalThreadMap<
     OutputTileShape<ThreadblockShape::kN, Detail::kTensorOpRows, Detail::WarpCount::kM, 1, 1>,
-    OutputTileShape<1, WarpShape::kM / Detail::kTensorOpRows, 1, 1, WarpShape::kM / Detail::kTensorOpRows>,
+    OutputTileShape<1,
+                    WarpShape::kM / Detail::kTensorOpRows,
+                    1,
+                    1,
+                    WarpShape::kM / Detail::kTensorOpRows>,
     Detail::kThreads,
     kElementsPerAccess,
-    sizeof_bits<Element>::value
-  >;
+    sizeof_bits<Element>::value>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

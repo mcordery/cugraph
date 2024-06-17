@@ -14,17 +14,17 @@
 import cudf
 import cupy as cp
 import numpy as np
+from cugraph.utilities.utils import import_optional
 from cugraph_dgl.dataloading.utils.sampling_helpers import (
-    cast_to_tensor,
-    _get_renumber_map,
-    _split_tensor,
-    _get_tensor_d_from_sampled_df,
-    create_homogeneous_sampled_graphs_from_dataframe,
-    _get_source_destination_range,
     _create_homogeneous_cugraph_dgl_nn_sparse_graph,
+    _get_renumber_map,
+    _get_source_destination_range,
+    _get_tensor_d_from_sampled_df,
+    _split_tensor,
+    cast_to_tensor,
+    create_homogeneous_sampled_graphs_from_dataframe,
     create_homogeneous_sampled_graphs_from_dataframe_csc,
 )
-from cugraph.utilities.utils import import_optional
 
 dgl = import_optional("dgl")
 torch = import_optional("torch")

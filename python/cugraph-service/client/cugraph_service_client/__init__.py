@@ -32,7 +32,6 @@ extension_return_dtype_map.update(
     dict(map(reversed, extension_return_dtype_map.items()))
 )
 
+from cugraph_service_client._version import __git_commit__, __version__
 from cugraph_service_client.client import CugraphServiceClient
 from cugraph_service_client.remote_graph import RemoteGraph
-
-from cugraph_service_client._version import __git_commit__, __version__

@@ -32,13 +32,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-#include <hipco/detail/utility/cuda.hpp>
-#include <hipco/detail/utils.hpp>
-
 #include <thrust/count.h>
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/tuple.h>
+
+#include <hipco/detail/utility/cuda.hpp>
+#include <hipco/detail/utils.hpp>
 
 #include <iterator>
 
@@ -490,9 +490,10 @@ template <typename Key,
           typename Allocator,
           class ProbeSequence>
 template <typename CG>
-__device__ __forceinline__ typename static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view
-static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view::make_copy(
-  CG g, pair_atomic_type* const memory_to_use, device_view source_device_view) noexcept
+__device__ __forceinline__
+  typename static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view
+  static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view::make_copy(
+    CG g, pair_atomic_type* const memory_to_use, device_view source_device_view) noexcept
 {
 #if defined(HIPCO_HAS_CUDA_BARRIER)
   __shared__ cuda::barrier<hip::thread_scope::thread_scope_block> barrier;
@@ -685,13 +686,13 @@ static_multimap<Key, Value, Scope, Allocator, ProbeSequence>::device_view::retri
   constexpr bool is_outer = false;
   if constexpr (uses_vector_load()) {
     impl_.template retrieve<buffer_size, is_outer>(flushing_cg,
-                                          probing_cg,
-                                          k,
-                                          flushing_cg_counter,
-                                          output_buffer,
-                                          num_matches,
-                                          output_begin,
-                                          key_equal);
+                                                   probing_cg,
+                                                   k,
+                                                   flushing_cg_counter,
+                                                   output_buffer,
+                                                   num_matches,
+                                                   output_begin,
+                                                   key_equal);
   } else  // In the case of scalar load, flushing CG is the same as probing CG
   {
     impl_.template retrieve<buffer_size, is_outer>(

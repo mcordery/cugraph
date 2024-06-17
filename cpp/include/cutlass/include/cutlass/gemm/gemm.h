@@ -33,8 +33,8 @@
 */
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 namespace gemm {
@@ -43,10 +43,10 @@ namespace gemm {
 
 /// GEMM operand enumeration: D = A * B + C
 enum class Operand {
-  kA, /// A multiplicand
-  kB, /// B multiplicand
-  kC, /// Source accumulator
-  kD  /// Destination accumulator
+  kA,  /// A multiplicand
+  kB,  /// B multiplicand
+  kC,  /// Source accumulator
+  kD   /// Destination accumulator
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,16 +58,15 @@ template <
   /// Columns of matrix product
   int N = 1,
   /// Inner dimension of matrix product
-  int K = 1
->
+  int K = 1>
 struct GemmShape {
   static int const kM = M;
   static int const kN = N;
   static int const kK = K;
 
-  static int const kMN = M * N;
-  static int const kMK = M * K;
-  static int const kKN = N * K;
+  static int const kMN  = M * N;
+  static int const kMK  = M * K;
+  static int const kKN  = N * K;
   static int const kMNK = M * N * K;
 
   static int const kCount = kMNK;
@@ -78,9 +77,7 @@ struct GemmShape {
 
   /// Returns a Coord object
   CUTLASS_HOST_DEVICE
-  static Coord<3> toCoord() {
-    return make_Coord(kM, kN, kK);
-  }
+  static Coord<3> toCoord() { return make_Coord(kM, kN, kK); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +85,7 @@ struct GemmShape {
 /// Type alias of the transpose of a GemmShape
 template <
   /// concept: GemmShape
-  typename Shape
->
+  typename Shape>
 using GemmShapeTranspose = GemmShape<Shape::kN, Shape::kM, Shape::kK>;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +93,6 @@ using GemmShapeTranspose = GemmShape<Shape::kN, Shape::kM, Shape::kK>;
 /// GemmCoord is a structure derived from Coord<3> that specifies a location within the
 /// coordinate space of a GEMM problem.
 struct GemmCoord : public Coord<3, int> {
-
   /// Integer-valued index
   typedef int Index;
 
@@ -119,87 +114,71 @@ struct GemmCoord : public Coord<3, int> {
 
   /// Default ctor
   CUTLASS_HOST_DEVICE
-  GemmCoord() { }
+  GemmCoord() {}
 
   /// Constructs from Coord<3> and a batch
   CUTLASS_HOST_DEVICE
-  GemmCoord(Coord<3, Index> const &coord): Base(make_Coord(coord[0], coord[1], coord[2])) { }
+  GemmCoord(Coord<3, Index> const& coord) : Base(make_Coord(coord[0], coord[1], coord[2])) {}
 
   /// Helper to construct from a K, N, M, batch variables
   CUTLASS_HOST_DEVICE
-  GemmCoord(Index m, Index n, Index k): Base(make_Coord(m, n, k)) { }
+  GemmCoord(Index m, Index n, Index k) : Base(make_Coord(m, n, k)) {}
 
   /// Returns the GEMM M coordinate
   CUTLASS_HOST_DEVICE
-  Index const & m() const { return this->at(kM); }
+  Index const& m() const { return this->at(kM); }
 
   /// Returns reference to the GEMM M coordinate
   CUTLASS_HOST_DEVICE
-  Index & m() { return this->at(kM); }
+  Index& m() { return this->at(kM); }
 
   /// Returns the GEMM N coordinate
   CUTLASS_HOST_DEVICE
-  Index const & n() const { return this->at(kN); }
+  Index const& n() const { return this->at(kN); }
 
   /// Returns reference to the GEMM N coordinate
   CUTLASS_HOST_DEVICE
-  Index & n() { return this->at(kN); }
+  Index& n() { return this->at(kN); }
 
   /// Returns the GEMM K coordinate
   CUTLASS_HOST_DEVICE
-  Index const & k() const { return this->at(kK); }
+  Index const& k() const { return this->at(kK); }
 
   /// Returns reference to the GEMM K coordinate
   CUTLASS_HOST_DEVICE
-  Index & k() { return this->at(kK); }
+  Index& k() { return this->at(kK); }
 
   /// Obtains a Coord<3> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<3> mnk() const {
-    return make_Coord(m(), n(), k());
-  }
+  Coord<3> mnk() const { return make_Coord(m(), n(), k()); }
 
   /// Obtains a Coord<3> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<3> knm() const {
-    return make_Coord(k(), n(), m());
-  }
+  Coord<3> knm() const { return make_Coord(k(), n(), m()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> nm() const {
-    return make_Coord(n(), m());
-  }
+  Coord<2> nm() const { return make_Coord(n(), m()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> mn() const {
-    return make_Coord(m(), n());
-  }
+  Coord<2> mn() const { return make_Coord(m(), n()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> mk() const {
-    return make_Coord(m(), k());
-  }
+  Coord<2> mk() const { return make_Coord(m(), k()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> km() const {
-    return make_Coord(k(), m());
-  }
+  Coord<2> km() const { return make_Coord(k(), m()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> nk() const {
-    return make_Coord(n(), k());
-  }
+  Coord<2> nk() const { return make_Coord(n(), k()); }
 
   /// Obtains a Coord<2> from GemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<2> kn() const {
-    return make_Coord(k(), n());
-  }
+  Coord<2> kn() const { return make_Coord(k(), n()); }
 
   //
   // Coord operators
@@ -207,52 +186,48 @@ struct GemmCoord : public Coord<3, int> {
 
   /// Element-wise addition
   CUTLASS_HOST_DEVICE
-  GemmCoord operator+(Base const& b) const {
-    return GemmCoord(Base::operator+(b));
-  }
+  GemmCoord operator+(Base const& b) const { return GemmCoord(Base::operator+(b)); }
 
   /// Element-wise subtraction
   CUTLASS_HOST_DEVICE
-  GemmCoord operator-(Base const& b) const {
-    return GemmCoord(Base::operator-(b));
-  }
+  GemmCoord operator-(Base const& b) const { return GemmCoord(Base::operator-(b)); }
 
   /// Element-wise multiplication
   CUTLASS_HOST_DEVICE
-  GemmCoord operator*(Base const& b) const {
-    return GemmCoord(Base::operator*(b));
-  }
+  GemmCoord operator*(Base const& b) const { return GemmCoord(Base::operator*(b)); }
 
   /// Element-wise division
   CUTLASS_HOST_DEVICE
-  GemmCoord operator/(Base const& b) const {
-    return GemmCoord(Base::operator/(b));
-  }
+  GemmCoord operator/(Base const& b) const { return GemmCoord(Base::operator/(b)); }
 
   /// In-place addition
   CUTLASS_HOST_DEVICE
-  GemmCoord& operator+=(Base const& b) {
+  GemmCoord& operator+=(Base const& b)
+  {
     Base::operator+=(b);
     return *this;
   }
 
   /// In-place subtraction
   CUTLASS_HOST_DEVICE
-  GemmCoord& operator-=(Base const& b) {
+  GemmCoord& operator-=(Base const& b)
+  {
     Base::operator-=(b);
     return *this;
   }
 
   /// In-place multiplication
   CUTLASS_HOST_DEVICE
-  GemmCoord& operator*=(Base const& b) {
+  GemmCoord& operator*=(Base const& b)
+  {
     Base::operator*=(b);
     return *this;
   }
 
   /// In-place division
   CUTLASS_HOST_DEVICE
-  GemmCoord& operator/=(Base const& b) {
+  GemmCoord& operator/=(Base const& b)
+  {
     Base::operator/=(b);
     return *this;
   }
@@ -263,7 +238,6 @@ struct GemmCoord : public Coord<3, int> {
 /// BatchedGemmCoord is a structure derived from Coord<4> that specifies a location within the
 /// coordinate space of a batched GEMM problem.
 struct BatchedGemmCoord : public Coord<4, int> {
-
   /// Integer-valued index
   typedef int Index;
 
@@ -288,59 +262,55 @@ struct BatchedGemmCoord : public Coord<4, int> {
 
   /// Default ctor
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord() { }
+  BatchedGemmCoord() {}
 
   /// Constructs from Coord<4>
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord(Base const &coord): Base(coord) { }
+  BatchedGemmCoord(Base const& coord) : Base(coord) {}
 
   /// Helper to construct from a K, N, M, and batch variables
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord(Index m, Index n, Index k, Index b): Base(make_Coord(m, n, k, b)) { }
+  BatchedGemmCoord(Index m, Index n, Index k, Index b) : Base(make_Coord(m, n, k, b)) {}
 
   /// Returns the GEMM M coordinate
   CUTLASS_HOST_DEVICE
-  Index const & m() const { return this->at(kM); }
+  Index const& m() const { return this->at(kM); }
 
   /// Returns reference to the GEMM M coordinate
   CUTLASS_HOST_DEVICE
-  Index & m() { return this->at(kM); }
+  Index& m() { return this->at(kM); }
 
   /// Returns the GEMM N coordinate
   CUTLASS_HOST_DEVICE
-  Index const & n() const { return this->at(kN); }
+  Index const& n() const { return this->at(kN); }
 
   /// Returns reference to the GEMM N coordinate
   CUTLASS_HOST_DEVICE
-  Index & n() { return this->at(kN); }
+  Index& n() { return this->at(kN); }
 
   /// Returns the GEMM K coordinate
   CUTLASS_HOST_DEVICE
-  Index const & k() const { return this->at(kK); }
+  Index const& k() const { return this->at(kK); }
 
   /// Returns reference to the GEMM K coordinate
   CUTLASS_HOST_DEVICE
-  Index & k() { return this->at(kK); }
+  Index& k() { return this->at(kK); }
 
   /// Returns the GEMM batch coordinate
   CUTLASS_HOST_DEVICE
-  Index const & batch() const { return this->at(kBatch); }
+  Index const& batch() const { return this->at(kBatch); }
 
   /// Returns reference to the GEMM batch coordinate
   CUTLASS_HOST_DEVICE
-  Index & batch() { return this->at(kBatch); }
+  Index& batch() { return this->at(kBatch); }
 
   /// Obtains a GemmCoord from BatchedGemmCoord
   CUTLASS_HOST_DEVICE
-  GemmCoord mnk() const {
-    return GemmCoord(m(), n(), k());
-  }
+  GemmCoord mnk() const { return GemmCoord(m(), n(), k()); }
 
   /// Obtains a Coord<4> from BatchedGemmCoord
   CUTLASS_HOST_DEVICE
-  Coord<4> mnkb() const {
-    return make_Coord(m(), n(), k(), batch());
-  }
+  Coord<4> mnkb() const { return make_Coord(m(), n(), k(), batch()); }
 
   //
   // Coord operators
@@ -348,52 +318,48 @@ struct BatchedGemmCoord : public Coord<4, int> {
 
   /// Element-wise addition
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord operator+(Base const& b) const {
-    return BatchedGemmCoord(Base::operator+(b));
-  }
+  BatchedGemmCoord operator+(Base const& b) const { return BatchedGemmCoord(Base::operator+(b)); }
 
   /// Element-wise subtraction
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord operator-(Base const& b) const {
-    return BatchedGemmCoord(Base::operator-(b));
-  }
+  BatchedGemmCoord operator-(Base const& b) const { return BatchedGemmCoord(Base::operator-(b)); }
 
   /// Element-wise multiplication
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord operator*(Base const& b) const {
-    return BatchedGemmCoord(Base::operator*(b));
-  }
+  BatchedGemmCoord operator*(Base const& b) const { return BatchedGemmCoord(Base::operator*(b)); }
 
   /// Element-wise division
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord operator/(Base const& b) const {
-    return BatchedGemmCoord(Base::operator/(b));
-  }
+  BatchedGemmCoord operator/(Base const& b) const { return BatchedGemmCoord(Base::operator/(b)); }
 
   /// In-place addition
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord& operator+=(Base const& b) {
+  BatchedGemmCoord& operator+=(Base const& b)
+  {
     Base::operator+=(b);
     return *this;
   }
 
   /// In-place subtraction
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord& operator-=(Base const& b) {
+  BatchedGemmCoord& operator-=(Base const& b)
+  {
     Base::operator-=(b);
     return *this;
   }
 
   /// In-place multiplication
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord& operator*=(Base const& b) {
+  BatchedGemmCoord& operator*=(Base const& b)
+  {
     Base::operator*=(b);
     return *this;
   }
 
   /// In-place division
   CUTLASS_HOST_DEVICE
-  BatchedGemmCoord& operator/=(Base const& b) {
+  BatchedGemmCoord& operator/=(Base const& b)
+  {
     Base::operator/=(b);
     return *this;
   }
@@ -401,26 +367,20 @@ struct BatchedGemmCoord : public Coord<4, int> {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-enum class GemmUniversalMode {
-  kGemm,
-  kGemmSplitKParallel,
-  kBatched,
-  kArray,
-  kInvalid
-};
+enum class GemmUniversalMode { kGemm, kGemmSplitKParallel, kBatched, kArray, kInvalid };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Some options for clearing shared memory
 enum class SharedMemoryClearOption {
-  kNone,            ///< SMEM is in don't-care state
-  kZfill,           ///< Kernels fill out of bounds accesses with zeros
-  kClearLastStage   ///< Last SMEM stage is explicitly cleared. Mainloop uses 'kNone'
+  kNone,           ///< SMEM is in don't-care state
+  kZfill,          ///< Kernels fill out of bounds accesses with zeros
+  kClearLastStage  ///< Last SMEM stage is explicitly cleared. Mainloop uses 'kNone'
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace gemm
-} // namespace cutlass
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

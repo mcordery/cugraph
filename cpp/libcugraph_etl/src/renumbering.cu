@@ -44,7 +44,7 @@ using accum_type = uint32_t;
 constexpr uint32_t hash_inc_constant = 9999;
 
 typedef struct str_hash_value {
-  __host__ __device__ str_hash_value(){};
+  __host__ __device__ str_hash_value() {};
 
   __host__ __device__ str_hash_value(size_type row, accum_type count, int32_t col)
   {

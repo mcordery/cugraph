@@ -70,11 +70,10 @@ struct TensorOpMultiplicandCongruous64b {
   // Static constants
   //
 
-  static int const kElementSize = 64;
+  static int const kElementSize       = 64;
   static int const kElementsPerAccess = 1;
 
  private:
-
   //
   // Data members
   //
@@ -97,24 +96,24 @@ struct TensorOpMultiplicandCongruous64b {
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static TensorOpMultiplicandCongruous64b packed(TensorCoord const &extent) {
+  static TensorOpMultiplicandCongruous64b packed(TensorCoord const& extent)
+  {
     return TensorOpMultiplicandCongruous64b(extent[0]);
   }
 
   /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     int tc = coord.contiguous() / 16;
     int ts = coord.strided() / 4;
 
     int c = coord.contiguous() % 16;
     int s = coord.strided() % 4;
 
-
     int bank = ((((c & 1) * 4 + (c & 6) / 2)) ^ (s & 1)) * 2 + (c / 8);
-    int row = (c & 6) / 2;
+    int row  = (c & 6) / 2;
 
     bank ^= ((s & 2) * 2);
 
@@ -129,19 +128,15 @@ struct TensorOpMultiplicandCongruous64b {
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride &stride() { return stride_; }
+  Stride& stride() { return stride_; }
 
   /// Compute the number of contiguous elements needed to store a tensor with
   /// the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
-    return extent[1] * stride_[0];
-  }
+  LongIndex capacity(TensorCoord const& extent) const { return extent[1] * stride_[0]; }
 
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
-    return TensorCoord();
-  }
+  TensorCoord inverse(LongIndex offset) const { return TensorCoord(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +144,6 @@ struct TensorOpMultiplicandCongruous64b {
 /// Template mapping a column-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct ColumnMajorTensorOpMultiplicandCongruous64b {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -174,62 +168,61 @@ struct ColumnMajorTensorOpMultiplicandCongruous64b {
 
   using Base = TensorOpMultiplicandCongruous64b;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCongruous64b(Index ldm = 0): layout_(ldm) { }
+  ColumnMajorTensorOpMultiplicandCongruous64b(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCongruous64b(Stride stride): layout_(stride) { }
+  ColumnMajorTensorOpMultiplicandCongruous64b(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorTensorOpMultiplicandCongruous64b packed(TensorCoord const &extent) {
+  static ColumnMajorTensorOpMultiplicandCongruous64b packed(TensorCoord const& extent)
+  {
     return ColumnMajorTensorOpMultiplicandCongruous64b(extent.row());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.row(), coord.column()));
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
+  TensorCoord inverse(LongIndex offset) const
+  {
     PitchLinearCoord coord = layout_.inverse(offset);
-    return MatrixCoord(coord.contiguous(), coord.strided());    
+    return MatrixCoord(coord.contiguous(), coord.strided());
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.row(), extent.column()));
   }
 };
@@ -239,7 +232,6 @@ public:
 /// Template mapping a row-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct RowMajorTensorOpMultiplicandCongruous64b {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -264,62 +256,61 @@ struct RowMajorTensorOpMultiplicandCongruous64b {
 
   using Base = TensorOpMultiplicandCongruous64b;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCongruous64b(Index ldm = 0): layout_(ldm) { }
+  RowMajorTensorOpMultiplicandCongruous64b(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCongruous64b(Stride stride): layout_(stride) { }
+  RowMajorTensorOpMultiplicandCongruous64b(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorTensorOpMultiplicandCongruous64b packed(TensorCoord const &extent) {
+  static RowMajorTensorOpMultiplicandCongruous64b packed(TensorCoord const& extent)
+  {
     return RowMajorTensorOpMultiplicandCongruous64b(extent.column());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.column(), coord.row()));
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
+  TensorCoord inverse(LongIndex offset) const
+  {
     PitchLinearCoord coord = layout_.inverse(offset);
     return MatrixCoord(coord.strided(), coord.contiguous());
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.column(), extent.row()));
   }
 };
@@ -351,11 +342,10 @@ struct TensorOpMultiplicand64bCrosswise {
   // Static constants
   //
 
-  static int const kElementSize = 64;
+  static int const kElementSize       = 64;
   static int const kElementsPerAccess = 1;
 
  private:
-
   //
   // Data members
   //
@@ -378,25 +368,26 @@ struct TensorOpMultiplicand64bCrosswise {
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static TensorOpMultiplicand64bCrosswise packed(TensorCoord const &extent) {
+  static TensorOpMultiplicand64bCrosswise packed(TensorCoord const& extent)
+  {
     return TensorOpMultiplicand64bCrosswise(extent[0]);
   }
 
   /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     int tc = coord.contiguous() / 16;
     int ts = coord.strided() / 16;
 
     int c = coord.contiguous() % 16;
     int s = coord.strided() % 16;
 
-    int k_group = c / 4;
+    int k_group  = c / 4;
     int access_s = s / 2;
 
-    int row = access_s % 4;
+    int row  = access_s % 4;
     int bank = ((k_group & 2) << 2) ^ ((s % 2) << 3) + (c % 4) * 2 + (access_s / 4) ^ (k_group & 1);
 
     int smem_row = (k_group * 4 + row) + tc * 16;
@@ -413,14 +404,12 @@ struct TensorOpMultiplicand64bCrosswise {
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride &stride() { return stride_; }
+  Stride& stride() { return stride_; }
 
   /// Compute the number of contiguous elements needed to store a tensor with
   /// the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
-    return extent[1] * stride_[0];
-  }
+  LongIndex capacity(TensorCoord const& extent) const { return extent[1] * stride_[0]; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -452,55 +441,53 @@ struct ColumnMajorTensorOpMultiplicand64bCrosswise {
 
   using Base = TensorOpMultiplicand64bCrosswise;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicand64bCrosswise(Index ldm = 0): layout_(ldm) { }
+  ColumnMajorTensorOpMultiplicand64bCrosswise(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicand64bCrosswise(Stride stride): layout_(stride) { }
+  ColumnMajorTensorOpMultiplicand64bCrosswise(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorTensorOpMultiplicand64bCrosswise packed(TensorCoord const &extent) {
+  static ColumnMajorTensorOpMultiplicand64bCrosswise packed(TensorCoord const& extent)
+  {
     return ColumnMajorTensorOpMultiplicand64bCrosswise(extent.column());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.row(), coord.column()));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.row(), extent.column()));
   }
 };
@@ -510,7 +497,6 @@ public:
 /// Template based on element size (in bits) - defined in terms of pitch-linear
 /// memory and Crosswise size (in elements).
 struct RowMajorTensorOpMultiplicand64bCrosswise {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -535,55 +521,53 @@ struct RowMajorTensorOpMultiplicand64bCrosswise {
 
   using Base = TensorOpMultiplicand64bCrosswise;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicand64bCrosswise(Index ldm = 0): layout_(ldm) { }
+  RowMajorTensorOpMultiplicand64bCrosswise(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicand64bCrosswise(Stride stride): layout_(stride) { }
+  RowMajorTensorOpMultiplicand64bCrosswise(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorTensorOpMultiplicand64bCrosswise packed(TensorCoord const &extent) {
+  static RowMajorTensorOpMultiplicand64bCrosswise packed(TensorCoord const& extent)
+  {
     return RowMajorTensorOpMultiplicand64bCrosswise(extent.row());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.column(), coord.row()));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.column(), extent.row()));
   }
 };
@@ -615,11 +599,10 @@ struct TensorOpMultiplicandCongruous128b {
   // Static constants
   //
 
-  static int const kElementSize = 128;
+  static int const kElementSize       = 128;
   static int const kElementsPerAccess = 1;
 
  private:
-
   //
   // Data members
   //
@@ -642,15 +625,16 @@ struct TensorOpMultiplicandCongruous128b {
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static TensorOpMultiplicandCongruous128b packed(TensorCoord const &extent) {
+  static TensorOpMultiplicandCongruous128b packed(TensorCoord const& extent)
+  {
     return TensorOpMultiplicandCongruous128b(extent[0]);
   }
 
   /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     Index tc = coord.contiguous() / 8;
     Index ts = coord.strided() / 4;
 
@@ -672,29 +656,23 @@ struct TensorOpMultiplicandCongruous128b {
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride &stride() { return stride_; }
+  Stride& stride() { return stride_; }
 
   /// Compute the number of contiguous elements needed to store a tensor with
   /// the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
-    return extent[1] * stride_[0];
-  }
+  LongIndex capacity(TensorCoord const& extent) const { return extent[1] * stride_[0]; }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
-    return TensorCoord();   
-  }
+  TensorCoord inverse(LongIndex offset) const { return TensorCoord(); }
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Template mapping a column-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct ColumnMajorTensorOpMultiplicandCongruous128b {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -719,62 +697,61 @@ struct ColumnMajorTensorOpMultiplicandCongruous128b {
 
   using Base = TensorOpMultiplicandCongruous128b;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCongruous128b(Index ldm = 0): layout_(ldm) { }
+  ColumnMajorTensorOpMultiplicandCongruous128b(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCongruous128b(Stride stride): layout_(stride) { }
+  ColumnMajorTensorOpMultiplicandCongruous128b(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorTensorOpMultiplicandCongruous128b packed(TensorCoord const &extent) {
+  static ColumnMajorTensorOpMultiplicandCongruous128b packed(TensorCoord const& extent)
+  {
     return ColumnMajorTensorOpMultiplicandCongruous128b(extent.row());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.row(), coord.column()));
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
+  TensorCoord inverse(LongIndex offset) const
+  {
     PitchLinearCoord coord = layout_.inverse(offset);
-    return MatrixCoord(coord.contiguous(), coord.strided());    
+    return MatrixCoord(coord.contiguous(), coord.strided());
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.row(), extent.column()));
   }
 };
@@ -784,7 +761,6 @@ public:
 /// Template mapping a row-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct RowMajorTensorOpMultiplicandCongruous128b {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -809,62 +785,61 @@ struct RowMajorTensorOpMultiplicandCongruous128b {
 
   using Base = TensorOpMultiplicandCongruous128b;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCongruous128b(Index ldm = 0): layout_(ldm) { }
+  RowMajorTensorOpMultiplicandCongruous128b(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCongruous128b(Stride stride): layout_(stride) { }
+  RowMajorTensorOpMultiplicandCongruous128b(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorTensorOpMultiplicandCongruous128b packed(TensorCoord const &extent) {
+  static RowMajorTensorOpMultiplicandCongruous128b packed(TensorCoord const& extent)
+  {
     return RowMajorTensorOpMultiplicandCongruous128b(extent.column());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.column(), coord.row()));
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
+  TensorCoord inverse(LongIndex offset) const
+  {
     PitchLinearCoord coord = layout_.inverse(offset);
     return MatrixCoord(coord.strided(), coord.contiguous());
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.column(), extent.row()));
   }
 };
@@ -896,11 +871,10 @@ struct TensorOpMultiplicandCrosswise128x4 {
   // Static constants
   //
 
-  static int const kElementSize = 128;
+  static int const kElementSize       = 128;
   static int const kElementsPerAccess = 1;
 
  private:
-
   //
   // Data members
   //
@@ -923,15 +897,16 @@ struct TensorOpMultiplicandCrosswise128x4 {
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static TensorOpMultiplicandCrosswise128x4 packed(TensorCoord const &extent) {
+  static TensorOpMultiplicandCrosswise128x4 packed(TensorCoord const& extent)
+  {
     return TensorOpMultiplicandCrosswise128x4(extent[0]);
   }
 
   /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     Index tc = coord.contiguous() / 8;
     Index ts = coord.strided() / 8;
 
@@ -955,14 +930,12 @@ struct TensorOpMultiplicandCrosswise128x4 {
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride &stride() { return stride_; }
+  Stride& stride() { return stride_; }
 
   /// Compute the number of contiguous elements needed to store a tensor with
   /// the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
-    return extent[1] * stride_[0];
-  }
+  LongIndex capacity(TensorCoord const& extent) const { return extent[1] * stride_[0]; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -970,7 +943,6 @@ struct TensorOpMultiplicandCrosswise128x4 {
 /// Template mapping a column-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct ColumnMajorTensorOpMultiplicandCrosswise128x4 {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -995,55 +967,53 @@ struct ColumnMajorTensorOpMultiplicandCrosswise128x4 {
 
   using Base = TensorOpMultiplicandCrosswise128x4;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCrosswise128x4(Index ldm = 0): layout_(ldm) { }
+  ColumnMajorTensorOpMultiplicandCrosswise128x4(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorTensorOpMultiplicandCrosswise128x4(Stride stride): layout_(stride) { }
+  ColumnMajorTensorOpMultiplicandCrosswise128x4(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorTensorOpMultiplicandCrosswise128x4 packed(TensorCoord const &extent) {
+  static ColumnMajorTensorOpMultiplicandCrosswise128x4 packed(TensorCoord const& extent)
+  {
     return ColumnMajorTensorOpMultiplicandCrosswise128x4(extent.column());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.row(), coord.column()));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.row(), extent.column()));
   }
 };
@@ -1053,7 +1023,6 @@ public:
 /// Template mapping a row-major view of pitch-linear memory to
 /// TensorOpMultiplicand
 struct RowMajorTensorOpMultiplicandCrosswise128x4 {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -1078,62 +1047,60 @@ struct RowMajorTensorOpMultiplicandCrosswise128x4 {
 
   using Base = TensorOpMultiplicandCrosswise128x4;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   Base layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCrosswise128x4(Index ldm = 0): layout_(ldm) { }
+  RowMajorTensorOpMultiplicandCrosswise128x4(Index ldm = 0) : layout_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorTensorOpMultiplicandCrosswise128x4(Stride stride): layout_(stride) { }
+  RowMajorTensorOpMultiplicandCrosswise128x4(Stride stride) : layout_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorTensorOpMultiplicandCrosswise128x4 packed(TensorCoord const &extent) {
+  static RowMajorTensorOpMultiplicandCrosswise128x4 packed(TensorCoord const& extent)
+  {
     return RowMajorTensorOpMultiplicandCrosswise128x4(extent.row());
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (contiguous, strided)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
+  LongIndex operator()(TensorCoord const& coord) const
+  {
     return layout_(PitchLinearCoord(coord.column(), coord.row()));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return layout_.stride();
-  }
+  Stride stride() const { return layout_.stride(); }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return layout_.stride();
-  }
+  Stride& stride() { return layout_.stride(); }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     return layout_.capacity(PitchLinearCoord(extent.column(), extent.row()));
   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace layout
-} // namespace cutlass
+}  // namespace layout
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

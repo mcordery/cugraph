@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -25,4 +25,4 @@ struct _LIBCUDACXX_TEMPLATE_VIS __dependent_type : public _Tp {};
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_DEPENDENT_TYPE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_DEPENDENT_TYPE_H

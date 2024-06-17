@@ -62,23 +62,23 @@ class cublas_device_pointer_mode {
  */
 template <typename T>
 hipblasStatus_t cublasaxpy(hipblasHandle_t handle,
-                          int n,
-                          const T* alpha,
-                          const T* x,
-                          int incx,
-                          T* y,
-                          int incy,
-                          hipStream_t stream);
+                           int n,
+                           const T* alpha,
+                           const T* x,
+                           int incx,
+                           T* y,
+                           int incy,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasaxpy(hipblasHandle_t handle,
-                                 int n,
-                                 const float* alpha,
-                                 const float* x,
-                                 int incx,
-                                 float* y,
-                                 int incy,
-                                 hipStream_t stream)
+                                  int n,
+                                  const float* alpha,
+                                  const float* x,
+                                  int incx,
+                                  float* y,
+                                  int incy,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSaxpy(handle, n, alpha, x, incx, y, incy);
@@ -86,13 +86,13 @@ inline hipblasStatus_t cublasaxpy(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasaxpy(hipblasHandle_t handle,
-                                 int n,
-                                 const double* alpha,
-                                 const double* x,
-                                 int incx,
-                                 double* y,
-                                 int incy,
-                                 hipStream_t stream)
+                                  int n,
+                                  const double* alpha,
+                                  const double* x,
+                                  int incx,
+                                  double* y,
+                                  int incy,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDaxpy(handle, n, alpha, x, incx, y, incy);
@@ -155,33 +155,33 @@ inline hipblasStatus_t cublasCopy(
  */
 template <typename T>
 hipblasStatus_t cublasgemv(hipblasHandle_t handle,
-                          hipblasOperation_t transA,
-                          int m,
-                          int n,
-                          const T* alfa,
-                          const T* A,
-                          int lda,
-                          const T* x,
-                          int incx,
-                          const T* beta,
-                          T* y,
-                          int incy,
-                          hipStream_t stream);
+                           hipblasOperation_t transA,
+                           int m,
+                           int n,
+                           const T* alfa,
+                           const T* A,
+                           int lda,
+                           const T* x,
+                           int incx,
+                           const T* beta,
+                           T* y,
+                           int incy,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgemv(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 int m,
-                                 int n,
-                                 const float* alfa,
-                                 const float* A,
-                                 int lda,
-                                 const float* x,
-                                 int incx,
-                                 const float* beta,
-                                 float* y,
-                                 int incy,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  int m,
+                                  int n,
+                                  const float* alfa,
+                                  const float* A,
+                                  int lda,
+                                  const float* x,
+                                  int incx,
+                                  const float* beta,
+                                  float* y,
+                                  int incy,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgemv(handle, transA, m, n, alfa, A, lda, x, incx, beta, y, incy);
@@ -189,18 +189,18 @@ inline hipblasStatus_t cublasgemv(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasgemv(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 int m,
-                                 int n,
-                                 const double* alfa,
-                                 const double* A,
-                                 int lda,
-                                 const double* x,
-                                 int incx,
-                                 const double* beta,
-                                 double* y,
-                                 int incy,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  int m,
+                                  int n,
+                                  const double* alfa,
+                                  const double* A,
+                                  int lda,
+                                  const double* x,
+                                  int incx,
+                                  const double* beta,
+                                  double* y,
+                                  int incy,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgemv(handle, transA, m, n, alfa, A, lda, x, incx, beta, y, incy);
@@ -213,28 +213,28 @@ inline hipblasStatus_t cublasgemv(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublasger(hipblasHandle_t handle,
-                         int m,
-                         int n,
-                         const T* alpha,
-                         const T* x,
-                         int incx,
-                         const T* y,
-                         int incy,
-                         T* A,
-                         int lda,
-                         hipStream_t stream);
+                          int m,
+                          int n,
+                          const T* alpha,
+                          const T* x,
+                          int incx,
+                          const T* y,
+                          int incy,
+                          T* A,
+                          int lda,
+                          hipStream_t stream);
 template <>
 inline hipblasStatus_t cublasger(hipblasHandle_t handle,
-                                int m,
-                                int n,
-                                const float* alpha,
-                                const float* x,
-                                int incx,
-                                const float* y,
-                                int incy,
-                                float* A,
-                                int lda,
-                                hipStream_t stream)
+                                 int m,
+                                 int n,
+                                 const float* alpha,
+                                 const float* x,
+                                 int incx,
+                                 const float* y,
+                                 int incy,
+                                 float* A,
+                                 int lda,
+                                 hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSger(handle, m, n, alpha, x, incx, y, incy, A, lda);
@@ -242,16 +242,16 @@ inline hipblasStatus_t cublasger(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasger(hipblasHandle_t handle,
-                                int m,
-                                int n,
-                                const double* alpha,
-                                const double* x,
-                                int incx,
-                                const double* y,
-                                int incy,
-                                double* A,
-                                int lda,
-                                hipStream_t stream)
+                                 int m,
+                                 int n,
+                                 const double* alpha,
+                                 const double* x,
+                                 int incx,
+                                 const double* y,
+                                 int incy,
+                                 double* A,
+                                 int lda,
+                                 hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDger(handle, m, n, alpha, x, incx, y, incy, A, lda);
@@ -264,37 +264,37 @@ inline hipblasStatus_t cublasger(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublasgemm(hipblasHandle_t handle,
-                          hipblasOperation_t transA,
-                          hipblasOperation_t transB,
-                          int m,
-                          int n,
-                          int k,
-                          const T* alfa,
-                          const T* A,
-                          int lda,
-                          const T* B,
-                          int ldb,
-                          const T* beta,
-                          T* C,
-                          int ldc,
-                          hipStream_t stream);
+                           hipblasOperation_t transA,
+                           hipblasOperation_t transB,
+                           int m,
+                           int n,
+                           int k,
+                           const T* alfa,
+                           const T* A,
+                           int lda,
+                           const T* B,
+                           int ldb,
+                           const T* beta,
+                           T* C,
+                           int ldc,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgemm(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 hipblasOperation_t transB,
-                                 int m,
-                                 int n,
-                                 int k,
-                                 const float* alfa,
-                                 const float* A,
-                                 int lda,
-                                 const float* B,
-                                 int ldb,
-                                 const float* beta,
-                                 float* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  hipblasOperation_t transB,
+                                  int m,
+                                  int n,
+                                  int k,
+                                  const float* alfa,
+                                  const float* A,
+                                  int lda,
+                                  const float* B,
+                                  int ldb,
+                                  const float* beta,
+                                  float* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgemm(handle, transA, transB, m, n, k, alfa, A, lda, B, ldb, beta, C, ldc);
@@ -302,20 +302,20 @@ inline hipblasStatus_t cublasgemm(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasgemm(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 hipblasOperation_t transB,
-                                 int m,
-                                 int n,
-                                 int k,
-                                 const double* alfa,
-                                 const double* A,
-                                 int lda,
-                                 const double* B,
-                                 int ldb,
-                                 const double* beta,
-                                 double* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  hipblasOperation_t transB,
+                                  int m,
+                                  int n,
+                                  int k,
+                                  const double* alfa,
+                                  const double* A,
+                                  int lda,
+                                  const double* B,
+                                  int ldb,
+                                  const double* beta,
+                                  double* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgemm(handle, transA, transB, m, n, k, alfa, A, lda, B, ldb, beta, C, ldc);
@@ -328,21 +328,21 @@ inline hipblasStatus_t cublasgemm(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublasgemmBatched(hipblasHandle_t handle,  // NOLINT
-                                 hipblasOperation_t transa,
-                                 hipblasOperation_t transb,
-                                 int m,
-                                 int n,
-                                 int k,
-                                 const T* alpha,
-                                 const T* const Aarray[],  // NOLINT
-                                 int lda,
-                                 const T* const Barray[],  // NOLINT
-                                 int ldb,
-                                 const T* beta,
-                                 T* Carray[],  // NOLINT
-                                 int ldc,
-                                 int batchCount,
-                                 hipStream_t stream);
+                                  hipblasOperation_t transa,
+                                  hipblasOperation_t transb,
+                                  int m,
+                                  int n,
+                                  int k,
+                                  const T* alpha,
+                                  const T* const Aarray[],  // NOLINT
+                                  int lda,
+                                  const T* const Barray[],  // NOLINT
+                                  int ldb,
+                                  const T* beta,
+                                  T* Carray[],  // NOLINT
+                                  int ldc,
+                                  int batchCount,
+                                  hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgemmBatched(  // NOLINT
@@ -365,20 +365,20 @@ inline hipblasStatus_t cublasgemmBatched(  // NOLINT
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgemmBatched(handle,
-                            transa,
-                            transb,
-                            m,
-                            n,
-                            k,
-                            alpha,
-                            Aarray,
-                            lda,
-                            Barray,
-                            ldb,
-                            beta,
-                            Carray,
-                            ldc,
-                            batchCount);
+                             transa,
+                             transb,
+                             m,
+                             n,
+                             k,
+                             alpha,
+                             Aarray,
+                             lda,
+                             Barray,
+                             ldb,
+                             beta,
+                             Carray,
+                             ldc,
+                             batchCount);
 }
 
 template <>
@@ -402,20 +402,20 @@ inline hipblasStatus_t cublasgemmBatched(  // NOLINT
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgemmBatched(handle,
-                            transa,
-                            transb,
-                            m,
-                            n,
-                            k,
-                            alpha,
-                            Aarray,
-                            lda,
-                            Barray,
-                            ldb,
-                            beta,
-                            Carray,
-                            ldc,
-                            batchCount);
+                             transa,
+                             transb,
+                             m,
+                             n,
+                             k,
+                             alpha,
+                             Aarray,
+                             lda,
+                             Barray,
+                             ldb,
+                             beta,
+                             Carray,
+                             ldc,
+                             batchCount);
 }
 /** @} */
 
@@ -469,23 +469,23 @@ inline hipblasStatus_t cublasgemmStridedBatched(  // NOLINT
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgemmStridedBatched(handle,
-                                   transa,
-                                   transb,
-                                   m,
-                                   n,
-                                   k,
-                                   alpha,
-                                   Aarray,
-                                   lda,
-                                   strideA,
-                                   Barray,
-                                   ldb,
-                                   strideB,
-                                   beta,
-                                   Carray,
-                                   ldc,
-                                   strideC,
-                                   batchCount);
+                                    transa,
+                                    transb,
+                                    m,
+                                    n,
+                                    k,
+                                    alpha,
+                                    Aarray,
+                                    lda,
+                                    strideA,
+                                    Barray,
+                                    ldb,
+                                    strideB,
+                                    beta,
+                                    Carray,
+                                    ldc,
+                                    strideC,
+                                    batchCount);
 }
 
 template <>
@@ -512,23 +512,23 @@ inline hipblasStatus_t cublasgemmStridedBatched(  // NOLINT
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgemmStridedBatched(handle,
-                                   transa,
-                                   transb,
-                                   m,
-                                   n,
-                                   k,
-                                   alpha,
-                                   Aarray,
-                                   lda,
-                                   strideA,
-                                   Barray,
-                                   ldb,
-                                   strideB,
-                                   beta,
-                                   Carray,
-                                   ldc,
-                                   strideC,
-                                   batchCount);
+                                    transa,
+                                    transb,
+                                    m,
+                                    n,
+                                    k,
+                                    alpha,
+                                    Aarray,
+                                    lda,
+                                    strideA,
+                                    Barray,
+                                    ldb,
+                                    strideB,
+                                    beta,
+                                    Carray,
+                                    ldc,
+                                    strideC,
+                                    batchCount);
 }
 /** @} */
 
@@ -539,23 +539,23 @@ inline hipblasStatus_t cublasgemmStridedBatched(  // NOLINT
 
 template <typename T>
 hipblasStatus_t cublasgetrfBatched(hipblasHandle_t handle,
-                                  int n,         // NOLINT
-                                  T* const A[],  // NOLINT
-                                  int lda,
-                                  int* P,
-                                  int* info,
-                                  int batchSize,
-                                  hipStream_t stream);
+                                   int n,         // NOLINT
+                                   T* const A[],  // NOLINT
+                                   int lda,
+                                   int* P,
+                                   int* info,
+                                   int batchSize,
+                                   hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgetrfBatched(hipblasHandle_t handle,  // NOLINT
-                                         int n,
-                                         float* const A[],  // NOLINT
-                                         int lda,
-                                         int* P,
-                                         int* info,
-                                         int batchSize,
-                                         hipStream_t stream)
+                                          int n,
+                                          float* const A[],  // NOLINT
+                                          int lda,
+                                          int* P,
+                                          int* info,
+                                          int batchSize,
+                                          hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgetrfBatched(handle, n, A, lda, P, info, batchSize);
@@ -563,13 +563,13 @@ inline hipblasStatus_t cublasgetrfBatched(hipblasHandle_t handle,  // NOLINT
 
 template <>
 inline hipblasStatus_t cublasgetrfBatched(hipblasHandle_t handle,  // NOLINT
-                                         int n,
-                                         double* const A[],  // NOLINT
-                                         int lda,
-                                         int* P,
-                                         int* info,
-                                         int batchSize,
-                                         hipStream_t stream)
+                                          int n,
+                                          double* const A[],  // NOLINT
+                                          int lda,
+                                          int* P,
+                                          int* info,
+                                          int batchSize,
+                                          hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgetrfBatched(handle, n, A, lda, P, info, batchSize);
@@ -577,15 +577,15 @@ inline hipblasStatus_t cublasgetrfBatched(hipblasHandle_t handle,  // NOLINT
 
 template <typename T>
 hipblasStatus_t cublasgetriBatched(hipblasHandle_t handle,
-                                  int n,               // NOLINT
-                                  const T* const A[],  // NOLINT
-                                  int lda,
-                                  const int* P,
-                                  T* const C[],  // NOLINT
-                                  int ldc,
-                                  int* info,
-                                  int batchSize,
-                                  hipStream_t stream);
+                                   int n,               // NOLINT
+                                   const T* const A[],  // NOLINT
+                                   int lda,
+                                   const int* P,
+                                   T* const C[],  // NOLINT
+                                   int ldc,
+                                   int* info,
+                                   int batchSize,
+                                   hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgetriBatched(  // NOLINT
@@ -630,33 +630,33 @@ inline hipblasStatus_t cublasgetriBatched(  // NOLINT
 
 template <typename T>
 inline hipblasStatus_t cublasgelsBatched(hipblasHandle_t handle,  // NOLINT
-                                        hipblasOperation_t trans,
-                                        int m,
-                                        int n,
-                                        int nrhs,
-                                        T* Aarray[],  // NOLINT
-                                        int lda,
-                                        T* Carray[],  // NOLINT
-                                        int ldc,
-                                        int* info,
-                                        int* devInfoArray,
-                                        int batchSize,
-                                        hipStream_t stream);
+                                         hipblasOperation_t trans,
+                                         int m,
+                                         int n,
+                                         int nrhs,
+                                         T* Aarray[],  // NOLINT
+                                         int lda,
+                                         T* Carray[],  // NOLINT
+                                         int ldc,
+                                         int* info,
+                                         int* devInfoArray,
+                                         int batchSize,
+                                         hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgelsBatched(hipblasHandle_t handle,  // NOLINT
-                                        hipblasOperation_t trans,
-                                        int m,
-                                        int n,
-                                        int nrhs,
-                                        float* Aarray[],  // NOLINT
-                                        int lda,
-                                        float* Carray[],  // NOLINT
-                                        int ldc,
-                                        int* info,
-                                        int* devInfoArray,
-                                        int batchSize,
-                                        hipStream_t stream)
+                                         hipblasOperation_t trans,
+                                         int m,
+                                         int n,
+                                         int nrhs,
+                                         float* Aarray[],  // NOLINT
+                                         int lda,
+                                         float* Carray[],  // NOLINT
+                                         int ldc,
+                                         int* info,
+                                         int* devInfoArray,
+                                         int batchSize,
+                                         hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgelsBatched(
@@ -665,18 +665,18 @@ inline hipblasStatus_t cublasgelsBatched(hipblasHandle_t handle,  // NOLINT
 
 template <>
 inline hipblasStatus_t cublasgelsBatched(hipblasHandle_t handle,  // NOLINT
-                                        hipblasOperation_t trans,
-                                        int m,
-                                        int n,
-                                        int nrhs,
-                                        double* Aarray[],  // NOLINT
-                                        int lda,
-                                        double* Carray[],  // NOLINT
-                                        int ldc,
-                                        int* info,
-                                        int* devInfoArray,
-                                        int batchSize,
-                                        hipStream_t stream)
+                                         hipblasOperation_t trans,
+                                         int m,
+                                         int n,
+                                         int nrhs,
+                                         double* Aarray[],  // NOLINT
+                                         int lda,
+                                         double* Carray[],  // NOLINT
+                                         int ldc,
+                                         int* info,
+                                         int* devInfoArray,
+                                         int batchSize,
+                                         hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgelsBatched(
@@ -691,35 +691,35 @@ inline hipblasStatus_t cublasgelsBatched(hipblasHandle_t handle,  // NOLINT
  */
 template <typename T>
 hipblasStatus_t cublasgeam(hipblasHandle_t handle,
-                          hipblasOperation_t transA,
-                          hipblasOperation_t transB,
-                          int m,
-                          int n,
-                          const T* alfa,
-                          const T* A,
-                          int lda,
-                          const T* beta,
-                          const T* B,
-                          int ldb,
-                          T* C,
-                          int ldc,
-                          hipStream_t stream);
+                           hipblasOperation_t transA,
+                           hipblasOperation_t transB,
+                           int m,
+                           int n,
+                           const T* alfa,
+                           const T* A,
+                           int lda,
+                           const T* beta,
+                           const T* B,
+                           int ldb,
+                           T* C,
+                           int ldc,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasgeam(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 hipblasOperation_t transB,
-                                 int m,
-                                 int n,
-                                 const float* alfa,
-                                 const float* A,
-                                 int lda,
-                                 const float* beta,
-                                 const float* B,
-                                 int ldb,
-                                 float* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  hipblasOperation_t transB,
+                                  int m,
+                                  int n,
+                                  const float* alfa,
+                                  const float* A,
+                                  int lda,
+                                  const float* beta,
+                                  const float* B,
+                                  int ldb,
+                                  float* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSgeam(handle, transA, transB, m, n, alfa, A, lda, beta, B, ldb, C, ldc);
@@ -727,19 +727,19 @@ inline hipblasStatus_t cublasgeam(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasgeam(hipblasHandle_t handle,
-                                 hipblasOperation_t transA,
-                                 hipblasOperation_t transB,
-                                 int m,
-                                 int n,
-                                 const double* alfa,
-                                 const double* A,
-                                 int lda,
-                                 const double* beta,
-                                 const double* B,
-                                 int ldb,
-                                 double* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasOperation_t transA,
+                                  hipblasOperation_t transB,
+                                  int m,
+                                  int n,
+                                  const double* alfa,
+                                  const double* A,
+                                  int lda,
+                                  const double* beta,
+                                  const double* B,
+                                  int ldb,
+                                  double* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDgeam(handle, transA, transB, m, n, alfa, A, lda, beta, B, ldb, C, ldc);
@@ -752,35 +752,35 @@ inline hipblasStatus_t cublasgeam(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublassymm(hipblasHandle_t handle,
-                          hipblasSideMode_t side,
-                          hipblasFillMode_t uplo,
-                          int m,
-                          int n,
-                          const T* alpha,
-                          const T* A,
-                          int lda,
-                          const T* B,
-                          int ldb,
-                          const T* beta,
-                          T* C,
-                          int ldc,
-                          hipStream_t stream);
+                           hipblasSideMode_t side,
+                           hipblasFillMode_t uplo,
+                           int m,
+                           int n,
+                           const T* alpha,
+                           const T* A,
+                           int lda,
+                           const T* B,
+                           int ldb,
+                           const T* beta,
+                           T* C,
+                           int ldc,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublassymm(hipblasHandle_t handle,
-                                 hipblasSideMode_t side,
-                                 hipblasFillMode_t uplo,
-                                 int m,
-                                 int n,
-                                 const float* alpha,
-                                 const float* A,
-                                 int lda,
-                                 const float* B,
-                                 int ldb,
-                                 const float* beta,
-                                 float* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasSideMode_t side,
+                                  hipblasFillMode_t uplo,
+                                  int m,
+                                  int n,
+                                  const float* alpha,
+                                  const float* A,
+                                  int lda,
+                                  const float* B,
+                                  int ldb,
+                                  const float* beta,
+                                  float* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSsymm(handle, side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
@@ -788,19 +788,19 @@ inline hipblasStatus_t cublassymm(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublassymm(hipblasHandle_t handle,
-                                 hipblasSideMode_t side,
-                                 hipblasFillMode_t uplo,
-                                 int m,
-                                 int n,
-                                 const double* alpha,
-                                 const double* A,
-                                 int lda,
-                                 const double* B,
-                                 int ldb,
-                                 const double* beta,
-                                 double* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasSideMode_t side,
+                                  hipblasFillMode_t uplo,
+                                  int m,
+                                  int n,
+                                  const double* alpha,
+                                  const double* A,
+                                  int lda,
+                                  const double* B,
+                                  int ldb,
+                                  const double* beta,
+                                  double* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDsymm(handle, side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc);
@@ -813,31 +813,31 @@ inline hipblasStatus_t cublassymm(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublassyrk(hipblasHandle_t handle,
-                          hipblasFillMode_t uplo,
-                          hipblasOperation_t trans,
-                          int n,
-                          int k,
-                          const T* alpha,
-                          const T* A,
-                          int lda,
-                          const T* beta,
-                          T* C,
-                          int ldc,
-                          hipStream_t stream);
+                           hipblasFillMode_t uplo,
+                           hipblasOperation_t trans,
+                           int n,
+                           int k,
+                           const T* alpha,
+                           const T* A,
+                           int lda,
+                           const T* beta,
+                           T* C,
+                           int ldc,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublassyrk(hipblasHandle_t handle,
-                                 hipblasFillMode_t uplo,
-                                 hipblasOperation_t trans,
-                                 int n,
-                                 int k,
-                                 const float* alpha,
-                                 const float* A,
-                                 int lda,
-                                 const float* beta,
-                                 float* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasFillMode_t uplo,
+                                  hipblasOperation_t trans,
+                                  int n,
+                                  int k,
+                                  const float* alpha,
+                                  const float* A,
+                                  int lda,
+                                  const float* beta,
+                                  float* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSsyrk(handle, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
@@ -845,17 +845,17 @@ inline hipblasStatus_t cublassyrk(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublassyrk(hipblasHandle_t handle,
-                                 hipblasFillMode_t uplo,
-                                 hipblasOperation_t trans,
-                                 int n,
-                                 int k,
-                                 const double* alpha,
-                                 const double* A,
-                                 int lda,
-                                 const double* beta,
-                                 double* C,
-                                 int ldc,
-                                 hipStream_t stream)
+                                  hipblasFillMode_t uplo,
+                                  hipblasOperation_t trans,
+                                  int n,
+                                  int k,
+                                  const double* alpha,
+                                  const double* A,
+                                  int lda,
+                                  const double* beta,
+                                  double* C,
+                                  int ldc,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDsyrk(handle, uplo, trans, n, k, alpha, A, lda, beta, C, ldc);
@@ -889,33 +889,33 @@ inline hipblasStatus_t cublasnrm2(
 
 template <typename T>
 hipblasStatus_t cublastrsm(hipblasHandle_t handle,
-                          hipblasSideMode_t side,
-                          hipblasFillMode_t uplo,
-                          hipblasOperation_t trans,
-                          hipblasDiagType_t diag,
-                          int m,
-                          int n,
-                          const T* alpha,
-                          const T* A,
-                          int lda,
-                          T* B,
-                          int ldb,
-                          hipStream_t stream);
+                           hipblasSideMode_t side,
+                           hipblasFillMode_t uplo,
+                           hipblasOperation_t trans,
+                           hipblasDiagType_t diag,
+                           int m,
+                           int n,
+                           const T* alpha,
+                           const T* A,
+                           int lda,
+                           T* B,
+                           int ldb,
+                           hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublastrsm(hipblasHandle_t handle,
-                                 hipblasSideMode_t side,
-                                 hipblasFillMode_t uplo,
-                                 hipblasOperation_t trans,
-                                 hipblasDiagType_t diag,
-                                 int m,
-                                 int n,
-                                 const float* alpha,
-                                 const float* A,
-                                 int lda,
-                                 float* B,
-                                 int ldb,
-                                 hipStream_t stream)
+                                  hipblasSideMode_t side,
+                                  hipblasFillMode_t uplo,
+                                  hipblasOperation_t trans,
+                                  hipblasDiagType_t diag,
+                                  int m,
+                                  int n,
+                                  const float* alpha,
+                                  const float* A,
+                                  int lda,
+                                  float* B,
+                                  int ldb,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasStrsm(handle, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
@@ -923,18 +923,18 @@ inline hipblasStatus_t cublastrsm(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublastrsm(hipblasHandle_t handle,
-                                 hipblasSideMode_t side,
-                                 hipblasFillMode_t uplo,
-                                 hipblasOperation_t trans,
-                                 hipblasDiagType_t diag,
-                                 int m,
-                                 int n,
-                                 const double* alpha,
-                                 const double* A,
-                                 int lda,
-                                 double* B,
-                                 int ldb,
-                                 hipStream_t stream)
+                                  hipblasSideMode_t side,
+                                  hipblasFillMode_t uplo,
+                                  hipblasOperation_t trans,
+                                  hipblasDiagType_t diag,
+                                  int m,
+                                  int n,
+                                  const double* alpha,
+                                  const double* A,
+                                  int lda,
+                                  double* B,
+                                  int ldb,
+                                  hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDtrsm(handle, side, uplo, trans, diag, m, n, alpha, A, lda, B, ldb);
@@ -946,23 +946,23 @@ inline hipblasStatus_t cublastrsm(hipblasHandle_t handle,
  */
 template <typename T>
 hipblasStatus_t cublasdot(hipblasHandle_t handle,
-                         int n,
-                         const T* x,
-                         int incx,
-                         const T* y,
-                         int incy,
-                         T* result,
-                         hipStream_t stream);
+                          int n,
+                          const T* x,
+                          int incx,
+                          const T* y,
+                          int incy,
+                          T* result,
+                          hipStream_t stream);
 
 template <>
 inline hipblasStatus_t cublasdot(hipblasHandle_t handle,
-                                int n,
-                                const float* x,
-                                int incx,
-                                const float* y,
-                                int incy,
-                                float* result,
-                                hipStream_t stream)
+                                 int n,
+                                 const float* x,
+                                 int incx,
+                                 const float* y,
+                                 int incy,
+                                 float* result,
+                                 hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDotEx_v2(
@@ -971,13 +971,13 @@ inline hipblasStatus_t cublasdot(hipblasHandle_t handle,
 
 template <>
 inline hipblasStatus_t cublasdot(hipblasHandle_t handle,
-                                int n,
-                                const double* x,
-                                int incx,
-                                const double* y,
-                                int incy,
-                                double* result,
-                                hipStream_t stream)
+                                 int n,
+                                 const double* x,
+                                 int incx,
+                                 const double* y,
+                                 int incy,
+                                 double* result,
+                                 hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasDotEx_v2(
@@ -998,8 +998,8 @@ inline hipblasStatus_t cublasdot(hipblasHandle_t handle,
 
 // template<>
 inline hipblasStatus_t cublassetpointermode(hipblasHandle_t handle,
-                                           hipblasPointerMode_t mode,
-                                           hipStream_t stream)
+                                            hipblasPointerMode_t mode,
+                                            hipStream_t stream)
 {
   RAFT_CUBLAS_TRY(hipblasSetStream(handle, stream));
   return hipblasSetPointerMode(handle, mode);

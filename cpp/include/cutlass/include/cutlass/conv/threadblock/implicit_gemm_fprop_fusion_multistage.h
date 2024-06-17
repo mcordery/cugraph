@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Template for a multistage threadblock-scoped fused activation's 
+    \brief Template for a multistage threadblock-scoped fused activation's
    scale+bias+relu and Implicit GEMM Convolution kernel.
 
    The original implicit gemm will store out-of-bound data as zeroes in the
@@ -48,24 +48,22 @@
      else
        data = scale+bias+relu(data, scale, bias);
 
-  See include/cutlass/conv/warp/scale_bias_relu_transformation.h for the 
+  See include/cutlass/conv/warp/scale_bias_relu_transformation.h for the
   elementwise computation.  See include/cutlass/arch/memory_sm80.h for nan fill.
 */
 
 #pragma once
 
 #include "cutlass/aligned_buffer.h"
+#include "cutlass/arch/cache_operation.h"
 #include "cutlass/arch/memory.h"
 #include "cutlass/array.h"
+#include "cutlass/conv/warp/scale_bias_relu_transform.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/gemm/warp/scale_bias_tile_iterator.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_types.h"
-#include "cutlass/arch/cache_operation.h"
-#include "cutlass/gemm/gemm.h"
-
-#include "cutlass/gemm/warp/scale_bias_tile_iterator.h"
-#include "cutlass/conv/warp/scale_bias_relu_transform.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,26 +74,26 @@ namespace threadblock {
 /// Structure to compute the matrix product targeting CUDA cores and SIMT math
 /// instructions.
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename Shape_,
-    /// Element type of scale and bias vectors 
-    typename ElementScaleBias_,
-    /// Layout of scale and bias vectors
-    typename LayoutScaleBias_,
-    /// Policy describing tuning details (concept: MmaPolicy)
-    typename Policy_,
-    /// WarpIterator to load Scale or Bias vector from the shared memory
-    typename WarpIteratorScaleBias_,
-    /// Number of stages,
-    int Stages,
-    /// Used for partial specialization
-    typename Enable = bool>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename Shape_,
+  /// Element type of scale and bias vectors
+  typename ElementScaleBias_,
+  /// Layout of scale and bias vectors
+  typename LayoutScaleBias_,
+  /// Policy describing tuning details (concept: MmaPolicy)
+  typename Policy_,
+  /// WarpIterator to load Scale or Bias vector from the shared memory
+  typename WarpIteratorScaleBias_,
+  /// Number of stages,
+  int Stages,
+  /// Used for partial specialization
+  typename Enable = bool>
 class MmaFpropFusionBase {
  public:
   ///< Size of the Gemm problem - concept: gemm::GemmShape<>
   using Shape = Shape_;
 
-  ///< Element type of scale and bias vectors 
+  ///< Element type of scale and bias vectors
   using ElementScaleBias = ElementScaleBias_;
 
   /// Layout of scale and bias vectors
@@ -119,13 +117,11 @@ class MmaFpropFusionBase {
   using WarpGemm = typename Policy::Operator::Shape;
 
   /// Shape describing the number of warps filling the CTA
-  using WarpCount = cutlass::gemm::GemmShape<Shape::kM / WarpGemm::kM,
-                                             Shape::kN / WarpGemm::kN,
-                                             Shape::kK / WarpGemm::kK>;
+  using WarpCount = cutlass::gemm::
+    GemmShape<Shape::kM / WarpGemm::kM, Shape::kN / WarpGemm::kN, Shape::kK / WarpGemm::kK>;
 
   /// Number of warp-level GEMM oeprations
-  static int const kWarpGemmIterations =
-      (WarpGemm::kK / Operator::Policy::MmaShape::kK);
+  static int const kWarpGemmIterations = (WarpGemm::kK / Operator::Policy::MmaShape::kK);
 
   /// Number of stages
   static int const kStages = Stages;
@@ -143,8 +139,7 @@ class MmaFpropFusionBase {
                 "The pipelined structure requires at least two warp-level "
                 "GEMM operations.");
 
-  static_assert((kWarpGemmIterations % 2) == 0,
-                "Inner loop iteration must be an even number.");
+  static_assert((kWarpGemmIterations % 2) == 0, "Inner loop iteration must be an even number.");
 
   //
   // Nested structs
@@ -159,18 +154,15 @@ class MmaFpropFusionBase {
 
     /// Shape of the A matrix operand in shared memory
     using ShapeA = MatrixShape<Shape::kM + Policy::SmemPaddingA::kRow,
-                               Shape::kK * kStages +
-                                   Policy::SmemPaddingA::kColumn>;
+                               Shape::kK * kStages + Policy::SmemPaddingA::kColumn>;
 
     /// Shape of the A scale and bias vectors in shared memory
-    using ShapeScaleBias =
-        MatrixShape<1 + Policy::SmemPaddingA::kRow,
-                    2 * Shape::kK * kStages + Policy::SmemPaddingA::kColumn>;
+    using ShapeScaleBias = MatrixShape<1 + Policy::SmemPaddingA::kRow,
+                                       2 * Shape::kK * kStages + Policy::SmemPaddingA::kColumn>;
 
     /// Shape of the B matrix operand in shared memory
-    using ShapeB =
-        MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
-                    Shape::kN + Policy::SmemPaddingB::kColumn>;
+    using ShapeB = MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
+                               Shape::kN + Policy::SmemPaddingB::kColumn>;
 
    public:
     //
@@ -187,51 +179,48 @@ class MmaFpropFusionBase {
     AlignedBuffer<ElementScaleBias, ShapeScaleBias::kCount> operand_A_scale_bias;
 
    public:
-
     //
     // Methods
     //
 
     /// Returns a layout object for the A matrix
     CUTLASS_DEVICE
-    static typename Operator::LayoutA LayoutA() {
+    static typename Operator::LayoutA LayoutA()
+    {
       return Operator::LayoutA::packed({ShapeA::kRow, ShapeA::kColumn});
     }
 
     /// Returns a layout object for the B matrix
     CUTLASS_HOST_DEVICE
-    static typename Operator::LayoutB LayoutB() {
+    static typename Operator::LayoutB LayoutB()
+    {
       return Operator::LayoutB::packed({ShapeB::kRow, ShapeB::kColumn});
     }
 
     /// Returns a layout object for the A scale and bias vectors
     CUTLASS_DEVICE
-    static LayoutScaleBias LayoutScaleBias() {
-      return LayoutScaleBias::packed(
-          {ShapeScaleBias::kRow, ShapeScaleBias::kColumn});
+    static LayoutScaleBias LayoutScaleBias()
+    {
+      return LayoutScaleBias::packed({ShapeScaleBias::kRow, ShapeScaleBias::kColumn});
     }
 
     /// Returns a TensorRef to the A operand
     CUTLASS_HOST_DEVICE
-    TensorRefA operand_A_ref() {
-      return TensorRefA{operand_A.data(), LayoutA()};
-    }
+    TensorRefA operand_A_ref() { return TensorRefA{operand_A.data(), LayoutA()}; }
 
     /// Returns a TensorRef to the B operand
     CUTLASS_HOST_DEVICE
-    TensorRefB operand_B_ref() {
-      return TensorRefB{operand_B.data(), LayoutB()};
-    }
+    TensorRefB operand_B_ref() { return TensorRefB{operand_B.data(), LayoutB()}; }
 
     /// Returns a TensorRef to the A operand Scale vector
     CUTLASS_HOST_DEVICE
-    TensorRefScaleBias operand_A_scale_bias_ref() {
+    TensorRefScaleBias operand_A_scale_bias_ref()
+    {
       return TensorRefScaleBias{operand_A_scale_bias.data(), LayoutScaleBias()};
     }
   };
 
  protected:
-
   //
   // Data members
   //
@@ -246,23 +235,23 @@ class MmaFpropFusionBase {
   /// Iterator to load a warp-scoped tile of B operand from shared memory
   typename Operator::IteratorB warp_tile_iterator_B_;
 
-public:
-
+ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   MmaFpropFusionBase(
-      ///< Shared storage needed for internal use by threadblock-scoped GEMM
-      SharedStorage &shared_storage,
-      ///< ID within the threadblock
-      int thread_idx,
-      ///< ID of warp
-      int warp_idx,
-      ///< ID of each thread within a warp
-      int lane_idx)
-      : warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
-        warp_tile_iterator_A_scale_bias_(
-            shared_storage.operand_A_scale_bias_ref(), lane_idx),
-        warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx) {}
+    ///< Shared storage needed for internal use by threadblock-scoped GEMM
+    SharedStorage& shared_storage,
+    ///< ID within the threadblock
+    int thread_idx,
+    ///< ID of warp
+    int warp_idx,
+    ///< ID of each thread within a warp
+    int lane_idx)
+    : warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
+      warp_tile_iterator_A_scale_bias_(shared_storage.operand_A_scale_bias_ref(), lane_idx),
+      warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx)
+  {
+  }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,47 +259,50 @@ public:
 /// Structure to compute the matrix product targeting CUDA cores and SIMT math
 /// instructions.
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename Shape_,
-    /// Iterates over tiles of A operand in global memory
-    //  (concept: ReadableTileIterator | ForwardTileIterator |
-    //  MaskedTileIterator)
-    typename IteratorA_,
-    /// Iterates over tiles of A operand in shared memory
-    /// (concept: WriteableTileIterator | RandomAccessTileIterator)
-    typename SmemIteratorA_,
-    /// Cache operation for operand A
-    cutlass::arch::CacheOperation::Kind CacheOpA,
-    /// Iterates over tiles of B operand in global memory
-    //  (concept: ReadableTileIterator | ForwardTileIterator |
-    //  MaskedTileIterator)
-    typename IteratorB_,
-    /// Iterates over tiles of B operand in shared memory
-    /// (concept: WriteableTileIterator | RandomAccessTileIterator)
-    typename SmemIteratorB_,
-    /// Cache operation for operand B
-    cutlass::arch::CacheOperation::Kind CacheOpB,
-    /// Iterates over vectors of scale and bias vector in global memory
-    //  (concept: ReadableTileIterator | ForwardTileIterator |
-    //  MaskedTileIterator)
-    typename IteratorScaleBias_,
-    /// Iterates over vectors of scale and bias vector in shared memory
-    /// (concept: WriteableTileIterator | RandomAccessTileIterator)
-    typename SmemIteratorScaleBias_,
-    /// Cache operation for scale/bias operand 
-    cutlass::arch::CacheOperation::Kind CacheOpScaleBias,
-    /// Policy describing tuning details (concept: MmaPolicy)
-    typename Policy_,
-    /// WarpIterator to load Scale or Bias vector from the shared memory
-    typename WarpIteratorScaleBias_,
-    /// Number of stages,
-    int Stages,
-    /// Used for partial specialization
-    typename Enable = bool>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename Shape_,
+  /// Iterates over tiles of A operand in global memory
+  //  (concept: ReadableTileIterator | ForwardTileIterator |
+  //  MaskedTileIterator)
+  typename IteratorA_,
+  /// Iterates over tiles of A operand in shared memory
+  /// (concept: WriteableTileIterator | RandomAccessTileIterator)
+  typename SmemIteratorA_,
+  /// Cache operation for operand A
+  cutlass::arch::CacheOperation::Kind CacheOpA,
+  /// Iterates over tiles of B operand in global memory
+  //  (concept: ReadableTileIterator | ForwardTileIterator |
+  //  MaskedTileIterator)
+  typename IteratorB_,
+  /// Iterates over tiles of B operand in shared memory
+  /// (concept: WriteableTileIterator | RandomAccessTileIterator)
+  typename SmemIteratorB_,
+  /// Cache operation for operand B
+  cutlass::arch::CacheOperation::Kind CacheOpB,
+  /// Iterates over vectors of scale and bias vector in global memory
+  //  (concept: ReadableTileIterator | ForwardTileIterator |
+  //  MaskedTileIterator)
+  typename IteratorScaleBias_,
+  /// Iterates over vectors of scale and bias vector in shared memory
+  /// (concept: WriteableTileIterator | RandomAccessTileIterator)
+  typename SmemIteratorScaleBias_,
+  /// Cache operation for scale/bias operand
+  cutlass::arch::CacheOperation::Kind CacheOpScaleBias,
+  /// Policy describing tuning details (concept: MmaPolicy)
+  typename Policy_,
+  /// WarpIterator to load Scale or Bias vector from the shared memory
+  typename WarpIteratorScaleBias_,
+  /// Number of stages,
+  int Stages,
+  /// Used for partial specialization
+  typename Enable = bool>
 class ImplicitGemmFpropFusionMultistage
-    : public MmaFpropFusionBase<Shape_, typename IteratorScaleBias_::Element,
-                       typename IteratorScaleBias_::Layout, Policy_,
-                       WarpIteratorScaleBias_, Stages> {
+  : public MmaFpropFusionBase<Shape_,
+                              typename IteratorScaleBias_::Element,
+                              typename IteratorScaleBias_::Layout,
+                              Policy_,
+                              WarpIteratorScaleBias_,
+                              Stages> {
  public:
   ///< Size of the Gemm problem - concept: gemm::GemmShape<>
   using Shape = Shape_;
@@ -325,18 +317,20 @@ class ImplicitGemmFpropFusionMultistage
   ///< Policy describing tuning details
   using Policy = Policy_;
   ///< Base class
-  using Base = MmaFpropFusionBase<Shape_, typename IteratorScaleBias::Element,
-                         typename IteratorScaleBias::Layout, Policy,
-                         WarpIteratorScaleBias, Stages>;
+  using Base = MmaFpropFusionBase<Shape_,
+                                  typename IteratorScaleBias::Element,
+                                  typename IteratorScaleBias::Layout,
+                                  Policy,
+                                  WarpIteratorScaleBias,
+                                  Stages>;
 
-  using SmemIteratorA = SmemIteratorA_;
-  using SmemIteratorB = SmemIteratorB_;
+  using SmemIteratorA         = SmemIteratorA_;
+  using SmemIteratorB         = SmemIteratorB_;
   using SmemIteratorScaleBias = SmemIteratorScaleBias_;
 
-  static cutlass::arch::CacheOperation::Kind const kCacheOpA = CacheOpA;
-  static cutlass::arch::CacheOperation::Kind const kCacheOpB = CacheOpB;
-  static cutlass::arch::CacheOperation::Kind const kCacheOpScaleBias =
-      CacheOpScaleBias;
+  static cutlass::arch::CacheOperation::Kind const kCacheOpA         = CacheOpA;
+  static cutlass::arch::CacheOperation::Kind const kCacheOpB         = CacheOpB;
+  static cutlass::arch::CacheOperation::Kind const kCacheOpScaleBias = CacheOpScaleBias;
 
   //
   // Dependent types
@@ -344,51 +338,45 @@ class ImplicitGemmFpropFusionMultistage
 
   /// Fragment of accumulator tile
 
-  using ElementC = typename Policy::Operator::ElementC;
+  using ElementC  = typename Policy::Operator::ElementC;
   using FragmentC = typename Policy::Operator::FragmentC;
 
   /// Warp-level Mma
   using Operator = typename Policy::Operator;
-  
+
   /// Internal structure exposed for introspection.
   struct Detail {
-
     static_assert(Base::kWarpGemmIterations > 1,
                   "The pipelined structure requires at least two warp-level "
                   "GEMM operations.");
 
     /// Number of cp.async instructions to load one stage of operand A
-    static int const AsyncCopyIterationsPerStageA =
-        IteratorA::ThreadMap::Iterations::kCount;
+    static int const AsyncCopyIterationsPerStageA = IteratorA::ThreadMap::Iterations::kCount;
 
     /// Number of cp.async instructions to load one stage of operand B
-    static int const AsyncCopyIterationsPerStageB =
-        IteratorB::ThreadMap::Iterations::kCount;
+    static int const AsyncCopyIterationsPerStageB = IteratorB::ThreadMap::Iterations::kCount;
 
     /// Number of stages
     static int const kStages = Stages;
 
     /// Number of cp.async instructions to load on group of operand A
     static int const kAccessesPerGroupA =
-        (AsyncCopyIterationsPerStageA + Base::kWarpGemmIterations - 1) / Base::kWarpGemmIterations;
+      (AsyncCopyIterationsPerStageA + Base::kWarpGemmIterations - 1) / Base::kWarpGemmIterations;
 
     /// Number of cp.async instructions to load on group of operand B
     static int const kAccessesPerGroupB =
-        (AsyncCopyIterationsPerStageB + Base::kWarpGemmIterations - 1) / Base::kWarpGemmIterations;
+      (AsyncCopyIterationsPerStageB + Base::kWarpGemmIterations - 1) / Base::kWarpGemmIterations;
   };
 
  private:
-
-  using WarpLoadedFragmentA = typename Operator::FragmentA;
-  using WarpLoadedFragmentB = typename Operator::FragmentB;
-  using WarpLoadedFragmentScaleBias =
-      typename WarpIteratorScaleBias::Fragment;
+  using WarpLoadedFragmentA         = typename Operator::FragmentA;
+  using WarpLoadedFragmentB         = typename Operator::FragmentB;
+  using WarpLoadedFragmentScaleBias = typename WarpIteratorScaleBias::Fragment;
 
   using WarpTransformedFragmentA = typename Operator::TransformedFragmentA;
   using WarpTransformedFragmentB = typename Operator::TransformedFragmentB;
 
  private:
-
   //
   // Data members
   //
@@ -401,25 +389,24 @@ class ImplicitGemmFpropFusionMultistage
 
   /// Iterator to write threadblock-scoped tile of B operand to shared memory
   SmemIteratorB smem_iterator_B_;
-  
-public:
 
+ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   ImplicitGemmFpropFusionMultistage(
-      ///< Shared storage needed for internal use by threadblock-scoped GEMM
-      typename Base::SharedStorage &shared_storage,
-      ///< ID within the threadblock
-      int thread_idx,
-      ///< ID of warp
-      int warp_idx,
-      ///< ID of each thread within a warp
-      int lane_idx)
-      : Base(shared_storage, thread_idx, warp_idx, lane_idx),
-        smem_iterator_A_(shared_storage.operand_A_ref(), thread_idx),
-        smem_iterator_A_scale_bias_(shared_storage.operand_A_scale_bias_ref(),
-                                    thread_idx),
-        smem_iterator_B_(shared_storage.operand_B_ref(), thread_idx) {
+    ///< Shared storage needed for internal use by threadblock-scoped GEMM
+    typename Base::SharedStorage& shared_storage,
+    ///< ID within the threadblock
+    int thread_idx,
+    ///< ID of warp
+    int warp_idx,
+    ///< ID of each thread within a warp
+    int lane_idx)
+    : Base(shared_storage, thread_idx, warp_idx, lane_idx),
+      smem_iterator_A_(shared_storage.operand_A_ref(), thread_idx),
+      smem_iterator_A_scale_bias_(shared_storage.operand_A_scale_bias_ref(), thread_idx),
+      smem_iterator_B_(shared_storage.operand_B_ref(), thread_idx)
+  {
     // Compute warp location within threadblock tile by mapping the warp_id to
     // three coordinates:
     //   _m: the warp's position within the threadblock along the M dimension
@@ -427,43 +414,43 @@ public:
     //   _k: the warp's position within the threadblock along the K dimension
 
     int warp_idx_mn = warp_idx % (Base::WarpCount::kM * Base::WarpCount::kN);
-    int warp_idx_k = warp_idx / (Base::WarpCount::kM * Base::WarpCount::kN);
+    int warp_idx_k  = warp_idx / (Base::WarpCount::kM * Base::WarpCount::kN);
 
     int warp_idx_m = warp_idx_mn % Base::WarpCount::kM;
     int warp_idx_n = warp_idx_mn / Base::WarpCount::kM;
 
     // Add per-warp offsets in units of warp-level tiles
     this->warp_tile_iterator_A_.add_tile_offset(
-        {warp_idx_m, Base::kWarpGemmIterations * warp_idx_k});
+      {warp_idx_m, Base::kWarpGemmIterations * warp_idx_k});
     this->warp_tile_iterator_A_scale_bias_.add_tile_offset(
-        {warp_idx_m, Base::kWarpGemmIterations * warp_idx_k});
+      {warp_idx_m, Base::kWarpGemmIterations * warp_idx_k});
     this->warp_tile_iterator_B_.add_tile_offset(
-        {Base::kWarpGemmIterations * warp_idx_k, warp_idx_n});
+      {Base::kWarpGemmIterations * warp_idx_k, warp_idx_n});
   }
 
   CUTLASS_DEVICE
-  void copy_tiles_and_advance(IteratorA &iterator_A,
-                              IteratorScaleBias &iterator_A_scale_bias,
-                              IteratorB &iterator_B, int group_start_A = 0,
-                              int group_start_B = 0) {
+  void copy_tiles_and_advance(IteratorA& iterator_A,
+                              IteratorScaleBias& iterator_A_scale_bias,
+                              IteratorB& iterator_B,
+                              int group_start_A = 0,
+                              int group_start_B = 0)
+  {
     iterator_A.set_iteration_index(group_start_A);
     this->smem_iterator_A_.set_iteration_index(group_start_A);
-      
+
     // Async Copy for operand A
     CUTLASS_PRAGMA_UNROLL
     for (int j = 0; j < Detail::kAccessesPerGroupA; ++j) {
-
       if (group_start_A + j < Detail::AsyncCopyIterationsPerStageA) {
-        typename IteratorA::AccessType *dst_ptr =
-            reinterpret_cast<typename IteratorA::AccessType *>(
-                this->smem_iterator_A_.get());
+        typename IteratorA::AccessType* dst_ptr =
+          reinterpret_cast<typename IteratorA::AccessType*>(this->smem_iterator_A_.get());
 
         int const kSrcBytes = sizeof_bits<typename IteratorA::Element>::value *
                               IteratorA::ThreadMap::kElementsPerAccess / 8;
 
         // Uses nan fill for out of bound data
         cutlass::arch::cp_async_nan<kSrcBytes, kCacheOpA>(
-            dst_ptr, iterator_A.get(), iterator_A.valid());
+          dst_ptr, iterator_A.get(), iterator_A.valid());
 
         ++iterator_A;
 
@@ -474,35 +461,33 @@ public:
     // Async Copy for operand A scale and bias vector.  Scale and bias vectors
     // are small.  One iteration is enough.
     if (group_start_A == 0) {
-      typename IteratorScaleBias::AccessType *dst_ptr =
-          reinterpret_cast<typename IteratorScaleBias::AccessType *>(
-              this->smem_iterator_A_scale_bias_.get());
+      typename IteratorScaleBias::AccessType* dst_ptr =
+        reinterpret_cast<typename IteratorScaleBias::AccessType*>(
+          this->smem_iterator_A_scale_bias_.get());
 
-      int const kSrcBytes =
-          sizeof_bits<typename IteratorScaleBias::Element>::value *
-          IteratorScaleBias::kElementsPerAccess / 8;
+      int const kSrcBytes = sizeof_bits<typename IteratorScaleBias::Element>::value *
+                            IteratorScaleBias::kElementsPerAccess / 8;
 
       cutlass::arch::cp_async<kSrcBytes, kCacheOpScaleBias>(
-          dst_ptr, iterator_A_scale_bias.get(), iterator_A_scale_bias.valid());
+        dst_ptr, iterator_A_scale_bias.get(), iterator_A_scale_bias.valid());
     }
 
     iterator_B.set_iteration_index(group_start_B);
 
     this->smem_iterator_B_.set_iteration_index(group_start_B);
-    
+
     // Async Copy for operand B
     CUTLASS_PRAGMA_UNROLL
     for (int j = 0; j < Detail::kAccessesPerGroupB; ++j) {
       if (group_start_B + j < Detail::AsyncCopyIterationsPerStageB) {
-        typename IteratorB::AccessType *dst_ptr =
-            reinterpret_cast<typename IteratorB::AccessType *>(
-                this->smem_iterator_B_.get());
-        
+        typename IteratorB::AccessType* dst_ptr =
+          reinterpret_cast<typename IteratorB::AccessType*>(this->smem_iterator_B_.get());
+
         int const kSrcBytes = sizeof_bits<typename IteratorB::Element>::value *
                               IteratorB::ThreadMap::kElementsPerAccess / 8;
 
         cutlass::arch::cp_async_zfill<kSrcBytes, kCacheOpB>(
-                dst_ptr, iterator_B.get(), iterator_B.valid());
+          dst_ptr, iterator_B.get(), iterator_B.valid());
 
         ++iterator_B;
         ++this->smem_iterator_B_;
@@ -513,50 +498,46 @@ public:
   /// Perform a threadblock-scoped matrix multiply-accumulate
   CUTLASS_DEVICE
   void operator()(
-      ///< problem size of GEMM
-      int gemm_k_iterations,
-      ///< destination accumulator tile
-      FragmentC &accum,
-      ///< iterator over A operand in global memory
-      IteratorA iterator_A,
-      ///< iterator over B operand in global memory
-      IteratorB iterator_B,
-      ///< iterator over scale and bias vectors in global memory
-      IteratorScaleBias iterator_A_scale_bias,
-      ///< initial value of accumulator
-      FragmentC const &src_accum,
-      ///< number of iterations per channel
-      int gemm_k_iterations_per_channel = 0,  
-      ///< Imaginary strides used for planar-complex only - ignored here
-      int64_t imag_stride_A = 0,
-      int64_t imag_stride_B = 0) {
-
+    ///< problem size of GEMM
+    int gemm_k_iterations,
+    ///< destination accumulator tile
+    FragmentC& accum,
+    ///< iterator over A operand in global memory
+    IteratorA iterator_A,
+    ///< iterator over B operand in global memory
+    IteratorB iterator_B,
+    ///< iterator over scale and bias vectors in global memory
+    IteratorScaleBias iterator_A_scale_bias,
+    ///< initial value of accumulator
+    FragmentC const& src_accum,
+    ///< number of iterations per channel
+    int gemm_k_iterations_per_channel = 0,
+    ///< Imaginary strides used for planar-complex only - ignored here
+    int64_t imag_stride_A = 0,
+    int64_t imag_stride_B = 0)
+  {
     //
     // Prologue
     //
 
     // Issue several complete stages
     CUTLASS_PRAGMA_UNROLL
-    for (int stage = 0; stage < Base::kStages - 1;
-         ++stage, --gemm_k_iterations) {
-
+    for (int stage = 0; stage < Base::kStages - 1; ++stage, --gemm_k_iterations) {
       iterator_A.set_iteration_index(0);
       this->smem_iterator_A_.set_iteration_index(0);
 
       // Async Copy for operand A
       CUTLASS_PRAGMA_UNROLL
       for (int j = 0; j < Detail::AsyncCopyIterationsPerStageA; ++j) {
-        typename IteratorA::AccessType *dst_ptr =
-          reinterpret_cast<typename IteratorA::AccessType *>(
-            this->smem_iterator_A_.get());
+        typename IteratorA::AccessType* dst_ptr =
+          reinterpret_cast<typename IteratorA::AccessType*>(this->smem_iterator_A_.get());
 
-        int const kSrcBytes =
-            sizeof_bits<typename IteratorA::Element>::value *
-            IteratorA::ThreadMap::kElementsPerAccess / 8;
-        
+        int const kSrcBytes = sizeof_bits<typename IteratorA::Element>::value *
+                              IteratorA::ThreadMap::kElementsPerAccess / 8;
+
         // Uses Nan fill for out of bound data
         cutlass::arch::cp_async_nan<kSrcBytes, kCacheOpA>(
-            dst_ptr, iterator_A.get(), iterator_A.valid());
+          dst_ptr, iterator_A.get(), iterator_A.valid());
 
         ++iterator_A;
         ++this->smem_iterator_A_;
@@ -565,16 +546,15 @@ public:
       // Async Copy for operand A scale and bias vectors.  Scale and bias
       // vectors are small.  One iteration is enough.
       {
-        typename IteratorScaleBias::AccessType *dst_ptr =
-            reinterpret_cast<typename IteratorScaleBias::AccessType *>(
-                this->smem_iterator_A_scale_bias_.get());
+        typename IteratorScaleBias::AccessType* dst_ptr =
+          reinterpret_cast<typename IteratorScaleBias::AccessType*>(
+            this->smem_iterator_A_scale_bias_.get());
 
-        int const kSrcBytes =
-            sizeof_bits<typename IteratorScaleBias::Element>::value *
-            IteratorScaleBias::kElementsPerAccess / 8;
+        int const kSrcBytes = sizeof_bits<typename IteratorScaleBias::Element>::value *
+                              IteratorScaleBias::kElementsPerAccess / 8;
 
         cutlass::arch::cp_async<kSrcBytes, kCacheOpScaleBias>(
-            dst_ptr, iterator_A_scale_bias.get(), iterator_A_scale_bias.valid());
+          dst_ptr, iterator_A_scale_bias.get(), iterator_A_scale_bias.valid());
       }
 
       iterator_B.set_iteration_index(0);
@@ -583,16 +563,14 @@ public:
       // Async Copy for operand B
       CUTLASS_PRAGMA_UNROLL
       for (int j = 0; j < Detail::AsyncCopyIterationsPerStageB; ++j) {
-        typename IteratorB::AccessType *dst_ptr =
-          reinterpret_cast<typename IteratorB::AccessType *>(
-              this->smem_iterator_B_.get());
+        typename IteratorB::AccessType* dst_ptr =
+          reinterpret_cast<typename IteratorB::AccessType*>(this->smem_iterator_B_.get());
 
-        int const kSrcBytes =
-            sizeof_bits<typename IteratorB::Element>::value *
-            IteratorB::ThreadMap::kElementsPerAccess / 8;
+        int const kSrcBytes = sizeof_bits<typename IteratorB::Element>::value *
+                              IteratorB::ThreadMap::kElementsPerAccess / 8;
 
         cutlass::arch::cp_async_zfill<kSrcBytes, kCacheOpB>(
-            dst_ptr, iterator_B.get(), iterator_B.valid());
+          dst_ptr, iterator_B.get(), iterator_B.valid());
 
         ++iterator_B;
         ++this->smem_iterator_B_;
@@ -614,7 +592,7 @@ public:
     // Perform accumulation in the 'd' output operand
     accum = src_accum;
 
-    // Waits until kStages-2 stages have committed. 
+    // Waits until kStages-2 stages have committed.
     cutlass::arch::cp_async_wait<Base::kStages - 2>();
     __syncthreads();
 
@@ -628,16 +606,15 @@ public:
 
     Operator warp_mma;
     cutlass::conv::warp::FpropScaleBiasReluTransform<WarpTransformedFragmentA,
-                                            WarpLoadedFragmentScaleBias>
-        elementwise_transform;
+                                                     WarpLoadedFragmentScaleBias>
+      elementwise_transform;
 
     this->warp_tile_iterator_A_.set_kgroup_index(0);
     this->warp_tile_iterator_A_scale_bias_.set_kgroup_index(0);
     this->warp_tile_iterator_B_.set_kgroup_index(0);
 
     this->warp_tile_iterator_A_.load(warp_loaded_frag_A[0]);
-    this->warp_tile_iterator_A_scale_bias_.load(
-        warp_loaded_frag_A_scale_bias[0]);
+    this->warp_tile_iterator_A_scale_bias_.load(warp_loaded_frag_A_scale_bias[0]);
     this->warp_tile_iterator_B_.load(warp_loaded_frag_B[0]);
 
     ++this->warp_tile_iterator_A_;
@@ -648,13 +625,14 @@ public:
     copy_tiles_and_advance(iterator_A, iterator_A_scale_bias, iterator_B);
 
     int smem_write_stage_idx = Base::kStages - 1;
-    int smem_read_stage_idx = 0;
+    int smem_read_stage_idx  = 0;
 
-    warp_mma.transform(warp_transformed_frag_A[0], warp_transformed_frag_B[0],
-                       warp_loaded_frag_A[0], warp_loaded_frag_B[0]);
+    warp_mma.transform(warp_transformed_frag_A[0],
+                       warp_transformed_frag_B[0],
+                       warp_loaded_frag_A[0],
+                       warp_loaded_frag_B[0]);
 
-    elementwise_transform(warp_transformed_frag_A[0],
-                         warp_loaded_frag_A_scale_bias[0]);
+    elementwise_transform(warp_transformed_frag_A[0], warp_loaded_frag_A_scale_bias[0]);
 
     //
     // Mainloop
@@ -669,19 +647,17 @@ public:
       // Computes a warp-level GEMM on data held in shared memory
       // Each "warp_mma_k" refers to a warp-level matrix multiply-accumulate
       CUTLASS_PRAGMA_UNROLL
-      for (int warp_mma_k = 0; warp_mma_k < Base::kWarpGemmIterations;
-           ++warp_mma_k) {
-
+      for (int warp_mma_k = 0; warp_mma_k < Base::kWarpGemmIterations; ++warp_mma_k) {
         // Load warp-level tiles from shared memory, wrapping to k offset if
         // this is the last group as the case may be.
         this->warp_tile_iterator_A_.set_kgroup_index((warp_mma_k + 1) % Base::kWarpGemmIterations);
-        this->warp_tile_iterator_A_scale_bias_.set_kgroup_index(
-            (warp_mma_k + 1) % Base::kWarpGemmIterations);
+        this->warp_tile_iterator_A_scale_bias_.set_kgroup_index((warp_mma_k + 1) %
+                                                                Base::kWarpGemmIterations);
         this->warp_tile_iterator_B_.set_kgroup_index((warp_mma_k + 1) % Base::kWarpGemmIterations);
 
         this->warp_tile_iterator_A_.load(warp_loaded_frag_A[(warp_mma_k + 1) % 2]);
         this->warp_tile_iterator_A_scale_bias_.load(
-            warp_loaded_frag_A_scale_bias[(warp_mma_k + 1) % 2]);
+          warp_loaded_frag_A_scale_bias[(warp_mma_k + 1) % 2]);
         this->warp_tile_iterator_B_.load(warp_loaded_frag_B[(warp_mma_k + 1) % 2]);
 
         ++this->warp_tile_iterator_A_;
@@ -695,15 +671,13 @@ public:
                              warp_loaded_frag_B[warp_mma_k % 2]);
 
           elementwise_transform(warp_transformed_frag_A[warp_mma_k % 2],
-                               warp_loaded_frag_A_scale_bias[warp_mma_k % 2]);
+                                warp_loaded_frag_A_scale_bias[warp_mma_k % 2]);
         }
 
-        warp_mma(
-                 accum, 
+        warp_mma(accum,
                  warp_transformed_frag_A[warp_mma_k % 2],
                  warp_transformed_frag_B[warp_mma_k % 2],
-                 accum
-                );
+                 accum);
 
         // Issue global->shared copies for the next stage
         int group_start_iteration_A, group_start_iteration_B;
@@ -712,16 +686,15 @@ public:
           group_start_iteration_A = 0;
           group_start_iteration_B = 0;
         } else {
-          group_start_iteration_A =
-              (warp_mma_k + 1) * Detail::kAccessesPerGroupA;
-          group_start_iteration_B =
-              (warp_mma_k + 1) * Detail::kAccessesPerGroupB;
+          group_start_iteration_A = (warp_mma_k + 1) * Detail::kAccessesPerGroupA;
+          group_start_iteration_B = (warp_mma_k + 1) * Detail::kAccessesPerGroupB;
         }
 
-        copy_tiles_and_advance(iterator_A, iterator_A_scale_bias, iterator_B,
+        copy_tiles_and_advance(iterator_A,
+                               iterator_A_scale_bias,
+                               iterator_B,
                                group_start_iteration_A,
                                group_start_iteration_B);
-
 
         if (warp_mma_k + 1 == Base::kWarpGemmIterations) {
           warp_mma.transform(warp_transformed_frag_A[(warp_mma_k + 1) % 2],
@@ -729,9 +702,8 @@ public:
                              warp_loaded_frag_A[(warp_mma_k + 1) % 2],
                              warp_loaded_frag_B[(warp_mma_k + 1) % 2]);
 
-          elementwise_transform(
-              warp_transformed_frag_A[(warp_mma_k + 1) % 2],
-              warp_loaded_frag_A_scale_bias[(warp_mma_k + 1) % 2]);
+          elementwise_transform(warp_transformed_frag_A[(warp_mma_k + 1) % 2],
+                                warp_loaded_frag_A_scale_bias[(warp_mma_k + 1) % 2]);
         }
 
         if (warp_mma_k + 2 == Base::kWarpGemmIterations) {
@@ -755,8 +727,7 @@ public:
           // circular buffer in shared memory
           if (smem_write_stage_idx == (Base::kStages - 1)) {
             this->smem_iterator_A_.add_tile_offset({0, -Base::kStages});
-            this->smem_iterator_A_scale_bias_.add_tile_offset(
-                {0, -Base::kStages});
+            this->smem_iterator_A_scale_bias_.add_tile_offset({0, -Base::kStages});
             this->smem_iterator_B_.add_tile_offset({-Base::kStages, 0});
             smem_write_stage_idx = 0;
           } else {
@@ -765,15 +736,11 @@ public:
 
           if (smem_read_stage_idx == (Base::kStages - 1)) {
             this->warp_tile_iterator_A_.add_tile_offset(
-                {0, -Base::kStages * Policy::kPartitionsK *
-                        Base::kWarpGemmIterations});
+              {0, -Base::kStages * Policy::kPartitionsK * Base::kWarpGemmIterations});
             this->warp_tile_iterator_A_scale_bias_.add_tile_offset(
-                {0, -Base::kStages * Policy::kPartitionsK *
-                        Base::kWarpGemmIterations});
+              {0, -Base::kStages * Policy::kPartitionsK * Base::kWarpGemmIterations});
             this->warp_tile_iterator_B_.add_tile_offset(
-                {-Base::kStages * Policy::kPartitionsK *
-                     Base::kWarpGemmIterations,
-                 0});
+              {-Base::kStages * Policy::kPartitionsK * Base::kWarpGemmIterations, 0});
             smem_read_stage_idx = 0;
           } else {
             ++smem_read_stage_idx;
@@ -782,21 +749,19 @@ public:
           --gemm_k_iterations;
         }
       }
-
     }
 
     // Insert fence and wait for all outstanding cp.async operations to commit.
     cutlass::arch::cp_async_fence();
     cutlass::arch::cp_async_wait<0>();
     __syncthreads();
-
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 }  // namespace threadblock
-}  // namespace gemm
+}  // namespace conv
 }  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

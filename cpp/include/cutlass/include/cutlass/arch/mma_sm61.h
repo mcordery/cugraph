@@ -45,37 +45,31 @@ namespace arch {
 
 /// Matrix multiply-add operation
 template <typename LayoutA, typename LayoutB, typename LayoutC>
-struct Mma<
-  gemm::GemmShape<1,1,4>,
-  1,
-  int8_t,
-  LayoutA,
-  int8_t,
-  LayoutB,
-  int,
-  LayoutC,
-  OpMultiplyAdd> {
-
-  using Shape = gemm::GemmShape<1, 1, 4>;
+struct Mma<gemm::GemmShape<1, 1, 4>,
+           1,
+           int8_t,
+           LayoutA,
+           int8_t,
+           LayoutB,
+           int,
+           LayoutC,
+           OpMultiplyAdd> {
+  using Shape    = gemm::GemmShape<1, 1, 4>;
   using Operator = OpMultiplyAdd;
   using ElementC = int;
 
   CUTLASS_HOST_DEVICE
-  void operator()(
-    Array<int, 1> &d,
-    Array<int8_t, 4> const &a,
-    Array<int8_t, 4> const &b,
-    Array<int, 1> const &c
-  ) {
-
+  void operator()(Array<int, 1>& d,
+                  Array<int8_t, 4> const& a,
+                  Array<int8_t, 4> const& b,
+                  Array<int, 1> const& c)
+  {
 #if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 610))
 
-    unsigned const &A = reinterpret_cast<unsigned const &>(a);
-    unsigned const &B = reinterpret_cast<unsigned const &>(b);
+    unsigned const& A = reinterpret_cast<unsigned const&>(a);
+    unsigned const& B = reinterpret_cast<unsigned const&>(b);
 
-    asm volatile("dp4a.s32.s32 %0, %1, %2, %3;"
-                 : "=r"(d[0])
-                 : "r"(A), "r"(B), "r"(c[0]));
+    asm volatile("dp4a.s32.s32 %0, %1, %2, %3;" : "=r"(d[0]) : "r"(A), "r"(B), "r"(c[0]));
 
 #else
 
@@ -94,37 +88,31 @@ struct Mma<
 
 /// Matrix multiply-add operation
 template <typename LayoutC>
-struct Mma<
-  gemm::GemmShape<1, 1, 2>,
-  1,
-  int16_t,
-  layout::RowMajor,
-  int16_t,
-  layout::ColumnMajor,
-  int,
-  LayoutC,
-  OpMultiplyAdd> {
-
-  using Shape = gemm::GemmShape<1, 1, 2>;
+struct Mma<gemm::GemmShape<1, 1, 2>,
+           1,
+           int16_t,
+           layout::RowMajor,
+           int16_t,
+           layout::ColumnMajor,
+           int,
+           LayoutC,
+           OpMultiplyAdd> {
+  using Shape    = gemm::GemmShape<1, 1, 2>;
   using Operator = OpMultiplyAdd;
   using ElementC = int;
 
   CUTLASS_HOST_DEVICE
-  void operator()(
-    Array<int, 1> &d,
-    Array<int16_t, 2> const &a,
-    Array<int16_t, 2> const &b,
-    Array<int, 1> const &c
-  ) {
-
+  void operator()(Array<int, 1>& d,
+                  Array<int16_t, 2> const& a,
+                  Array<int16_t, 2> const& b,
+                  Array<int, 1> const& c)
+  {
 #if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 610))
 
-    unsigned const &A = reinterpret_cast<unsigned const &>(a);
-    unsigned const &B = reinterpret_cast<unsigned const &>(b);
+    unsigned const& A = reinterpret_cast<unsigned const&>(a);
+    unsigned const& B = reinterpret_cast<unsigned const&>(b);
 
-    asm volatile("dp2a.s32.s32 %0, %1, %2, %3;"
-                 : "=r"(d[0])
-                 : "r"(A), "r"(B), "r"(c[0]));
+    asm volatile("dp2a.s32.s32 %0, %1, %2, %3;" : "=r"(d[0]) : "r"(A), "r"(B), "r"(c[0]));
 #else
     d[0] = c[0];
 
@@ -138,5 +126,5 @@ struct Mma<
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-}
-}
+}  // namespace arch
+}  // namespace cutlass

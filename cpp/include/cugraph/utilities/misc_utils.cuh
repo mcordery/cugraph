@@ -21,14 +21,14 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/atomic>
-#include <hip/functional>
 #include <thrust/binary_search.h>
 #include <thrust/gather.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/optional.h>
 
+#include <hip/atomic>
+#include <hip/functional>
 #include <optional>
 #include <tuple>
 #include <vector>

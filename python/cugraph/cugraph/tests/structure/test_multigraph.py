@@ -13,12 +13,12 @@
 
 import gc
 
-import pytest
-import numpy as np
 import networkx as nx
+import numpy as np
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, utils
 
 import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
 
 
 # =============================================================================

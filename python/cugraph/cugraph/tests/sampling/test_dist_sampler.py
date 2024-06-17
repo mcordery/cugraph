@@ -11,24 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import os
 import shutil
 
-import cupy
 import cudf
-
-from cugraph.datasets import karate
-from cugraph.gnn import UniformNeighborSampler, DistSampleWriter
-
-from pylibcugraph import SGGraph, ResourceHandle, GraphProperties
-
+import cupy
+import pytest
+from cugraph.gnn import DistSampleWriter, UniformNeighborSampler
 from cugraph.utilities.utils import (
+    MissingModule,
     create_directory_with_overwrite,
     import_optional,
-    MissingModule,
 )
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 
+from cugraph.datasets import karate
 
 torch = import_optional("torch")
 

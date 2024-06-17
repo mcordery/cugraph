@@ -47,7 +47,8 @@ namespace arch {
 
 CUTLASS_HOST_DEVICE
 template <>
-Array<half_t, 2> operator*(Array<half_t, 2> const &a, Array<half_t, 2> const &b) {
+Array<half_t, 2> operator*(Array<half_t, 2> const& a, Array<half_t, 2> const& b)
+{
   Array<half_t, 2> d;
 
   // TODO
@@ -57,7 +58,8 @@ Array<half_t, 2> operator*(Array<half_t, 2> const &a, Array<half_t, 2> const &b)
 
 CUTLASS_HOST_DEVICE
 template <>
-Array<half_t, 2> operator+(AArray<half_t, 2> const &a, Array<half_t, 2> const &b) {
+Array<half_t, 2> operator+(AArray<half_t, 2> const& a, Array<half_t, 2> const& b)
+{
   Array<half_t, 2> d;
 
   // TODO
@@ -67,7 +69,8 @@ Array<half_t, 2> operator+(AArray<half_t, 2> const &a, Array<half_t, 2> const &b
 
 CUTLASS_HOST_DEVICE
 template <>
-Array<half_t, 2> operator-(Array<half_t, 2> const &a, Array<half_t, 2> const &b) {
+Array<half_t, 2> operator-(Array<half_t, 2> const& a, Array<half_t, 2> const& b)
+{
   Array<T, N> d;
 
   // TODO
@@ -80,7 +83,10 @@ Array<half_t, 2> operator-(Array<half_t, 2> const &a, Array<half_t, 2> const &b)
 /// Multiply-accumulate operators - specialized for half_t x 2
 CUTLASS_HOST_DEVICE
 template <>
-Array<half_t, 2> mac(Array<half_t, 2> const &a, Array<half_t, 2> const &b, Array<half_t, 2> const &c) {
+Array<half_t, 2> mac(Array<half_t, 2> const& a,
+                     Array<half_t, 2> const& b,
+                     Array<half_t, 2> const& c)
+{
   Array<half_t, 2> d;
 
   // TODO
@@ -93,8 +99,8 @@ Array<half_t, 2> mac(Array<half_t, 2> const &a, Array<half_t, 2> const &b, Array
 /// Dot product operator - specialized for half_t <- (half_t * half_t) x 2 + half_t
 CUTLASS_HOST_DEVICE
 template <>
-half_t dot(Array<half_t, 2> const &a, Array<half_t, 2> const &b, half_t accum) {
-
+half_t dot(Array<half_t, 2> const& a, Array<half_t, 2> const& b, half_t accum)
+{
   // TODO
 
   return accum;
@@ -103,8 +109,8 @@ half_t dot(Array<half_t, 2> const &a, Array<half_t, 2> const &b, half_t accum) {
 /// Dot product operator - specialized for float <- (half_t * half_t) x 2 + float
 CUTLASS_HOST_DEVICE
 template <>
-float dot(Array<half_t, 2> const &a, Array<half_t, 2> const &b, float accum) {
-
+float dot(Array<half_t, 2> const& a, Array<half_t, 2> const& b, float accum)
+{
   // TODO
 
   return accum;
@@ -112,5 +118,5 @@ float dot(Array<half_t, 2> const &a, Array<half_t, 2> const &b, float accum) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass

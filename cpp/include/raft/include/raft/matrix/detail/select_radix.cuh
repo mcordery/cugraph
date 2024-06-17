@@ -20,9 +20,9 @@
 #include <raft/core/detail/macros.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/linalg/map.cuh>
 #include <raft/util/cudart_utils.hpp>
 #include <raft/util/device_atomics.cuh>
@@ -343,7 +343,8 @@ _RAFT_DEVICE void scan(volatile IdxT* histogram)
   if constexpr (num_buckets >= BlockSize) {
     static_assert(num_buckets % BlockSize == 0);
     constexpr int items_per_thread = num_buckets / BlockSize;
-    typedef hipcub::BlockLoad<IdxT, BlockSize, items_per_thread, hipcub::BLOCK_LOAD_TRANSPOSE> BlockLoad;
+    typedef hipcub::BlockLoad<IdxT, BlockSize, items_per_thread, hipcub::BLOCK_LOAD_TRANSPOSE>
+      BlockLoad;
     typedef hipcub::BlockStore<IdxT, BlockSize, items_per_thread, hipcub::BLOCK_STORE_TRANSPOSE>
       BlockStore;
     typedef hipcub::BlockScan<IdxT, BlockSize> BlockScan;
@@ -396,7 +397,7 @@ _RAFT_DEVICE void choose_bucket(Counter<T, IdxT>* counter,
       counter->k   = k - prev;    // how many values still are there to find
       counter->len = cur - prev;  // number of values in next pass
       typename hipcub::Traits<T>::UnsignedBits bucket = i;
-      int start_bit                                = calc_start_bit<T, BitsPerPass>(pass);
+      int start_bit                                   = calc_start_bit<T, BitsPerPass>(pass);
       counter->kth_value_bits |= bucket << start_bit;
     }
   }
@@ -814,8 +815,7 @@ template <typename T, typename IdxT, int BlockSize, typename Kernel>
 int calc_chunk_size(int batch_size, IdxT len, int sm_cnt, Kernel kernel, bool one_block)
 {
   int active_blocks;
-  RAFT_CUDA_TRY(
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks, kernel, BlockSize, 0));
+  RAFT_CUDA_TRY(hipOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks, kernel, BlockSize, 0));
 
   // The chunk size is chosen so that there is enough workload to fully utilize GPU.
   // One full wave contains (sm_cnt * active_blocks) blocks, and 10 waves is an empirically safe

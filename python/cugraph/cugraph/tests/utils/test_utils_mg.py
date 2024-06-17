@@ -15,18 +15,18 @@ import gc
 import os
 import time
 
-import pytest
+import cugraph.dask as dcg
+import dask_cudf
 import numpy as np
+import pytest
+from cugraph.dask.common.mg_utils import is_single_gpu
+from cugraph.dask.common.part_utils import concat_within_workers
+from cugraph.dask.common.read_utils import get_n_workers
+from cugraph.testing import utils
+from cugraph.testing.utils import RAPIDS_DATASET_ROOT_DIR_PATH
+from dask.distributed import default_client, futures_of, wait
 
 import cugraph
-import dask_cudf
-import cugraph.dask as dcg
-from cugraph.testing import utils
-from cugraph.dask.common.mg_utils import is_single_gpu
-from cugraph.dask.common.read_utils import get_n_workers
-from dask.distributed import default_client, futures_of, wait
-from cugraph.testing.utils import RAPIDS_DATASET_ROOT_DIR_PATH
-from cugraph.dask.common.part_utils import concat_within_workers
 
 
 # =============================================================================

@@ -17,14 +17,14 @@ import inspect
 import io
 import os
 
+import cudf
 import numpy as np
 import pandas as pd
-import scipy
 import pytest
+import scipy
+from cugraph.testing import utils
 
 import cugraph
-import cudf
-from cugraph.testing import utils
 
 datasets = utils.RAPIDS_DATASET_ROOT_DIR_PATH
 

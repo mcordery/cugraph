@@ -17,13 +17,17 @@
 # cython: language_level = 3
 
 from cugraph.layout.force_atlas2 cimport force_atlas2 as c_force_atlas2
+
 from cugraph.structure import graph_primtypes_wrapper
+
 from cugraph.structure.graph_primtypes cimport *
-from libcpp cimport bool
 from libc.stdint cimport uintptr_t
+from libcpp cimport bool
+
 import cudf
-from numba import cuda
 import numpy as np
+from numba import cuda
+
 
 cdef extern from "cugraph/legacy/internals.hpp" namespace "cugraph::internals":
     cdef cppclass GraphBasedDimRedCallback

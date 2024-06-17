@@ -16,12 +16,13 @@
 # cython: embedsignature = True
 # cython: language_level = 3
 
-from cugraph.utilities.path_retrieval cimport get_traversed_cost as c_get_traversed_cost
 from cugraph.structure.graph_primtypes cimport *
+from cugraph.utilities.path_retrieval cimport get_traversed_cost as c_get_traversed_cost
 from libc.stdint cimport uintptr_t
-from numba import cuda
+
 import cudf
 import numpy as np
+from numba import cuda
 
 
 def get_traversed_cost(input_df, stop_vertex):

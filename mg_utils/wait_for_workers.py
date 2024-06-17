@@ -14,8 +14,8 @@
 import os
 import sys
 import time
-import yaml
 
+import yaml
 from dask.distributed import Client
 
 
@@ -25,9 +25,9 @@ def initialize_dask_cuda(communication_type):
         os.environ["UCX_MAX_RNDV_RAILS"] = "1"
 
     if communication_type == "ucx-ib":
-        os.environ["UCX_MEMTYPE_REG_WHOLE_ALLOC_TYPES"]="cuda"
-        os.environ["DASK_RMM__POOL_SIZE"]="0.5GB"
-        os.environ["DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT"]="True"
+        os.environ["UCX_MEMTYPE_REG_WHOLE_ALLOC_TYPES"] = "cuda"
+        os.environ["DASK_RMM__POOL_SIZE"] = "0.5GB"
+        os.environ["DASK_DISTRIBUTED__COMM__UCX__CREATE_CUDA_CONTEXT"] = "True"
 
 
 def wait_for_workers(

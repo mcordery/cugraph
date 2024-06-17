@@ -33,11 +33,11 @@
 
 #pragma once
 
-#include <hipco/detail/traits.hpp>
-#include <hipco/detail/utils.cuh>
-
 #include <thrust/device_reference.h>
 #include <thrust/tuple.h>
+
+#include <hipco/detail/traits.hpp>
+#include <hipco/detail/utils.cuh>
 
 #include <tuple>
 #include <type_traits>

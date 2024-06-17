@@ -17,18 +17,21 @@
 # cython: language_level = 3
 
 from cugraph.structure.graph_primtypes cimport *
+
 from cugraph.structure.utils_wrapper import *
+
 from libcpp cimport bool
+
 import enum
+
 from libc.stdint cimport uintptr_t
 
-import dask_cudf as dc
-import cugraph.dask.comms.comms as Comms
-from dask.distributed import wait, default_client
-from cugraph.dask.common.input_utils import DistributedDataHandler
-
 import cudf
+import cugraph.dask.comms.comms as Comms
+import dask_cudf as dc
 import numpy as np
+from cugraph.dask.common.input_utils import DistributedDataHandler
+from dask.distributed import default_client, wait
 
 
 def datatype_cast(cols, dtypes):

@@ -18,8 +18,8 @@
 
 #include "../silhouette_score.cuh"
 
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/cuda_stream_pool.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/device_atomics.cuh>

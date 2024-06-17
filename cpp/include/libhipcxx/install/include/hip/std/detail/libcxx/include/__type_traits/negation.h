@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -28,10 +28,10 @@ struct _Not : _BoolConstant<!_Pred::value> {};
 #if _LIBCUDACXX_STD_VER > 11
 template <class _Tp>
 struct negation : _Not<_Tp> {};
-template<class _Tp>
+template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool negation_v = !_Tp::value;
-#endif // _LIBCUDACXX_STD_VER > 14
+#endif  // _LIBCUDACXX_STD_VER > 14
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_NEGATION_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_NEGATION_H

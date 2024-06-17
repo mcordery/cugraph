@@ -274,7 +274,7 @@ class graph_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<!m
   graph_t(raft::handle_t const& handle)
     : detail::graph_base_t<vertex_t, edge_t>(),
       offsets_(0, handle.get_stream()),
-      indices_(0, handle.get_stream()){};
+      indices_(0, handle.get_stream()) {};
 
   graph_t(raft::handle_t const& handle,
           rmm::device_uvector<edge_t>&& offsets,

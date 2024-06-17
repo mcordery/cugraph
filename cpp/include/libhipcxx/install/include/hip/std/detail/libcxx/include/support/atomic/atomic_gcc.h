@@ -13,4 +13,4 @@
 
 #include "atomic_base.h"
 
-#endif // _LIBCUDACXX_ATOMIC_GCC_H
+#endif  // _LIBCUDACXX_ATOMIC_GCC_H

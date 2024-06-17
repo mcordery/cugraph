@@ -34,20 +34,17 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-#include "cutlass/gemm/gemm.h"
-#include "cutlass/gemm/warp/mma.h"
-
-#include "cutlass/gemm/thread/mma.h"
-
-#include "cutlass/gemm/warp/mma_simt_tile_iterator.h"
-#include "cutlass/gemm/warp/mma_simt_policy.h"
-
-#include "cutlass/gemm/warp/mma_simt.h"
 #include "cutlass/conv/warp/mma_depthwise_simt_tile_iterator.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/gemm.h"
+#include "cutlass/gemm/thread/mma.h"
+#include "cutlass/gemm/warp/mma.h"
+#include "cutlass/gemm/warp/mma_simt.h"
+#include "cutlass/gemm/warp/mma_simt_policy.h"
+#include "cutlass/gemm/warp/mma_simt_tile_iterator.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,37 +56,37 @@ namespace warp {
 
 /// Structure to compute the matrix product targeting CUDA cores and SIMT math instructions.
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename Shape_,
-    /// Data type of A elements
-    typename ElementA_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA_,
-    /// Data type of B elements
-    typename ElementB_,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB_,
-    /// Element type of C matrix
-    typename ElementC_,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC_,
-    /// Shape of the warp in units of thread (concept: MmaSimtPolicy)
-    typename Policy_,
-    /// Number of partitions along K dimension
-    int PartitionsK = 1,
-    /// Complex transformation on operand A
-    ComplexTransform TransformA = ComplexTransform::kNone,
-    /// Complex transformation on operand B
-    ComplexTransform TransformB = ComplexTransform::kNone,
-    /// Used for partial specialization
-    typename Enable = bool>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename Shape_,
+  /// Data type of A elements
+  typename ElementA_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA_,
+  /// Data type of B elements
+  typename ElementB_,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB_,
+  /// Element type of C matrix
+  typename ElementC_,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC_,
+  /// Shape of the warp in units of thread (concept: MmaSimtPolicy)
+  typename Policy_,
+  /// Number of partitions along K dimension
+  int PartitionsK = 1,
+  /// Complex transformation on operand A
+  ComplexTransform TransformA = ComplexTransform::kNone,
+  /// Complex transformation on operand B
+  ComplexTransform TransformB = ComplexTransform::kNone,
+  /// Used for partial specialization
+  typename Enable = bool>
 class MmaDepthwiseSimt
-    : public cutlass::gemm::warp::
-          MmaSimt<Shape_, ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_, LayoutC_, Policy_> {
+  : public cutlass::gemm::warp::
+      MmaSimt<Shape_, ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_, LayoutC_, Policy_> {
   using Base = cutlass::gemm::warp::
-      MmaSimt<Shape_, ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_, LayoutC_, Policy_>;
-      
-public:
+    MmaSimt<Shape_, ElementA_, LayoutA_, ElementB_, LayoutB_, ElementC_, LayoutC_, Policy_>;
+
+ public:
   /// Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;  // < 64, 16 , 8>
 
@@ -126,8 +123,7 @@ public:
   /// Complex transform on B operand
   static ComplexTransform const kTransformB = TransformB;
 
-public:
-
+ public:
   /// Iterates over the B operand in memory
   using IteratorB = cutlass::conv::warp::DepthwiseMmaSimtTileIterator<
     MatrixShape<Policy::LaneMmaShape::kK, Shape::kN>,
@@ -136,8 +132,7 @@ public:
     LayoutB,
     Policy,
     PartitionsK,
-    Shape::kK
-  >;
+    Shape::kK>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
@@ -145,19 +140,18 @@ public:
   /// Storage for transformed A tile
   using TransformedFragmentB = FragmentB;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_DEVICE
-  MmaDepthwiseSimt():Base() {}
+  MmaDepthwiseSimt() : Base() {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace conv
+}  // namespace cutlass

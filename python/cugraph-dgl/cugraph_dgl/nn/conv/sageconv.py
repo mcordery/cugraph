@@ -13,8 +13,8 @@
 
 from typing import Optional, Union
 
-from cugraph_dgl.nn.conv.base import BaseConv, SparseGraph
 from cugraph.utilities.utils import import_optional
+from cugraph_dgl.nn.conv.base import BaseConv, SparseGraph
 
 dgl = import_optional("dgl")
 torch = import_optional("torch")
@@ -61,6 +61,7 @@ class SAGEConv(BaseConv):
             [-1.1690,  0.1952],
             [-1.1690,  0.1952]], device='cuda:0', grad_fn=<AddmmBackward0>)
     """
+
     valid_aggr_types = {"mean", "sum", "min", "max", "pool", "gcn"}
 
     def __init__(

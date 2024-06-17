@@ -38,43 +38,35 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/platform/platform.h"
-
-#include "cutlass/gemm/gemm.h"
-
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/conversion_op.h"
 #include "cutlass/epilogue/thread/linear_combination.h"
 #include "cutlass/epilogue/thread/linear_combination_clamp.h"
-#include "cutlass/epilogue/thread/linear_combination_relu.h"
-#include "cutlass/epilogue/thread/linear_combination_relu0.h"
 #include "cutlass/epilogue/thread/linear_combination_gelu.h"
-#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/linear_combination_hardswish.h"
 #include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
-
-#include "cutlass/epilogue/thread/conversion_op.h"
+#include "cutlass/epilogue/thread/linear_combination_relu.h"
+#include "cutlass/epilogue/thread/linear_combination_relu0.h"
+#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/reduction_op.h"
-
-#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
-
-#include "cutlass/epilogue/warp/fragment_iterator_tensor_op.h"
-#include "cutlass/epilogue/warp/fragment_iterator_complex_tensor_op.h"
-#include "cutlass/epilogue/warp/tile_iterator_tensor_op.h"
-#include "cutlass/epilogue/warp/tile_iterator_tensor_op_mixed.h"
 #include "cutlass/epilogue/threadblock/default_thread_map_tensor_op.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h"
-#include "cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h"
-#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
-#include "cutlass/epilogue/threadblock/shared_load_iterator_mixed.h"
-
 #include "cutlass/epilogue/threadblock/epilogue.h"
 #include "cutlass/epilogue/threadblock/interleaved_epilogue.h"
-
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator_affine.h"
+#include "cutlass/epilogue/threadblock/predicated_tile_iterator_strided_dgrad.h"
+#include "cutlass/epilogue/threadblock/shared_load_iterator.h"
+#include "cutlass/epilogue/threadblock/shared_load_iterator_mixed.h"
+#include "cutlass/epilogue/warp/fragment_iterator_complex_tensor_op.h"
+#include "cutlass/epilogue/warp/fragment_iterator_tensor_op.h"
+#include "cutlass/epilogue/warp/tile_iterator_tensor_op.h"
+#include "cutlass/epilogue/warp/tile_iterator_tensor_op_mixed.h"
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/platform/platform.h"
+#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -86,191 +78,143 @@ namespace threadblock {
 
 namespace detail {
 
-template <
-  typename ElementOutput,
-  typename ElementAccumulator,
-  int ElementsPerAccess,
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
+template <typename ElementOutput,
+          typename ElementAccumulator,
+          int ElementsPerAccess,
+          typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
 struct DefaultIteratorsTensorOp {
-  
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    WarpShape,
-    InstructionShape,
-    ElementAccumulator,
-    layout::RowMajor
-  >;
+  using WarpTileIterator = cutlass::epilogue::warp::
+    TileIteratorTensorOp<WarpShape, InstructionShape, ElementAccumulator, layout::RowMajor>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    ThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator =
+    cutlass::epilogue::threadblock::SharedLoadIterator<ThreadMap, ElementAccumulator>;
 
   static int const kFragmentsPerIteration = 1;
 };
 
 /// Partial specialization for float <= float x 4
-template <
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
-struct DefaultIteratorsTensorOp<float, float, 4, ThreadblockShape, WarpShape, InstructionShape, ThreadMap> {
-  
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    WarpShape,
-    InstructionShape,
-    float,
-    layout::RowMajor
-  >;
+template <typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
+struct DefaultIteratorsTensorOp<float,
+                                float,
+                                4,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                ThreadMap> {
+  using WarpTileIterator = cutlass::epilogue::warp::
+    TileIteratorTensorOp<WarpShape, InstructionShape, float, layout::RowMajor>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    ThreadMap,
-    float
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<ThreadMap, float>;
 
   static int const kFragmentsPerIteration = 2;
 };
 
 /// Partial specialization for int32_t <= int32_t x 4
-template <
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
-struct DefaultIteratorsTensorOp<int32_t, int32_t, 4, ThreadblockShape, WarpShape, InstructionShape, ThreadMap> {
-  
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    WarpShape,
-    InstructionShape,
-    int32_t,
-    layout::RowMajor
-  >;
+template <typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
+struct DefaultIteratorsTensorOp<int32_t,
+                                int32_t,
+                                4,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                ThreadMap> {
+  using WarpTileIterator = cutlass::epilogue::warp::
+    TileIteratorTensorOp<WarpShape, InstructionShape, int32_t, layout::RowMajor>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    ThreadMap,
-    int32_t
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<ThreadMap, int32_t>;
 
   static int const kFragmentsPerIteration = 1;
 };
 
 /// Partial specialization for float <= int32_t x 4
-template <
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
-struct DefaultIteratorsTensorOp<float, int32_t, 4, ThreadblockShape, WarpShape, InstructionShape, ThreadMap> {
+template <typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
+struct DefaultIteratorsTensorOp<float,
+                                int32_t,
+                                4,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                ThreadMap> {
+  using WarpTileIterator = cutlass::epilogue::warp::
+    TileIteratorTensorOp<WarpShape, InstructionShape, int32_t, layout::RowMajor>;
 
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOp<
-    WarpShape,
-    InstructionShape,
-    int32_t,
-    layout::RowMajor
-  >;
-
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    ThreadMap,
-    int32_t
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<ThreadMap, int32_t>;
 
   static int const kFragmentsPerIteration = 1;
 };
 
 /// Partial specialization for half <= float x 8 epilogues avoids shared memory bank conflicts.
-template <
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
-struct DefaultIteratorsTensorOp<
-  half_t, 
-  float, 
-  8, 
-  ThreadblockShape, 
-  WarpShape, 
-  InstructionShape, 
-  ThreadMap> {
-  
-  using WarpTileIterator = cutlass::epilogue::warp::TileIteratorTensorOpMixed<
-    WarpShape,
-    InstructionShape,
-    float,
-    32,
-    16,
-    8,
-    8
-  >;
+template <typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
+struct DefaultIteratorsTensorOp<half_t,
+                                float,
+                                8,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                ThreadMap> {
+  using WarpTileIterator = cutlass::epilogue::warp::
+    TileIteratorTensorOpMixed<WarpShape, InstructionShape, float, 32, 16, 8, 8>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIteratorMixed<
-    ThreadMap,
-    float,
-    32,
-    16,
-    8,
-    8
-  >;
+  using SharedLoadIterator =
+    cutlass::epilogue::threadblock::SharedLoadIteratorMixed<ThreadMap, float, 32, 16, 8, 8>;
 
   static int const kFragmentsPerIteration = 2;
 };
 
-/// Partial specialization for int8/int4b_t <= int32 x 16/8 epilogues avoids shared memory bank conflicts.
-/// Threadblock::kN = 256 still has bank conflicts.
-template <
-  typename ElementOutput,
-  int ElementsPerAccess,
-  typename ThreadblockShape,
-  typename WarpShape,
-  typename InstructionShape,
-  typename ThreadMap
->
-struct DefaultIteratorsTensorOp<
-  ElementOutput, 
-  int32_t, 
-  ElementsPerAccess,
-  ThreadblockShape, 
-  WarpShape, 
-  InstructionShape, 
-  ThreadMap> {
-
+/// Partial specialization for int8/int4b_t <= int32 x 16/8 epilogues avoids shared memory bank
+/// conflicts. Threadblock::kN = 256 still has bank conflicts.
+template <typename ElementOutput,
+          int ElementsPerAccess,
+          typename ThreadblockShape,
+          typename WarpShape,
+          typename InstructionShape,
+          typename ThreadMap>
+struct DefaultIteratorsTensorOp<ElementOutput,
+                                int32_t,
+                                ElementsPerAccess,
+                                ThreadblockShape,
+                                WarpShape,
+                                InstructionShape,
+                                ThreadMap> {
   static_assert(platform::is_same<ElementOutput, cutlass::int4b_t>::value ||
-                platform::is_same<ElementOutput, cutlass::uint4b_t>::value ||
-                platform::is_same<ElementOutput, int8_t>::value ||
-                platform::is_same<ElementOutput, uint8_t>::value,
+                  platform::is_same<ElementOutput, cutlass::uint4b_t>::value ||
+                  platform::is_same<ElementOutput, int8_t>::value ||
+                  platform::is_same<ElementOutput, uint8_t>::value,
                 "ElementOutput needs to be 4 or 8 bit (unsigned) int.");
 
-   static_assert((ElementsPerAccess == 16 || ElementsPerAccess == 8),
+  static_assert((ElementsPerAccess == 16 || ElementsPerAccess == 8),
                 "ElementsPerAccess needs to be 16 or 8.");
-  
-  using WarpTileIteratorMixed = cutlass::epilogue::warp::TileIteratorTensorOpMixed<
-    WarpShape,
-    InstructionShape,
-    int32_t,
-    32,
-    cutlass::sizeof_bits<ElementOutput>::value,
-    ElementsPerAccess,
-    8
-  >;
 
-  using WarpTileIteratorNotMixed =  cutlass::epilogue::warp::TileIteratorTensorOp<
-    WarpShape,
-    InstructionShape,
-    int32_t,
-    layout::RowMajor
-  >;
+  using WarpTileIteratorMixed =
+    cutlass::epilogue::warp::TileIteratorTensorOpMixed<WarpShape,
+                                                       InstructionShape,
+                                                       int32_t,
+                                                       32,
+                                                       cutlass::sizeof_bits<ElementOutput>::value,
+                                                       ElementsPerAccess,
+                                                       8>;
 
-  using WarpTileIterator = typename platform::conditional<
-                             (ThreadblockShape::kN == 256),
-                             WarpTileIteratorNotMixed,
-                             WarpTileIteratorMixed>::type;
+  using WarpTileIteratorNotMixed = cutlass::epilogue::warp::
+    TileIteratorTensorOp<WarpShape, InstructionShape, int32_t, layout::RowMajor>;
+
+  using WarpTileIterator = typename platform::conditional<(ThreadblockShape::kN == 256),
+                                                          WarpTileIteratorNotMixed,
+                                                          WarpTileIteratorMixed>::type;
 
   using SharedLoadIteratorMixed = cutlass::epilogue::threadblock::SharedLoadIteratorMixed<
     ThreadMap,
@@ -278,45 +222,38 @@ struct DefaultIteratorsTensorOp<
     32,
     cutlass::sizeof_bits<ElementOutput>::value,
     ElementsPerAccess,
-    8
-  >;
+    8>;
 
-  using SharedLoadIteratorNotMixed = cutlass::epilogue::threadblock::SharedLoadIterator<
-    ThreadMap,
-    int32_t
-  >;
+  using SharedLoadIteratorNotMixed =
+    cutlass::epilogue::threadblock::SharedLoadIterator<ThreadMap, int32_t>;
 
-  using SharedLoadIterator = typename platform::conditional<
-                             (ThreadblockShape::kN == 256),
-                             SharedLoadIteratorNotMixed,
-                             SharedLoadIteratorMixed>::type;
+  using SharedLoadIterator = typename platform::conditional<(ThreadblockShape::kN == 256),
+                                                            SharedLoadIteratorNotMixed,
+                                                            SharedLoadIteratorMixed>::type;
 
   static int const kFragmentsPerIteration = 1;
 };
-} // namespace detail
+}  // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  typename Shape_,
-  typename WarpMmaTensorOp_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueTensorOp {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -328,89 +265,83 @@ struct DefaultEpilogueTensorOp {
     typename WarpMmaTensorOp::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
   static bool const UseCUDAStore = platform::is_same<ElementOutput, double>::value;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout,
-    UseCUDAStore
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIterator<OutputTileThreadMap,
+                                                           ElementOutput,
+                                                           ScatterD,
+                                                           PermuteDLayout,
+                                                           UseCUDAStore>;
 
-  using AccumulatorFragmentIterator = typename platform::conditional<is_complex<ElementOutput>::value,
-                                    cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        LayoutC>,
-                                    cutlass::epilogue::warp::FragmentIteratorTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        LayoutC> >::type;
+  using AccumulatorFragmentIterator =
+    typename platform::conditional<is_complex<ElementOutput>::value,
+                                   cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     LayoutC>,
+                                   cutlass::epilogue::warp::FragmentIteratorTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     LayoutC>>::type;
 
   /// Support several implementations depending on structure of epilogue
-  using DefaultIterators = detail::DefaultIteratorsTensorOp<
-    ElementOutput,
-    ElementAccumulator,
-    kElementsPerAccess,
-    Shape,
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    typename OutputTileThreadMap::CompactedThreadMap
-  >;
+  using DefaultIterators =
+    detail::DefaultIteratorsTensorOp<ElementOutput,
+                                     ElementAccumulator,
+                                     kElementsPerAccess,
+                                     Shape,
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename OutputTileThreadMap::CompactedThreadMap>;
 
-  using WarpTileIterator = typename DefaultIterators::WarpTileIterator;
+  using WarpTileIterator   = typename DefaultIterators::WarpTileIterator;
   using SharedLoadIterator = typename DefaultIterators::SharedLoadIterator;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = cutlass::MatrixShape<0, 64 / sizeof_bits<ElementAccumulator>::value * 4>;
 
-  static int const kFragmentsPerIteration = (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
+  static int const kFragmentsPerIteration =
+    (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding,
-    kFragmentsPerIteration
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding,
+                                                            kFragmentsPerIteration>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  typename Shape_,
-  typename WarpMmaTensorOp_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
 struct DefaultEpilogueTensorOpStridedDgrad {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -422,86 +353,79 @@ struct DefaultEpilogueTensorOpStridedDgrad {
     typename WarpMmaTensorOp::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIteratorStridedDgrad<
-    OutputTileThreadMap,
-    ElementOutput
-  >;
+  using OutputTileIterator =
+    cutlass::epilogue::threadblock::PredicatedTileIteratorStridedDgrad<OutputTileThreadMap,
+                                                                       ElementOutput>;
 
-  using AccumulatorFragmentIterator = typename platform::conditional<is_complex<ElementOutput>::value,
-                                    cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        LayoutC>,
-                                    cutlass::epilogue::warp::FragmentIteratorTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        LayoutC> >::type;
+  using AccumulatorFragmentIterator =
+    typename platform::conditional<is_complex<ElementOutput>::value,
+                                   cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     LayoutC>,
+                                   cutlass::epilogue::warp::FragmentIteratorTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     LayoutC>>::type;
 
   /// Support several implementations depending on structure of epilogue
-  using DefaultIterators = detail::DefaultIteratorsTensorOp<
-    ElementOutput,
-    ElementAccumulator,
-    kElementsPerAccess,
-    Shape,
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    typename OutputTileThreadMap::CompactedThreadMap
-  >;
+  using DefaultIterators =
+    detail::DefaultIteratorsTensorOp<ElementOutput,
+                                     ElementAccumulator,
+                                     kElementsPerAccess,
+                                     Shape,
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename OutputTileThreadMap::CompactedThreadMap>;
 
-  using WarpTileIterator = typename DefaultIterators::WarpTileIterator;
+  using WarpTileIterator   = typename DefaultIterators::WarpTileIterator;
   using SharedLoadIterator = typename DefaultIterators::SharedLoadIterator;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = cutlass::MatrixShape<0, 64 / sizeof_bits<ElementAccumulator>::value * 4>;
 
-  static int const kFragmentsPerIteration = (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
+  static int const kFragmentsPerIteration =
+    (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding,
-    kFragmentsPerIteration
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding,
+                                                            kFragmentsPerIteration>;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps.
-template <
-  int Rank,
-  typename Shape_,
-  typename WarpMmaTensorOp_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
+template <int Rank,
+          typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
 struct DefaultEpilogueTensorOpAffineRankN {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -513,161 +437,176 @@ struct DefaultEpilogueTensorOpAffineRankN {
     typename WarpMmaTensorOp::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIteratorAffineRankN<
-    OutputTileThreadMap,
-    ElementOutput,
-    Rank
-  >;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    PredicatedTileIteratorAffineRankN<OutputTileThreadMap, ElementOutput, Rank>;
 
   // Map to the row major iterator since the iterator selection for affineN is the same.
-  using AccumulatorFragmentIterator = typename platform::conditional<is_complex<ElementOutput>::value,
-                                    cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        layout::RowMajor>,
-                                    cutlass::epilogue::warp::FragmentIteratorTensorOp<
-                                        typename WarpMmaTensorOp::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::Shape,
-                                        typename WarpMmaTensorOp::Policy::Operator::ElementC,
-                                        typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-                                        layout::RowMajor> >::type;
+  using AccumulatorFragmentIterator =
+    typename platform::conditional<is_complex<ElementOutput>::value,
+                                   cutlass::epilogue::warp::FragmentIteratorComplexTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     layout::RowMajor>,
+                                   cutlass::epilogue::warp::FragmentIteratorTensorOp<
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::ElementC,
+                                     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+                                     layout::RowMajor>>::type;
 
   /// Support several implementations depending on structure of epilogue
-  using DefaultIterators = detail::DefaultIteratorsTensorOp<
-    ElementOutput,
-    ElementAccumulator,
-    kElementsPerAccess,
-    Shape,
-    typename WarpMmaTensorOp::Shape,
-    typename WarpMmaTensorOp::Policy::Operator::Shape,
-    typename OutputTileThreadMap::CompactedThreadMap
-  >;
+  using DefaultIterators =
+    detail::DefaultIteratorsTensorOp<ElementOutput,
+                                     ElementAccumulator,
+                                     kElementsPerAccess,
+                                     Shape,
+                                     typename WarpMmaTensorOp::Shape,
+                                     typename WarpMmaTensorOp::Policy::Operator::Shape,
+                                     typename OutputTileThreadMap::CompactedThreadMap>;
 
-  using WarpTileIterator = typename DefaultIterators::WarpTileIterator;
+  using WarpTileIterator   = typename DefaultIterators::WarpTileIterator;
   using SharedLoadIterator = typename DefaultIterators::SharedLoadIterator;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = cutlass::MatrixShape<0, 64 / sizeof_bits<ElementAccumulator>::value * 4>;
 
-  static int const kFragmentsPerIteration = (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
+  static int const kFragmentsPerIteration =
+    (kPartitionsK == 1 ? DefaultIterators::kFragmentsPerIteration : 1);
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding,
-    kFragmentsPerIteration
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding,
+                                                            kFragmentsPerIteration>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Defines sensible defaults for epilogues for TensorOps which uses
 /// intereleaved output layout. For this case, shared memory is not needed.
-template <typename Shape_, typename WarpMmaTensorOp_, int PartitionsK,
-          typename OutputOp_, int ElementsPerAccess, int InterleavedK,
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess,
+          int InterleavedK,
           bool isSplitK = false>
 struct DefaultInterleavedEpilogueTensorOp {
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
   // Thread map
   //
-  using OutputTileThreadMap = typename cutlass::epilogue::threadblock::
-      DefaultInterleavedThreadMapTensorOp<
-          Shape, typename WarpMmaTensorOp::Shape, kPartitionsK, ElementOutput,
-          kElementsPerAccess, InterleavedK>::Type;
+  using OutputTileThreadMap =
+    typename cutlass::epilogue::threadblock::DefaultInterleavedThreadMapTensorOp<
+      Shape,
+      typename WarpMmaTensorOp::Shape,
+      kPartitionsK,
+      ElementOutput,
+      kElementsPerAccess,
+      InterleavedK>::Type;
 
-  using OutputTileIterator =
-      cutlass::epilogue::threadblock::InterleavedPredicatedTileIterator<
-          OutputTileThreadMap, ElementOutput, InterleavedK>;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    InterleavedPredicatedTileIterator<OutputTileThreadMap, ElementOutput, InterleavedK>;
 
-  using AccumulatorFragmentIterator =
-      cutlass::epilogue::warp::FragmentIteratorTensorOp<
-          typename WarpMmaTensorOp::Shape,
-          typename WarpMmaTensorOp::Policy::Operator::Shape,
-          typename WarpMmaTensorOp::Policy::Operator::ElementC,
-          typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-          LayoutC>;
+  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorTensorOp<
+    typename WarpMmaTensorOp::Shape,
+    typename WarpMmaTensorOp::Policy::Operator::Shape,
+    typename WarpMmaTensorOp::Policy::Operator::ElementC,
+    typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+    LayoutC>;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::InterleavedEpilogue<
-      Shape, WarpMmaTensorOp, kPartitionsK, OutputTileIterator,
-      AccumulatorFragmentIterator, OutputOp, InterleavedK>;
+  using Epilogue = cutlass::epilogue::threadblock::InterleavedEpilogue<Shape,
+                                                                       WarpMmaTensorOp,
+                                                                       kPartitionsK,
+                                                                       OutputTileIterator,
+                                                                       AccumulatorFragmentIterator,
+                                                                       OutputOp,
+                                                                       InterleavedK>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for TensorOps which uses
 /// intereleaved output layout. For this case, shared memory is not needed.
-template <typename Shape_, typename WarpMmaTensorOp_, int PartitionsK,
-          typename OutputOp_, int ElementsPerAccess, int InterleavedK,
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess,
+          int InterleavedK,
           bool isSplitK = false>
 struct DefaultInterleavedConvEpilogue {
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
+  using ElementOutput      = typename OutputOp::ElementOutput;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
   // Thread map
   //
-  using OutputTileThreadMap = typename cutlass::epilogue::threadblock::
-      DefaultInterleavedConvThreadMapTensorOp<
-          Shape, typename WarpMmaTensorOp::Shape, kPartitionsK, ElementOutput,
-          kElementsPerAccess, InterleavedK>::Type;
+  using OutputTileThreadMap =
+    typename cutlass::epilogue::threadblock::DefaultInterleavedConvThreadMapTensorOp<
+      Shape,
+      typename WarpMmaTensorOp::Shape,
+      kPartitionsK,
+      ElementOutput,
+      kElementsPerAccess,
+      InterleavedK>::Type;
 
-  using OutputTileIterator =
-      cutlass::epilogue::threadblock::InterleavedConvPredicatedTileIterator<
-          OutputTileThreadMap, ElementOutput, InterleavedK>;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    InterleavedConvPredicatedTileIterator<OutputTileThreadMap, ElementOutput, InterleavedK>;
 
-  using AccumulatorFragmentIterator =
-      cutlass::epilogue::warp::FragmentIteratorTensorOp<
-          typename WarpMmaTensorOp::Shape,
-          typename WarpMmaTensorOp::Policy::Operator::Shape,
-          typename WarpMmaTensorOp::Policy::Operator::ElementC,
-          typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-          // can reuse the gemm version here to do element selection
-          layout::ColumnMajorInterleaved<InterleavedK>>;
+  using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorTensorOp<
+    typename WarpMmaTensorOp::Shape,
+    typename WarpMmaTensorOp::Policy::Operator::Shape,
+    typename WarpMmaTensorOp::Policy::Operator::ElementC,
+    typename WarpMmaTensorOp::Policy::Operator::FragmentC,
+    // can reuse the gemm version here to do element selection
+    layout::ColumnMajorInterleaved<InterleavedK>>;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::InterleavedEpilogue<
-      Shape, WarpMmaTensorOp, kPartitionsK, OutputTileIterator,
-      AccumulatorFragmentIterator, OutputOp, InterleavedK>;
+  using Epilogue = cutlass::epilogue::threadblock::InterleavedEpilogue<Shape,
+                                                                       WarpMmaTensorOp,
+                                                                       kPartitionsK,
+                                                                       OutputTileIterator,
+                                                                       AccumulatorFragmentIterator,
+                                                                       OutputOp,
+                                                                       InterleavedK>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -63,7 +63,7 @@ void pairwise_matrix_dispatch(OpT distance_op,
       const DataT* y_norm,                                                             \
       OutT* out,                                                                       \
       FinOpT fin_op,                                                                   \
-      hipStream_t stream,                                                             \
+      hipStream_t stream,                                                              \
       bool is_row_major)
 
 /*

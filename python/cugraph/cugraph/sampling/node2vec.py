@@ -11,14 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pylibcugraph import (
-    ResourceHandle,
-    node2vec as pylibcugraph_node2vec,
-)
-from cugraph.utilities import ensure_cugraph_obj_for_nx
 import warnings
 
 import cudf
+from cugraph.utilities import ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import node2vec as pylibcugraph_node2vec
 
 
 # FIXME: Move this function to the utility module so that it can be

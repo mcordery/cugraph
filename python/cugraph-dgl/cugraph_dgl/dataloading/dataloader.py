@@ -11,21 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
 import os
 import shutil
+
+import cudf
 import cugraph_dgl
 import cupy as cp
-import cudf
-from cugraph.utilities.utils import import_optional
 from cugraph.gnn import BulkSampler
-from dask.distributed import default_client, Event
+from cugraph.utilities.utils import import_optional
 from cugraph_dgl.dataloading import (
-    HomogenousBulkSamplerDataset,
     HeterogenousBulkSamplerDataset,
+    HomogenousBulkSamplerDataset,
 )
 from cugraph_dgl.dataloading.utils.extract_graph_helpers import (
     create_cugraph_graph_from_edges_dict,
 )
+from dask.distributed import Event, default_client
 
 dgl = import_optional("dgl")
 torch = import_optional("torch")

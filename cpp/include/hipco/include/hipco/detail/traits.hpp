@@ -36,41 +36,35 @@
 #include <thrust/tuple.h>
 
 #include <hip/std/type_traits>
-
 #include <tuple>
 
 namespace hipco::detail {
 
 template <typename T, typename = void>
-struct is_std_pair_like : hip::std::false_type {
-};
+struct is_std_pair_like : hip::std::false_type {};
 
 template <typename T>
 struct is_std_pair_like<T,
                         hip::std::void_t<decltype(std::get<0>(hip::std::declval<T>())),
-                                          decltype(std::get<1>(hip::std::declval<T>()))>>
+                                         decltype(std::get<1>(hip::std::declval<T>()))>>
   : hip::std::
-      conditional_t<std::tuple_size<T>::value == 2, hip::std::true_type, hip::std::false_type> {
-};
+      conditional_t<std::tuple_size<T>::value == 2, hip::std::true_type, hip::std::false_type> {};
 
 template <typename T, typename = void>
-struct is_thrust_pair_like_impl : hip::std::false_type {
-};
+struct is_thrust_pair_like_impl : hip::std::false_type {};
 
 template <typename T>
-struct is_thrust_pair_like_impl<
-  T,
-  hip::std::void_t<decltype(thrust::get<0>(hip::std::declval<T>())),
-                    decltype(thrust::get<1>(hip::std::declval<T>()))>>
-  : hip::std::conditional_t<thrust::tuple_size<T>::value == 2,
-                             hip::std::true_type,
-                             hip::std::false_type> {
+struct is_thrust_pair_like_impl<T,
+                                hip::std::void_t<decltype(thrust::get<0>(hip::std::declval<T>())),
+                                                 decltype(thrust::get<1>(hip::std::declval<T>()))>>
+  : hip::std::
+      conditional_t<thrust::tuple_size<T>::value == 2, hip::std::true_type, hip::std::false_type> {
 };
 
 template <typename T>
 struct is_thrust_pair_like
-  : is_thrust_pair_like_impl<hip::std::remove_reference_t<decltype(thrust::raw_reference_cast(
-      hip::std::declval<T>()))>> {
+  : is_thrust_pair_like_impl<
+      hip::std::remove_reference_t<decltype(thrust::raw_reference_cast(hip::std::declval<T>()))>> {
 };
 
 }  // namespace hipco::detail

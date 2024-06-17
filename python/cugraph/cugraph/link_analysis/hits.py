@@ -13,13 +13,12 @@
 # limitations under the License.
 #
 
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
-from pylibcugraph import ResourceHandle, hits as pylibcugraph_hits
-import cudf
 import warnings
+
+import cudf
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import hits as pylibcugraph_hits
 
 
 def hits(G, max_iter=100, tol=1.0e-5, nstart=None, normalized=True):

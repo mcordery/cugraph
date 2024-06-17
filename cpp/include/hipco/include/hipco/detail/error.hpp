@@ -38,7 +38,7 @@
 #include <hip/hip_runtime_api.h>
 
 #define STRINGIFY_DETAIL(x) #x
-#define HIPCO_STRINGIFY(x)   STRINGIFY_DETAIL(x)
+#define HIPCO_STRINGIFY(x)  STRINGIFY_DETAIL(x)
 
 /**
  * @brief Error checking macro for CUDA runtime API functions.
@@ -65,14 +65,15 @@
   GET_HIPCO_HIP_TRY_MACRO(__VA_ARGS__, HIPCO_HIP_TRY_2, HIPCO_HIP_TRY_1) \
   (__VA_ARGS__)
 #define GET_HIPCO_HIP_TRY_MACRO(_1, _2, NAME, ...) NAME
-#define HIPCO_HIP_TRY_2(_call, _exception_type)                                                    \
-  do {                                                                                             \
-    hipError_t error = (_call);                                                             \
-    if (hipSuccess != error) {                                                                    \
-      error = hipGetLastError();                                                                          \
-      throw _exception_type{std::string{"CUDA error at: "} + __FILE__ + HIPCO_STRINGIFY(__LINE__) + \
-                            ": " + hipGetErrorName(error) + " " + hipGetErrorString(error)};     \
-    }                                                                                              \
+#define HIPCO_HIP_TRY_2(_call, _exception_type)                                               \
+  do {                                                                                        \
+    hipError_t error = (_call);                                                               \
+    if (hipSuccess != error) {                                                                \
+      error = hipGetLastError();                                                              \
+      throw _exception_type{std::string{"CUDA error at: "} + __FILE__ +                       \
+                            HIPCO_STRINGIFY(__LINE__) + ": " + hipGetErrorName(error) + " " + \
+                            hipGetErrorString(error)};                                        \
+    }                                                                                         \
   } while (0);
 #define HIPCO_HIP_TRY_1(_call) HIPCO_HIP_TRY_2(_call, hipco::cuda_error)
 
@@ -82,9 +83,9 @@
  *
  */
 #define HIPCO_ASSERT_CUDA_SUCCESS(expr) \
-  do {                                 \
-    hipError_t const status = (expr); \
-    assert(hipSuccess == status);     \
+  do {                                  \
+    hipError_t const status = (expr);   \
+    assert(hipSuccess == status);       \
   } while (0)
 
 /**
@@ -111,21 +112,22 @@
  *     specified, defaults to `hipco::logic_error`.
  * @throw `_exception_type` if the condition evaluates to 0 (false).
  */
-#define HIPCO_EXPECTS(...)                                             \
+#define HIPCO_EXPECTS(...)                                               \
   GET_HIPCO_EXPECTS_MACRO(__VA_ARGS__, HIPCO_EXPECTS_3, HIPCO_EXPECTS_2) \
   (__VA_ARGS__)
 
 #define GET_HIPCO_EXPECTS_MACRO(_1, _2, _3, NAME, ...) NAME
 
-#define HIPCO_EXPECTS_3(_condition, _reason, _exception_type)                    \
-  do {                                                                          \
-    static_assert(std::is_base_of_v<std::exception, _exception_type>);          \
-    (_condition) ? static_cast<void>(0)                                         \
-                 : throw _exception_type /*NOLINT(bugprone-macro-parentheses)*/ \
+#define HIPCO_EXPECTS_3(_condition, _reason, _exception_type)                     \
+  do {                                                                            \
+    static_assert(std::is_base_of_v<std::exception, _exception_type>);            \
+    (_condition) ? static_cast<void>(0)                                           \
+                 : throw _exception_type /*NOLINT(bugprone-macro-parentheses)*/   \
       {"HIPCO failure at: " __FILE__ ":" HIPCO_STRINGIFY(__LINE__) ": " _reason}; \
   } while (0)
 
-#define HIPCO_EXPECTS_2(_condition, _reason) HIPCO_EXPECTS_3(_condition, _reason, hipco::logic_error)
+#define HIPCO_EXPECTS_2(_condition, _reason) \
+  HIPCO_EXPECTS_3(_condition, _reason, hipco::logic_error)
 
 /**
  * @brief Indicates that an erroneous code path has been taken.
@@ -146,13 +148,13 @@
  *     specified, defaults to `hipco::logic_error`.
  * @throw `_exception_type` if the condition evaluates to 0 (false).
  */
-#define HIPCO_FAIL(...)                                       \
+#define HIPCO_FAIL(...)                                         \
   GET_HIPCO_FAIL_MACRO(__VA_ARGS__, HIPCO_FAIL_2, HIPCO_FAIL_1) \
   (__VA_ARGS__)
 
 #define GET_HIPCO_FAIL_MACRO(_1, _2, NAME, ...) NAME
 
-#define HIPCO_FAIL_2(_what, _exception_type)      \
+#define HIPCO_FAIL_2(_what, _exception_type)     \
   /*NOLINTNEXTLINE(bugprone-macro-parentheses)*/ \
   throw _exception_type { "HIPCO failure at:" __FILE__ ":" HIPCO_STRINGIFY(__LINE__) ": " _what }
 

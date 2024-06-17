@@ -15,9 +15,8 @@ import argparse
 import sys
 from collections import namedtuple
 
-from networkx.utils.backends import _registered_algorithms as algos
-
 from _nx_cugraph import get_info
+from networkx.utils.backends import _registered_algorithms as algos
 from nx_cugraph.interface import BackendInterface
 
 

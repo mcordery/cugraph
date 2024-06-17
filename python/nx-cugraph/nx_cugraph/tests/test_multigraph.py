@@ -11,9 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import networkx as nx
-import pytest
-
 import nx_cugraph as nxcg
+import pytest
 
 
 @pytest.mark.parametrize("test_nxcugraph", [False, True])

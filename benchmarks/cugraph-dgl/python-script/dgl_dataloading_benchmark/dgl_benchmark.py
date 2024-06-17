@@ -12,15 +12,16 @@
 # limitations under the License.
 
 
-import dgl
-import torch
-import pandas as pd
-import os
-import time
 import json
+import os
 import random
-import numpy as np
+import time
 from argparse import ArgumentParser
+
+import dgl
+import numpy as np
+import pandas as pd
+import torch
 
 
 def load_edges_from_disk(parquet_path, replication_factor, input_meta):
@@ -97,9 +98,9 @@ def load_node_labels(dataset_path, replication_factor, input_meta):
             node_label_tensor = torch.full(
                 (num_nodes_dict[node_type],), -1, dtype=torch.float32
             )
-            node_label_tensor[
-                torch.as_tensor(node_label.node.values)
-            ] = torch.as_tensor(node_label.label.values)
+            node_label_tensor[torch.as_tensor(node_label.node.values)] = (
+                torch.as_tensor(node_label.label.values)
+            )
 
             del node_label
             node_data[node_type]["train_idx"] = (

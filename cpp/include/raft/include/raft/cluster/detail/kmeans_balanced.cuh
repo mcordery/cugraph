@@ -18,12 +18,12 @@
 
 #include <raft/cluster/detail/kmeans_common.cuh>
 #include <raft/cluster/kmeans_balanced_types.hpp>
-//#include <raft/common/nvtx.hpp>
+// #include <raft/common/nvtx.hpp>
 #include <raft/core/cudart_utils.hpp>
 #include <raft/core/logger.hpp>
 #include <raft/core/operators.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_memory_resource.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/thrust_policy.hpp>
 #include <raft/distance/distance.cuh>
 #include <raft/distance/distance_types.hpp>
@@ -322,7 +322,7 @@ void compute_norm(const raft::resources& handle,
                   MappingOpT mapping_op,
                   std::optional<rmm::device_async_resource_ref> mr = std::nullopt)
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope("compute_norm");
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope("compute_norm");
   auto stream = resource::get_cuda_stream(handle);
   rmm::device_uvector<MathT> mapped_dataset(
     0, stream, mr.value_or(resource::get_workspace_resource(handle)));
@@ -378,8 +378,8 @@ void predict(const raft::resources& handle,
              const MathT* dataset_norm                        = nullptr)
 {
   auto stream = resource::get_cuda_stream(handle);
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "predict(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "predict(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
   auto mem_res = mr.value_or(resource::get_workspace_resource(handle));
   auto [max_minibatch_size, _mem_per_row] =
     calc_minibatch_size<MathT>(n_clusters, n_rows, dim, params.metric, std::is_same_v<T, MathT>);
@@ -530,8 +530,8 @@ auto adjust_centers(MathT* centers,
                     rmm::cuda_stream_view stream,
                     rmm::device_async_resource_ref device_memory) -> bool
 {
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "adjust_centers(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "adjust_centers(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
   if (n_clusters == 0) { return false; }
   constexpr static std::array kPrimes{29,   71,   113,  173,  229,  281,  349,  409,  463,  541,
                                       601,  659,  733,  809,  863,  941,  1013, 1069, 1151, 1223,
@@ -894,7 +894,8 @@ auto build_fine_clusters(const raft::resources& handle,
                    "Number of fine clusters must be non-zero for a non-empty mesocluster");
     }
 
-    hipcub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset_mptr, mapping_op);
+    hipcub::TransformInputIterator<MathT, MappingOpT, const T*> mapping_itr(dataset_mptr,
+                                                                            mapping_op);
     raft::matrix::gather(mapping_itr, dim, n_rows, mc_trainset_ids, k, mc_trainset, stream);
     if (params.metric == raft::distance::DistanceType::L2Expanded ||
         params.metric == raft::distance::DistanceType::L2SqrtExpanded) {
@@ -961,8 +962,8 @@ void build_hierarchical(const raft::resources& handle,
   auto stream  = resource::get_cuda_stream(handle);
   using LabelT = uint32_t;
 
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "build_hierarchical(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "build_hierarchical(%zu, %u)", static_cast<size_t>(n_rows), n_clusters);
 
   IdxT n_mesoclusters = std::min(n_clusters, static_cast<IdxT>(std::sqrt(n_clusters) + 0.5));
   RAFT_LOG_DEBUG("build_hierarchical: n_mesoclusters: %u", n_mesoclusters);

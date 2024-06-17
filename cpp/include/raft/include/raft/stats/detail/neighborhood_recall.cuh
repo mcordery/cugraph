@@ -27,9 +27,9 @@
 #include <raft/core/resources.hpp>
 
 #include <hipcub/hipcub.hpp>
-#include <hip/atomic>
 
 #include <cstddef>
+#include <hip/atomic>
 #include <optional>
 
 namespace raft::stats::detail {

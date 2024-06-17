@@ -11,22 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+from typing import Iterable, Union
+
+import cudf
+from cugraph.structure import Graph
 from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
     df_edge_score_to_dictionary,
+    ensure_cugraph_obj_for_nx,
     renumber_vertex_pair,
 )
-import cudf
-import warnings
-from typing import Union, Iterable
-
-from pylibcugraph import (
-    overlap_coefficients as pylibcugraph_overlap_coefficients,
-)
-from pylibcugraph import ResourceHandle
-
-from cugraph.structure import Graph
 from cugraph.utilities.utils import import_optional
+from pylibcugraph import ResourceHandle
+from pylibcugraph import overlap_coefficients as pylibcugraph_overlap_coefficients
 
 # FIXME: the networkx.Graph type used in type annotations is specified
 # using a string literal to avoid depending on and importing networkx.

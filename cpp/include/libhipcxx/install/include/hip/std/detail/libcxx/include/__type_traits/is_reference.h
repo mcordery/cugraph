@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -22,24 +22,23 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-#if defined(_LIBCUDACXX_IS_LVALUE_REFERENCE) && !defined(_LIBCUDACXX_USE_IS_LVALUE_REFERENCE_FALLBACK) && \
-    defined(_LIBCUDACXX_IS_RVALUE_REFERENCE) && !defined(_LIBCUDACXX_USE_IS_RVALUE_REFERENCE_FALLBACK) && \
-    defined(_LIBCUDACXX_IS_REFERENCE) && !defined(_LIBCUDACXX_USE_IS_REFERENCE_FALLBACK)
+#if defined(_LIBCUDACXX_IS_LVALUE_REFERENCE) &&                                                  \
+  !defined(_LIBCUDACXX_USE_IS_LVALUE_REFERENCE_FALLBACK) &&                                      \
+  defined(_LIBCUDACXX_IS_RVALUE_REFERENCE) &&                                                    \
+  !defined(_LIBCUDACXX_USE_IS_RVALUE_REFERENCE_FALLBACK) && defined(_LIBCUDACXX_IS_REFERENCE) && \
+  !defined(_LIBCUDACXX_USE_IS_REFERENCE_FALLBACK)
 
-template<class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference 
-    : public integral_constant<bool, _LIBCUDACXX_IS_LVALUE_REFERENCE(_Tp)>
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference
+  : public integral_constant<bool, _LIBCUDACXX_IS_LVALUE_REFERENCE(_Tp)> {};
 
-template<class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference 
-    : public integral_constant<bool, _LIBCUDACXX_IS_RVALUE_REFERENCE(_Tp)>
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference
+  : public integral_constant<bool, _LIBCUDACXX_IS_RVALUE_REFERENCE(_Tp)> {};
 
-template<class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_reference 
-    : public integral_constant<bool, _LIBCUDACXX_IS_REFERENCE(_Tp)>
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_reference
+  : public integral_constant<bool, _LIBCUDACXX_IS_REFERENCE(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -52,15 +51,22 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_reference_v = _LIBCUDACXX_IS_REFERENCE(
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference       : public false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference<_Tp&> : public true_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_lvalue_reference<_Tp&> : public true_type {};
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference        : public false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference<_Tp&&> : public true_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_rvalue_reference<_Tp&&> : public true_type {};
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_reference        : public false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_reference<_Tp&>  : public true_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_reference<_Tp&&> : public true_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_reference : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_reference<_Tp&> : public true_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_reference<_Tp&&> : public true_type {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -73,8 +79,8 @@ template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_reference_v = is_reference<_Tp>::value;
 #endif
 
-#endif // __has_builtin(__is_lvalue_reference) && etc...
+#endif  // __has_builtin(__is_lvalue_reference) && etc...
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_REFERENCE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_REFERENCE_H

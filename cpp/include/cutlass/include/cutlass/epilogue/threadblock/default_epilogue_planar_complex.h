@@ -38,19 +38,16 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
+#include "cutlass/arch/arch.h"
 #include "cutlass/array.h"
 #include "cutlass/array_planar_complex.h"
-
-#include "cutlass/arch/arch.h"
-
+#include "cutlass/cutlass.h"
 #include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_simt.h"
-#include "cutlass/epilogue/threadblock/default_epilogue_volta_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_epilogue_tensor_op.h"
-
+#include "cutlass/epilogue/threadblock/default_epilogue_volta_tensor_op.h"
 #include "cutlass/epilogue/threadblock/epilogue_planar_complex.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -61,181 +58,145 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues.
-template <
-  typename ThreadblockShape_,
-  typename WarpMma_,
-  typename OpcodeClass_,
-  typename ArchTag_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
+template <typename ThreadblockShape_,
+          typename WarpMma_,
+          typename OpcodeClass_,
+          typename ArchTag_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
 struct DefaultEpiloguePlanarComplex;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues.
-template <
-  typename ThreadblockShape_,
-  typename WarpMmaOperator_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
-struct DefaultEpiloguePlanarComplex<
-  ThreadblockShape_, 
-  WarpMmaOperator_, 
-  arch::OpClassTensorOp, 
-  arch::Sm70,
-  PartitionsK, 
-  OutputOp_, 
-  ElementsPerAccess> {
+template <typename ThreadblockShape_,
+          typename WarpMmaOperator_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
+struct DefaultEpiloguePlanarComplex<ThreadblockShape_,
+                                    WarpMmaOperator_,
+                                    arch::OpClassTensorOp,
+                                    arch::Sm70,
+                                    PartitionsK,
+                                    OutputOp_,
+                                    ElementsPerAccess> {
+  using RealEpilogue = DefaultEpilogueVoltaTensorOp<ThreadblockShape_,
+                                                    WarpMmaOperator_,
+                                                    PartitionsK,
+                                                    OutputOp_,
+                                                    ElementsPerAccess>;
 
-  using RealEpilogue = DefaultEpilogueVoltaTensorOp<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    OutputOp_,
-    ElementsPerAccess
-  >;
-
-  using Epilogue = EpiloguePlanarComplex<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    typename RealEpilogue::OutputTileIterator,
-    typename RealEpilogue::AccumulatorFragmentIterator,
-    typename RealEpilogue::WarpTileIterator,
-    typename RealEpilogue::SharedLoadIterator,
-    OutputOp_,
-    typename RealEpilogue::Padding
-  >;
+  using Epilogue = EpiloguePlanarComplex<ThreadblockShape_,
+                                         WarpMmaOperator_,
+                                         PartitionsK,
+                                         typename RealEpilogue::OutputTileIterator,
+                                         typename RealEpilogue::AccumulatorFragmentIterator,
+                                         typename RealEpilogue::WarpTileIterator,
+                                         typename RealEpilogue::SharedLoadIterator,
+                                         OutputOp_,
+                                         typename RealEpilogue::Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues.
-template <
-  typename ThreadblockShape_,
-  typename WarpMmaOperator_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
-struct DefaultEpiloguePlanarComplex<
-  ThreadblockShape_, 
-  WarpMmaOperator_, 
-  arch::OpClassTensorOp, 
-  arch::Sm75,
-  PartitionsK, 
-  OutputOp_, 
-  ElementsPerAccess> {
+template <typename ThreadblockShape_,
+          typename WarpMmaOperator_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
+struct DefaultEpiloguePlanarComplex<ThreadblockShape_,
+                                    WarpMmaOperator_,
+                                    arch::OpClassTensorOp,
+                                    arch::Sm75,
+                                    PartitionsK,
+                                    OutputOp_,
+                                    ElementsPerAccess> {
+  using RealEpilogue = DefaultEpilogueTensorOp<ThreadblockShape_,
+                                               WarpMmaOperator_,
+                                               PartitionsK,
+                                               OutputOp_,
+                                               ElementsPerAccess>;
 
-  using RealEpilogue = DefaultEpilogueTensorOp<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    OutputOp_,
-    ElementsPerAccess
-  >;
-
-  using Epilogue = EpiloguePlanarComplex<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    typename RealEpilogue::OutputTileIterator,
-    typename RealEpilogue::AccumulatorFragmentIterator,
-    typename RealEpilogue::WarpTileIterator,
-    typename RealEpilogue::SharedLoadIterator,
-    OutputOp_,
-    typename RealEpilogue::Padding
-  >;
+  using Epilogue = EpiloguePlanarComplex<ThreadblockShape_,
+                                         WarpMmaOperator_,
+                                         PartitionsK,
+                                         typename RealEpilogue::OutputTileIterator,
+                                         typename RealEpilogue::AccumulatorFragmentIterator,
+                                         typename RealEpilogue::WarpTileIterator,
+                                         typename RealEpilogue::SharedLoadIterator,
+                                         OutputOp_,
+                                         typename RealEpilogue::Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues.
-template <
-  typename ThreadblockShape_,
-  typename WarpMmaOperator_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
-struct DefaultEpiloguePlanarComplex<
-  ThreadblockShape_, 
-  WarpMmaOperator_, 
-  arch::OpClassTensorOp, 
-  arch::Sm80,
-  PartitionsK, 
-  OutputOp_, 
-  ElementsPerAccess> {
+template <typename ThreadblockShape_,
+          typename WarpMmaOperator_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
+struct DefaultEpiloguePlanarComplex<ThreadblockShape_,
+                                    WarpMmaOperator_,
+                                    arch::OpClassTensorOp,
+                                    arch::Sm80,
+                                    PartitionsK,
+                                    OutputOp_,
+                                    ElementsPerAccess> {
+  using RealEpilogue = DefaultEpilogueTensorOp<ThreadblockShape_,
+                                               WarpMmaOperator_,
+                                               PartitionsK,
+                                               OutputOp_,
+                                               ElementsPerAccess>;
 
-  using RealEpilogue = DefaultEpilogueTensorOp<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    OutputOp_,
-    ElementsPerAccess
-  >;
-
-  using Epilogue = EpiloguePlanarComplex<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    typename RealEpilogue::OutputTileIterator,
-    typename RealEpilogue::AccumulatorFragmentIterator,
-    typename RealEpilogue::WarpTileIterator,
-    typename RealEpilogue::SharedLoadIterator,
-    OutputOp_,
-    typename RealEpilogue::Padding
-  >;
+  using Epilogue = EpiloguePlanarComplex<ThreadblockShape_,
+                                         WarpMmaOperator_,
+                                         PartitionsK,
+                                         typename RealEpilogue::OutputTileIterator,
+                                         typename RealEpilogue::AccumulatorFragmentIterator,
+                                         typename RealEpilogue::WarpTileIterator,
+                                         typename RealEpilogue::SharedLoadIterator,
+                                         OutputOp_,
+                                         typename RealEpilogue::Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues.
-template <
-  typename ThreadblockShape_,
-  typename WarpMmaOperator_,
-  typename ArchTag_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess
->
-struct DefaultEpiloguePlanarComplex<
-  ThreadblockShape_, 
-  WarpMmaOperator_, 
-  arch::OpClassSimt, 
-  ArchTag_,
-  PartitionsK, 
-  OutputOp_, 
-  ElementsPerAccess> {
+template <typename ThreadblockShape_,
+          typename WarpMmaOperator_,
+          typename ArchTag_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess>
+struct DefaultEpiloguePlanarComplex<ThreadblockShape_,
+                                    WarpMmaOperator_,
+                                    arch::OpClassSimt,
+                                    ArchTag_,
+                                    PartitionsK,
+                                    OutputOp_,
+                                    ElementsPerAccess> {
+  using RealEpilogue =
+    DefaultEpilogueSimt<ThreadblockShape_, WarpMmaOperator_, OutputOp_, ElementsPerAccess>;
 
-  using RealEpilogue = DefaultEpilogueSimt<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    OutputOp_,
-    ElementsPerAccess
-  >;
-
-  using Epilogue = EpiloguePlanarComplex<
-    ThreadblockShape_,
-    WarpMmaOperator_,
-    PartitionsK,
-    typename RealEpilogue::OutputTileIterator,
-    typename RealEpilogue::AccumulatorFragmentIterator,
-    typename RealEpilogue::WarpTileIterator,
-    typename RealEpilogue::SharedLoadIterator,
-    OutputOp_,
-    typename RealEpilogue::Padding
-  >;
+  using Epilogue = EpiloguePlanarComplex<ThreadblockShape_,
+                                         WarpMmaOperator_,
+                                         PartitionsK,
+                                         typename RealEpilogue::OutputTileIterator,
+                                         typename RealEpilogue::AccumulatorFragmentIterator,
+                                         typename RealEpilogue::WarpTileIterator,
+                                         typename RealEpilogue::SharedLoadIterator,
+                                         OutputOp_,
+                                         typename RealEpilogue::Padding>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

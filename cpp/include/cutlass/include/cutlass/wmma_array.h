@@ -39,8 +39,8 @@
 
 #if defined(CUTLASS_ARCH_WMMA_ENABLED)
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 
 namespace cutlass {
 
@@ -51,28 +51,23 @@ template <
   /// Element type
   typename T,
   /// Number of elements in the array
-  int N
->
-class WmmaFragmentArray: public Array<T, N, true> {
-public:
+  int N>
+class WmmaFragmentArray : public Array<T, N, true> {
+ public:
   /// Efficient clear method (override Array::clear())
   CUTLASS_HOST_DEVICE
-  void clear() {
-
-    for(int i=0; i<Array<T, N, true>::kElements; i++) {
-
+  void clear()
+  {
+    for (int i = 0; i < Array<T, N, true>::kElements; i++) {
       nvcuda::wmma::fill_fragment((*this)[i], (typename T::element_type)0);
-
     }
-
   }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#endif // if defined(CUTLASS_ARCH_WMMA_ENABLED)
-
+#endif  // if defined(CUTLASS_ARCH_WMMA_ENABLED)

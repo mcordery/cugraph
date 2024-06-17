@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/add_rvalue_reference.h"
 #include "../__type_traits/is_nothrow_constructible.h"
@@ -23,16 +23,16 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_nothrow_move_constructible
-    : public is_nothrow_constructible<_Tp, __add_rvalue_reference_t<_Tp>>
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_nothrow_move_constructible
+  : public is_nothrow_constructible<_Tp, __add_rvalue_reference_t<_Tp>> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
-_LIBCUDACXX_INLINE_VAR constexpr bool is_nothrow_move_constructible_v
-    = is_nothrow_move_constructible<_Tp>::value;
+_LIBCUDACXX_INLINE_VAR constexpr bool is_nothrow_move_constructible_v =
+  is_nothrow_move_constructible<_Tp>::value;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_NOTHROW_MOVE_CONSTRUCTIBLE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_NOTHROW_MOVE_CONSTRUCTIBLE_H

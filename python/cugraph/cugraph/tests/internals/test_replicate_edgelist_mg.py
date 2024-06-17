@@ -13,14 +13,13 @@
 
 import gc
 
-import pytest
-
 import dask_cudf
 import numpy as np
-from cugraph.datasets import karate, dolphins, karate_disjoint
-from cugraph.structure.replicate_edgelist import replicate_edgelist
+import pytest
 from cudf.testing.testing import assert_frame_equal
+from cugraph.structure.replicate_edgelist import replicate_edgelist
 
+from cugraph.datasets import dolphins, karate, karate_disjoint
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

@@ -34,8 +34,9 @@ namespace raft::neighbors::ivf_pq::detail {
 // is_local_topk_feasible is not inline here, because we would have to define it
 // here as well. That would run the risk of the definitions here and in the
 // -inl.cuh header diverging.
-auto RAFT_WEAK_FUNCTION is_local_topk_feasible(uint32_t k, uint32_t n_probes, uint32_t n_queries)
-  -> bool;
+auto RAFT_WEAK_FUNCTION is_local_topk_feasible(uint32_t k,
+                                               uint32_t n_probes,
+                                               uint32_t n_queries) -> bool;
 
 template <typename OutT,
           typename LutT,
@@ -136,46 +137,45 @@ auto compute_similarity_select(const hipDeviceProp_t& dev_props,
 
 #endif  // RAFT_EXPLICIT_INSTANTIATE_ONLY
 
-#define instantiate_raft_neighbors_ivf_pq_detail_compute_similarity_select(                 \
-  OutT, LutT, IvfSampleFilterT)                                                             \
-  extern template auto                                                                      \
-  raft::neighbors::ivf_pq::detail::compute_similarity_select<OutT, LutT, IvfSampleFilterT>( \
-    const hipDeviceProp_t& dev_props,                                                        \
-    bool manage_local_topk,                                                                 \
-    int locality_hint,                                                                      \
-    double preferred_shmem_carveout,                                                        \
-    uint32_t pq_bits,                                                                       \
-    uint32_t pq_dim,                                                                        \
-    uint32_t precomp_data_count,                                                            \
-    uint32_t n_queries,                                                                     \
-    uint32_t n_probes,                                                                      \
-    uint32_t topk)                                                                          \
-    ->raft::neighbors::ivf_pq::detail::selected<OutT, LutT, IvfSampleFilterT>;              \
-                                                                                            \
-  extern template void                                                                      \
-  raft::neighbors::ivf_pq::detail::compute_similarity_run<OutT, LutT, IvfSampleFilterT>(    \
-    raft::neighbors::ivf_pq::detail::selected<OutT, LutT, IvfSampleFilterT> s,              \
-    rmm::cuda_stream_view stream,                                                           \
-    uint32_t dim,                                                                           \
-    uint32_t n_probes,                                                                      \
-    uint32_t pq_dim,                                                                        \
-    uint32_t n_queries,                                                                     \
-    uint32_t queries_offset,                                                                \
-    raft::distance::DistanceType metric,                                                    \
-    raft::neighbors::ivf_pq::codebook_gen codebook_kind,                                    \
-    uint32_t topk,                                                                          \
-    uint32_t max_samples,                                                                   \
-    const float* cluster_centers,                                                           \
-    const float* pq_centers,                                                                \
-    const uint8_t* const* pq_dataset,                                                       \
-    const uint32_t* cluster_labels,                                                         \
-    const uint32_t* _chunk_indices,                                                         \
-    const float* queries,                                                                   \
-    const uint32_t* index_list,                                                             \
-    float* query_kths,                                                                      \
-    IvfSampleFilterT sample_filter,                                                         \
-    LutT* lut_scores,                                                                       \
-    OutT* _out_scores,                                                                      \
+#define instantiate_raft_neighbors_ivf_pq_detail_compute_similarity_select(                    \
+  OutT, LutT, IvfSampleFilterT)                                                                \
+  extern template auto                                                                         \
+  raft::neighbors::ivf_pq::detail::compute_similarity_select<OutT, LutT, IvfSampleFilterT>(    \
+    const hipDeviceProp_t& dev_props,                                                          \
+    bool manage_local_topk,                                                                    \
+    int locality_hint,                                                                         \
+    double preferred_shmem_carveout,                                                           \
+    uint32_t pq_bits,                                                                          \
+    uint32_t pq_dim,                                                                           \
+    uint32_t precomp_data_count,                                                               \
+    uint32_t n_queries,                                                                        \
+    uint32_t n_probes,                                                                         \
+    uint32_t topk) -> raft::neighbors::ivf_pq::detail::selected<OutT, LutT, IvfSampleFilterT>; \
+                                                                                               \
+  extern template void                                                                         \
+  raft::neighbors::ivf_pq::detail::compute_similarity_run<OutT, LutT, IvfSampleFilterT>(       \
+    raft::neighbors::ivf_pq::detail::selected<OutT, LutT, IvfSampleFilterT> s,                 \
+    rmm::cuda_stream_view stream,                                                              \
+    uint32_t dim,                                                                              \
+    uint32_t n_probes,                                                                         \
+    uint32_t pq_dim,                                                                           \
+    uint32_t n_queries,                                                                        \
+    uint32_t queries_offset,                                                                   \
+    raft::distance::DistanceType metric,                                                       \
+    raft::neighbors::ivf_pq::codebook_gen codebook_kind,                                       \
+    uint32_t topk,                                                                             \
+    uint32_t max_samples,                                                                      \
+    const float* cluster_centers,                                                              \
+    const float* pq_centers,                                                                   \
+    const uint8_t* const* pq_dataset,                                                          \
+    const uint32_t* cluster_labels,                                                            \
+    const uint32_t* _chunk_indices,                                                            \
+    const float* queries,                                                                      \
+    const uint32_t* index_list,                                                                \
+    float* query_kths,                                                                         \
+    IvfSampleFilterT sample_filter,                                                            \
+    LutT* lut_scores,                                                                          \
+    OutT* _out_scores,                                                                         \
     uint32_t* _out_indices);
 
 #define COMMA ,

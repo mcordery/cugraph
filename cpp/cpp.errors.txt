@@ -95,7 +95,7 @@ NB some later errors show up with CUDA intrinsics that seem to lack HIP equivale
       src/traversal/k_hop_nbrs_sg.cpp
       src/traversal/k_hop_nbrs_mg.cpp
 
-        
+
 
 
 ........................................................
@@ -105,7 +105,3 @@ NB some later errors show up with CUDA intrinsics that seem to lack HIP equivale
 
   src/structure/induced_subgraph_sg.cpp
   src/structure/induced_subgraph_mg.cpp
-
-
-
-

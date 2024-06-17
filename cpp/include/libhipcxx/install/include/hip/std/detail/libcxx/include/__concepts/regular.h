@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__concepts/equality_comparable.h"
@@ -28,26 +28,23 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 // [concept.object]
 
-template<class _Tp>
+template <class _Tp>
 concept regular = semiregular<_Tp> && equality_comparable<_Tp>;
 
 #elif _LIBCUDACXX_STD_VER > 11
 
 // [concept.object]
 
-template<class _Tp>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  __regular_,
-  requires()(
-    requires(semiregular<_Tp>),
-    requires(equality_comparable<_Tp>)
-  ));
+template <class _Tp>
+_LIBCUDACXX_CONCEPT_FRAGMENT(__regular_,
+                             requires()(requires(semiregular<_Tp>),
+                                        requires(equality_comparable<_Tp>)));
 
-template<class _Tp>
+template <class _Tp>
 _LIBCUDACXX_CONCEPT regular = _LIBCUDACXX_FRAGMENT(__regular_, _Tp);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_REGULAR_H
+#endif  // _LIBCUDACXX___CONCEPTS_REGULAR_H

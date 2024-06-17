@@ -12,14 +12,13 @@
 # limitations under the License.
 
 import gc
-
 import random
+
+import cugraph.dask as dcg
 import pytest
 
 import cugraph
-import cugraph.dask as dcg
-from cugraph.datasets import karate, dolphins
-
+from cugraph.datasets import dolphins, karate
 
 # =============================================================================
 # Pytest Setup / Teardown - called for each test function

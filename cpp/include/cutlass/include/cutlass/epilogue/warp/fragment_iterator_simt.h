@@ -32,7 +32,7 @@
     \brief This defines a "fragment" iterator for visiting the fragments of an accumulator tile
       that participate in one warp-level store operation.
 
-      Typically, the accumulator tile is the largest single block of register-backed storage 
+      Typically, the accumulator tile is the largest single block of register-backed storage
       within the kernel. Storing it to memory is best accomplished by partitioning it into
       smaller tiles and storing these sequentially.
 
@@ -44,9 +44,8 @@
 #pragma once
 
 #include "cutlass/array.h"
-#include "cutlass/layout/matrix.h"
-
 #include "cutlass/epilogue/warp/simt_policy.h"
+#include "cutlass/layout/matrix.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,97 +56,87 @@ namespace warp {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Fragment iterator for SIMT accumulator arrangements
-template <
-  typename WarpShape,             ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename Operator,              ///< matrix multiply operation (concept: arch::Mma)
-  typename Layout,                ///< target shared memory layout
-  typename MmaSimtPolicy          ///< policy defining lane arrangement (concept: MmaSimtPolicy)
->
+template <typename WarpShape,     ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename Operator,      ///< matrix multiply operation (concept: arch::Mma)
+          typename Layout,        ///< target shared memory layout
+          typename MmaSimtPolicy  ///< policy defining lane arrangement (concept: MmaSimtPolicy)
+          >
 class FragmentIteratorSimt;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major shared memory
-template <
-  typename WarpShape_,     ///< shape of the warp-level GEMM tile
-  typename Operator_ ,     ///< matrix multiply operator (concept: arch::Mma)
-  typename MmaSimtPolicy_  ///< policy defining lane arrangement (concept: MmaSimtPolicy)
->
+template <typename WarpShape_,     ///< shape of the warp-level GEMM tile
+          typename Operator_,      ///< matrix multiply operator (concept: arch::Mma)
+          typename MmaSimtPolicy_  ///< policy defining lane arrangement (concept: MmaSimtPolicy)
+          >
 class FragmentIteratorSimt<WarpShape_, Operator_, layout::RowMajor, MmaSimtPolicy_> {
-public:
-
+ public:
   using WarpShape = WarpShape_;
-  using Operator = Operator_;
-  using Layout = layout::RowMajor;
+  using Operator  = Operator_;
+  using Layout    = layout::RowMajor;
 
   /// Policy for warp-level epilogue components
   using Policy = SimtPolicy<WarpShape, Operator, Layout, MmaSimtPolicy_>;
 
   /// This is the fragment size produced by one access of the iterator.
-  using Fragment = Array<
-    typename Operator::ElementC, 
-    Policy::kElementsPerIteration>;
+  using Fragment = Array<typename Operator::ElementC, Policy::kElementsPerIteration>;
 
   /// This is the complete warp-level accumulator tile.
-  using AccumulatorTile = Array<
-    typename Operator::ElementC, 
-    Policy::kAccumulatorElementCount>;
+  using AccumulatorTile = Array<typename Operator::ElementC, Policy::kAccumulatorElementCount>;
 
   using OutputAccumulatorTile = AccumulatorTile;
 
   /// Number of times this iterator can be incremented
   static int const kIterations = Policy::kIterations;
 
-private:
-
+ private:
   /// Internal access type
   using AccessType = Array<typename Operator::ElementC, Policy::kElementsPerAccess>;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Accumulator tile
-  AccessType const *accumulators_;
+  AccessType const* accumulators_;
 
   /// Internal index
   int index_;
 
-public:
-
+ public:
   /// Constructs an iterator
   CUTLASS_HOST_DEVICE
-  FragmentIteratorSimt(AccumulatorTile const &accum): 
-    accumulators_(reinterpret_cast<AccessType const *>(&accum)), 
-    index_(0) {
-
+  FragmentIteratorSimt(AccumulatorTile const& accum)
+    : accumulators_(reinterpret_cast<AccessType const*>(&accum)), index_(0)
+  {
   }
 
   /// Increments
   CUTLASS_HOST_DEVICE
-  FragmentIteratorSimt &operator++() {
+  FragmentIteratorSimt& operator++()
+  {
     ++index_;
     return *this;
   }
 
   /// Decrements
   CUTLASS_HOST_DEVICE
-  FragmentIteratorSimt &operator--() {
+  FragmentIteratorSimt& operator--()
+  {
     --index_;
     return *this;
   }
 
   /// Loads a fragment from the referenced part of the accumulator tile
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, int index_offset = 0) const {
-
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+  void load(Fragment& frag, int index_offset = 0) const
+  {
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int n = 0; n < Policy::kAccessesPerIteration; ++n) {
-
       int accumulator_access_offset = index_ * Policy::kAccessesPerIteration + n;
 
       frag_ptr[n] = accumulators_[accumulator_access_offset];
@@ -157,8 +146,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

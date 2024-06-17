@@ -11,19 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+from typing import Tuple, Union
+
 import cudf
 import cupy as cp
-from pylibcugraph import ResourceHandle
-from pylibcugraph import (
-    uniform_random_walks as pylibcugraph_uniform_random_walks,
-)
-
-from cugraph.utilities import ensure_cugraph_obj_for_nx
 from cugraph.structure import Graph
-
-import warnings
+from cugraph.utilities import ensure_cugraph_obj_for_nx
 from cugraph.utilities.utils import import_optional
-from typing import Union, Tuple
+from pylibcugraph import ResourceHandle
+from pylibcugraph import uniform_random_walks as pylibcugraph_uniform_random_walks
 
 # FIXME: the networkx.Graph type used in type annotations is specified
 # using a string literal to avoid depending on and importing networkx.

@@ -14,14 +14,13 @@
 import gc
 import time
 
-import pytest
+import cudf
 import networkx as nx
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS, utils
 
 import cugraph
-import cudf
-from cugraph.testing import utils, UNDIRECTED_DATASETS
 from cugraph.datasets import karate_asymmetric
-
 
 # =============================================================================
 # Test data

@@ -13,17 +13,14 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
 from cugraph.dask.common.input_utils import get_distributed_data
 from cugraph.utilities import renumber_vertex_pair
-
-from pylibcugraph import (
-    sorensen_coefficients as pylibcugraph_sorensen_coefficients,
-)
+from dask.distributed import default_client, wait
 from pylibcugraph import ResourceHandle
+from pylibcugraph import sorensen_coefficients as pylibcugraph_sorensen_coefficients
 
 
 def convert_to_cudf(cp_arrays):

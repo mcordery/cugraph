@@ -47,28 +47,28 @@ namespace warp {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Data type of A elements
-    typename ElementA_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA_,
-    /// Data type of B elements
-    typename ElementB_,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB_,
-    /// Element type of C matrix
-    typename ElementC_,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC_,
-    /// Complex transform on A operand
-    ComplexTransform TransformA = ComplexTransform::kNone,
-    /// Complex transform on B operand
-    ComplexTransform TransformB = ComplexTransform::kNone,
-    /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
-    typename Operator_ = arch::OpMultiplyAddComplex>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Data type of A elements
+  typename ElementA_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA_,
+  /// Data type of B elements
+  typename ElementB_,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB_,
+  /// Element type of C matrix
+  typename ElementC_,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC_,
+  /// Complex transform on A operand
+  ComplexTransform TransformA = ComplexTransform::kNone,
+  /// Complex transform on B operand
+  ComplexTransform TransformB = ComplexTransform::kNone,
+  /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
+  typename Operator_ = arch::OpMultiplyAddComplex>
 struct DefaultMmaComplexTensorOp;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,68 +76,63 @@ struct DefaultMmaComplexTensorOp;
 /// Partial specialization for complex<T>*complex<T> case
 //  4 real-valued mma operations
 //  A = (ar + j ai), B (br +j bi), D = AB
-//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br) 
+//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Real-valued underlying type of complex-valued A operand
-    typename RealElementA,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Real-valued underlying type of complex-valued B operand
-    typename RealElementB,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Real-valued underlying type of complex-valued C operand
-    typename RealElementC,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<RealElementA>,
-    LayoutA,
-    complex<RealElementB>,
-    LayoutB,
-    complex<RealElementC>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddComplex> {
-
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        RealElementA,
-        cutlass::layout::RowMajor,
-        RealElementB,
-        cutlass::layout::ColumnMajor,
-        RealElementC,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Real-valued underlying type of complex-valued A operand
+  typename RealElementA,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Real-valued underlying type of complex-valued B operand
+  typename RealElementB,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Real-valued underlying type of complex-valued C operand
+  typename RealElementC,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<RealElementA>,
+                                 LayoutA,
+                                 complex<RealElementB>,
+                                 LayoutB,
+                                 complex<RealElementC>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddComplex> {
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              RealElementA,
+                                                              cutlass::layout::RowMajor,
+                                                              RealElementB,
+                                                              cutlass::layout::ColumnMajor,
+                                                              RealElementC,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaComplexTensorOp<
-    WarpShape_,
-    complex<RealElementA>,
-    LayoutA,
-    complex<RealElementB>,
-    LayoutB,
-    complex<RealElementC>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaComplexTensorOp<WarpShape_,
+                                                       complex<RealElementA>,
+                                                       LayoutA,
+                                                       complex<RealElementB>,
+                                                       LayoutB,
+                                                       complex<RealElementC>,
+                                                       LayoutC,
+                                                       Policy,
+                                                       TransformA,
+                                                       TransformB>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,331 +140,306 @@ struct DefaultMmaComplexTensorOp<
 /// Partial specialization for complex<T>*complex<T> case using GaussianComplex operation
 //  3 real-valued mma operations
 //  A  = (ar + j ai), B = (br +j bi), D = AB
-//  P1 = (ar + ai) * br, P2 = - ar * (br - bi), P3 = ai * (br + bi) 
+//  P1 = (ar + ai) * br, P2 = - ar * (br - bi), P3 = ai * (br + bi)
 //  D  = dr + j di = (P1 - P3) + j (P1 + P2)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Real-valued underlying type of complex-valued A operand
-    typename RealElementA,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Real-valued underlying type of complex-valued B operand
-    typename RealElementB,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Real-valued underlying type of complex-valued C operand
-    typename RealElementC,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<RealElementA>,
-    LayoutA,
-    complex<RealElementB>,
-    LayoutB,
-    complex<RealElementC>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddGaussianComplex> {
-
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        RealElementA,
-        cutlass::layout::RowMajor,
-        RealElementB,
-        cutlass::layout::ColumnMajor,
-        RealElementC,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Real-valued underlying type of complex-valued A operand
+  typename RealElementA,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Real-valued underlying type of complex-valued B operand
+  typename RealElementB,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Real-valued underlying type of complex-valued C operand
+  typename RealElementC,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<RealElementA>,
+                                 LayoutA,
+                                 complex<RealElementB>,
+                                 LayoutB,
+                                 complex<RealElementC>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddGaussianComplex> {
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              RealElementA,
+                                                              cutlass::layout::RowMajor,
+                                                              RealElementB,
+                                                              cutlass::layout::ColumnMajor,
+                                                              RealElementC,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaGaussianComplexTensorOp<
-    WarpShape_,
-    complex<RealElementA>,
-    LayoutA,
-    complex<RealElementB>,
-    LayoutB,
-    complex<RealElementC>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaGaussianComplexTensorOp<WarpShape_,
+                                                               complex<RealElementA>,
+                                                               LayoutA,
+                                                               complex<RealElementB>,
+                                                               LayoutB,
+                                                               complex<RealElementC>,
+                                                               LayoutC,
+                                                               Policy,
+                                                               TransformA,
+                                                               TransformB>;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Partial specialization - input and output types are complex<float>*complex<float> 
+/// Partial specialization - input and output types are complex<float>*complex<float>
 //  Use TF32 tensor operation internally
-//  4 real-valued MMA.1688.F32.TF32 operations on TF32 
+//  4 real-valued MMA.1688.F32.TF32 operations on TF32
 //  A = (ar + j ai), B (br +j bi), D = AB
-//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br) 
+//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddComplex> {
-
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<float>,
+                                 LayoutA,
+                                 complex<float>,
+                                 LayoutB,
+                                 complex<float>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddComplex> {
   // Complex floating point tensor operation use MMA.1688.F32.TF32 mma instruction
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        tfloat32_t,
-        cutlass::layout::RowMajor,
-        tfloat32_t,
-        cutlass::layout::ColumnMajor,
-        float,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              tfloat32_t,
+                                                              cutlass::layout::RowMajor,
+                                                              tfloat32_t,
+                                                              cutlass::layout::ColumnMajor,
+                                                              float,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaComplexTensorOp<
-    WarpShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaComplexTensorOp<WarpShape_,
+                                                       complex<float>,
+                                                       LayoutA,
+                                                       complex<float>,
+                                                       LayoutB,
+                                                       complex<float>,
+                                                       LayoutC,
+                                                       Policy,
+                                                       TransformA,
+                                                       TransformB>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Partial specialization - input and output types are complex<float>*complex<float> 
+/// Partial specialization - input and output types are complex<float>*complex<float>
 //  Use BF16 tensor operation internally
 //  4 real-valued MMA.1688.F32.BF16 operations on BF16
 //  A = (ar + j ai), B (br +j bi), D = AB
-//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br) 
+//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddFastBF16> {
-
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<float>,
+                                 LayoutA,
+                                 complex<float>,
+                                 LayoutB,
+                                 complex<float>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddFastBF16> {
   // Complex floating point tensor operation use MMA.1688.F32.BF16 mma instruction
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        bfloat16_t,
-        cutlass::layout::RowMajor,
-        bfloat16_t,
-        cutlass::layout::ColumnMajor,
-        float,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              bfloat16_t,
+                                                              cutlass::layout::RowMajor,
+                                                              bfloat16_t,
+                                                              cutlass::layout::ColumnMajor,
+                                                              float,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaComplexTensorOp<
-    WarpShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaComplexTensorOp<WarpShape_,
+                                                       complex<float>,
+                                                       LayoutA,
+                                                       complex<float>,
+                                                       LayoutB,
+                                                       complex<float>,
+                                                       LayoutC,
+                                                       Policy,
+                                                       TransformA,
+                                                       TransformB>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Partial specialization - input and output types are complex<float>*complex<float> 
+/// Partial specialization - input and output types are complex<float>*complex<float>
 //  Use F16 tensor operation internally
 //  4 real-valued MMA.1688.F32.F16 operations on F16
 //  A = (ar + j ai), B (br +j bi), D = AB
-//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br) 
+//  D = dr + j di = (ar*br - ai*bi) + j (ar*bi + ai*br)
 /////////////////////////////////////////////////////////////////////////////////////////////////
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddFastF16> {
-
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<float>,
+                                 LayoutA,
+                                 complex<float>,
+                                 LayoutB,
+                                 complex<float>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddFastF16> {
   // Complex floating point tensor operation use MMA.1688.F32.F16 mma instruction
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        half_t,
-        cutlass::layout::RowMajor,
-        half_t,
-        cutlass::layout::ColumnMajor,
-        float,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              half_t,
+                                                              cutlass::layout::RowMajor,
+                                                              half_t,
+                                                              cutlass::layout::ColumnMajor,
+                                                              float,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaComplexTensorOp<
-    WarpShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaComplexTensorOp<WarpShape_,
+                                                       complex<float>,
+                                                       LayoutA,
+                                                       complex<float>,
+                                                       LayoutB,
+                                                       complex<float>,
+                                                       LayoutC,
+                                                       Policy,
+                                                       TransformA,
+                                                       TransformB>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// 3xTF32 or 4xTF32 (fast and accurate complex<float> operation)
-/// Partial specialization - input and output types are complex<float> * complex<float> 
+/// Partial specialization - input and output types are complex<float> * complex<float>
 //  Use 3xTF32 or 4xTF32 tensor operation internally
-//  4 real-valued MMA.1688.F32.TF32 operations on TF32 
+//  4 real-valued MMA.1688.F32.TF32 operations on TF32
 //  A = (ar + j ai), B (br +j bi), D = AB
 //  D = dr + j di = 3x[(ar*br - ai*bi) + j (ar*bi + ai*br)]
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename WarpShape_,
-    /// Shape of one matrix production operation (concept: GemmShape)
-    typename InstructionShape_,
-    /// Layout of A matrix (concept: MatrixLayout)
-    typename LayoutA,
-    /// Layout of B matrix (concept: MatrixLayout)
-    typename LayoutB,
-    /// Layout of C matrix (concept: MatrixLayout)
-    typename LayoutC,
-    /// Complex transform on A operand
-    ComplexTransform TransformA,
-    /// Complex transform on B operand
-    ComplexTransform TransformB>
-struct DefaultMmaComplexTensorOp<
-    WarpShape_,
-    InstructionShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC,
-    TransformA,
-    TransformB,
-    arch::OpMultiplyAddComplexFastF32> {
-
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename WarpShape_,
+  /// Shape of one matrix production operation (concept: GemmShape)
+  typename InstructionShape_,
+  /// Layout of A matrix (concept: MatrixLayout)
+  typename LayoutA,
+  /// Layout of B matrix (concept: MatrixLayout)
+  typename LayoutB,
+  /// Layout of C matrix (concept: MatrixLayout)
+  typename LayoutC,
+  /// Complex transform on A operand
+  ComplexTransform TransformA,
+  /// Complex transform on B operand
+  ComplexTransform TransformB>
+struct DefaultMmaComplexTensorOp<WarpShape_,
+                                 InstructionShape_,
+                                 complex<float>,
+                                 LayoutA,
+                                 complex<float>,
+                                 LayoutB,
+                                 complex<float>,
+                                 LayoutC,
+                                 TransformA,
+                                 TransformB,
+                                 arch::OpMultiplyAddComplexFastF32> {
   // Complex floating point tensor operation use MMA.1688.F32.TF32 mma instruction
-  using Policy = cutlass::gemm::warp::MmaTensorOpPolicy<
-      cutlass::arch::Mma<
-        InstructionShape_, 
-        32, 
-        tfloat32_t,
-        cutlass::layout::RowMajor,
-        tfloat32_t,
-        cutlass::layout::ColumnMajor,
-        float,
-        cutlass::layout::RowMajor, 
-        arch::OpMultiplyAdd>,
-      cutlass::MatrixShape<1, 1>
-    >;
+  using Policy =
+    cutlass::gemm::warp::MmaTensorOpPolicy<cutlass::arch::Mma<InstructionShape_,
+                                                              32,
+                                                              tfloat32_t,
+                                                              cutlass::layout::RowMajor,
+                                                              tfloat32_t,
+                                                              cutlass::layout::ColumnMajor,
+                                                              float,
+                                                              cutlass::layout::RowMajor,
+                                                              arch::OpMultiplyAdd>,
+                                           cutlass::MatrixShape<1, 1>>;
 
   // Define the warp-level tensor op
-  using Type = cutlass::gemm::warp::MmaComplexTensorOpFastF32<
-    WarpShape_,
-    complex<float>,
-    LayoutA,
-    complex<float>,
-    LayoutB,
-    complex<float>,
-    LayoutC, 
-    Policy,
-    TransformA,
-    TransformB>;
+  using Type = cutlass::gemm::warp::MmaComplexTensorOpFastF32<WarpShape_,
+                                                              complex<float>,
+                                                              LayoutA,
+                                                              complex<float>,
+                                                              LayoutB,
+                                                              complex<float>,
+                                                              LayoutC,
+                                                              Policy,
+                                                              TransformA,
+                                                              TransformB>;
 };
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass

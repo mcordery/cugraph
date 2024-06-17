@@ -11,21 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pylibcugraph import (
-    betweenness_centrality as pylibcugraph_betweenness_centrality,
-    edge_betweenness_centrality as pylibcugraph_edge_betweenness_centrality,
-    ResourceHandle,
-)
+import warnings
+from typing import Union
 
+import cudf
+import numpy as np
 from cugraph.utilities import (
     df_edge_score_to_dictionary,
-    ensure_cugraph_obj_for_nx,
     df_score_to_dictionary,
+    ensure_cugraph_obj_for_nx,
 )
-import cudf
-import warnings
-import numpy as np
-from typing import Union
+from pylibcugraph import ResourceHandle
+from pylibcugraph import betweenness_centrality as pylibcugraph_betweenness_centrality
+from pylibcugraph import (
+    edge_betweenness_centrality as pylibcugraph_edge_betweenness_centrality,
+)
 
 
 def betweenness_centrality(

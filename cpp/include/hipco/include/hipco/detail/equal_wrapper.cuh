@@ -111,7 +111,7 @@ struct equal_wrapper {
   __device__ constexpr equal_result operator()(LHS const& lhs, RHS const& rhs) const noexcept
   {
     return hipco::detail::bitwise_compare(lhs, empty_sentinel_) ? equal_result::EMPTY
-                                                               : this->equal_to(lhs, rhs);
+                                                                : this->equal_to(lhs, rhs);
   }
 };
 

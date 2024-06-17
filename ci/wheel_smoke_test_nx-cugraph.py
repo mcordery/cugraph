@@ -16,7 +16,6 @@ import math
 import networkx as nx
 import nx_cugraph as nxcg
 
-
 if __name__ == "__main__":
     G = nx.Graph()
     G.add_edges_from([(0, 1), (1, 2), (2, 3)])
@@ -34,5 +33,6 @@ if __name__ == "__main__":
     assert nxcu_nodes == nx_nodes
     for node_id in nx_nodes:
         nx_bc, nxcu_bc = nx_result[node_id], nxcu_result[node_id]
-        assert math.isclose(nx_bc, nxcu_bc, rel_tol=1e-6), \
-            f"bc for {node_id=} exceeds tolerance: {nx_bc=}, {nxcu_bc=}"
+        assert math.isclose(
+            nx_bc, nxcu_bc, rel_tol=1e-6
+        ), f"bc for {node_id=} exceeds tolerance: {nx_bc=}, {nxcu_bc=}"

@@ -126,7 +126,7 @@ static constexpr cuda_stream_ref cuda_stream_default{};
 /**
  * @brief Static `cuda_stream_ref` of cudaStreamLegacy, for convenience
  */
-//TODO(HIP): is there an equivalent?
+// TODO(HIP): is there an equivalent?
 static const cuda_stream_ref cuda_stream_legacy{};
 
 /**

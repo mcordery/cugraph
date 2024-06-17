@@ -24,10 +24,10 @@
  */
 #pragma once
 
+#include <hip/hip_runtime.h>
+
 #include <cassert>
 #include <cstdint>
-
-#include <hip/hip_runtime.h>
 
 namespace cugraph {
 namespace detail {

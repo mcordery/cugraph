@@ -11,11 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import cudf
 import numpy as np
+from cugraph.generators import rmat
 
 import cugraph
-from cugraph.generators import rmat
-import cudf
 
 
 def generate_edgelist(

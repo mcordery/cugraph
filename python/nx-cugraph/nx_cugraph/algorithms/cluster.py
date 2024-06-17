@@ -12,7 +12,6 @@
 # limitations under the License.
 import cupy as cp
 import pylibcugraph as plc
-
 from nx_cugraph.convert import _to_undirected_graph
 from nx_cugraph.utils import networkx_algorithm, not_implemented_for
 

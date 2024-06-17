@@ -13,15 +13,13 @@
 
 import cudf
 import cupy
-
 import pytest
-
+from cugraph.utilities.utils import MissingModule, import_optional
 from cugraph_pyg.data import CuGraphStore
 from cugraph_pyg.sampler.cugraph_sampler import (
     _sampler_output_from_sampling_results_heterogeneous,
 )
 
-from cugraph.utilities.utils import import_optional, MissingModule
 from cugraph import uniform_neighbor_sample
 
 torch = import_optional("torch")

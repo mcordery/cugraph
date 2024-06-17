@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/add_pointer.h"
 #include "../__type_traits/conditional.h"
@@ -38,42 +38,42 @@ struct decay {
 #else
 
 template <class _Up, bool>
-struct __decay {
-    typedef _LIBCUDACXX_NODEBUG_TYPE __remove_cv_t<_Up> type;
+struct __decay
+{
+  typedef _LIBCUDACXX_NODEBUG_TYPE __remove_cv_t<_Up> type;
 };
 
 template <class _Up>
-struct __decay<_Up, true> {
-public:
-    typedef _LIBCUDACXX_NODEBUG_TYPE typename conditional
-                     <
-                         is_array<_Up>::value,
+struct __decay<_Up, true>
+{
+ public:
+  typedef _LIBCUDACXX_NODEBUG_TYPE
+    typename conditional<is_array<_Up>::value,
                          __remove_extent_t<_Up>*,
-                         typename conditional
-                         <
-                              is_function<_Up>::value,
-                              typename add_pointer<_Up>::type,
-                              __remove_cv_t<_Up>
-                         >::type
-                     >::type type;
+                         typename conditional<is_function<_Up>::value,
+                                              typename add_pointer<_Up>::type,
+                                              __remove_cv_t<_Up>>::type>::type type;
 };
 
 template <class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS decay
-{
-private:
-    typedef _LIBCUDACXX_NODEBUG_TYPE __libcpp_remove_reference_t<_Tp> _Up;
-public:
-  typedef _LIBCUDACXX_NODEBUG_TYPE typename __decay<_Up, __libcpp_is_referenceable<_Up>::value>::type type;
-};
-#endif // defined(_LIBCUDACXX_DECAY) && !defined(_LIBCUDACXX_USE_DECAY_FALLBACK)
+struct _LIBCUDACXX_TEMPLATE_VIS decay {
+ private:
+  typedef _LIBCUDACXX_NODEBUG_TYPE __libcpp_remove_reference_t<_Tp> _Up;
 
-template <class _Tp> using __decay_t = typename decay<_Tp>::type;
+ public:
+  typedef _LIBCUDACXX_NODEBUG_TYPE
+    typename __decay<_Up, __libcpp_is_referenceable<_Up>::value>::type type;
+};
+#endif  // defined(_LIBCUDACXX_DECAY) && !defined(_LIBCUDACXX_USE_DECAY_FALLBACK)
+
+template <class _Tp>
+using __decay_t = typename decay<_Tp>::type;
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using decay_t = typename decay<_Tp>::type;
+template <class _Tp>
+using decay_t = typename decay<_Tp>::type;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_DECAY_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_DECAY_H

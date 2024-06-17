@@ -12,19 +12,19 @@
 # limitations under the License.
 
 
+import cudf
+from cugraph.components import connectivity_wrapper
+from cugraph.structure import Graph
+from cugraph.utilities import cupy_package as cp
 from cugraph.utilities import (
     df_score_to_dictionary,
     ensure_cugraph_obj,
-    is_matrix_type,
     is_cp_matrix_type,
+    is_matrix_type,
     is_nx_graph_type,
-    cupy_package as cp,
 )
-from cugraph.structure import Graph
-from cugraph.components import connectivity_wrapper
-import cudf
-from pylibcugraph import weakly_connected_components as pylibcugraph_wcc
 from pylibcugraph import ResourceHandle
+from pylibcugraph import weakly_connected_components as pylibcugraph_wcc
 
 
 def _ensure_args(api_name, G, directed, connection, return_labels):

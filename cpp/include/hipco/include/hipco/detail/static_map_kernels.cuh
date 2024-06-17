@@ -34,12 +34,11 @@
 
 #pragma once
 
+#include <hip/hip_cooperative_groups.h>
+#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 #include <hipcub/block/block_reduce.hpp>
 
 #include <hip/std/atomic>
-
-#include <hip/hip_cooperative_groups.h>
-#include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
 namespace hipco {
 namespace detail {
 // Todo(HIP): Change to "namespace cg = cooperative_groups;" once we have CG workaround in ROCm.
@@ -464,16 +463,17 @@ __global__ void find(
   auto tile                 = cg::tiled_partition<tile_size>(cg::this_thread_block());
   int64_t const loop_stride = gridDim.x * block_size / tile_size;
   int64_t idx               = (block_size * blockIdx.x + threadIdx.x) / tile_size;
-  // NOTE(HIP/AMD): We need to change "block_size / tile_size" to this one to avoid the following error for STATIC_MAP_BLOCK_BENCH
-  // clang-17: llvm/include/llvm/Support/OptimizedStructLayout.h:53: 
-  // llvm::OptimizedStructLayoutField::OptimizedStructLayoutField(const void*, uint64_t, llvm::Align, uint64_t): 
-  // Assertion `Size > 0 && "adding an empty field to the layout"' failed.
-  __shared__ Value writeBuffer[(block_size + tile_size - 1)/ tile_size]; 
+  // NOTE(HIP/AMD): We need to change "block_size / tile_size" to this one to avoid the following
+  // error for STATIC_MAP_BLOCK_BENCH clang-17:
+  // llvm/include/llvm/Support/OptimizedStructLayout.h:53:
+  // llvm::OptimizedStructLayoutField::OptimizedStructLayoutField(const void*, uint64_t,
+  // llvm::Align, uint64_t): Assertion `Size > 0 && "adding an empty field to the layout"' failed.
+  __shared__ Value writeBuffer[(block_size + tile_size - 1) / tile_size];
 
   while (idx < n) {
     auto key   = *(first + idx);
     auto found = view.find(tile, key, hash, key_equal);
-    
+
     /*
      * The ld.relaxed.gpu instruction used in view.find causes L1 to
      * flush more frequently, causing increased sector stores from L2 to global memory.
@@ -582,10 +582,11 @@ __global__ void contains(
   auto tile                 = cg::tiled_partition<tile_size>(cg::this_thread_block());
   int64_t const loop_stride = gridDim.x * block_size / tile_size;
   int64_t idx               = (block_size * blockIdx.x + threadIdx.x) / tile_size;
-  // NOTE(HIP/AMD): We need to change "block_size / tile_size" to this one to avoid the following error for STATIC_MAP_BLOCK_BENCH
-  // clang-17: llvm/include/llvm/Support/OptimizedStructLayout.h:53: 
-  // llvm::OptimizedStructLayoutField::OptimizedStructLayoutField(const void*, uint64_t, llvm::Align, uint64_t): 
-  // Assertion `Size > 0 && "adding an empty field to the layout"' failed.
+  // NOTE(HIP/AMD): We need to change "block_size / tile_size" to this one to avoid the following
+  // error for STATIC_MAP_BLOCK_BENCH clang-17:
+  // llvm/include/llvm/Support/OptimizedStructLayout.h:53:
+  // llvm::OptimizedStructLayoutField::OptimizedStructLayoutField(const void*, uint64_t,
+  // llvm::Align, uint64_t): Assertion `Size > 0 && "adding an empty field to the layout"' failed.
   __shared__ bool writeBuffer[(block_size + tile_size - 1) / tile_size];
 
   while (idx < n) {

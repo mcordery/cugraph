@@ -19,7 +19,7 @@
 #include <raft/cluster/kmeans_balanced.cuh>
 #include <raft/core/logger.hpp>
 #include <raft/core/mdarray.hpp>
-//#include <raft/core/nvtx.hpp>
+// #include <raft/core/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
@@ -174,8 +174,8 @@ void extend(raft::resources const& handle,
   auto dim     = index->dim();
   list_spec<uint32_t, T, IdxT> list_device_spec{index->dim(),
                                                 index->conservative_memory_allocation()};
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_flat::extend(%zu, %u)", size_t(n_rows), dim);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_flat::extend(%zu, %u)", size_t(n_rows), dim);
 
   RAFT_EXPECTS(new_indices != nullptr || index->size() == 0,
                "You must pass data indices when the index is non-empty.");
@@ -348,8 +348,8 @@ inline auto build(raft::resources const& handle,
                   uint32_t dim) -> index<T, IdxT>
 {
   auto stream = resource::get_cuda_stream(handle);
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_flat::build(%zu, %u)", size_t(n_rows), dim);
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_flat::build(%zu, %u)", size_t(n_rows), dim);
   static_assert(std::is_same_v<T, float> || std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>,
                 "unsupported data type");
   RAFT_EXPECTS(n_rows > 0 && dim > 0, "empty dataset");
@@ -370,13 +370,13 @@ inline auto build(raft::resources const& handle,
     rmm::device_uvector<T> trainset(n_rows_train * index.dim(), stream);
     // TODO: a proper sampling
     RAFT_CUDA_TRY(hipMemcpy2DAsync(trainset.data(),
-                                    sizeof(T) * index.dim(),
-                                    dataset,
-                                    sizeof(T) * index.dim() * trainset_ratio,
-                                    sizeof(T) * index.dim(),
-                                    n_rows_train,
-                                    hipMemcpyDefault,
-                                    stream));
+                                   sizeof(T) * index.dim(),
+                                   dataset,
+                                   sizeof(T) * index.dim() * trainset_ratio,
+                                   sizeof(T) * index.dim(),
+                                   n_rows_train,
+                                   hipMemcpyDefault,
+                                   stream));
     auto trainset_const_view =
       raft::make_device_matrix_view<const T, IdxT>(trainset.data(), n_rows_train, index.dim());
     auto centers_view = raft::make_device_matrix_view<float, IdxT>(
@@ -424,8 +424,8 @@ inline void fill_refinement_index(raft::resources const& handle,
 
   auto stream      = resource::get_cuda_stream(handle);
   uint32_t n_lists = n_queries;
-//  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
-//    "ivf_flat::fill_refinement_index(%zu, %u)", size_t(n_queries));
+  //  common::nvtx::range<common::nvtx::domain::raft> fun_scope(
+  //    "ivf_flat::fill_refinement_index(%zu, %u)", size_t(n_queries));
 
   rmm::device_uvector<LabelT> new_labels(n_queries * n_candidates, stream);
   auto new_labels_view =

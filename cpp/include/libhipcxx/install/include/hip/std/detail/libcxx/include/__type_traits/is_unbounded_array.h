@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -22,18 +22,22 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template <class>     struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_unbounded_array        : false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_unbounded_array<_Tp[]> : true_type {};
+template <class>
+struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_unbounded_array : false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_unbounded_array<_Tp[]> : true_type {};
 
 #if _LIBCUDACXX_STD_VER > 11
 
-template <class>     struct _LIBCUDACXX_TEMPLATE_VIS is_unbounded_array        : false_type {};
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_unbounded_array<_Tp[]> : true_type {};
+template <class>
+struct _LIBCUDACXX_TEMPLATE_VIS is_unbounded_array : false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_unbounded_array<_Tp[]> : true_type {};
 
 template <class _Tp>
-_LIBCUDACXX_INLINE_VAR constexpr bool is_unbounded_array_v  = is_unbounded_array<_Tp>::value;
+_LIBCUDACXX_INLINE_VAR constexpr bool is_unbounded_array_v = is_unbounded_array<_Tp>::value;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_UNBOUNDED_ARRAY_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_UNBOUNDED_ARRAY_H

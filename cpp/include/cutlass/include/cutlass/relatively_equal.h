@@ -41,8 +41,7 @@ namespace cutlass {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-CUTLASS_HOST_DEVICE
-bool relatively_equal(T a, T b, T epsilon, T nonzero_floor);
+CUTLASS_HOST_DEVICE bool relatively_equal(T a, T b, T epsilon, T nonzero_floor);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,151 +52,153 @@ namespace detail {
 // https://floating-point-gui.de/errors/comparison/
 //
 template <typename T>
-CUTLASS_HOST_DEVICE
-bool relatively_equal_float(T a, T b, T epsilon, T nonzero_floor) {
-  
+CUTLASS_HOST_DEVICE bool relatively_equal_float(T a, T b, T epsilon, T nonzero_floor)
+{
   using std::abs;
 
   T abs_A = abs(a);
   T abs_B = abs(b);
-  T diff = abs(a - b);
-  T zero = T(0);
+  T diff  = abs(a - b);
+  T zero  = T(0);
 
   if (a == b) {
     return true;
-  }
-  else if (a == zero || b == zero || diff < nonzero_floor) {
+  } else if (a == zero || b == zero || diff < nonzero_floor) {
     return diff < epsilon * nonzero_floor;
   }
-  
+
   return diff < epsilon * (abs_A + abs_B);
 }
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint1b_t>(uint1b_t a, uint1b_t b, uint1b_t, uint1b_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint1b_t>(uint1b_t a, uint1b_t b, uint1b_t, uint1b_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int2b_t>(int2b_t a, int2b_t b, int2b_t, int2b_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int2b_t>(int2b_t a, int2b_t b, int2b_t, int2b_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint2b_t>(uint2b_t a, uint2b_t b, uint2b_t, uint2b_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint2b_t>(uint2b_t a, uint2b_t b, uint2b_t, uint2b_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int4b_t>(int4b_t a, int4b_t b, int4b_t, int4b_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int4b_t>(int4b_t a, int4b_t b, int4b_t, int4b_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint4b_t>(uint4b_t a, uint4b_t b, uint4b_t, uint4b_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint4b_t>(uint4b_t a, uint4b_t b, uint4b_t, uint4b_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int8_t>(int8_t a, int8_t b, int8_t, int8_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int8_t>(int8_t a, int8_t b, int8_t, int8_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint8_t>(uint8_t a, uint8_t b, uint8_t, uint8_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint8_t>(uint8_t a, uint8_t b, uint8_t, uint8_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int16_t>(int16_t a, int16_t b, int16_t, int16_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int16_t>(int16_t a, int16_t b, int16_t, int16_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint16_t>(uint16_t a, uint16_t b, uint16_t, uint16_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint16_t>(uint16_t a, uint16_t b, uint16_t, uint16_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int32_t>(int32_t a, int32_t b, int32_t, int32_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int32_t>(int32_t a, int32_t b, int32_t, int32_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint32_t>(uint32_t a, uint32_t b, uint32_t, uint32_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint32_t>(uint32_t a, uint32_t b, uint32_t, uint32_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<int64_t>(int64_t a, int64_t b, int64_t, int64_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<int64_t>(int64_t a, int64_t b, int64_t, int64_t)
+{
   return (a == b);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<uint64_t>(uint64_t a, uint64_t b, uint64_t, uint64_t) {
+CUTLASS_HOST_DEVICE bool relatively_equal<uint64_t>(uint64_t a, uint64_t b, uint64_t, uint64_t)
+{
   return (a == b);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<half_t>(half_t a, half_t b, half_t epsilon, half_t nonzero_floor) {
+CUTLASS_HOST_DEVICE bool relatively_equal<half_t>(half_t a,
+                                                  half_t b,
+                                                  half_t epsilon,
+                                                  half_t nonzero_floor)
+{
   return detail::relatively_equal_float(a, b, epsilon, nonzero_floor);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<bfloat16_t>(
-  bfloat16_t a, 
-  bfloat16_t b, 
-  bfloat16_t epsilon, 
-  bfloat16_t nonzero_floor) {
-  
+CUTLASS_HOST_DEVICE bool relatively_equal<bfloat16_t>(bfloat16_t a,
+                                                      bfloat16_t b,
+                                                      bfloat16_t epsilon,
+                                                      bfloat16_t nonzero_floor)
+{
   return detail::relatively_equal_float(a, b, epsilon, nonzero_floor);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<tfloat32_t>(
-  tfloat32_t a, 
-  tfloat32_t b, 
-  tfloat32_t epsilon, 
-  tfloat32_t nonzero_floor) {
-  
+CUTLASS_HOST_DEVICE bool relatively_equal<tfloat32_t>(tfloat32_t a,
+                                                      tfloat32_t b,
+                                                      tfloat32_t epsilon,
+                                                      tfloat32_t nonzero_floor)
+{
   return detail::relatively_equal_float(a, b, epsilon, nonzero_floor);
 }
 
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<float>(float a, float b, float epsilon, float nonzero_floor) {
+CUTLASS_HOST_DEVICE bool relatively_equal<float>(float a,
+                                                 float b,
+                                                 float epsilon,
+                                                 float nonzero_floor)
+{
   return detail::relatively_equal_float(a, b, epsilon, nonzero_floor);
 }
 
-
 template <>
-CUTLASS_HOST_DEVICE
-bool relatively_equal<double>(double a, double b, double epsilon, double nonzero_floor) {
+CUTLASS_HOST_DEVICE bool relatively_equal<double>(double a,
+                                                  double b,
+                                                  double epsilon,
+                                                  double nonzero_floor)
+{
   return detail::relatively_equal_float(a, b, epsilon, nonzero_floor);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass

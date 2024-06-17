@@ -13,12 +13,11 @@
 
 import gc
 
-import pytest
 import networkx as nx
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS, utils
 
 import cugraph
-from cugraph.testing import utils, UNDIRECTED_DATASETS
-
 
 print("Networkx version : {} ".format(nx.__version__))
 

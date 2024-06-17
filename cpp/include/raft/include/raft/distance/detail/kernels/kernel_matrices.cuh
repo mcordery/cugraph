@@ -155,8 +155,7 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
   math_t gain;
   math_t offset;
 
-  void applyKernel(
-    math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
+  void applyKernel(math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
   {
     const int n_minor = is_row_major ? cols : rows;
     if (ld == n_minor) {
@@ -189,7 +188,10 @@ class PolynomialKernel : public GramMatrixBase<math_t> {
   {
   }
 
-  [[deprecated]] PolynomialKernel(exp_t exponent, math_t gain, math_t offset, hipblasHandle_t handle)
+  [[deprecated]] PolynomialKernel(exp_t exponent,
+                                  math_t gain,
+                                  math_t offset,
+                                  hipblasHandle_t handle)
     : GramMatrixBase<math_t>(handle), exponent(exponent), gain(gain), offset(offset)
   {
   }
@@ -329,8 +331,7 @@ template <typename math_t>
 class TanhKernel : public GramMatrixBase<math_t> {
   math_t gain, offset;
 
-  void applyKernel(
-    math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
+  void applyKernel(math_t* inout, int ld, int rows, int cols, bool is_row_major, hipStream_t stream)
   {
     const int n_minor = is_row_major ? cols : rows;
     if (ld == n_minor) {

@@ -12,11 +12,12 @@
 # limitations under the License.
 
 
-# Utils for sampling on graphstore like objects
-import cugraph
 import cudf
 import cupy as cp
 import dask_cudf
+
+# Utils for sampling on graphstore like objects
+import cugraph
 
 src_n = "_SRC_"
 dst_n = "_DST_"

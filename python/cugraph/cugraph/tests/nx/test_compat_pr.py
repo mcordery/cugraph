@@ -20,13 +20,12 @@
 import gc
 import importlib
 
-import pytest
 import numpy as np
-
+import pytest
 from cugraph.testing import utils
-from cugraph.datasets import karate
 from pylibcugraph.testing.utils import gen_fixture_params_product
 
+from cugraph.datasets import karate
 
 MAX_ITERATIONS = [100, 200]
 TOLERANCE = [1.0e-06]

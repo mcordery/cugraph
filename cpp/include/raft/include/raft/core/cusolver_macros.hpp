@@ -20,7 +20,6 @@
 #pragma once
 
 #include <hipsolver.h>
-#include <hipsolver.h>
 ///@todo: enable this once logging is enabled
 // #include <cuml/common/logger.hpp>
 #include <raft/util/cudart_utils.hpp>
@@ -88,8 +87,8 @@ inline const char* cusolver_error_to_string(hipsolverStatus_t err)
  */
 #define RAFT_CUSOLVER_TRY(call)                                              \
   do {                                                                       \
-    hipsolverStatus_t const status = (call);                                  \
-    if (HIPSOLVER_STATUS_SUCCESS != status) {                                 \
+    hipsolverStatus_t const status = (call);                                 \
+    if (HIPSOLVER_STATUS_SUCCESS != status) {                                \
       std::string msg{};                                                     \
       SET_ERROR_MSG(msg,                                                     \
                     "cuSOLVER error encountered at: ",                       \
@@ -112,8 +111,8 @@ inline const char* cusolver_error_to_string(hipsolverStatus_t err)
 //  */
 #define RAFT_CUSOLVER_TRY_NO_THROW(call)                               \
   do {                                                                 \
-    hipsolverStatus_t const status = call;                              \
-    if (HIPSOLVER_STATUS_SUCCESS != status) {                           \
+    hipsolverStatus_t const status = call;                             \
+    if (HIPSOLVER_STATUS_SUCCESS != status) {                          \
       printf("CUSOLVER call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                    \
              __FILE__,                                                 \

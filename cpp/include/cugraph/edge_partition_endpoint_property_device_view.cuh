@@ -128,7 +128,8 @@ class edge_partition_endpoint_property_device_view_t {
   template <typename Iter = ValueIterator, typename T = value_t>
   __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
-      !cugraph::has_packed_bool_element<Iter, T>() /* add undefined for (packed-)bool */> /* removed value_t*/
+    !cugraph::
+      has_packed_bool_element<Iter, T>() /* add undefined for (packed-)bool */> /* removed value_t*/
   atomic_add(vertex_t offset, value_t val) const
   {
     auto val_offset = value_offset(offset);
@@ -156,7 +157,8 @@ class edge_partition_endpoint_property_device_view_t {
   template <typename Iter = ValueIterator, typename T = value_t>
   __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
-      !cugraph::has_packed_bool_element<Iter, T>() /* min undefined for (packed-)bool */> /* removed value_t*/
+    !cugraph::
+      has_packed_bool_element<Iter, T>() /* min undefined for (packed-)bool */> /* removed value_t*/
   elementwise_atomic_min(vertex_t offset, value_t val) const
   {
     auto val_offset = value_offset(offset);
@@ -166,8 +168,8 @@ class edge_partition_endpoint_property_device_view_t {
   template <typename Iter = ValueIterator, typename T = value_t>
   __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
-      !cugraph::has_packed_bool_element<Iter, T>() /* max undefined for (packed-)bool */
-    > /* removed value_t*/
+    !cugraph::has_packed_bool_element<Iter, T>() /* max undefined for (packed-)bool */
+    >                                            /* removed value_t*/
   elementwise_atomic_max(vertex_t offset, value_t val) const
   {
     auto val_offset = value_offset(offset);

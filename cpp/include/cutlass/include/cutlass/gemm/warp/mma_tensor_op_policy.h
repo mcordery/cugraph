@@ -35,8 +35,8 @@
 #pragma once
 
 #include "cutlass/cutlass.h"
-#include "cutlass/matrix_shape.h"
 #include "cutlass/gemm/gemm.h"
+#include "cutlass/matrix_shape.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,20 +46,18 @@ namespace warp {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Policy 
-template <
-  typename Operator_,        ///< hardware instruction(s) performing TensorOp (concept: arch::Mma)
-  typename OpDelta_          ///< distance between operations (concept: MatrixShape)
->
+/// Policy
+template <typename Operator_,  ///< hardware instruction(s) performing TensorOp (concept: arch::Mma)
+          typename OpDelta_    ///< distance between operations (concept: MatrixShape)
+          >
 struct MmaTensorOpPolicy {
-
-  using Operator = Operator_;    ///< hardware instruction(s) performing TensorOp (concept: arch::Mma)
-  using OpDelta = OpDelta_;      ///< distance between operations (concept: MatrixShape)
+  using Operator = Operator_;  ///< hardware instruction(s) performing TensorOp (concept: arch::Mma)
+  using OpDelta  = OpDelta_;   ///< distance between operations (concept: MatrixShape)
   using MmaShape = typename Operator::Shape;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass

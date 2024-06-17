@@ -12,15 +12,18 @@
 # limitations under the License.
 
 from functools import cached_property
-import cugraph
+
 import cudf
 import cupy as cp
 from cugraph.gnn.dgl_extensions.utils.sampling import (
-    sample_cugraph_graphs,
+    dst_n,
     get_subgraph_and_src_range_from_edgelist,
     get_underlying_dtype_from_sg,
+    sample_cugraph_graphs,
+    src_n,
 )
-from cugraph.gnn.dgl_extensions.utils.sampling import src_n, dst_n
+
+import cugraph
 
 
 class DGLUniformSampler:

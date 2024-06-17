@@ -13,7 +13,7 @@
 #ifndef __cuda_std__
 #include <__config>
 #include <cstddef>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -23,8 +23,9 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS alignment_of
-    : public integral_constant<size_t, _LIBCUDACXX_ALIGNOF(_Tp)> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS alignment_of
+  : public integral_constant<size_t, _LIBCUDACXX_ALIGNOF(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -33,4 +34,4 @@ _LIBCUDACXX_INLINE_VAR constexpr size_t alignment_of_v = _LIBCUDACXX_ALIGNOF(_Tp
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_ALIGNMENT_OF_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_ALIGNMENT_OF_H

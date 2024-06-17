@@ -114,10 +114,12 @@ RAFT_KERNEL __launch_bounds__(1024, 1) devKeyValSortColumnPerRow(const InType* i
   BlockRadixSortType(tmpSmem.tempStorage.sort).SortBlockedToStriped(threadKeys, threadValues);
 
   // storing index values back (not keys)
-  hipcub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, inputVals + blockOffset, threadValues, n_cols);
+  hipcub::StoreDirectStriped<BLOCK_SIZE>(
+    threadIdx.x, inputVals + blockOffset, threadValues, n_cols);
 
   if (outputKeys) {
-    hipcub::StoreDirectStriped<BLOCK_SIZE>(threadIdx.x, outputKeys + blockOffset, threadKeys, n_cols);
+    hipcub::StoreDirectStriped<BLOCK_SIZE>(
+      threadIdx.x, outputKeys + blockOffset, threadKeys, n_cols);
   }
 }
 
@@ -240,15 +242,15 @@ void sortColumnsPerRow(const InType* in,
 
       // first call is to get size of workspace
       RAFT_CUDA_TRY(hipcub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
-                                                             workspaceSize,
-                                                             in,
-                                                             sortedKeys,
-                                                             tmpValIn,
-                                                             out,
-                                                             totalElements,
-                                                             numSegments,
-                                                             tmpOffsetBuffer,
-                                                             tmpOffsetBuffer + 1));
+                                                                workspaceSize,
+                                                                in,
+                                                                sortedKeys,
+                                                                tmpValIn,
+                                                                out,
+                                                                totalElements,
+                                                                numSegments,
+                                                                tmpOffsetBuffer,
+                                                                tmpOffsetBuffer + 1));
       bAllocWorkspace = true;
       // more staging space for temp output of keys
       if (!sortedKeys)
@@ -283,18 +285,18 @@ void sortColumnsPerRow(const InType* in,
       RAFT_CUDA_TRY(layoutSortOffset(dSegmentOffsets, n_columns, numSegments, stream));
 
       RAFT_CUDA_TRY(hipcub::DeviceSegmentedRadixSort::SortPairs(workspacePtr,
-                                                             workspaceSize,
-                                                             in,
-                                                             sortedKeys,
-                                                             dValuesIn,
-                                                             out,
-                                                             totalElements,
-                                                             numSegments,
-                                                             dSegmentOffsets,
-                                                             dSegmentOffsets + 1,
-                                                             0,
-                                                             sizeof(InType) * 8,
-                                                             stream));
+                                                                workspaceSize,
+                                                                in,
+                                                                sortedKeys,
+                                                                dValuesIn,
+                                                                out,
+                                                                totalElements,
+                                                                numSegments,
+                                                                dSegmentOffsets,
+                                                                dSegmentOffsets + 1,
+                                                                0,
+                                                                sizeof(InType) * 8,
+                                                                stream));
     }
   } else {
     // batched per row device wide sort

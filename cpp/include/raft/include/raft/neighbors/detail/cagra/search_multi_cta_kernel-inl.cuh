@@ -26,8 +26,8 @@
 
 #include <raft/core/device_mdspan.hpp>
 #include <raft/core/logger.hpp>
-#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resource/device_properties.hpp>
+#include <raft/core/resource/hip_stream.hpp>
 #include <raft/core/resources.hpp>
 #include <raft/distance/distance_types.hpp>
 #include <raft/neighbors/sample_filter_types.hpp>
@@ -473,8 +473,8 @@ void select_and_run(
       choose_buffer_size(result_buffer_size, block_size);
 
   RAFT_CUDA_TRY(hipFuncSetAttribute(kernel,
-                                     hipFuncAttributeMaxDynamicSharedMemorySize,
-                                     smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
+                                    hipFuncAttributeMaxDynamicSharedMemorySize,
+                                    smem_size + DATASET_DESCRIPTOR_T::smem_buffer_size_in_byte));
   // Initialize hash table
   const uint32_t hash_size = hashmap::get_size(hash_bitlen);
   set_value_batch(hashmap_ptr,

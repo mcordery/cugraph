@@ -33,6 +33,10 @@
 
 #pragma once
 
+#include <thrust/iterator/constant_iterator.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/transform_iterator.h>
+
 #include <hipco/detail/__config>
 #include <hipco/detail/common_functors.cuh>
 #include <hipco/detail/common_kernels.cuh>
@@ -44,15 +48,10 @@
 #include <hipco/storage.cuh>
 #include <hipco/utility/traits.hpp>
 
-#include <thrust/iterator/constant_iterator.h>
-#include <thrust/iterator/counting_iterator.h>
-#include <thrust/iterator/transform_iterator.h>
-
 #include <hipcub/hipcub.hpp>
 
-#include <hip/atomic>
-
 #include <cmath>
+#include <hip/atomic>
 
 namespace hipco {
 namespace experimental {
@@ -247,8 +246,8 @@ class open_addressing_impl {
       storage_{make_window_extent<open_addressing_impl>(capacity), alloc}
   {
     HIPCO_EXPECTS(empty_key_sentinel_ != erased_key_sentinel_,
-                 "The empty key sentinel and erased key sentinel cannot be the same value.",
-                 std::logic_error);
+                  "The empty key sentinel and erased key sentinel cannot be the same value.",
+                  std::logic_error);
 
     this->clear_async(stream);
   }
@@ -455,8 +454,8 @@ class open_addressing_impl {
   void erase_async(InputIt first, InputIt last, Ref container_ref, cuda_stream_ref stream = {})
   {
     HIPCO_EXPECTS(empty_key_sentinel_ != erased_key_sentinel_,
-                 "The empty key sentinel and erased key sentinel cannot be the same value.",
-                 std::logic_error);
+                  "The empty key sentinel and erased key sentinel cannot be the same value.",
+                  std::logic_error);
 
     auto const num_keys = hipco::detail::distance(first, last);
     if (num_keys == 0) { return; }
@@ -576,30 +575,31 @@ class open_addressing_impl {
                                       cuda_stream_ref stream) const
   {
     std::size_t temp_storage_bytes = 0;
-    using temp_allocator_type = typename std::allocator_traits<allocator_type>::template rebind_alloc<char>;
-    auto temp_allocator       = temp_allocator_type{this->allocator()};
-    auto d_num_out            = reinterpret_cast<size_type*>(
+    using temp_allocator_type =
+      typename std::allocator_traits<allocator_type>::template rebind_alloc<char>;
+    auto temp_allocator = temp_allocator_type{this->allocator()};
+    auto d_num_out      = reinterpret_cast<size_type*>(
       std::allocator_traits<temp_allocator_type>::allocate(temp_allocator, sizeof(size_type)));
     HIPCO_HIP_TRY(hipcub::DeviceSelect::If(nullptr,
-                                        temp_storage_bytes,
-                                        begin,
-                                        output_begin,
-                                        d_num_out,
-                                        this->capacity(),
-                                        is_filled,
-                                        stream));
+                                           temp_storage_bytes,
+                                           begin,
+                                           output_begin,
+                                           d_num_out,
+                                           this->capacity(),
+                                           is_filled,
+                                           stream));
 
     // Allocate temporary storage
     auto d_temp_storage = temp_allocator.allocate(temp_storage_bytes);
 
     HIPCO_HIP_TRY(hipcub::DeviceSelect::If(d_temp_storage,
-                                        temp_storage_bytes,
-                                        begin,
-                                        output_begin,
-                                        d_num_out,
-                                        this->capacity(),
-                                        is_filled,
-                                        stream));
+                                           temp_storage_bytes,
+                                           begin,
+                                           output_begin,
+                                           d_num_out,
+                                           this->capacity(),
+                                           is_filled,
+                                           stream));
 
     size_type h_num_out;
     HIPCO_HIP_TRY(

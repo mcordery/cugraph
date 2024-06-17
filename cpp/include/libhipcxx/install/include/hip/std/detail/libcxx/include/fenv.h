@@ -10,7 +10,6 @@
 #ifndef _LIBCUDACXX_FENV_H
 #define _LIBCUDACXX_FENV_H
 
-
 /*
     fenv.h synopsis
 
@@ -70,7 +69,6 @@ extern "C++" {
 #undef fegetexceptflag
 #endif
 
-
 #ifdef feraiseexcept
 #undef feraiseexcept
 #endif
@@ -78,7 +76,6 @@ extern "C++" {
 #ifdef fesetexceptflag
 #undef fesetexceptflag
 #endif
-
 
 #ifdef fetestexcept
 #undef fetestexcept
@@ -100,7 +97,6 @@ extern "C++" {
 #undef feholdexcept
 #endif
 
-
 #ifdef fesetenv
 #undef fesetenv
 #endif
@@ -109,8 +105,8 @@ extern "C++" {
 #undef feupdateenv
 #endif
 
-} // extern "C++"
+}  // extern "C++"
 
-#endif // defined(__cplusplus)
+#endif  // defined(__cplusplus)
 
-#endif // _LIBCUDACXX_FENV_H
+#endif  // _LIBCUDACXX_FENV_H

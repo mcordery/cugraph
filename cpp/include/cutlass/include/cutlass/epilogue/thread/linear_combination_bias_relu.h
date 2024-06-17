@@ -34,14 +34,14 @@
 
 #pragma once
 
-#include <hip/hip_fp16.h>
-
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/activation.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
-#include "cutlass/epilogue/thread/activation.h"
+#include "cutlass/numeric_types.h"
+
+#include <hip/hip_fp16.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,19 +49,16 @@ namespace cutlass {
 namespace epilogue {
 namespace thread {
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace detail {
 
 template <typename Element, int ElementsPerAccess>
 struct ArrayMaximum {
-
   CUTLASS_HOST_DEVICE
-  Array<Element, ElementsPerAccess> operator()(
-    Array<Element, ElementsPerAccess>  const &lhs,
-    Array<Element, ElementsPerAccess>  const &rhs) const {
-
+  Array<Element, ElementsPerAccess> operator()(Array<Element, ElementsPerAccess> const& lhs,
+                                               Array<Element, ElementsPerAccess> const& rhs) const
+  {
     Array<Element, ElementsPerAccess> result;
 
     CUTLASS_PRAGMA_UNROLL
@@ -75,76 +72,71 @@ struct ArrayMaximum {
 
 template <int ElementsPerAccess>
 struct ArrayMaximum<half_t, ElementsPerAccess> {
-
   CUTLASS_DEVICE
-  Array<half_t, ElementsPerAccess> operator()(
-    Array<half_t, ElementsPerAccess>  const &lhs,
-    Array<half_t, ElementsPerAccess>  const &rhs) const {
-
+  Array<half_t, ElementsPerAccess> operator()(Array<half_t, ElementsPerAccess> const& lhs,
+                                              Array<half_t, ElementsPerAccess> const& rhs) const
+  {
     Array<half_t, ElementsPerAccess> result;
 
-    #if __CUDA_ARCH__ >= 800
+#if __CUDA_ARCH__ >= 800
     int const kVectorCount = ElementsPerAccess / 2;
 
-
-    __half2 const *lhs_ptr = reinterpret_cast<__half2 const *>(lhs.raw_data());
-    __half2 const *rhs_ptr = reinterpret_cast<__half2 const *>(rhs.raw_data());
-    __half2       *res_ptr = reinterpret_cast<__half2 *>(result.raw_data());
+    __half2 const* lhs_ptr = reinterpret_cast<__half2 const*>(lhs.raw_data());
+    __half2 const* rhs_ptr = reinterpret_cast<__half2 const*>(rhs.raw_data());
+    __half2* res_ptr       = reinterpret_cast<__half2*>(result.raw_data());
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kVectorCount; ++i) {
       res_ptr[i] = __hmax2(lhs_ptr[i], rhs_ptr[i]);
     }
 
-    #else
-    __half const *lhs_ptr = reinterpret_cast<__half const *>(lhs.raw_data());
-    __half const *rhs_ptr = reinterpret_cast<__half const *>(rhs.raw_data());
-    __half       *res_ptr = reinterpret_cast<__half       *>(result.raw_data());
+#else
+    __half const* lhs_ptr = reinterpret_cast<__half const*>(lhs.raw_data());
+    __half const* rhs_ptr = reinterpret_cast<__half const*>(rhs.raw_data());
+    __half* res_ptr       = reinterpret_cast<__half*>(result.raw_data());
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < ElementsPerAccess; ++i) {
       res_ptr[i] = ((lhs_ptr[i] < rhs_ptr[i]) ? rhs_ptr[i] : lhs_ptr[i]);
     }
 
-    #endif
+#endif
 
     return result;
   }
 
   CUTLASS_DEVICE
-  Array<half_t, ElementsPerAccess> operator()(
-    Array<half_t, ElementsPerAccess>  const &lhs,
-    half_t const &rhs) const {
-
+  Array<half_t, ElementsPerAccess> operator()(Array<half_t, ElementsPerAccess> const& lhs,
+                                              half_t const& rhs) const
+  {
     Array<half_t, ElementsPerAccess> result;
 
-    #if __CUDA_ARCH__ >= 800
+#if __CUDA_ARCH__ >= 800
     int const kVectorCount = ElementsPerAccess / 2;
 
-
-    __half rhs_raw = reinterpret_cast<__half const &>(rhs);
+    __half rhs_raw   = reinterpret_cast<__half const&>(rhs);
     __half2 rhs_pair = __half2half2(rhs_raw);
 
-    __half2 const *lhs_ptr = reinterpret_cast<__half2 const *>(lhs.raw_data());
-    __half2       *res_ptr = reinterpret_cast<__half2 *>(result.raw_data());
+    __half2 const* lhs_ptr = reinterpret_cast<__half2 const*>(lhs.raw_data());
+    __half2* res_ptr       = reinterpret_cast<__half2*>(result.raw_data());
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kVectorCount; ++i) {
       res_ptr[i] = __hmax2(lhs_ptr[i], rhs_pair);
     }
 
-    #else
+#else
 
-    __half const *lhs_ptr = reinterpret_cast<__half const *>(lhs.raw_data());
-    __half const  rhs_raw = reinterpret_cast<__half const &>(rhs);
-    __half       *res_ptr = reinterpret_cast<__half       *>(result.raw_data());
+    __half const* lhs_ptr = reinterpret_cast<__half const*>(lhs.raw_data());
+    __half const rhs_raw  = reinterpret_cast<__half const&>(rhs);
+    __half* res_ptr       = reinterpret_cast<__half*>(result.raw_data());
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < ElementsPerAccess; ++i) {
       res_ptr[i] = ((lhs_ptr[i] < rhs_raw) ? rhs_raw : lhs_ptr[i]);
     }
 
-    #endif
+#endif
 
     return result;
   }
@@ -154,13 +146,11 @@ struct ArrayMaximum<half_t, ElementsPerAccess> {
 
 template <typename Element, int ElementsPerAccess>
 struct ReluConditional {
-
   CUTLASS_HOST_DEVICE
-  void operator()(
-    bool conditional[],
-    Array<Element, ElementsPerAccess> const &fragment, 
-    Element threshold) const {
-
+  void operator()(bool conditional[],
+                  Array<Element, ElementsPerAccess> const& fragment,
+                  Element threshold) const
+  {
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < ElementsPerAccess; ++i) {
       conditional[i] = !(fragment[i] < threshold);
@@ -170,15 +160,13 @@ struct ReluConditional {
 
 template <int ElementsPerAccess>
 struct ReluConditional<half_t, ElementsPerAccess> {
-
   CUTLASS_DEVICE
-  void operator()(
-    bool conditional[],
-    Array<half_t, ElementsPerAccess> const &fragment, 
-    half_t threshold) const {
-
-    __half y = reinterpret_cast<__half const &>(threshold);
-    __half const *x = reinterpret_cast<__half const *>(fragment.raw_data());
+  void operator()(bool conditional[],
+                  Array<half_t, ElementsPerAccess> const& fragment,
+                  half_t threshold) const
+  {
+    __half y        = reinterpret_cast<__half const&>(threshold);
+    __half const* x = reinterpret_cast<__half const*>(fragment.raw_data());
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < ElementsPerAccess; ++i) {
@@ -187,7 +175,7 @@ struct ReluConditional<half_t, ElementsPerAccess> {
   }
 };
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -198,36 +186,33 @@ struct ReluConditional<half_t, ElementsPerAccess> {
 ///
 /// This base class is meant to define the concept required of the
 /// EpilogueWithBroadcast::OutputOp
-template <
-  typename ElementC_,
-  typename ElementAccumulator_,
-  typename ElementCompute_,
-  typename ElementZ_,
-  int ElementsPerAccess,
-  bool StoreT = true
->
+template <typename ElementC_,
+          typename ElementAccumulator_,
+          typename ElementCompute_,
+          typename ElementZ_,
+          int ElementsPerAccess,
+          bool StoreT = true>
 class LinearCombinationBiasRelu {
-public:
-
-  using ElementOutput = ElementC_;
-  using ElementC = ElementC_;
+ public:
+  using ElementOutput      = ElementC_;
+  using ElementC           = ElementC_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementCompute_;
-  using ElementZ = ElementZ_;
+  using ElementCompute     = ElementCompute_;
+  using ElementZ           = ElementZ_;
 
   using ElementT = uint1b_t;
 
   static int const kElementsPerAccess = ElementsPerAccess;
-  static int const kCount = kElementsPerAccess;
+  static int const kCount             = kElementsPerAccess;
 
   using ElementwiseOp = ReLu<ElementCompute>;
-  using BinaryOp = plus<ElementCompute>;
+  using BinaryOp      = plus<ElementCompute>;
 
   using FragmentAccumulator = Array<ElementAccumulator, kElementsPerAccess>;
-  using FragmentCompute = Array<ElementCompute, kElementsPerAccess>;
-  using FragmentC = Array<ElementOutput, kElementsPerAccess>;
-  using FragmentZ = Array<ElementZ, kElementsPerAccess>;
-  using FragmentT = Array<ElementT, kElementsPerAccess>;
+  using FragmentCompute     = Array<ElementCompute, kElementsPerAccess>;
+  using FragmentC           = Array<ElementOutput, kElementsPerAccess>;
+  using FragmentZ           = Array<ElementZ, kElementsPerAccess>;
+  using FragmentT           = Array<ElementT, kElementsPerAccess>;
 
   /// If true, the 'Z' tensor is stored
   static bool const kStoreZ = true;
@@ -237,12 +222,13 @@ public:
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta;                   ///< scales source tensor
-    ElementCompute const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
-    ElementCompute const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
-    ElementZ threshold;                    ///< ReLu threshold
+    ElementCompute alpha;  ///< scales accumulators
+    ElementCompute beta;   ///< scales source tensor
+    ElementCompute const*
+      alpha_ptr;  ///< pointer to accumulator scalar - if not null, loads it from memory
+    ElementCompute const*
+      beta_ptr;          ///< pointer to source scalar - if not null, loads it from memory
+    ElementZ threshold;  ///< ReLu threshold
 
     //
     // Methods
@@ -252,55 +238,49 @@ public:
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta(ElementCompute()), 
-      alpha_ptr(nullptr), 
-      beta_ptr(nullptr),
-      threshold(ElementCompute()) { }
+    Params()
+      : alpha(ElementCompute(1)),
+        beta(ElementCompute()),
+        alpha_ptr(nullptr),
+        beta_ptr(nullptr),
+        threshold(ElementCompute())
+    {
+    }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta,
-      ElementCompute threshold_ = ElementCompute()
-    ): 
-      alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params(ElementCompute alpha, ElementCompute beta, ElementCompute threshold_ = ElementCompute())
+      : alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
       NumericConverter<ElementZ, ElementCompute> convert_threshold;
 
       threshold = convert_threshold(threshold_);
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha
-    ): alpha(alpha), beta(0), alpha_ptr(nullptr), beta_ptr(nullptr), threshold(ElementZ()) {
-
+    Params(ElementCompute alpha)
+      : alpha(alpha), beta(0), alpha_ptr(nullptr), beta_ptr(nullptr), threshold(ElementZ())
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr,
-      ElementCompute const *beta_ptr,
-      ElementCompute threshold_ = ElementCompute()
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) {
-
+    Params(ElementCompute const* alpha_ptr,
+           ElementCompute const* beta_ptr,
+           ElementCompute threshold_ = ElementCompute())
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr)
+    {
       NumericConverter<ElementZ, ElementCompute> convert_threshold;
 
       threshold = convert_threshold(threshold_);
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(nullptr), threshold(ElementZ()) {
+    Params(ElementCompute const* alpha_ptr)
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(nullptr), threshold(ElementZ())
+    {
     }
-
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -309,65 +289,61 @@ private:
   ElementCompute beta_;
   ElementZ threshold_;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Constructor from Params
   CUTLASS_HOST_DEVICE
-  LinearCombinationBiasRelu(Params const &params) {
-
-    alpha_ = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    beta_ = (params.beta_ptr ? *params.beta_ptr : params.beta);
+  LinearCombinationBiasRelu(Params const& params)
+  {
+    alpha_     = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
+    beta_      = (params.beta_ptr ? *params.beta_ptr : params.beta);
     threshold_ = params.threshold;
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
-    return beta_ != ElementCompute(0);
-  }
+  bool is_source_needed() const { return beta_ != ElementCompute(0); }
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    if (k_partition) {
-      beta_ = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition, int k_partition_count)
+  {
+    if (k_partition) { beta_ = ElementCompute(1); }
 
     if (k_partition != k_partition_count - 1) {
       // set to NaN to make ReLU no-op for all except last k partitions
       int64_t allones = -1;
-      threshold_ = reinterpret_cast<ElementZ const &>(allones);
+      threshold_      = reinterpret_cast<ElementZ const&>(allones);
     }
   }
 
   /// Applies the operation when is_source_needed() is true
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentZ &frag_Z, 
-    FragmentT &frag_T, 
-    FragmentAccumulator const &AB,
-    FragmentC const &frag_C,
-    FragmentCompute const &V) const {
-
+  void operator()(FragmentZ& frag_Z,
+                  FragmentT& frag_T,
+                  FragmentAccumulator const& AB,
+                  FragmentC const& frag_C,
+                  FragmentCompute const& V) const
+  {
     BinaryOp binary_op;
 
-    FragmentCompute tmp_Accum = NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
-    FragmentCompute tmp_C = NumericArrayConverter<ElementCompute, ElementC, kElementsPerAccess>()(frag_C);
+    FragmentCompute tmp_Accum =
+      NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
+    FragmentCompute tmp_C =
+      NumericArrayConverter<ElementCompute, ElementC, kElementsPerAccess>()(frag_C);
     FragmentCompute result_Z;
 
     bool conditions[kElementsPerAccess];
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kElementsPerAccess; ++i) {
-
       ElementCompute z = alpha_ * tmp_Accum[i];
       z += beta_ * tmp_C[i];
 
-      z = binary_op(z, V[i]);
+      z           = binary_op(z, V[i]);
       result_Z[i] = z;
     }
 
@@ -386,21 +362,21 @@ public:
 
     if (kStoreT) {
       PackPredicates<kElementsPerAccess> pack_predicates;
-      frag_T = pack_predicates(conditions); 
+      frag_T = pack_predicates(conditions);
     }
   }
 
   /// Applies the operation when is_source_needed() is false
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentZ &frag_Z, 
-    FragmentT &frag_T, 
-    FragmentAccumulator const &AB,
-    FragmentCompute const &V) const {
-
+  void operator()(FragmentZ& frag_Z,
+                  FragmentT& frag_T,
+                  FragmentAccumulator const& AB,
+                  FragmentCompute const& V) const
+  {
     BinaryOp binary_op;
 
-    FragmentCompute tmp_Accum = NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
+    FragmentCompute tmp_Accum =
+      NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
     FragmentCompute result_Z;
 
     bool conditions[kElementsPerAccess];
@@ -408,7 +384,7 @@ public:
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kElementsPerAccess; ++i) {
       ElementCompute z = binary_op(alpha_ * tmp_Accum[i], V[i]);
-      result_Z[i] = z;
+      result_Z[i]      = z;
     }
 
     NumericArrayConverter<ElementZ, ElementCompute, kElementsPerAccess> convert_z;
@@ -424,7 +400,7 @@ public:
     detail::ArrayMaximum<ElementZ, kElementsPerAccess> maximum_op;
     frag_Z = maximum_op(frag_Z, threshold_);
 
-    // 
+    //
     // Compute conditions
     //
 
@@ -440,8 +416,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

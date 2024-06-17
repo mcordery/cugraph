@@ -15,8 +15,8 @@
 import os
 from pathlib import Path
 
-import pytest
 import numpy as np
+import pytest
 
 # If the rapids-pytest-benchmark plugin is installed, the "gpubenchmark"
 # fixture will be available automatically. Check that this fixture is available
@@ -30,13 +30,11 @@ except ImportError:
 
     gpubenchmark = pytest_benchmark.plugin.benchmark
 
-from cugraph_service_client import CugraphServiceClient
-from cugraph_service_client.exceptions import CugraphServiceError
-from cugraph_service_client import RemoteGraph
-from cugraph_service_server.testing import utils
-
 from cugraph_benchmarking import params
 from cugraph_benchmarking.timer import TimerContext
+from cugraph_service_client import CugraphServiceClient, RemoteGraph
+from cugraph_service_client.exceptions import CugraphServiceError
+from cugraph_service_server.testing import utils
 
 _seed = 42
 

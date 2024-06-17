@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 
@@ -24,12 +24,14 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if defined(_LIBCUDACXX_IS_FINAL)
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS
-__libcpp_is_final : public integral_constant<bool, _LIBCUDACXX_IS_FINAL(_Tp)> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_final
+  : public integral_constant<bool, _LIBCUDACXX_IS_FINAL(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS
-is_final : public integral_constant<bool, _LIBCUDACXX_IS_FINAL(_Tp)> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_final
+  : public integral_constant<bool, _LIBCUDACXX_IS_FINAL(_Tp)> {};
 #endif
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
@@ -39,12 +41,12 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_final_v = _LIBCUDACXX_IS_FINAL(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS
-__libcpp_is_final : public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS __libcpp_is_final : public false_type {};
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS
-is_final :  public false_type {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_final : public false_type {};
 #endif
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
@@ -52,8 +54,8 @@ template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_final_v = false;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_FINAL)
+#endif  // defined(_LIBCUDACXX_IS_FINAL)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_FINAL_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_FINAL_H

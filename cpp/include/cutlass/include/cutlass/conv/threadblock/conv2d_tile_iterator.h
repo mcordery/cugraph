@@ -35,17 +35,17 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
+#include "cutlass/conv/conv2d_problem_size.h"
+#include "cutlass/conv/convolution.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/layout/pitch_linear.h"
+#include "cutlass/layout/tensor.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/tensor_ref.h"
 #include "cutlass/tensor_view.h"
-#include "cutlass/layout/pitch_linear.h"
-#include "cutlass/layout/tensor.h"
-#include "cutlass/layout/matrix.h"
-#include "cutlass/conv/convolution.h"
-#include "cutlass/conv/conv2d_problem_size.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,75 +57,74 @@ namespace threadblock {
 
 template <typename TileAccessIterator_>
 class TileIterator {
-public:
+ public:
   using TileAccessIterator = TileAccessIterator_;
 
-  using Shape = typename TileAccessIterator::Shape;
-  using Element = typename TileAccessIterator::Element;
-  using Layout = typename TileAccessIterator::Layout;
-  using TensorCoord = typename Layout::TensorCoord;
-  using ThreadMap = typename TileAccessIterator::ThreadMap;
-  using AccessType = typename TileAccessIterator::AccessType;
-  using TensorRef = typename TileAccessIterator::TensorRef;
-  using Index = typename TileAccessIterator::Index;
-  using LongIndex = typename TileAccessIterator::LongIndex;
+  using Shape                                       = typename TileAccessIterator::Shape;
+  using Element                                     = typename TileAccessIterator::Element;
+  using Layout                                      = typename TileAccessIterator::Layout;
+  using TensorCoord                                 = typename Layout::TensorCoord;
+  using ThreadMap                                   = typename TileAccessIterator::ThreadMap;
+  using AccessType                                  = typename TileAccessIterator::AccessType;
+  using TensorRef                                   = typename TileAccessIterator::TensorRef;
+  using Index                                       = typename TileAccessIterator::Index;
+  using LongIndex                                   = typename TileAccessIterator::LongIndex;
   static IteratorAlgorithm const kIteratorAlgorithm = TileAccessIterator::kIteratorAlgorithm;
-  static StrideSupport const kStrideSupport = TileAccessIterator::kStrideSupport;
-  using Params = typename TileAccessIterator::Params;
-  static int const kConvDim = TileAccessIterator::kConvDim;
-  using ConvProblemSize = typename TileAccessIterator::ConvProblemSize;
-  static int const kAccessesPerVector = TileAccessIterator::kAccessesPerVector;
+  static StrideSupport const kStrideSupport         = TileAccessIterator::kStrideSupport;
+  using Params                                      = typename TileAccessIterator::Params;
+  static int const kConvDim                         = TileAccessIterator::kConvDim;
+  using ConvProblemSize                             = typename TileAccessIterator::ConvProblemSize;
+  static int const kAccessesPerVector               = TileAccessIterator::kAccessesPerVector;
 
   /// Fragment object to be loaded or stored
-  using Fragment = cutlass::Array<
-    Element, 
-    ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
+  using Fragment =
+    cutlass::Array<Element, ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
 
-private:
-
+ private:
   /// Internal state
   TileAccessIterator tile_access_iterator_;
 
-public:
-
+ public:
   /// Constructor
   CUTLASS_HOST_DEVICE
-  TileIterator(
-    Params const &params,
-    ConvProblemSize const &problem_size,
-    Element const *ptr,
-    int thread_idx,
-    MatrixCoord const &threadblock_offset = MatrixCoord()
-  ):
-    tile_access_iterator_(params, problem_size, ptr, thread_idx, threadblock_offset) { }
+  TileIterator(Params const& params,
+               ConvProblemSize const& problem_size,
+               Element const* ptr,
+               int thread_idx,
+               MatrixCoord const& threadblock_offset = MatrixCoord())
+    : tile_access_iterator_(params, problem_size, ptr, thread_idx, threadblock_offset)
+  {
+  }
 
   CUTLASS_HOST_DEVICE
-  static Params getParams(ConvProblemSize const &problem_size, Layout const &layout) {
+  static Params getParams(ConvProblemSize const& problem_size, Layout const& layout)
+  {
     return TileAccessIterator::getParams(problem_size, layout);
   }
 
   /// Overrides the internal iteration index
   CUTLASS_HOST_DEVICE
-  void set_iteration_index(Index index) {
-    tile_access_iterator_.set_iteration_index(index);
-  }
+  void set_iteration_index(Index index) { tile_access_iterator_.set_iteration_index(index); }
 
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     tile_access_iterator_.add_pointer_offset(pointer_offset);
   }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  TileIterator &operator++() {
+  TileIterator& operator++()
+  {
     tile_access_iterator_.advance();
     return *this;
   }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  TileIterator operator++(int) {
+  TileIterator operator++(int)
+  {
     TileIterator self(*this);
     operator++();
     return self;
@@ -133,10 +132,10 @@ public:
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     frag.clear();
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
@@ -144,18 +143,13 @@ public:
       for (int c = 0; c < ThreadMap::Iterations::kContiguous; ++c) {
         CUTLASS_PRAGMA_UNROLL
         for (int v = 0; v < kAccessesPerVector; ++v) {
-
           int idx = v + kAccessesPerVector * (c + s * ThreadMap::Iterations::kContiguous);
 
-          cutlass::arch::global_load<
-            AccessType,
-            sizeof(AccessType)
-          >(
+          cutlass::arch::global_load<AccessType, sizeof(AccessType)>(
             frag_ptr[idx],
             tile_access_iterator_.get() + pointer_offset,
-            tile_access_iterator_.valid()
-          );
-  
+            tile_access_iterator_.valid());
+
           ++tile_access_iterator_;
         }
       }
@@ -164,20 +158,19 @@ public:
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
+  void load(Fragment& frag)
+  {
     tile_access_iterator_.set_iteration_index(0);
     load_with_pointer_offset(frag, 0);
   }
 
   CUTLASS_DEVICE
-  void advance() {
-    tile_access_iterator_.advance();
-  }
+  void advance() { tile_access_iterator_.advance(); }
 
   /// Determines whether the Implicit GEMM can execute the given problem.
   CUTLASS_HOST_DEVICE
-  static Status can_implement(ConvProblemSize const &problem_size) {
-
+  static Status can_implement(ConvProblemSize const& problem_size)
+  {
     // dispatch to iterator implementation
     return TileAccessIterator::can_implement(problem_size);
   }
@@ -187,95 +180,95 @@ public:
 // Strided Dgrad Tile Iterator
 template <typename TileAccessIterator_>
 class TileIteratorStridedDgrad {
-public:
+ public:
   using TileAccessIterator = TileAccessIterator_;
 
-  using Shape = typename TileAccessIterator::Shape;
-  using Element = typename TileAccessIterator::Element;
-  using Layout = typename TileAccessIterator::Layout;
-  using TensorCoord = typename Layout::TensorCoord;
-  using ThreadMap = typename TileAccessIterator::ThreadMap;
-  using AccessType = typename TileAccessIterator::AccessType;
-  using TensorRef = typename TileAccessIterator::TensorRef;
-  using Index = typename TileAccessIterator::Index;
-  using LongIndex = typename TileAccessIterator::LongIndex;
+  using Shape                                       = typename TileAccessIterator::Shape;
+  using Element                                     = typename TileAccessIterator::Element;
+  using Layout                                      = typename TileAccessIterator::Layout;
+  using TensorCoord                                 = typename Layout::TensorCoord;
+  using ThreadMap                                   = typename TileAccessIterator::ThreadMap;
+  using AccessType                                  = typename TileAccessIterator::AccessType;
+  using TensorRef                                   = typename TileAccessIterator::TensorRef;
+  using Index                                       = typename TileAccessIterator::Index;
+  using LongIndex                                   = typename TileAccessIterator::LongIndex;
   static IteratorAlgorithm const kIteratorAlgorithm = TileAccessIterator::kIteratorAlgorithm;
-  static StrideSupport const kStrideSupport = TileAccessIterator::kStrideSupport;
-  using Params = typename TileAccessIterator::Params;
-  static int const kConvDim = TileAccessIterator::kConvDim;
-  using ConvProblemSize = typename TileAccessIterator::ConvProblemSize;
+  static StrideSupport const kStrideSupport         = TileAccessIterator::kStrideSupport;
+  using Params                                      = typename TileAccessIterator::Params;
+  static int const kConvDim                         = TileAccessIterator::kConvDim;
+  using ConvProblemSize                             = typename TileAccessIterator::ConvProblemSize;
 
   /// Fragment object to be loaded or stored
-  using Fragment = cutlass::Array<
-    Element, 
-    ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
+  using Fragment =
+    cutlass::Array<Element, ThreadMap::Iterations::kCount * ThreadMap::kElementsPerAccess>;
 
-private:
-
+ private:
   /// Internal state
   TileAccessIterator tile_access_iterator_;
 
-public:
-
+ public:
   /// Constructor (output gradient (Dy) OperandA ctor)
   CUTLASS_HOST_DEVICE
-  TileIteratorStridedDgrad(
-    Params const &params,
-    ConvProblemSize const &problem_size,
-    Element const *ptr,
-    int thread_idx,
-    FastDivmod const &stride_h_divmod, FastDivmod const &stride_w_divmod,
-    int start_r, int start_s,
-    MatrixCoord const &threadblock_offset = MatrixCoord()
-  ):
-    tile_access_iterator_(
-      params, 
-      problem_size, 
-      ptr, 
-      thread_idx, 
-      stride_h_divmod, stride_w_divmod, 
-      start_r, start_s, 
-      threadblock_offset) { }
+  TileIteratorStridedDgrad(Params const& params,
+                           ConvProblemSize const& problem_size,
+                           Element const* ptr,
+                           int thread_idx,
+                           FastDivmod const& stride_h_divmod,
+                           FastDivmod const& stride_w_divmod,
+                           int start_r,
+                           int start_s,
+                           MatrixCoord const& threadblock_offset = MatrixCoord())
+    : tile_access_iterator_(params,
+                            problem_size,
+                            ptr,
+                            thread_idx,
+                            stride_h_divmod,
+                            stride_w_divmod,
+                            start_r,
+                            start_s,
+                            threadblock_offset)
+  {
+  }
 
   /// Constructor (filter (w) OperandB ctor)
   CUTLASS_HOST_DEVICE
-  TileIteratorStridedDgrad(
-    Params const &params,
-    ConvProblemSize const &problem_size,
-    Element const *ptr,
-    int thread_idx,
-    int start_r, int start_s,
-    MatrixCoord const &threadblock_offset = MatrixCoord()
-  ):
-    tile_access_iterator_(params, 
-      problem_size, 
-      ptr, 
-      thread_idx, 
-      start_r, start_s, 
-      threadblock_offset) { }
+  TileIteratorStridedDgrad(Params const& params,
+                           ConvProblemSize const& problem_size,
+                           Element const* ptr,
+                           int thread_idx,
+                           int start_r,
+                           int start_s,
+                           MatrixCoord const& threadblock_offset = MatrixCoord())
+    : tile_access_iterator_(
+        params, problem_size, ptr, thread_idx, start_r, start_s, threadblock_offset)
+  {
+  }
 
   CUTLASS_HOST_DEVICE
-  static Params getParams(ConvProblemSize const &problem_size, Layout const &layout) {
+  static Params getParams(ConvProblemSize const& problem_size, Layout const& layout)
+  {
     return TileAccessIterator::getParams(problem_size, layout);
   }
 
-
   /// Adds a pointer offset in units of Element
   CUTLASS_HOST_DEVICE
-  void add_pointer_offset(LongIndex pointer_offset) {
+  void add_pointer_offset(LongIndex pointer_offset)
+  {
     tile_access_iterator_.add_pointer_offset(pointer_offset);
   }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  TileIteratorStridedDgrad &operator++() {
+  TileIteratorStridedDgrad& operator++()
+  {
     tile_access_iterator_.advance();
     return *this;
   }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  TileIteratorStridedDgrad operator++(int) {
+  TileIteratorStridedDgrad operator++(int)
+  {
     TileIteratorStridedDgrad self(*this);
     operator++();
     return self;
@@ -283,24 +276,19 @@ public:
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     frag.clear();
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int s = 0; s < ThreadMap::Iterations::kStrided; ++s) {
       CUTLASS_PRAGMA_UNROLL
       for (int c = 0; c < ThreadMap::Iterations::kContiguous; ++c) {
-
-        cutlass::arch::global_load<
-          AccessType,
-          sizeof(AccessType)
-        >(
+        cutlass::arch::global_load<AccessType, sizeof(AccessType)>(
           frag_ptr[c + s * ThreadMap::Iterations::kContiguous],
           tile_access_iterator_.get() + pointer_offset,
-          tile_access_iterator_.valid()
-        );
+          tile_access_iterator_.valid());
 
         ++tile_access_iterator_;
       }
@@ -309,29 +297,27 @@ public:
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
+  void load(Fragment& frag)
+  {
     tile_access_iterator_.set_iteration_index(0);
     load_with_pointer_offset(frag, 0);
   }
 
   CUTLASS_DEVICE
-  void advance() {
-    tile_access_iterator_.advance();
-  }
+  void advance() { tile_access_iterator_.advance(); }
 
   /// Determines whether the Implicit GEMM can execute the given problem.
   CUTLASS_HOST_DEVICE
-  static Status can_implement(ConvProblemSize const &problem_size) {
-
+  static Status can_implement(ConvProblemSize const& problem_size)
+  {
     // dispatch to iterator implementation
     return TileAccessIterator::can_implement(problem_size);
   }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace conv
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace conv
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-

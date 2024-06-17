@@ -33,9 +33,6 @@
 
 #pragma once
 
-#include <hipco/detail/error.hpp>
-#include <hipco/detail/utils.cuh>
-
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/iterator_traits.h>
@@ -46,9 +43,13 @@
 #include <thrust/transform.h>
 #include <thrust/type_traits/is_execution_policy.h>
 
+#include <hipco/detail/error.hpp>
+#include <hipco/detail/utils.cuh>
+
+#include <time.h>
+
 #include <cstdint>
 #include <iterator>
-#include <time.h>
 #include <type_traits>
 
 namespace hipco::utility {
@@ -58,8 +59,7 @@ namespace distribution {
 /**
  * @brief Tag struct representing a random distribution of unique keys.
  */
-struct unique {
-};
+struct unique {};
 
 /**
  * @brief Tag struct representing a uniform distribution.

@@ -109,16 +109,16 @@
   GET_RMM_CUDA_TRY_MACRO(__VA_ARGS__, RMM_CUDA_TRY_2, RMM_CUDA_TRY_1) \
   (__VA_ARGS__)
 #define GET_RMM_CUDA_TRY_MACRO(_1, _2, NAME, ...) NAME
-#define RMM_CUDA_TRY_2(_call, _exception_type)                                               \
-  do {                                                                                       \
+#define RMM_CUDA_TRY_2(_call, _exception_type)                                              \
+  do {                                                                                      \
     hipError_t const error = (_call);                                                       \
     if (hipSuccess != error) {                                                              \
       hipGetLastError();                                                                    \
-      /*NOLINTNEXTLINE(bugprone-macro-parentheses)*/                                         \
-      throw _exception_type{std::string{"CUDA error at: "} + __FILE__ + ":" +                \
+      /*NOLINTNEXTLINE(bugprone-macro-parentheses)*/                                        \
+      throw _exception_type{std::string{"CUDA error at: "} + __FILE__ + ":" +               \
                             RMM_STRINGIFY(__LINE__) + ": " + hipGetErrorName(error) + " " + \
                             hipGetErrorString(error)};                                      \
-    }                                                                                        \
+    }                                                                                       \
   } while (0)
 #define RMM_CUDA_TRY_1(_call) RMM_CUDA_TRY_2(_call, rmm::cuda_error)
 
@@ -134,12 +134,12 @@
  */
 #define RMM_CUDA_TRY_ALLOC(_call)                                                                  \
   do {                                                                                             \
-    hipError_t const error = (_call);                                                             \
-    if (hipSuccess != error) {                                                                    \
-      hipGetLastError();                                                                          \
+    hipError_t const error = (_call);                                                              \
+    if (hipSuccess != error) {                                                                     \
+      hipGetLastError();                                                                           \
       auto const msg = std::string{"CUDA error at: "} + __FILE__ + ":" + RMM_STRINGIFY(__LINE__) + \
-                       ": " + hipGetErrorName(error) + " " + hipGetErrorString(error);           \
-      if (hipErrorOutOfMemory == error) { throw rmm::out_of_memory{msg}; }                   \
+                       ": " + hipGetErrorName(error) + " " + hipGetErrorString(error);             \
+      if (hipErrorOutOfMemory == error) { throw rmm::out_of_memory{msg}; }                         \
       throw rmm::bad_alloc{msg};                                                                   \
     }                                                                                              \
   } while (0)
@@ -175,14 +175,14 @@
     (_call);                           \
   } while (0);
 #else
-#define RMM_ASSERT_CUDA_SUCCESS(_call)                                          \
-  do {                                                                          \
+#define RMM_ASSERT_CUDA_SUCCESS(_call)                                         \
+  do {                                                                         \
     hipError_t const status__ = (_call);                                       \
     if (status__ != hipSuccess) {                                              \
       std::cerr << "CUDA Error detected. " << hipGetErrorName(status__) << " " \
                 << hipGetErrorString(status__) << std::endl;                   \
-    }                                                                           \
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay) */   \
+    }                                                                          \
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay) */  \
     assert(status__ == hipSuccess);                                            \
   } while (0)
 #endif

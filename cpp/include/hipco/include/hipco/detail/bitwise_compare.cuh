@@ -35,9 +35,8 @@
 
 #include <hipco/utility/traits.hpp>
 
-#include <hip/std/bit>
-
 #include <cstdint>
+#include <hip/std/bit>
 #include <type_traits>
 
 namespace hipco {
@@ -104,9 +103,9 @@ __host__ __device__ constexpr bool bitwise_compare(T const& lhs, T const& rhs)
     hipco::is_bitwise_comparable_v<T>,
     "Bitwise compared objects must have unique object representations or be explicitly declared as "
     "safe for bitwise comparison via specialization of hipco::is_bitwise_comparable_v.");
-  //Todo(HIP): Unused?
-  // alignas(detail::alignment<T>()) T __lhs{lhs};
-  // alignas(detail::alignment<T>()) T __rhs{rhs};
+  // Todo(HIP): Unused?
+  //  alignas(detail::alignment<T>()) T __lhs{lhs};
+  //  alignas(detail::alignment<T>()) T __rhs{rhs};
   return detail::bitwise_compare_impl<sizeof(T)>::compare(reinterpret_cast<char const*>(&lhs),
                                                           reinterpret_cast<char const*>(&rhs));
 }

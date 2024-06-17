@@ -29,7 +29,7 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Defines layout functions used by TensorRef and derived classes. 
+    \brief Defines layout functions used by TensorRef and derived classes.
 
     Layout functions map logical coordinates to linear memory. They often require additional
     data to describe strides between elements.
@@ -55,7 +55,7 @@ namespace layout {
 
 /// Mapping function for row-major matrices.
 class RowMajor {
-public:
+ public:
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -74,7 +74,7 @@ public:
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -82,72 +82,65 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Constructor
   CUTLASS_HOST_DEVICE
-  RowMajor(LongIndex ldm = 0): stride_(ldm) { }
+  RowMajor(LongIndex ldm = 0) : stride_(ldm) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajor(Stride stride): stride_(stride) { }
+  RowMajor(Stride stride) : stride_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajor packed(MatrixCoord const &extent) {
-    return RowMajor(extent.column());
-  }
+  static RowMajor packed(MatrixCoord const& extent) { return RowMajor(extent.column()); }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     return LongIndex(coord.row()) * LongIndex(stride_[0]) + coord.column();
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     return MatrixCoord(Index(offset / stride_[0]), Index(offset % stride_[0]));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return LongIndex(extent.row()) * LongIndex(stride_[0]);
   }
 };
 
 /// Mapping function for column-major matrices.
 class ColumnMajor {
-public:
+ public:
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -166,7 +159,7 @@ public:
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -174,66 +167,58 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajor(LongIndex ldm = 0): stride_(ldm) { }
-  
+  ColumnMajor(LongIndex ldm = 0) : stride_(ldm) {}
+
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajor(Stride stride): stride_(stride) { }
-
+  ColumnMajor(Stride stride) : stride_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajor packed(MatrixCoord const &extent) {
-    return ColumnMajor(extent.row());
-  }
+  static ColumnMajor packed(MatrixCoord const& extent) { return ColumnMajor(extent.row()); }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     return LongIndex(coord.column()) * LongIndex(stride_[0]) + coord.row();
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     return MatrixCoord(Index(offset % stride_[0]), Index(offset / stride_[0]));
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return LongIndex(extent.column()) * LongIndex(stride_[0]);
   }
 };
@@ -242,7 +227,6 @@ public:
 /// as row-major arrangement of fixed-size columns.
 template <int Interleave>
 struct RowMajorInterleaved {
-  
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -264,7 +248,7 @@ struct RowMajorInterleaved {
   /// Size of interleaved columns
   static int const kInterleave = Interleave;
 
-private:
+ private:
   //
   // Data members
   //
@@ -272,74 +256,70 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorInterleaved(LongIndex ldm = 0): stride_(ldm) { }
-  
+  RowMajorInterleaved(LongIndex ldm = 0) : stride_(ldm) {}
+
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorInterleaved(Stride stride): stride_(stride) { }
+  RowMajorInterleaved(Stride stride) : stride_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorInterleaved packed(MatrixCoord const &extent) {
+  static RowMajorInterleaved packed(MatrixCoord const& extent)
+  {
     return RowMajorInterleaved(extent.column() * kInterleave);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     Index row_major = coord.row() / kInterleave;
     Index row_minor = coord.row() % kInterleave;
-    return LongIndex(row_major) * LongIndex(stride_[0]) + LongIndex(coord.column()) * kInterleave + row_minor;
+    return LongIndex(row_major) * LongIndex(stride_[0]) + LongIndex(coord.column()) * kInterleave +
+           row_minor;
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
-
+  MatrixCoord inverse(LongIndex offset) const
+  {
     Index row_major = Index(offset / stride_[0]);
-    Index residual = Index(offset % stride_[0]);
+    Index residual  = Index(offset % stride_[0]);
 
-    Index column = residual / kInterleave;
-    Index row_minor =  residual % kInterleave;
+    Index column    = residual / kInterleave;
+    Index row_minor = residual % kInterleave;
 
     return MatrixCoord(row_major * kInterleave + row_minor, column);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return (extent.row() + kInterleave - 1) / kInterleave * stride_[0];
   }
 };
@@ -348,7 +328,6 @@ public:
 /// as column-major arrangement of fixed-size rows.
 template <int Interleave>
 struct ColumnMajorInterleaved {
-  
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -370,7 +349,7 @@ struct ColumnMajorInterleaved {
   /// Size of interleaved columns
   static int const kInterleave = Interleave;
 
-private:
+ private:
   //
   // Data members
   //
@@ -378,89 +357,83 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorInterleaved(LongIndex ldm = 0): stride_(ldm) { }
-  
+  ColumnMajorInterleaved(LongIndex ldm = 0) : stride_(ldm) {}
+
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorInterleaved(Stride stride): stride_(stride) { }
-
+  ColumnMajorInterleaved(Stride stride) : stride_(stride) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorInterleaved packed(MatrixCoord const &extent) {
+  static ColumnMajorInterleaved packed(MatrixCoord const& extent)
+  {
     return ColumnMajorInterleaved(extent.row() * kInterleave);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     Index column_major = coord.column() / kInterleave;
     Index column_minor = coord.column() % kInterleave;
-    return LongIndex(column_major) * LongIndex(stride_[0]) + LongIndex(coord.row()) * kInterleave + column_minor;
+    return LongIndex(column_major) * LongIndex(stride_[0]) + LongIndex(coord.row()) * kInterleave +
+           column_minor;
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
-
+  MatrixCoord inverse(LongIndex offset) const
+  {
     Index column_major = Index(offset / stride_[0]);
-    Index residual = Index(offset % stride_[0]);
+    Index residual     = Index(offset % stride_[0]);
 
-    Index row = residual / kInterleave;
-    Index column_minor =  residual % kInterleave;
+    Index row          = residual / kInterleave;
+    Index column_minor = residual % kInterleave;
 
     return MatrixCoord(row, column_major * kInterleave + column_minor);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return (extent.column() + kInterleave - 1) / kInterleave * stride_[0];
   }
 };
 
 /// Enumerated type for canonical pitch-linear matrix layouts
 enum class Matrix {
-  kColumnMajor,       ///< leading dimension refers to stride between columns; stride along rows is 1
-  kRowMajor           ///< leading dimension refers to stride between rows; stride along columns is 1
+  kColumnMajor,  ///< leading dimension refers to stride between columns; stride along rows is 1
+  kRowMajor      ///< leading dimension refers to stride between rows; stride along columns is 1
 };
 
 /// Mapping function for scenario in which layout is row-major or column-major but this information
 /// is only available at runtime.
 struct ContiguousMatrix {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -479,7 +452,7 @@ struct ContiguousMatrix {
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -490,46 +463,41 @@ private:
   /// Enumerated type indicating canonical matrix layout
   Matrix layout_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ContiguousMatrix(
-    Index ldm = 0, 
-    Matrix layout = Matrix::kColumnMajor
-  ):
-    stride_(ldm), layout_(layout) { }
+  ContiguousMatrix(Index ldm = 0, Matrix layout = Matrix::kColumnMajor)
+    : stride_(ldm), layout_(layout)
+  {
+  }
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ContiguousMatrix packed(
-    MatrixCoord const &extent, 
-    Matrix layout = Matrix::kColumnMajor) {
-
+  static ContiguousMatrix packed(MatrixCoord const& extent, Matrix layout = Matrix::kColumnMajor)
+  {
     Index ldm = 0;
     if (layout == Matrix::kColumnMajor) {
       ldm = extent.row();
-    }
-    else if (layout == Matrix::kRowMajor) {
+    } else if (layout == Matrix::kRowMajor) {
       ldm = extent.column();
     }
     return ContiguousMatrix(ldm, layout);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     if (layout_ == Matrix::kColumnMajor) {
       return coord.row() + coord.column() * stride_[0];
-    }
-    else if (layout_ == Matrix::kRowMajor) {
+    } else if (layout_ == Matrix::kRowMajor) {
       return coord.row() * stride_[0] + coord.column();
-    }
-    else {
+    } else {
       // degenerate case
       return 0;
     }
@@ -537,45 +505,37 @@ public:
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     // TODO
     return MatrixCoord(0, 0);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     if (layout_ == Matrix::kColumnMajor) {
       return stride_[0] * extent.column();
-    }
-    else if (layout_ == Matrix::kRowMajor) {
+    } else if (layout_ == Matrix::kRowMajor) {
       return stride_[0] * extent.row();
-    }
-    else {
+    } else {
       // degenerate case
       return 0;
     }
@@ -587,7 +547,6 @@ public:
 /// Mapping function for scenario in which both rows and columns are separated by a stride.
 template <int Rank>
 struct AffineRankN {
-
   /// Logical rank of tensor
   static int const kRank = Rank;
 
@@ -606,7 +565,7 @@ struct AffineRankN {
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -614,60 +573,52 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRankN(
-    Stride const &stride = Stride()
-  ):
-    stride_(stride) { }
+  AffineRankN(Stride const& stride = Stride()) : stride_(stride) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRankN(
-    Coord<kRank/2, LongIndex> const &stride_m,
-    Coord<kRank/2, LongIndex> const &stride_n
-  ) { 
-
+  AffineRankN(Coord<kRank / 2, LongIndex> const& stride_m,
+              Coord<kRank / 2, LongIndex> const& stride_n)
+  {
     // Concatenate the strides
     CUTLASS_PRAGMA_UNROLL
-    for (int m = 0; m < kRank/2; ++m) {
+    for (int m = 0; m < kRank / 2; ++m) {
       stride_[m] = stride_m[m];
     }
 
     CUTLASS_PRAGMA_UNROLL
-    for (int n = 0; n < kRank/2; ++n) {
-      stride_[n + kRank/2] = stride_n[n];
+    for (int n = 0; n < kRank / 2; ++n) {
+      stride_[n + kRank / 2] = stride_n[n];
     }
   }
 
   /// Ctor for N = 2
   CUTLASS_HOST_DEVICE
-  AffineRankN(
-    LongIndex const &stride_m,
-    LongIndex const &stride_n
-  ) { 
-      stride_[0] = stride_m;
-      stride_[1] = stride_n;
+  AffineRankN(LongIndex const& stride_m, LongIndex const& stride_n)
+  {
+    stride_[0] = stride_m;
+    stride_[1] = stride_n;
   }
 
   /// Ctor for N = 2
   CUTLASS_HOST_DEVICE
-  AffineRankN(
-    LongIndex const &stride
-  ) { 
-      stride_[0] = stride;
-      stride_[1] = 1;
+  AffineRankN(LongIndex const& stride)
+  {
+    stride_[0] = stride;
+    stride_[1] = 1;
   }
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static AffineRankN packed(TensorCoord const &extent) {
-    
+  static AffineRankN packed(TensorCoord const& extent)
+  {
     AffineRankN layout;
     layout.stride_[kRank - 1] = 1;
 
@@ -679,47 +630,39 @@ public:
     return layout;
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(TensorCoord const &coord) const {
-    return dot(coord, stride_);
-  }
+  LongIndex operator()(TensorCoord const& coord) const { return dot(coord, stride_); }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  TensorCoord inverse(LongIndex offset) const {
+  TensorCoord inverse(LongIndex offset) const
+  {
     // TODO
     return TensorCoord();
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(TensorCoord const &extent) const {
+  LongIndex capacity(TensorCoord const& extent) const
+  {
     int idx = stride_.max_dim_index();
     return extent[idx] * stride_[idx];
   }
@@ -728,7 +671,6 @@ public:
 /// Mapping function for scenario in which both rows and columns are separated by a stride.
 /// Row stride is smaller than column stride in AffineRank2ColumnMajor.
 struct AffineRank2ColumnMajor {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -747,7 +689,7 @@ struct AffineRank2ColumnMajor {
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -755,88 +697,78 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRank2ColumnMajor(
-    Stride const &stride = Stride()
-  ):
-    stride_(stride) { }
+  AffineRank2ColumnMajor(Stride const& stride = Stride()) : stride_(stride) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
   AffineRank2ColumnMajor(
-    LongIndex row_stride,           ///< stride between elements in consecutive rows
-    LongIndex column_stride         ///< stride between elements in consecutive columns
+    LongIndex row_stride,    ///< stride between elements in consecutive rows
+    LongIndex column_stride  ///< stride between elements in consecutive columns
   )
-    { stride_[0] = row_stride; stride_[1] = column_stride;}
+  {
+    stride_[0] = row_stride;
+    stride_[1] = column_stride;
+  }
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRank2ColumnMajor(
-    LongIndex stride
-  )
-    { stride_[0] = 1; stride_[1] = stride;}
+  AffineRank2ColumnMajor(LongIndex stride)
+  {
+    stride_[0] = 1;
+    stride_[1] = stride;
+  }
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static AffineRank2ColumnMajor packed(MatrixCoord const &extent) {
+  static AffineRank2ColumnMajor packed(MatrixCoord const& extent)
+  {
     return AffineRank2ColumnMajor(extent.column(), 1);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
-    return dot(coord, stride_);
-  }
+  LongIndex operator()(MatrixCoord const& coord) const { return dot(coord, stride_); }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     // TODO
     return MatrixCoord(0, 0);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
-    return extent.column() * stride_[1];
-  }
+  LongIndex capacity(MatrixCoord const& extent) const { return extent.column() * stride_[1]; }
 };
 
 /// Mapping function for scenario in which both rows and columns are separated by a stride.
 /// Column stride is smaller than row stride in AffineRank2RowMajor.
 struct AffineRank2RowMajor {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -855,7 +787,7 @@ struct AffineRank2RowMajor {
   /// Stride vector
   using Stride = Coord<kStrideRank, LongIndex>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -863,80 +795,72 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRank2RowMajor(
-    Stride const &stride = Stride()
-  ):
-    stride_(stride) { }
+  AffineRank2RowMajor(Stride const& stride = Stride()) : stride_(stride) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRank2RowMajor(
-    LongIndex row_stride,           ///< stride between elements in consecutive rows
-    LongIndex column_stride         ///< stride between elements in consecutive columns
-  ) { stride_[0] = row_stride; stride_[1] = column_stride;}
+  AffineRank2RowMajor(LongIndex row_stride,    ///< stride between elements in consecutive rows
+                      LongIndex column_stride  ///< stride between elements in consecutive columns
+  )
+  {
+    stride_[0] = row_stride;
+    stride_[1] = column_stride;
+  }
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  AffineRank2RowMajor(
-    LongIndex stride
-  ) { stride_[0] = stride; stride_[1] = 1;}
+  AffineRank2RowMajor(LongIndex stride)
+  {
+    stride_[0] = stride;
+    stride_[1] = 1;
+  }
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static AffineRank2RowMajor packed(MatrixCoord const &extent) {
+  static AffineRank2RowMajor packed(MatrixCoord const& extent)
+  {
     return AffineRank2RowMajor(extent.column(), 1);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
-    return dot(coord, stride_);
-  }
+  LongIndex operator()(MatrixCoord const& coord) const { return dot(coord, stride_); }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     // TODO
     return MatrixCoord(0, 0);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
-    return extent.row() * stride_[0];
-  }
+  LongIndex capacity(MatrixCoord const& extent) const { return extent.row() * stride_[0]; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -948,41 +872,48 @@ public:
 // All Coodinates used here are matrix coordinates.  stride[0] and extent[0] are for the
 // rows.  stride[1] and extent[1] are for the columns.
 template <typename Affine2Layout>
-  struct Affine2Layout_Factory {
+struct Affine2Layout_Factory {
   CUTLASS_HOST_DEVICE
-  static Affine2Layout layout_factory(cutlass::Coord<2> const &extent, typename Affine2Layout::Stride stride_factor) {
+  static Affine2Layout layout_factory(cutlass::Coord<2> const& extent,
+                                      typename Affine2Layout::Stride stride_factor)
+  {
     return Affine2Layout::packed(extent);
   }
 };
 
 template <>
 struct Affine2Layout_Factory<cutlass::layout::AffineRank2ColumnMajor> {
-CUTLASS_HOST_DEVICE
-static cutlass::layout::AffineRank2ColumnMajor layout_factory(
-  cutlass::Coord<2> const &extent,
-  typename cutlass::layout::AffineRank2ColumnMajor::Stride stride_factor) {
-    return cutlass::layout::AffineRank2ColumnMajor({ stride_factor[0], stride_factor[0] * stride_factor[1] * extent[0] });
+  CUTLASS_HOST_DEVICE
+  static cutlass::layout::AffineRank2ColumnMajor layout_factory(
+    cutlass::Coord<2> const& extent,
+    typename cutlass::layout::AffineRank2ColumnMajor::Stride stride_factor)
+  {
+    return cutlass::layout::AffineRank2ColumnMajor(
+      {stride_factor[0], stride_factor[0] * stride_factor[1] * extent[0]});
   }
 };
 
 template <>
 struct Affine2Layout_Factory<cutlass::layout::AffineRank2RowMajor> {
-CUTLASS_HOST_DEVICE
-static cutlass::layout::AffineRank2RowMajor layout_factory(
-  cutlass::Coord<2> const &extent,
-  typename cutlass::layout::AffineRank2RowMajor::Stride stride_factor) {
-    return cutlass::layout::AffineRank2RowMajor({ stride_factor[0] * stride_factor[1] * extent[1], stride_factor[1] });
+  CUTLASS_HOST_DEVICE
+  static cutlass::layout::AffineRank2RowMajor layout_factory(
+    cutlass::Coord<2> const& extent,
+    typename cutlass::layout::AffineRank2RowMajor::Stride stride_factor)
+  {
+    return cutlass::layout::AffineRank2RowMajor(
+      {stride_factor[0] * stride_factor[1] * extent[1], stride_factor[1]});
   }
 };
 
 // The base layout cutlass::layout::AffineRankN<2> is similar to AffineRank2ColumnMajor
 template <>
 struct Affine2Layout_Factory<cutlass::layout::AffineRankN<2>> {
-CUTLASS_HOST_DEVICE
-static cutlass::layout::AffineRankN<2> layout_factory(
-  cutlass::Coord<2> const &extent,
-  typename cutlass::layout::AffineRankN<2>::Stride stride_factor) {
-    return cutlass::layout::AffineRankN<2>({ stride_factor[0], stride_factor[0] * stride_factor[1] * extent[0] });
+  CUTLASS_HOST_DEVICE
+  static cutlass::layout::AffineRankN<2> layout_factory(
+    cutlass::Coord<2> const& extent, typename cutlass::layout::AffineRankN<2>::Stride stride_factor)
+  {
+    return cutlass::layout::AffineRankN<2>(
+      {stride_factor[0], stride_factor[0] * stride_factor[1] * extent[0]});
   }
 };
 
@@ -1016,7 +947,7 @@ struct ColumnMajorBlockLinear {
   /// Size of a block in columns
   static int const kBlockColumns = BlockColumns;
 
-private:
+ private:
   //
   // Data members
   //
@@ -1024,67 +955,60 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ColumnMajorBlockLinear(Index ldm = 0): stride_(ldm) { }
+  ColumnMajorBlockLinear(Index ldm = 0) : stride_(ldm) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static ColumnMajorBlockLinear packed(MatrixCoord const &extent) {
+  static ColumnMajorBlockLinear packed(MatrixCoord const& extent)
+  {
     return ColumnMajorBlockLinear(extent.row() * kBlockRows * kBlockColumns);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
-    return 
-      (coord.row() % kBlockRows) + 
-      (coord.column() % kBlockColumns) * kBlockRows +
-      (coord.row() / kBlockRows) * kBlockRows * kBlockColumns +
-      (coord.column() / kBlockColumns) * stride_[0];
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
+    return (coord.row() % kBlockRows) + (coord.column() % kBlockColumns) * kBlockRows +
+           (coord.row() / kBlockRows) * kBlockRows * kBlockColumns +
+           (coord.column() / kBlockColumns) * stride_[0];
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
-
+  MatrixCoord inverse(LongIndex offset) const
+  {
     // TODO
     return MatrixCoord(0, 0);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
 
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return (extent.column() + kBlockColumns - 1) / kBlockColumns * stride_[0];
   }
 };
@@ -1117,7 +1041,7 @@ struct RowMajorBlockLinear {
   /// Size of a block in columns
   static int const kBlockColumns = BlockColumns;
 
-private:
+ private:
   //
   // Data members
   //
@@ -1125,66 +1049,60 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  RowMajorBlockLinear(Index ldm = 0): stride_(ldm) { }
+  RowMajorBlockLinear(Index ldm = 0) : stride_(ldm) {}
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static RowMajorBlockLinear packed(MatrixCoord const &extent) {
+  static RowMajorBlockLinear packed(MatrixCoord const& extent)
+  {
     return RowMajorBlockLinear(extent.column() * kBlockRows * kBlockColumns);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
-    return 
-      (coord.column() % kBlockColumns) +
-      (coord.row() % kBlockRows) * kBlockColumns +
-      (coord.column() / kBlockColumns) * kBlockRows * kBlockColumns +
-      (coord.row() / kBlockRows) * stride_[0];
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
+    return (coord.column() % kBlockColumns) + (coord.row() % kBlockRows) * kBlockColumns +
+           (coord.column() / kBlockColumns) * kBlockRows * kBlockColumns +
+           (coord.row() / kBlockRows) * stride_[0];
   }
 
   /// Inverse of layout function, mapping linear offset to logical coordinate
   CUTLASS_HOST_DEVICE
-  MatrixCoord inverse(LongIndex offset) const {
+  MatrixCoord inverse(LongIndex offset) const
+  {
     // TODO
     return MatrixCoord(0, 0);
   }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
-  
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
+
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     return (extent.row() + kBlockRows - 1) / kBlockRows * stride_[0];
   }
 };
@@ -1192,7 +1110,6 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 struct GeneralMatrix {
-
   /// Logical rank of tensor
   static int const kRank = 2;
 
@@ -1211,7 +1128,7 @@ struct GeneralMatrix {
   /// Stride vector
   using Stride = Coord<kStrideRank, Index>;
 
-private:
+ private:
   //
   // Data members
   //
@@ -1221,34 +1138,32 @@ private:
   /// Stride data member
   Stride stride_;
 
-public:
+ public:
   //
   // Methods
   //
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  GeneralMatrix(): layout_id_(Matrix::kColumnMajor), stride_(make_Coord(0, 1)) { }
+  GeneralMatrix() : layout_id_(Matrix::kColumnMajor), stride_(make_Coord(0, 1)) {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  GeneralMatrix(
-    Matrix layout_id, 
-    Index ldm, 
-    Index interleave): layout_id_(layout_id), stride_(make_Coord(ldm, interleave)) { }
+  GeneralMatrix(Matrix layout_id, Index ldm, Index interleave)
+    : layout_id_(layout_id), stride_(make_Coord(ldm, interleave))
+  {
+  }
 
   /// Helper returns a layout to a tightly packed tensor
   CUTLASS_HOST_DEVICE
-  static GeneralMatrix packed(
-    MatrixCoord const &extent, 
-    Matrix layout_id = Matrix::kColumnMajor, 
-    Index interleave = 1) {
-
+  static GeneralMatrix packed(MatrixCoord const& extent,
+                              Matrix layout_id = Matrix::kColumnMajor,
+                              Index interleave = 1)
+  {
     Index c;
     if (layout_id == Matrix::kRowMajor) {
       c = extent.column();
-    }
-    else {
+    } else {
       c = extent.row();
     }
 
@@ -1257,21 +1172,21 @@ public:
     return GeneralMatrix(layout_id, ldm, interleave);
   }
 
-  /// Returns the offset of a coordinate in linear memory. 
+  /// Returns the offset of a coordinate in linear memory.
   /// Assumes coordinate has convention (row, column)
   CUTLASS_HOST_DEVICE
-  LongIndex operator()(MatrixCoord const &coord) const {
+  LongIndex operator()(MatrixCoord const& coord) const
+  {
     Index c, s;
     if (layout_id_ == Matrix::kRowMajor) {
       c = coord.column();
       s = coord.row();
-    }
-    else {
+    } else {
       s = coord.column();
       c = coord.row();
     }
 
-    Index v = s / stride_[1];
+    Index v        = s / stride_[1];
     Index residual = (s % stride_[1]);
 
     return LongIndex(c) * LongIndex(stride_[1]) + LongIndex(v) * LongIndex(stride_[0]) + residual;
@@ -1279,46 +1194,34 @@ public:
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride stride() const {
-    return stride_;
-  }
+  Stride stride() const { return stride_; }
 
   CUTLASS_HOST_DEVICE
-  Matrix layout_id() const {
-    return layout_id_;
-  }
+  Matrix layout_id() const { return layout_id_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  Stride & stride() {
-    return stride_;
-  }
+  Stride& stride() { return stride_; }
 
   CUTLASS_HOST_DEVICE
-  Matrix & layout_id() {
-    return layout_id_;
-  }
+  Matrix& layout_id() { return layout_id_; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index stride(int idx) const {
-    return stride_[idx];
-  }
+  typename Stride::Index stride(int idx) const { return stride_[idx]; }
 
   /// Returns the stride of the layout
   CUTLASS_HOST_DEVICE
-  typename Stride::Index & stride(int idx) {
-    return stride_[idx];
-  }
-  
+  typename Stride::Index& stride(int idx) { return stride_[idx]; }
+
   /// Compute the number of contiguous elements needed to store a tensor with the given size
   CUTLASS_HOST_DEVICE
-  LongIndex capacity(MatrixCoord const &extent) const {
+  LongIndex capacity(MatrixCoord const& extent) const
+  {
     Index s;
     if (layout_id_ == Matrix::kRowMajor) {
       s = extent.row();
-    }
-    else {
+    } else {
       s = extent.column();
     }
 
@@ -1347,5 +1250,5 @@ struct LayoutTranspose<layout::ColumnMajor> {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace layout
-} // namespace cutlass
+}  // namespace layout
+}  // namespace cutlass

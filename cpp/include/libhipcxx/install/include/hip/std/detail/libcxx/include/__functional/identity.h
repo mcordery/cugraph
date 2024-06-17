@@ -13,7 +13,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__utility/forward.h"
 
@@ -25,7 +25,9 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 struct __identity {
   template <class _Tp>
-  _LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&& operator()(_Tp&& __t) const _NOEXCEPT {
+  _LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY _LIBCUDACXX_CONSTEXPR _Tp&& operator()(
+    _Tp&& __t) const _NOEXCEPT
+  {
     return _CUDA_VSTD::forward<_Tp>(__t);
   }
 
@@ -35,16 +37,17 @@ struct __identity {
 #if _LIBCUDACXX_STD_VER > 11
 
 struct identity {
-    template<class _Tp>
-    _LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY constexpr _Tp&& operator()(_Tp&& __t) const noexcept
-    {
-        return _CUDA_VSTD::forward<_Tp>(__t);
-    }
+  template <class _Tp>
+  _LIBCUDACXX_NODISCARD_EXT _LIBCUDACXX_INLINE_VISIBILITY constexpr _Tp&& operator()(
+    _Tp&& __t) const noexcept
+  {
+    return _CUDA_VSTD::forward<_Tp>(__t);
+  }
 
-    using is_transparent = void;
+  using is_transparent = void;
 };
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___FUNCTIONAL_IDENTITY_H
+#endif  // _LIBCUDACXX___FUNCTIONAL_IDENTITY_H

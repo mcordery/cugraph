@@ -48,16 +48,16 @@ struct cuda_error : public raft::exception {
  */
 #define RAFT_CUDA_TRY(call)                        \
   do {                                             \
-    hipError_t const status = call;               \
-    if (status != hipSuccess) {                   \
-      hipGetLastError();                          \
+    hipError_t const status = call;                \
+    if (status != hipSuccess) {                    \
+      hipGetLastError();                           \
       std::string msg{};                           \
       SET_ERROR_MSG(msg,                           \
                     "CUDA error encountered at: ", \
                     "call='%s', Reason=%s:%s",     \
                     #call,                         \
-                    hipGetErrorName(status),      \
-                    hipGetErrorString(status));   \
+                    hipGetErrorName(status),       \
+                    hipGetErrorString(status));    \
       throw raft::cuda_error(msg);                 \
     }                                              \
   } while (0)
@@ -87,12 +87,12 @@ struct cuda_error : public raft::exception {
 //  */
 #define RAFT_CUDA_TRY_NO_THROW(call)                               \
   do {                                                             \
-    hipError_t const status = call;                               \
-    if (hipSuccess != status) {                                   \
+    hipError_t const status = call;                                \
+    if (hipSuccess != status) {                                    \
       printf("CUDA call='%s' at file=%s line=%d failed with %s\n", \
              #call,                                                \
              __FILE__,                                             \
              __LINE__,                                             \
-             hipGetErrorString(status));                          \
+             hipGetErrorString(status));                           \
     }                                                              \
   } while (0)

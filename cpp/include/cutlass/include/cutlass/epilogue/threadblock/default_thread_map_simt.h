@@ -29,14 +29,14 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 
 */
 
 #pragma once
 
-#include "predicated_tile_iterator.h"
 #include "cutlass/gemm/gemm.h"
+#include "predicated_tile_iterator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -47,21 +47,18 @@ namespace threadblock {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Defines the optimal thread map for SIMT accumulator layouts
-template <
-  typename ThreadblockShape_,
-  typename WarpShape_,
-  typename MmaSimtPolicy_,
-  int PartitionsK,
-  typename Element_,
-  int ElementsPerAccess
->
+template <typename ThreadblockShape_,
+          typename WarpShape_,
+          typename MmaSimtPolicy_,
+          int PartitionsK,
+          typename Element_,
+          int ElementsPerAccess>
 struct DefaultThreadMapSimt {
-
-  using ThreadblockShape = ThreadblockShape_;
-  using WarpShape = WarpShape_;
-  using MmaSimtPolicy = MmaSimtPolicy_;
-  static int const kPartitionsK = PartitionsK;
-  using Element = Element_;
+  using ThreadblockShape              = ThreadblockShape_;
+  using WarpShape                     = WarpShape_;
+  using MmaSimtPolicy                 = MmaSimtPolicy_;
+  static int const kPartitionsK       = PartitionsK;
+  using Element                       = Element_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
   //
@@ -69,19 +66,16 @@ struct DefaultThreadMapSimt {
   //
 
   struct Detail {
-
     static int const kWarpSize = 32;
 
-    static_assert(
-      !(ThreadblockShape::kM % WarpShape::kM) &&
-      !(ThreadblockShape::kN % WarpShape::kN), "Divisibility");
+    static_assert(!(ThreadblockShape::kM % WarpShape::kM) &&
+                    !(ThreadblockShape::kN % WarpShape::kN),
+                  "Divisibility");
 
     /// Number of warps
-    using WarpCount = gemm::GemmShape<
-      ThreadblockShape::kM / WarpShape::kM,
-      ThreadblockShape::kN / WarpShape::kN,
-      kPartitionsK
-    >;
+    using WarpCount = gemm::GemmShape<ThreadblockShape::kM / WarpShape::kM,
+                                      ThreadblockShape::kN / WarpShape::kN,
+                                      kPartitionsK>;
 
     /// Computes number of thread-level matrix multiplies are needed to span a warp
     static int const kGroupCount =
@@ -97,31 +91,30 @@ struct DefaultThreadMapSimt {
   //
   // ThreadMap
   //
-  
-  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept OutputTileThreadMap
-  using Type = OutputTileOptimalThreadMap<
-    OutputTileShape<                          // Shape
-      ThreadblockShape::kN, 
-      1, 
-      MmaSimtPolicy::WarpShape::kRow, 
-      Detail::WarpCount::kM, 
-      1>,
-    OutputTileShape<                          // Count
-      1, 
-      MmaSimtPolicy::LaneMmaShape::kM, 
-      Detail::kGroupCount, 
-      1, 
-      Detail::kIterations>,
-    Detail::kThreads,
-    kElementsPerAccess,
-    sizeof_bits<Element>::value
-  >;
+
+  /// ThreadMap to be used by epilogue::PredicatedTileIterator satisfying concept
+  /// OutputTileThreadMap
+  using Type = OutputTileOptimalThreadMap<OutputTileShape<  // Shape
+                                            ThreadblockShape::kN,
+                                            1,
+                                            MmaSimtPolicy::WarpShape::kRow,
+                                            Detail::WarpCount::kM,
+                                            1>,
+                                          OutputTileShape<  // Count
+                                            1,
+                                            MmaSimtPolicy::LaneMmaShape::kM,
+                                            Detail::kGroupCount,
+                                            1,
+                                            Detail::kIterations>,
+                                          Detail::kThreads,
+                                          kElementsPerAccess,
+                                          sizeof_bits<Element>::value>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -17,12 +17,13 @@
 # cython: language_level = 3
 
 import numpy as np
+
 from libc.stdint cimport uintptr_t
 from libcpp.utility cimport move
-
 from rmm._lib.device_buffer cimport DeviceBuffer
-from cudf.core.buffer import as_buffer
+
 import cudf
+from cudf.core.buffer import as_buffer
 
 
 cdef move_device_buffer_to_column(

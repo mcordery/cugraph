@@ -12,15 +12,15 @@
 # limitations under the License.
 
 import gc
-
 import random
-import pytest
-import networkx as nx
-import pandas as pd
 
 import cudf
-import cugraph
+import networkx as nx
+import pandas as pd
+import pytest
 from cugraph.testing import DEFAULT_DATASETS
+
+import cugraph
 
 
 def cugraph_call(G, partitions):

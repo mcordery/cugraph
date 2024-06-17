@@ -12,18 +12,15 @@
 # limitations under the License.
 
 
-import time
 import argparse
 import gc
+import time
+from typing import Union
 
 import torch
-
-from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
-
 import torch.nn as nn
 import torch.nn.functional as F
-
-from typing import Union
+from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
 
 
 class CuGraphSAGE(nn.Module):
@@ -73,11 +70,11 @@ def train(device: int, features_device: Union[str, int] = "cpu", num_epochs=2) -
 
     init_pytorch_worker(device)
 
-    import cugraph
     from cugraph_pyg.data import CuGraphStore
     from cugraph_pyg.loader import CuGraphNeighborLoader
-
     from ogb.nodeproppred import NodePropPredDataset
+
+    import cugraph
 
     dataset = NodePropPredDataset(name="ogbn-mag")
     data = dataset[0]

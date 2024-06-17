@@ -32,7 +32,7 @@
     \brief This defines a "fragment" iterator for visiting the fragments of an accumulator tile
       that participate in one warp-level store operation.
 
-      Typically, the accumulator tile is the largest single block of register-backed storage 
+      Typically, the accumulator tile is the largest single block of register-backed storage
       within the kernel. Storing it to memory is best accomplished by partitioning it into
       smaller tiles and storing these sequentially.
 
@@ -44,9 +44,8 @@
 #pragma once
 
 #include "cutlass/array.h"
-#include "cutlass/layout/matrix.h"
-
 #include "cutlass/epilogue/warp/tensor_op_policy.h"
+#include "cutlass/layout/matrix.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,105 +55,103 @@ namespace warp {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/// 
-template <
-  typename WarpShape,         ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape,     ///< matrix multiply operation shape (concept: gemm::GemmShape)
-  typename OperatorElementC,  ///< matrix multiply operation data type (concept: data type)
-  typename OperatorFragmentC, ///< matrix multiply operation fragment (concept: Array)
-  typename Layout             ///< target shared memory layout
->
+///
+template <typename WarpShape,      ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape,  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          typename OperatorElementC,   ///< matrix multiply operation data type (concept: data type)
+          typename OperatorFragmentC,  ///< matrix multiply operation fragment (concept: Array)
+          typename Layout              ///< target shared memory layout
+          >
 class FragmentIteratorTensorOp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major shared memory
-template <
-  typename WarpShape_,         ///< shape of the warp-level GEMM tile
-  typename OperatorShape_,     ///< matrix multiply operation shape (concept: gemm::GemmShape)
-  typename OperatorElementC_,  ///< matrix multiply operation data type (concept: data type)
-  typename OperatorFragmentC_  ///< matrix multiply operation fragment (concept: Array)
->
-class FragmentIteratorTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, OperatorFragmentC_, layout::RowMajor> {
-public:
-
-  using WarpShape = WarpShape_;
-  using OperatorShape = OperatorShape_;
-  using OperatorElementC = OperatorElementC_;
+template <typename WarpShape_,      ///< shape of the warp-level GEMM tile
+          typename OperatorShape_,  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          typename OperatorElementC_,  ///< matrix multiply operation data type (concept: data type)
+          typename OperatorFragmentC_  ///< matrix multiply operation fragment (concept: Array)
+          >
+class FragmentIteratorTensorOp<WarpShape_,
+                               OperatorShape_,
+                               OperatorElementC_,
+                               OperatorFragmentC_,
+                               layout::RowMajor> {
+ public:
+  using WarpShape         = WarpShape_;
+  using OperatorShape     = OperatorShape_;
+  using OperatorElementC  = OperatorElementC_;
   using OperatorFragmentC = OperatorFragmentC_;
-  using Layout = layout::RowMajor;
+  using Layout            = layout::RowMajor;
 
   using Policy = TensorOpPolicy<WarpShape, OperatorShape, Layout>;
 
   /// This is the fragment size produced by one access of the iterator.
-  using Fragment = Array<
-    OperatorElementC, 
-    Policy::OperatorCount::kColumn * Policy::kElementsPerAccess>;
+  using Fragment =
+    Array<OperatorElementC, Policy::OperatorCount::kColumn * Policy::kElementsPerAccess>;
 
   /// This is the complete warp-level accumulator tile.
-  using AccumulatorTile = Array<
-    OperatorElementC, 
-    OperatorFragmentC::kElements * Policy::OperatorCount::kRow * Policy::OperatorCount::kColumn>;
+  using AccumulatorTile = Array<OperatorElementC,
+                                OperatorFragmentC::kElements * Policy::OperatorCount::kRow *
+                                  Policy::OperatorCount::kColumn>;
 
   using OutputAccumulatorTile = AccumulatorTile;
 
   /// Number of times this iterator can be incremented
-  static int const kIterations = Policy::kIterations;
-  using TileIterations = typename Policy::TileIterations;
+  static int const kIterations        = Policy::kIterations;
+  using TileIterations                = typename Policy::TileIterations;
   static int const kIterationsPerTile = kIterations / TileIterations::kCount;
 
-private:
-
+ private:
   /// Internal access type
   using AccessType = Array<OperatorElementC, Policy::kElementsPerAccess>;
 
-private:
-
+ private:
   //
   // Data members
   //
 
   /// Accumulator tile
-  AccessType const *accumulators_;
+  AccessType const* accumulators_;
 
   /// Internal index
   int index_;
 
-public:
-
+ public:
   /// Constructs an iterator
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp(AccumulatorTile const &accum): 
-    accumulators_(reinterpret_cast<AccessType const *>(&accum)), 
-    index_(0) {
+  FragmentIteratorTensorOp(AccumulatorTile const& accum)
+    : accumulators_(reinterpret_cast<AccessType const*>(&accum)), index_(0)
+  {
   }
 
   /// Increments
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp &operator++() {
+  FragmentIteratorTensorOp& operator++()
+  {
     ++index_;
     return *this;
   }
 
   /// Decrements
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp &operator--() {
+  FragmentIteratorTensorOp& operator--()
+  {
     --index_;
     return *this;
   }
 
   /// Loads a fragment from the referenced part of the accumulator tile
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, int index_offset = 0) const {
-
+  void load(Fragment& frag, int index_offset = 0) const
+  {
     int index = index_ + index_offset;
 
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int n = 0; n < Policy::OperatorCount::kColumn; ++n) {
-
-      int accumulator_access_offset = 
+      int accumulator_access_offset =
         index + n * Policy::kAccumulatorColumnStride / Policy::kElementsPerAccess;
 
       frag_ptr[n] = accumulators_[accumulator_access_offset];
@@ -166,48 +163,48 @@ public:
 
 /// Dedicated to interleaved layout
 template <
-    /// shape of the warp-level GEMM tile
-    typename WarpShape_,
-    /// matrix multiply operator shape (concept: gemm::GemmShape)
-    typename OperatorShape_,
-    /// matrix multiply operator data type (concept: data type)
-    typename OperatorElementC_,
-    /// matrix multiply operator fragment (concept: Array)
-    typename OperatorFragmentC_,
-    /// number of interleaved k
-    int InterleavedK>
-class FragmentIteratorTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, OperatorFragmentC_,
+  /// shape of the warp-level GEMM tile
+  typename WarpShape_,
+  /// matrix multiply operator shape (concept: gemm::GemmShape)
+  typename OperatorShape_,
+  /// matrix multiply operator data type (concept: data type)
+  typename OperatorElementC_,
+  /// matrix multiply operator fragment (concept: Array)
+  typename OperatorFragmentC_,
+  /// number of interleaved k
+  int InterleavedK>
+class FragmentIteratorTensorOp<WarpShape_,
+                               OperatorShape_,
+                               OperatorElementC_,
+                               OperatorFragmentC_,
                                layout::ColumnMajorInterleaved<InterleavedK>> {
  public:
-  using WarpShape = WarpShape_;
-  using OperatorShape = OperatorShape_;
-  using OperatorElementC = OperatorElementC_;
-  using OperatorFragmentC = OperatorFragmentC_;
+  using WarpShape                = WarpShape_;
+  using OperatorShape            = OperatorShape_;
+  using OperatorElementC         = OperatorElementC_;
+  using OperatorFragmentC        = OperatorFragmentC_;
   static int const kInterleavedK = InterleavedK;
-  using Layout = layout::ColumnMajorInterleaved<kInterleavedK>;
+  using Layout                   = layout::ColumnMajorInterleaved<kInterleavedK>;
 
   using Policy = TensorOpPolicy<WarpShape, OperatorShape, Layout>;
 
   /// This is the fragment size produced by one access of the iterator.
   using Fragment =
-      Array<OperatorElementC,
-            Policy::kElementsPerAccess * InterleavedK / OperatorShape::kN>;
+    Array<OperatorElementC, Policy::kElementsPerAccess * InterleavedK / OperatorShape::kN>;
 
   /// This is the complete warp-level accumulator tile.
-  using AccumulatorTile =
-      Array<OperatorElementC, OperatorFragmentC::kElements *
-                                  Policy::OperatorCount::kRow *
+  using AccumulatorTile = Array<OperatorElementC,
+                                OperatorFragmentC::kElements * Policy::OperatorCount::kRow *
                                   Policy::OperatorCount::kColumn>;
 
   /// Number of times this iterator can be incremented
-  static int const kIterations = Policy::kIterations;
-  using TileIterations = typename Policy::TileIterations;
+  static int const kIterations        = Policy::kIterations;
+  using TileIterations                = typename Policy::TileIterations;
   static int const kIterationsPerTile = kIterations / TileIterations::kCount;
 
  private:
   /// Internal access type
-  using AccessType =
-      Array<OperatorElementC, Policy::kElementsPerAccess>;
+  using AccessType = Array<OperatorElementC, Policy::kElementsPerAccess>;
 
  private:
   //
@@ -215,7 +212,7 @@ class FragmentIteratorTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, Op
   //
 
   /// Accumulator tile
-  AccessType const *accumulators_;
+  AccessType const* accumulators_;
 
   /// Internal index
   int index_;
@@ -223,45 +220,45 @@ class FragmentIteratorTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, Op
  public:
   /// Constructs an iterator
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp(AccumulatorTile const &accum)
-      : accumulators_(reinterpret_cast<AccessType const *>(&accum)),
-        index_(0) {}
+  FragmentIteratorTensorOp(AccumulatorTile const& accum)
+    : accumulators_(reinterpret_cast<AccessType const*>(&accum)), index_(0)
+  {
+  }
 
   /// Increments
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp &operator++() {
+  FragmentIteratorTensorOp& operator++()
+  {
     ++index_;
     return *this;
   }
 
   /// Decrements
   CUTLASS_HOST_DEVICE
-  FragmentIteratorTensorOp &operator--() {
+  FragmentIteratorTensorOp& operator--()
+  {
     --index_;
     return *this;
   }
 
   /// Loads a fragment from the referenced part of the accumulator tile
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag, int index_offset = 0) const {
+  void load(Fragment& frag, int index_offset = 0) const
+  {
     int index = index_ + index_offset;
 
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int n = 0; n < (InterleavedK / OperatorShape::kN); ++n) {
-      int index_m = index % (Policy::OperatorCount::kRow *
-                             Policy::kIterationsPerInstruction);
-      int index_n = index / (Policy::OperatorCount::kRow *
-                             Policy::kIterationsPerInstruction);
+      int index_m = index % (Policy::OperatorCount::kRow * Policy::kIterationsPerInstruction);
+      int index_n = index / (Policy::OperatorCount::kRow * Policy::kIterationsPerInstruction);
       int accumulator_access_offset =
-          (index_m / Policy::kIterationsPerInstruction) *
-              (Policy::OperatorCount::kColumn *
-               Policy::kIterationsPerInstruction) +
-          (index_m % Policy::kIterationsPerInstruction) +
-          index_n * (InterleavedK / OperatorShape::kN) *
-              Policy::kIterationsPerInstruction +
-          n * Policy::kIterationsPerInstruction;
+        (index_m / Policy::kIterationsPerInstruction) *
+          (Policy::OperatorCount::kColumn * Policy::kIterationsPerInstruction) +
+        (index_m % Policy::kIterationsPerInstruction) +
+        index_n * (InterleavedK / OperatorShape::kN) * Policy::kIterationsPerInstruction +
+        n * Policy::kIterationsPerInstruction;
 
       frag_ptr[n] = accumulators_[accumulator_access_offset];
     }
@@ -270,8 +267,8 @@ class FragmentIteratorTensorOp<WarpShape_, OperatorShape_, OperatorElementC_, Op
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

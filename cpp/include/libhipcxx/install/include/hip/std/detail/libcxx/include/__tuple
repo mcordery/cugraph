@@ -577,12 +577,12 @@ namespace std {
 #endif
 
     template <class... _Tp>
-    struct tuple_size<_CUDA_VSTD::tuple<_Tp...>> 
-      : _CUDA_VSTD::tuple_size<_CUDA_VSTD::tuple<_Tp...>> 
+    struct tuple_size<_CUDA_VSTD::tuple<_Tp...>>
+      : _CUDA_VSTD::tuple_size<_CUDA_VSTD::tuple<_Tp...>>
     {};
 
     template<size_t _Ip, class... _Tp>
-    struct tuple_element<_Ip, _CUDA_VSTD::tuple<_Tp...>> 
+    struct tuple_element<_Ip, _CUDA_VSTD::tuple<_Tp...>>
       : _CUDA_VSTD::tuple_element<_Ip, _CUDA_VSTD::tuple<_Tp...>>
     {};
 }

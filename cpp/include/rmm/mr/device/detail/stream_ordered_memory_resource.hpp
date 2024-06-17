@@ -21,9 +21,8 @@
 #include <rmm/logger.hpp>
 #include <rmm/mr/device/device_memory_resource.hpp>
 
-#include <hip/hip_runtime_api.h>
-
 #include <fmt/core.h>
+#include <hip/hip_runtime_api.h>
 
 #include <cstddef>
 #include <map>
@@ -294,8 +293,7 @@ class stream_ordered_memory_resource : public crtp<PoolResource>, public device_
     auto const iter = stream_events_.find(stream_to_store);
     return (iter != stream_events_.end()) ? iter->second : [&]() {
       stream_event_pair stream_event{stream_to_store};
-      RMM_ASSERT_CUDA_SUCCESS(
-        hipEventCreateWithFlags(&stream_event.event, hipEventDisableTiming));
+      RMM_ASSERT_CUDA_SUCCESS(hipEventCreateWithFlags(&stream_event.event, hipEventDisableTiming));
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       stream_events_[stream_to_store] = stream_event;
       return stream_event;

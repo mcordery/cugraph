@@ -47,55 +47,54 @@ namespace threadblock {
 
 template <typename VectorAccessIterator_>
 class VectorIterator {
-public:
+ public:
   using VectorAccessIterator = VectorAccessIterator_;
 
-  using Shape = typename VectorAccessIterator::Shape;
-  using Element = typename VectorAccessIterator::Element;
-  using Layout = typename VectorAccessIterator::Layout;
+  using Shape       = typename VectorAccessIterator::Shape;
+  using Element     = typename VectorAccessIterator::Element;
+  using Layout      = typename VectorAccessIterator::Layout;
   using TensorCoord = typename Layout::TensorCoord;
-  using AccessType = typename VectorAccessIterator::AccessType;
-  using TensorRef = typename VectorAccessIterator::TensorRef;
-  using Index = typename VectorAccessIterator::Index;
-  using LongIndex = typename VectorAccessIterator::LongIndex;
+  using AccessType  = typename VectorAccessIterator::AccessType;
+  using TensorRef   = typename VectorAccessIterator::TensorRef;
+  using Index       = typename VectorAccessIterator::Index;
+  using LongIndex   = typename VectorAccessIterator::LongIndex;
 
   static int const kElementsPerAccess = VectorAccessIterator::kElementsPerAccess;
-  static int const kRowsPerIteration = VectorAccessIterator::kRowsPerIteration;
-  static int const kThreads = VectorAccessIterator::kThreads;
-  static int const kIterations = VectorAccessIterator::kIterations;
+  static int const kRowsPerIteration  = VectorAccessIterator::kRowsPerIteration;
+  static int const kThreads           = VectorAccessIterator::kThreads;
+  static int const kIterations        = VectorAccessIterator::kIterations;
 
   /// Fragment object to be loaded or stored
-  using Fragment = cutlass::Array<
-    Element, kElementsPerAccess * kIterations>;
+  using Fragment = cutlass::Array<Element, kElementsPerAccess * kIterations>;
 
-private:
-
+ private:
   /// Internal state
   VectorAccessIterator vector_access_iterator_;
 
-public:
-
+ public:
   /// Constructor
   CUTLASS_HOST_DEVICE
-  VectorIterator(
-    Element const *ptr,
-    TensorCoord extent,
-    int thread_idx,
-    int warp_idx,
-    MatrixCoord const &threadblock_offset = MatrixCoord()
-  ):
-    vector_access_iterator_(ptr, extent, thread_idx, warp_idx, threadblock_offset) { }
+  VectorIterator(Element const* ptr,
+                 TensorCoord extent,
+                 int thread_idx,
+                 int warp_idx,
+                 MatrixCoord const& threadblock_offset = MatrixCoord())
+    : vector_access_iterator_(ptr, extent, thread_idx, warp_idx, threadblock_offset)
+  {
+  }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  VectorIterator &operator++() {
+  VectorIterator& operator++()
+  {
     vector_access_iterator_.advance();
     return *this;
   }
 
   /// Advances to the next tile in memory.
   CUTLASS_HOST_DEVICE
-  VectorIterator operator++(int) {
+  VectorIterator operator++(int)
+  {
     VectorIterator self(*this);
     operator++();
     return self;
@@ -103,47 +102,39 @@ public:
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) {
-
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset)
+  {
     frag.clear();
-    AccessType *frag_ptr = reinterpret_cast<AccessType *>(&frag);
+    AccessType* frag_ptr = reinterpret_cast<AccessType*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
-      for (int c = 0; c < kIterations; ++c) {
+    for (int c = 0; c < kIterations; ++c) {
+      cutlass::arch::global_load<AccessType, sizeof(AccessType)>(
+        frag_ptr[c],
+        vector_access_iterator_.get() + pointer_offset,
+        vector_access_iterator_.valid());
 
-        cutlass::arch::global_load<
-          AccessType,
-          sizeof(AccessType)
-        >(
-          frag_ptr[c],
-          vector_access_iterator_.get() + pointer_offset,
-          vector_access_iterator_.valid()
-        );
-
-        ++vector_access_iterator_;
-      }
-//    }
+      ++vector_access_iterator_;
+    }
+    //    }
   }
 
   /// Loads a fragment from memory
   CUTLASS_DEVICE
-  void load(Fragment &frag) {
+  void load(Fragment& frag)
+  {
     vector_access_iterator_.set_iteration_index(0);
     load_with_pointer_offset(frag, 0);
   }
 
   CUTLASS_DEVICE
-  void advance() {
-    vector_access_iterator_.advance();
-  }
-
+  void advance() { vector_access_iterator_.advance(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace transform
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace transform
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-

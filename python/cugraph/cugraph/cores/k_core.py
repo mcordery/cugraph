@@ -12,17 +12,10 @@
 # limitations under the License.
 
 import cudf
-
-from pylibcugraph import (
-    core_number as pylibcugraph_core_number,
-    k_core as pylibcugraph_k_core,
-    ResourceHandle,
-)
-
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    cugraph_to_nx,
-)
+from cugraph.utilities import cugraph_to_nx, ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import core_number as pylibcugraph_core_number
+from pylibcugraph import k_core as pylibcugraph_k_core
 
 
 def _call_plc_core_number(G, degree_type):

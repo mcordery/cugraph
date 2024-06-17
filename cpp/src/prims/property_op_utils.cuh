@@ -22,7 +22,6 @@
 #include <raft/core/device_span.hpp>
 #include <raft/util/device_atomics.cuh>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/detail/type_traits/iterator/is_discard_iterator.h>
 #include <thrust/functional.h>
 #include <thrust/iterator/detail/any_assign.h>
@@ -30,6 +29,8 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/memory.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <array>
 #include <type_traits>

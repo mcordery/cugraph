@@ -26,9 +26,9 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/iterator/zip_iterator.h>
 
+#include <hip/hip_runtime.h>
 #include <nccl.h>
 #include <stdlib.h>
 #include <time.h>

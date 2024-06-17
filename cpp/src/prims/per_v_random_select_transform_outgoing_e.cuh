@@ -33,10 +33,6 @@
 #include <cugraph-ops/graph/sampling.hpp>
 #endif
 
-#include <hipcub/hipcub.hpp>
-#include <hip/atomic>
-#include <hip/functional>
-#include <rocprim/functional.hpp>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/iterator/constant_iterator.h>
@@ -48,6 +44,11 @@
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
 
+#include <hipcub/hipcub.hpp>
+#include <rocprim/functional.hpp>
+
+#include <hip/atomic>
+#include <hip/functional>
 #include <optional>
 #include <tuple>
 

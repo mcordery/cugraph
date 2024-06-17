@@ -36,12 +36,12 @@
 
 import datetime as dt
 
+import cudf
 import pandas as pd
 import pytest
-import cudf
 from cudf.testing.testing import assert_frame_equal
-import cugraph
 
+import cugraph
 
 simple_df = cudf.DataFrame.from_pandas(
     pd.DataFrame(
@@ -172,7 +172,7 @@ def test_hyperedges(categorical_metadata):
         edges = edges.astype({"edge_type": "category"})
 
     assert_frame_equal(edges, h["edges"], check_dtype=False)
-    for (k, v) in [("entities", 12), ("nodes", 15), ("edges", 12), ("events", 3)]:
+    for k, v in [("entities", 12), ("nodes", 15), ("edges", 12), ("events", 3)]:
         assert len(h[k]) == v
 
 
@@ -268,7 +268,7 @@ def test_drop_edge_attrs(categorical_metadata):
 
     assert_frame_equal(edges, h["edges"], check_dtype=False)
 
-    for (k, v) in [("entities", 9), ("nodes", 12), ("edges", 9), ("events", 3)]:
+    for k, v in [("entities", 9), ("nodes", 12), ("edges", 9), ("events", 3)]:
         assert len(h[k]) == v
 
 
@@ -298,9 +298,23 @@ def test_drop_edge_attrs_direct(categorical_metadata):
                     "event_id::1",
                     "event_id::2",
                 ],
-                "edge_type": ["a1::🙈", "a1::🙈", "a1::🙈", "id::a1", "id::a1", "id::a1"],
+                "edge_type": [
+                    "a1::🙈",
+                    "a1::🙈",
+                    "a1::🙈",
+                    "id::a1",
+                    "id::a1",
+                    "id::a1",
+                ],
                 "src": ["a1::1", "a1::2", "a1::3", "id::a", "id::b", "id::c"],
-                "dst": ["🙈::æski ēˈmōjē", "🙈::😋", "🙈::s", "a1::1", "a1::2", "a1::3"],
+                "dst": [
+                    "🙈::æski ēˈmōjē",
+                    "🙈::😋",
+                    "🙈::s",
+                    "a1::1",
+                    "a1::2",
+                    "a1::3",
+                ],
             }
         )
     )
@@ -310,7 +324,7 @@ def test_drop_edge_attrs_direct(categorical_metadata):
 
     assert_frame_equal(edges, h["edges"], check_dtype=False)
 
-    for (k, v) in [("entities", 9), ("nodes", 9), ("edges", 6), ("events", 0)]:
+    for k, v in [("entities", 9), ("nodes", 9), ("edges", 6), ("events", 0)]:
         assert len(h[k]) == v
 
 

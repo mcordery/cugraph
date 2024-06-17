@@ -67,12 +67,12 @@ int getUniquelabels(rmm::device_uvector<value_t>& unique, value_t* y, size_t n, 
   hipcub::DeviceRadixSort::SortKeys(
     cub_storage.data(), bytes, y, workspace.data(), n, 0, sizeof(value_t) * 8, stream);
   hipcub::DeviceSelect::Unique(cub_storage.data(),
-                            bytes,
-                            workspace.data(),
-                            workspace.data(),
-                            d_num_selected.data(),
-                            n,
-                            stream);
+                               bytes,
+                               workspace.data(),
+                               workspace.data(),
+                               d_num_selected.data(),
+                               n,
+                               stream);
 
   int n_unique = d_num_selected.value(stream);
   // Copy unique classes to output

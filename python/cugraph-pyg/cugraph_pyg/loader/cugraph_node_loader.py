@@ -11,26 +11,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tempfile
-
 import os
 import re
+import tempfile
 import warnings
+from typing import Dict, List, Sequence, Tuple, Union
 
-import cupy
 import cudf
-
+import cupy
 from cugraph.gnn import BulkSampler
-from cugraph.utilities.utils import import_optional, MissingModule
-
+from cugraph.utilities.utils import MissingModule, import_optional
 from cugraph_pyg.data import CuGraphStore
 from cugraph_pyg.sampler.cugraph_sampler import (
     _sampler_output_from_sampling_results_heterogeneous,
-    _sampler_output_from_sampling_results_homogeneous_csr,
     _sampler_output_from_sampling_results_homogeneous_coo,
+    _sampler_output_from_sampling_results_homogeneous_csr,
 )
-
-from typing import Union, Tuple, Sequence, List, Dict
 
 torch_geometric = import_optional("torch_geometric")
 torch = import_optional("torch")
@@ -202,9 +198,11 @@ class BulkSampleLoader:
 
         bulk_sampler = BulkSampler(
             batch_size,
-            self.__directory
-            if isinstance(self.__directory, str)
-            else self.__directory.name,
+            (
+                self.__directory
+                if isinstance(self.__directory, str)
+                else self.__directory.name
+            ),
             self.__graph_store._subgraph(edge_types),
             fanout_vals=num_neighbors,
             with_replacement=replace,

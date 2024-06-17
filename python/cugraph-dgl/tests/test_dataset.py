@@ -20,16 +20,16 @@ try:
 except ModuleNotFoundError:
     pytest.skip("cugraph_dgl not available", allow_module_level=True)
 
-from dgl.dataloading import MultiLayerNeighborSampler
-import dgl
-import torch
 import cudf
-import pandas as pd
 import cupy as cp
+import dgl
 import numpy as np
+import pandas as pd
+import torch
 from cugraph_dgl.dataloading.utils.sampling_helpers import (
     create_homogeneous_sampled_graphs_from_dataframe,
 )
+from dgl.dataloading import MultiLayerNeighborSampler
 
 
 def get_edge_df_from_homogenous_block(block):

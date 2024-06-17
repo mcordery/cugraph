@@ -30,16 +30,16 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
 */
 
 #pragma once
 
+#include "cutlass/complex.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/fast_math.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/matrix_coord.h"
-#include "cutlass/complex.h"
 #include "cutlass/semaphore.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,52 +50,49 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename Mma_,                  ///! Threadblock-scoped matrix multiply-accumulate 
-  typename Epilogue_,             ///! Epilogue
-  typename ThreadblockSwizzle_    ///! Threadblock swizzling function
->
+template <typename Mma_,                ///! Threadblock-scoped matrix multiply-accumulate
+          typename Epilogue_,           ///! Epilogue
+          typename ThreadblockSwizzle_  ///! Threadblock swizzling function
+          >
 struct GemmPlanarComplexArray {
-public:
-
-  using Mma = Mma_;
-  using Epilogue = Epilogue_;
-  using EpilogueOutputOp = typename Epilogue::OutputOp;
+ public:
+  using Mma                = Mma_;
+  using Epilogue           = Epilogue_;
+  using EpilogueOutputOp   = typename Epilogue::OutputOp;
   using ThreadblockSwizzle = ThreadblockSwizzle_;
 
   using ElementA = typename Mma::IteratorA::Element;
-  using LayoutA = typename Mma::IteratorA::Layout;
+  using LayoutA  = typename Mma::IteratorA::Layout;
   using ElementB = typename Mma::IteratorB::Element;
-  using LayoutB = typename Mma::IteratorB::Layout;
+  using LayoutB  = typename Mma::IteratorB::Layout;
   using ElementC = typename Epilogue::OutputTileIterator::Element;
-  using LayoutC = typename Epilogue::OutputTileIterator::Layout;
+  using LayoutC  = typename Epilogue::OutputTileIterator::Layout;
   using Operator = typename Mma::Operator;
-  using ArchTag = typename Mma::ArchTag;
+  using ArchTag  = typename Mma::ArchTag;
 
   static ComplexTransform const kTransformA = Mma::kTransformA;
   static ComplexTransform const kTransformB = Mma::kTransformB;
 
   /// Warp count (concept: GemmShape)
-  using WarpCount = typename Mma::WarpCount;
+  using WarpCount               = typename Mma::WarpCount;
   static int const kThreadCount = 32 * WarpCount::kCount;
 
   /// Split-K preserves splits that are 128b aligned
-  static int const kSplitKAlignment = const_max(
-    128 / sizeof_bits<ElementA>::value, 
-    128 / sizeof_bits<ElementB>::value);
+  static int const kSplitKAlignment =
+    const_max(128 / sizeof_bits<ElementA>::value, 128 / sizeof_bits<ElementB>::value);
 
   //
   // Additional types needed for reflection
   //
 
   using ElementAccumulator = typename Mma::Policy::Operator::ElementC;
-  using OperatorClass = typename Mma::Operator::OperatorClass;
-  using ThreadblockShape = typename Mma::Shape;
-  using WarpShape = typename Mma::Operator::Shape;
-  using InstructionShape = typename Mma::Policy::Operator::Shape;
+  using OperatorClass      = typename Mma::Operator::OperatorClass;
+  using ThreadblockShape   = typename Mma::Shape;
+  using WarpShape          = typename Mma::Operator::Shape;
+  using InstructionShape   = typename Mma::Policy::Operator::Shape;
 
   static int const kStages = Mma::kStages;
-    
+
   static int const kAlignmentA = Mma::IteratorA::AccessType::kElements;
   static int const kAlignmentB = Mma::IteratorB::AccessType::kElements;
   static int const kAlignmentC = Epilogue::OutputTileIterator::kElementsPerAccess;
@@ -106,7 +103,6 @@ public:
 
   /// Argument structure
   struct Arguments {
-
     //
     // Data members
     //
@@ -117,21 +113,21 @@ public:
 
     typename EpilogueOutputOp::Params epilogue;
 
-    int const *ptr_M;
-    int const *ptr_N;
-    int const *ptr_K;
+    int const* ptr_M;
+    int const* ptr_N;
+    int const* ptr_K;
 
-    void const * const * ptr_A_real;
-    void const * const * ptr_A_imag;
+    void const* const* ptr_A_real;
+    void const* const* ptr_A_imag;
 
-    void const * const * ptr_B_real;
-    void const * const * ptr_B_imag;
+    void const* const* ptr_B_real;
+    void const* const* ptr_B_imag;
 
-    void const * const * ptr_C_real;
-    void const * const * ptr_C_imag;
+    void const* const* ptr_C_real;
+    void const* const* ptr_C_imag;
 
-    void * const * ptr_D_real;
-    void * const * ptr_D_imag;
+    void* const* ptr_D_real;
+    void* const* ptr_D_imag;
 
     typename LayoutA::Stride::Index lda_real;
     typename LayoutA::Stride::Index lda_imag;
@@ -142,85 +138,85 @@ public:
     typename LayoutC::Stride::Index ldd_real;
     typename LayoutC::Stride::Index ldd_imag;
 
-    int64_t batch_stride_D;    // unused
+    int64_t batch_stride_D;  // unused
 
     //
     // Methods
     //
-    
-    Arguments(): 
-      mode(GemmUniversalMode::kArray),
-      batch_count(1),
-      ptr_M(nullptr),
-      ptr_N(nullptr),
-      ptr_K(nullptr),
-      ptr_A_real(nullptr), 
-      ptr_A_imag(nullptr), 
-      ptr_B_real(nullptr), 
-      ptr_B_imag(nullptr), 
-      ptr_C_real(nullptr), 
-      ptr_C_imag(nullptr), 
-      ptr_D_real(nullptr),
-      ptr_D_imag(nullptr),
-      batch_stride_D(0)
-      { }
+
+    Arguments()
+      : mode(GemmUniversalMode::kArray),
+        batch_count(1),
+        ptr_M(nullptr),
+        ptr_N(nullptr),
+        ptr_K(nullptr),
+        ptr_A_real(nullptr),
+        ptr_A_imag(nullptr),
+        ptr_B_real(nullptr),
+        ptr_B_imag(nullptr),
+        ptr_C_real(nullptr),
+        ptr_C_imag(nullptr),
+        ptr_D_real(nullptr),
+        ptr_D_imag(nullptr),
+        batch_stride_D(0)
+    {
+    }
 
     /// constructs an arguments structure
-    Arguments(
-      GemmCoord problem_size,
-      int batch_count,
-      typename EpilogueOutputOp::Params epilogue,
-      int const *ptr_M,
-      int const *ptr_N,
-      int const *ptr_K,
-      void const * const * ptr_A_real,
-      void const * const * ptr_A_imag,
-      void const * const * ptr_B_real,
-      void const * const * ptr_B_imag,
-      void const * const * ptr_C_real,
-      void const * const * ptr_C_imag,
-      void * const * ptr_D_real,
-      void * const * ptr_D_imag,
-      typename LayoutA::Stride::Index lda_real,
-      typename LayoutA::Stride::Index lda_imag,
-      typename LayoutB::Stride::Index ldb_real,
-      typename LayoutB::Stride::Index ldb_imag,
-      typename LayoutC::Stride::Index ldc_real,
-      typename LayoutC::Stride::Index ldc_imag,
-      typename LayoutC::Stride::Index ldd_real,
-      typename LayoutC::Stride::Index ldd_imag
-    ):
-      mode(GemmUniversalMode::kArray),
-      problem_size(problem_size), 
-      batch_count(batch_count),
-      epilogue(epilogue),
-      ptr_M(ptr_M),
-      ptr_N(ptr_N),
-      ptr_K(ptr_K),
-      ptr_A_real(ptr_A_real), 
-      ptr_A_imag(ptr_A_imag), 
-      ptr_B_real(ptr_B_real),
-      ptr_B_imag(ptr_B_imag),
-      ptr_C_real(ptr_C_real),
-      ptr_C_imag(ptr_C_imag),
-      ptr_D_real(ptr_D_real), 
-      ptr_D_imag(ptr_D_imag), 
-      lda_real(lda_real),
-      lda_imag(lda_imag),
-      ldb_real(ldb_real),
-      ldb_imag(ldb_imag),
-      ldc_real(ldc_real),
-      ldc_imag(ldc_imag),
-      ldd_real(ldd_real),
-      ldd_imag(ldd_imag),
-      batch_stride_D(0) {
-
-      }
+    Arguments(GemmCoord problem_size,
+              int batch_count,
+              typename EpilogueOutputOp::Params epilogue,
+              int const* ptr_M,
+              int const* ptr_N,
+              int const* ptr_K,
+              void const* const* ptr_A_real,
+              void const* const* ptr_A_imag,
+              void const* const* ptr_B_real,
+              void const* const* ptr_B_imag,
+              void const* const* ptr_C_real,
+              void const* const* ptr_C_imag,
+              void* const* ptr_D_real,
+              void* const* ptr_D_imag,
+              typename LayoutA::Stride::Index lda_real,
+              typename LayoutA::Stride::Index lda_imag,
+              typename LayoutB::Stride::Index ldb_real,
+              typename LayoutB::Stride::Index ldb_imag,
+              typename LayoutC::Stride::Index ldc_real,
+              typename LayoutC::Stride::Index ldc_imag,
+              typename LayoutC::Stride::Index ldd_real,
+              typename LayoutC::Stride::Index ldd_imag)
+      : mode(GemmUniversalMode::kArray),
+        problem_size(problem_size),
+        batch_count(batch_count),
+        epilogue(epilogue),
+        ptr_M(ptr_M),
+        ptr_N(ptr_N),
+        ptr_K(ptr_K),
+        ptr_A_real(ptr_A_real),
+        ptr_A_imag(ptr_A_imag),
+        ptr_B_real(ptr_B_real),
+        ptr_B_imag(ptr_B_imag),
+        ptr_C_real(ptr_C_real),
+        ptr_C_imag(ptr_C_imag),
+        ptr_D_real(ptr_D_real),
+        ptr_D_imag(ptr_D_imag),
+        lda_real(lda_real),
+        lda_imag(lda_imag),
+        ldb_real(ldb_real),
+        ldb_imag(ldb_imag),
+        ldc_real(ldc_real),
+        ldc_imag(ldc_imag),
+        ldd_real(ldd_real),
+        ldd_imag(ldd_imag),
+        batch_stride_D(0)
+    {
+    }
 
     /// Returns arguments for the transposed problem
-    Arguments transposed_problem() const {
+    Arguments transposed_problem() const
+    {
       Arguments args(*this);
-      
+
       std::swap(args.problem_size.m(), args.problem_size.n());
       std::swap(args.ptr_M, args.ptr_N);
       std::swap(args.ptr_A_real, args.ptr_B_real);
@@ -249,82 +245,81 @@ public:
     typename Epilogue::OutputTileIterator::Params params_C_imag;
     typename Epilogue::OutputTileIterator::Params params_D_real;
     typename Epilogue::OutputTileIterator::Params params_D_imag;
-    
+
     typename EpilogueOutputOp::Params output_op;
 
     int batch_count;
-    
-    int const *ptr_M;
-    int const *ptr_N;
-    int const *ptr_K;
 
-    void const * const * ptr_A_real;
-    void const * const * ptr_A_imag;
-    void const * const * ptr_B_real;
-    void const * const * ptr_B_imag;
-    void const * const * ptr_C_real;
-    void const * const * ptr_C_imag;
-    void * const * ptr_D_real;
-    void * const * ptr_D_imag;
+    int const* ptr_M;
+    int const* ptr_N;
+    int const* ptr_K;
+
+    void const* const* ptr_A_real;
+    void const* const* ptr_A_imag;
+    void const* const* ptr_B_real;
+    void const* const* ptr_B_imag;
+    void const* const* ptr_C_real;
+    void const* const* ptr_C_imag;
+    void* const* ptr_D_real;
+    void* const* ptr_D_imag;
 
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params():
-      batch_count(0),
-      swizzle_log_tile(0),
-      ptr_M(nullptr),
-      ptr_N(nullptr),
-      ptr_K(nullptr),
-      ptr_A_real(nullptr),
-      ptr_A_imag(nullptr),
-      ptr_B_real(nullptr),
-      ptr_B_imag(nullptr),
-      ptr_C_real(nullptr),
-      ptr_C_imag(nullptr),
-      ptr_D_real(nullptr),
-      ptr_D_imag(nullptr) { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      Arguments const &args,
-      cutlass::gemm::GemmCoord const & grid_tiled_shape,
-      int gemm_k_size = 0,                                    // ignored
-      void *workspace = nullptr                               // ignored
-    ):
-      problem_size(args.problem_size),
-      grid_tiled_shape(grid_tiled_shape),
-      swizzle_log_tile(ThreadblockSwizzle().get_log_tile(grid_tiled_shape)),
-      ptr_M(args.ptr_M),
-      ptr_N(args.ptr_N),
-      ptr_K(args.ptr_K),
-      params_A_real(args.lda_real),
-      params_A_imag(args.lda_imag),
-      params_B_real(args.ldb_real),
-      params_B_imag(args.ldb_imag),
-      params_C_real(args.ldc_real),
-      params_C_imag(args.ldc_imag),
-      params_D_real(args.ldd_real),
-      params_D_imag(args.ldd_imag),
-      output_op(args.epilogue),
-      batch_count(args.batch_count),
-      ptr_A_real(args.ptr_A_real),
-      ptr_A_imag(args.ptr_A_imag),
-      ptr_B_real(args.ptr_B_real),
-      ptr_B_imag(args.ptr_B_imag),
-      ptr_C_real(args.ptr_C_real),
-      ptr_C_imag(args.ptr_C_imag),
-      ptr_D_real(args.ptr_D_real),
-      ptr_D_imag(args.ptr_D_imag) {
-
+    Params()
+      : batch_count(0),
+        swizzle_log_tile(0),
+        ptr_M(nullptr),
+        ptr_N(nullptr),
+        ptr_K(nullptr),
+        ptr_A_real(nullptr),
+        ptr_A_imag(nullptr),
+        ptr_B_real(nullptr),
+        ptr_B_imag(nullptr),
+        ptr_C_real(nullptr),
+        ptr_C_imag(nullptr),
+        ptr_D_real(nullptr),
+        ptr_D_imag(nullptr)
+    {
     }
 
-    void update(
-      Arguments const &args,
-      void *workspace = nullptr) {
+    CUTLASS_HOST_DEVICE
+    Params(Arguments const& args,
+           cutlass::gemm::GemmCoord const& grid_tiled_shape,
+           int gemm_k_size = 0,       // ignored
+           void* workspace = nullptr  // ignored
+           )
+      : problem_size(args.problem_size),
+        grid_tiled_shape(grid_tiled_shape),
+        swizzle_log_tile(ThreadblockSwizzle().get_log_tile(grid_tiled_shape)),
+        ptr_M(args.ptr_M),
+        ptr_N(args.ptr_N),
+        ptr_K(args.ptr_K),
+        params_A_real(args.lda_real),
+        params_A_imag(args.lda_imag),
+        params_B_real(args.ldb_real),
+        params_B_imag(args.ldb_imag),
+        params_C_real(args.ldc_real),
+        params_C_imag(args.ldc_imag),
+        params_D_real(args.ldd_real),
+        params_D_imag(args.ldd_imag),
+        output_op(args.epilogue),
+        batch_count(args.batch_count),
+        ptr_A_real(args.ptr_A_real),
+        ptr_A_imag(args.ptr_A_imag),
+        ptr_B_real(args.ptr_B_real),
+        ptr_B_imag(args.ptr_B_imag),
+        ptr_C_real(args.ptr_C_real),
+        ptr_C_imag(args.ptr_C_imag),
+        ptr_D_real(args.ptr_D_real),
+        ptr_D_imag(args.ptr_D_imag)
+    {
+    }
 
+    void update(Arguments const& args, void* workspace = nullptr)
+    {
       ptr_M = args.ptr_M;
       ptr_N = args.ptr_N;
       ptr_K = args.ptr_K;
@@ -351,18 +346,17 @@ public:
     typename Epilogue::SharedStorage epilogue;
   };
 
-public:
-
+ public:
   //
   // Methods
   //
 
   CUTLASS_DEVICE
-  GemmPlanarComplexArray() { } 
+  GemmPlanarComplexArray() {}
 
   /// Determines whether kernel satisfies alignment
-  static Status can_implement(Arguments const &args) {
-
+  static Status can_implement(Arguments const& args)
+  {
     static int const kAlignmentA = Mma::IteratorA::AccessType::kElements;
     static int const kAlignmentB = Mma::IteratorB::AccessType::kElements;
     static int const kAlignmentC = Epilogue::OutputTileIterator::kElementsPerAccess;
@@ -389,33 +383,30 @@ public:
       isCMisaligned = args.problem_size.m() % kAlignmentC;
     }
 
-    if (isAMisaligned || isBMisaligned || isCMisaligned) {
-      return Status::kErrorMisalignedOperand;
-    }
+    if (isAMisaligned || isBMisaligned || isCMisaligned) { return Status::kErrorMisalignedOperand; }
 
     return Status::kSuccess;
   }
 
-  static size_t get_extra_workspace_size(Arguments const &args,
-                                         cutlass::gemm::GemmCoord const &grid_tiled_shape) {
-
+  static size_t get_extra_workspace_size(Arguments const& args,
+                                         cutlass::gemm::GemmCoord const& grid_tiled_shape)
+  {
     return 0;
   }
- 
+
   /// Executes one GEMM
   CUTLASS_DEVICE
-  void operator()(Params const &params, SharedStorage &shared_storage) {
-
+  void operator()(Params const& params, SharedStorage& shared_storage)
+  {
     // Compute threadblock location
     ThreadblockSwizzle threadblock_swizzle;
 
     cutlass::gemm::GemmCoord threadblock_tile_offset =
-        threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
+      threadblock_swizzle.get_tile_offset(params.swizzle_log_tile);
 
     // Early exit if CTA is out of range
     if (params.grid_tiled_shape.m() <= threadblock_tile_offset.m() ||
-      params.grid_tiled_shape.n() <= threadblock_tile_offset.n()) {
-
+        params.grid_tiled_shape.n() <= threadblock_tile_offset.n()) {
       return;
     }
 
@@ -425,31 +416,25 @@ public:
     int problem_size_n = params.problem_size.n();
     int problem_size_k = params.problem_size.k();
 
-    ElementA *ptr_A_real = static_cast<ElementA *>(const_cast<void *>(params.ptr_A_real[batch_idx]));
-    ElementA *ptr_A_imag = static_cast<ElementA *>(const_cast<void *>(params.ptr_A_imag[batch_idx]));
+    ElementA* ptr_A_real = static_cast<ElementA*>(const_cast<void*>(params.ptr_A_real[batch_idx]));
+    ElementA* ptr_A_imag = static_cast<ElementA*>(const_cast<void*>(params.ptr_A_imag[batch_idx]));
 
-    ElementB *ptr_B_real = static_cast<ElementB *>(const_cast<void *>(params.ptr_B_real[batch_idx]));
-    ElementB *ptr_B_imag = static_cast<ElementB *>(const_cast<void *>(params.ptr_B_imag[batch_idx]));
+    ElementB* ptr_B_real = static_cast<ElementB*>(const_cast<void*>(params.ptr_B_real[batch_idx]));
+    ElementB* ptr_B_imag = static_cast<ElementB*>(const_cast<void*>(params.ptr_B_imag[batch_idx]));
 
     //
     // If pointers for problem sizes are specified, these are loaded from global memory
     //
 
-    if (params.ptr_M) {
-      problem_size_m = params.ptr_M[batch_idx];
-    }
+    if (params.ptr_M) { problem_size_m = params.ptr_M[batch_idx]; }
 
-    if (params.ptr_N) {
-      problem_size_n = params.ptr_N[batch_idx];
-    }
+    if (params.ptr_N) { problem_size_n = params.ptr_N[batch_idx]; }
 
-    if (params.ptr_K) {
-      problem_size_k = params.ptr_K[batch_idx];
-    }
+    if (params.ptr_K) { problem_size_k = params.ptr_K[batch_idx]; }
 
     int const kBlockCountM = (problem_size_m + Mma::Shape::kM - 1) / Mma::Shape::kM;
     int const kBlockCountN = (problem_size_n + Mma::Shape::kN - 1) / Mma::Shape::kN;
-        
+
     int const kGemmKIterations = (problem_size_k + Mma::Shape::kK - 1) / Mma::Shape::kK;
 
     //
@@ -458,15 +443,11 @@ public:
     //
 
     CUTLASS_PRAGMA_NO_UNROLL
-    for (int block_m = threadblock_tile_offset.m(); 
-      block_m < kBlockCountM; 
-      block_m += params.grid_tiled_shape.m()) {
-
+    for (int block_m = threadblock_tile_offset.m(); block_m < kBlockCountM;
+         block_m += params.grid_tiled_shape.m()) {
       CUTLASS_PRAGMA_NO_UNROLL
-      for (int block_n = threadblock_tile_offset.n(); 
-        block_n < kBlockCountN; 
-        block_n += params.grid_tiled_shape.n()) {
-
+      for (int block_n = threadblock_tile_offset.n(); block_n < kBlockCountN;
+           block_n += params.grid_tiled_shape.n()) {
         //
         // Compute indices within threadblock and warp.
         //
@@ -476,43 +457,39 @@ public:
         // is compiled as warp-uniform.
         int warp_idx = __shfl_sync(0xffffffff, threadIdx.x / 32, 0);
         int lane_idx = threadIdx.x % 32;
-    
+
         //
         // Proceed with regular GEMM logic.
         //
 
         // Compute initial location in logical coordinates
-        cutlass::MatrixCoord tb_offset_A{ block_m * Mma::Shape::kM, 0};
-        cutlass::MatrixCoord tb_offset_B{ 0, block_n * Mma::Shape::kN };
+        cutlass::MatrixCoord tb_offset_A{block_m * Mma::Shape::kM, 0};
+        cutlass::MatrixCoord tb_offset_B{0, block_n * Mma::Shape::kN};
 
         // Construct iterators to A and B operands
-        typename Mma::IteratorA iterator_A_real(
-          params.params_A_real,
-          ptr_A_real,
-          {problem_size_m, problem_size_k},
-          thread_idx,
-          tb_offset_A);
+        typename Mma::IteratorA iterator_A_real(params.params_A_real,
+                                                ptr_A_real,
+                                                {problem_size_m, problem_size_k},
+                                                thread_idx,
+                                                tb_offset_A);
 
-        typename Mma::IteratorA iterator_A_imag(
-          params.params_A_imag,
-          ptr_A_imag,
-          {problem_size_m, problem_size_k},
-          thread_idx,
-          tb_offset_A);
+        typename Mma::IteratorA iterator_A_imag(params.params_A_imag,
+                                                ptr_A_imag,
+                                                {problem_size_m, problem_size_k},
+                                                thread_idx,
+                                                tb_offset_A);
 
-        typename Mma::IteratorB iterator_B_real(
-          params.params_B_real,
-          ptr_B_real,
-          {problem_size_k, problem_size_n},
-          thread_idx,
-          tb_offset_B);
-  
-        typename Mma::IteratorB iterator_B_imag(
-          params.params_B_imag,
-          ptr_B_imag,
-          {problem_size_k, problem_size_n},
-          thread_idx,
-          tb_offset_B);
+        typename Mma::IteratorB iterator_B_real(params.params_B_real,
+                                                ptr_B_real,
+                                                {problem_size_k, problem_size_n},
+                                                thread_idx,
+                                                tb_offset_B);
+
+        typename Mma::IteratorB iterator_B_imag(params.params_B_imag,
+                                                ptr_B_imag,
+                                                {problem_size_k, problem_size_n},
+                                                thread_idx,
+                                                tb_offset_B);
 
         //
         // Main loop
@@ -526,14 +503,13 @@ public:
         accumulators.clear();
 
         // Compute threadblock-scoped matrix multiply-add
-        mma(
-          kGemmKIterations, 
-          accumulators, 
-          iterator_A_real,
-          iterator_A_imag,
-          iterator_B_real, 
-          iterator_B_imag, 
-          accumulators);
+        mma(kGemmKIterations,
+            accumulators,
+            iterator_A_real,
+            iterator_A_imag,
+            iterator_B_real,
+            iterator_B_imag,
+            accumulators);
 
         //
         // Epilogue
@@ -545,81 +521,65 @@ public:
         // Masked tile iterators constructed from members
         //
 
-        //assume identity swizzle
-        MatrixCoord threadblock_offset(
-          block_m * Mma::Shape::kM,
-          block_n * Mma::Shape::kN
-        );
+        // assume identity swizzle
+        MatrixCoord threadblock_offset(block_m * Mma::Shape::kM, block_n * Mma::Shape::kN);
 
-        ElementC *ptr_C_real = static_cast<ElementC *>(const_cast<void *>(params.ptr_C_real[batch_idx]));
-        ElementC *ptr_C_imag = static_cast<ElementC *>(const_cast<void *>(params.ptr_C_imag[batch_idx]));
-        ElementC *ptr_D_real = static_cast<ElementC *>(params.ptr_D_real[batch_idx]);
-        ElementC *ptr_D_imag = static_cast<ElementC *>(params.ptr_D_imag[batch_idx]);
+        ElementC* ptr_C_real =
+          static_cast<ElementC*>(const_cast<void*>(params.ptr_C_real[batch_idx]));
+        ElementC* ptr_C_imag =
+          static_cast<ElementC*>(const_cast<void*>(params.ptr_C_imag[batch_idx]));
+        ElementC* ptr_D_real = static_cast<ElementC*>(params.ptr_D_real[batch_idx]);
+        ElementC* ptr_D_imag = static_cast<ElementC*>(params.ptr_D_imag[batch_idx]);
 
         // Tile iterator loading from source tensor.
-        typename Epilogue::OutputTileIterator iterator_C_real(
-          params.params_C_real,
-          ptr_C_real,
-          {problem_size_m, problem_size_n},
-          thread_idx,
-          threadblock_offset
-        );
+        typename Epilogue::OutputTileIterator iterator_C_real(params.params_C_real,
+                                                              ptr_C_real,
+                                                              {problem_size_m, problem_size_n},
+                                                              thread_idx,
+                                                              threadblock_offset);
 
-        typename Epilogue::OutputTileIterator iterator_C_imag(
-          params.params_C_imag,
-          ptr_C_imag,
-          {problem_size_m, problem_size_n},
-          thread_idx,
-          threadblock_offset
-        );
+        typename Epilogue::OutputTileIterator iterator_C_imag(params.params_C_imag,
+                                                              ptr_C_imag,
+                                                              {problem_size_m, problem_size_n},
+                                                              thread_idx,
+                                                              threadblock_offset);
 
         // Tile iterator writing to destination tensor.
-        typename Epilogue::OutputTileIterator iterator_D_real(
-          params.params_D_real,
-          ptr_D_real,
-          {problem_size_m, problem_size_n},
-          thread_idx,
-          threadblock_offset
-        );
+        typename Epilogue::OutputTileIterator iterator_D_real(params.params_D_real,
+                                                              ptr_D_real,
+                                                              {problem_size_m, problem_size_n},
+                                                              thread_idx,
+                                                              threadblock_offset);
 
-        typename Epilogue::OutputTileIterator iterator_D_imag(
-          params.params_D_imag,
-          ptr_D_imag,
-          {problem_size_m, problem_size_n},
-          thread_idx,
-          threadblock_offset
-        );
+        typename Epilogue::OutputTileIterator iterator_D_imag(params.params_D_imag,
+                                                              ptr_D_imag,
+                                                              {problem_size_m, problem_size_n},
+                                                              thread_idx,
+                                                              threadblock_offset);
 
         //
         // Construct epilogue
         //
 
-        Epilogue epilogue(
-          shared_storage.epilogue, 
-          thread_idx, 
-          warp_idx, 
-          lane_idx);
+        Epilogue epilogue(shared_storage.epilogue, thread_idx, warp_idx, lane_idx);
 
         // Execute the epilogue operator to update the destination tensor.
-        epilogue(
-          output_op, 
-          iterator_D_real, 
-          iterator_D_imag, 
-          accumulators, 
-          iterator_C_real,
-          iterator_C_imag); 
+        epilogue(output_op,
+                 iterator_D_real,
+                 iterator_D_imag,
+                 accumulators,
+                 iterator_C_real,
+                 iterator_C_imag);
 
-
-      } // for block_n
-    } // for block_m
+      }  // for block_n
+    }  // for block_m
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace gemm
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-

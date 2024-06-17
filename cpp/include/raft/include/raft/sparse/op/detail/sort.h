@@ -24,13 +24,13 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/iterator/zip_iterator.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 #include <thrust/tuple.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 
 #include <algorithm>

@@ -37,19 +37,15 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/array.h"
-
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
-
 #include "cutlass/arch/mma.h"
-
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma.h"
-
 #include "cutlass/gemm/warp/mma_tensor_op_policy.h"
 #include "cutlass/gemm/warp/mma_tensor_op_tile_iterator_sm70.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -78,10 +74,9 @@ template <
   /// Policy describing warp-level MmaTensorOp (concept: MmaTensorOp policy)
   typename Policy_,
   /// Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 class MmaVoltaTensorOp {
-public:
+ public:
   /// Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;
 
@@ -115,9 +110,9 @@ public:
   /// Underlying matrix multiply operator (concept: arch::Mma)
   using ArchMmaOperator = typename Policy::Operator;
 
-  /// Indicates math operator 
+  /// Indicates math operator
   using MathOperator = typename ArchMmaOperator::Operator;
-  
+
   /// Underlying instruction shape
   using InstructionShape = typename ArchMmaOperator::Shape;
 
@@ -133,24 +128,19 @@ public:
   /// interleaved 32x32 tiles
   using InterleavedTileShape = GemmShape<32, 32, 4>;
 
-  static_assert(!(Shape::kM % InterleavedTileShape::kM) &&
-                !(Shape::kN % InterleavedTileShape::kN),
+  static_assert(!(Shape::kM % InterleavedTileShape::kM) && !(Shape::kN % InterleavedTileShape::kN),
                 "Shape must be a multiple of InterleavedTileShape.");
-public:
 
+ public:
   /// Iterates over the A operand in memory
   using IteratorA = MmaVoltaTensorOpMultiplicandTileIterator<
     MatrixShape<Shape::kM, Shape::kK>,
     Operand::kA,
     ElementA,
     LayoutA,
-    MatrixShape<
-      ArchMmaOperator::Shape::kM,
-      ArchMmaOperator::Shape::kK
-    >,
+    MatrixShape<ArchMmaOperator::Shape::kM, ArchMmaOperator::Shape::kK>,
     Policy::OpDelta::kRow,
-    kThreadCount
-  >;
+    kThreadCount>;
 
   /// Storage for A tile
   using FragmentA = typename IteratorA::Fragment;
@@ -161,81 +151,63 @@ public:
     Operand::kB,
     ElementB,
     LayoutB,
-    MatrixShape<
-      ArchMmaOperator::Shape::kK,
-      ArchMmaOperator::Shape::kN
-    >,
+    MatrixShape<ArchMmaOperator::Shape::kK, ArchMmaOperator::Shape::kN>,
     Policy::OpDelta::kRow,
-    kThreadCount
-  >;
+    kThreadCount>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
 
   /// Iterates over the C operand in memory
-  using IteratorC = MmaVoltaTensorOpAccumulatorTileIterator<
-    MatrixShape<Shape::kM, Shape::kN>,
-    ElementC,
-    LayoutC,
-    typename ArchMmaOperator::Shape,
-    typename Policy::OpDelta
-  >;
+  using IteratorC = MmaVoltaTensorOpAccumulatorTileIterator<MatrixShape<Shape::kM, Shape::kN>,
+                                                            ElementC,
+                                                            LayoutC,
+                                                            typename ArchMmaOperator::Shape,
+                                                            typename Policy::OpDelta>;
 
   /// Storage for C tile
   using FragmentC = typename IteratorC::Fragment;
 
-private:
-
-  static_assert(
-    !(Shape::kM % ArchMmaOperator::Shape::kM) && 
-    !(Shape::kN % ArchMmaOperator::Shape::kN),
-    "Shape of warp-level Mma must be divisible by operator shape.");
+ private:
+  static_assert(!(Shape::kM % ArchMmaOperator::Shape::kM) &&
+                  !(Shape::kN % ArchMmaOperator::Shape::kN),
+                "Shape of warp-level Mma must be divisible by operator shape.");
 
   /// Number of mma operations performed
-  using MmaIterations = MatrixShape<
-    InterleavedTileShape::kM / ArchMmaOperator::Shape::kM,
-    InterleavedTileShape::kN / ArchMmaOperator::Shape::kN
-  >;
-  using TileIterations = MatrixShape<
-    Shape::kM / InterleavedTileShape::kM,
-    Shape::kN / InterleavedTileShape::kN
-  >;
+  using MmaIterations = MatrixShape<InterleavedTileShape::kM / ArchMmaOperator::Shape::kM,
+                                    InterleavedTileShape::kN / ArchMmaOperator::Shape::kN>;
+  using TileIterations =
+    MatrixShape<Shape::kM / InterleavedTileShape::kM, Shape::kN / InterleavedTileShape::kN>;
 
   // Whether matrix B is reordered
   bool reorder_B_;
 
-public:
-
+ public:
   /// Underlying matrix multiply operator (concept: arch::Mma)
   ArchMmaOperator mma;
 
-public:
-
+ public:
   //
   // Methods
   //
-  
+
   /// Ctor
   CUTLASS_DEVICE
   MmaVoltaTensorOp() {}
 
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
-  void operator()(
-    FragmentC &D, 
-    FragmentA const &A, 
-    FragmentB const &B, 
-    FragmentC const &C)  {
-
+  void operator()(FragmentC& D, FragmentA const& A, FragmentB const& B, FragmentC const& C)
+  {
     using MmaOperandA = typename ArchMmaOperator::FragmentA;
     using MmaOperandB = typename ArchMmaOperator::FragmentB;
     using MmaOperandC = typename ArchMmaOperator::FragmentC;
 
     D = C;
 
-    MmaOperandA const *ptr_A = reinterpret_cast<MmaOperandA const *>(&A);
-    MmaOperandB const *ptr_B = reinterpret_cast<MmaOperandB const *>(&B);
-    MmaOperandC *ptr_D = reinterpret_cast<MmaOperandC *>(&D);
+    MmaOperandA const* ptr_A = reinterpret_cast<MmaOperandA const*>(&A);
+    MmaOperandB const* ptr_B = reinterpret_cast<MmaOperandB const*>(&B);
+    MmaOperandC* ptr_D       = reinterpret_cast<MmaOperandC*>(&D);
 
     CUTLASS_PRAGMA_UNROLL
     for (int outer_col = 0; outer_col < TileIterations::kColumn; ++outer_col) {
@@ -246,7 +218,6 @@ public:
           CUTLASS_PRAGMA_UNROLL
 
           for (int inner_row = 0; inner_row < MmaIterations::kRow; ++inner_row) {
-      
             int op_col = inner_col + MmaIterations::kColumn * outer_col;
 
             // Column-major serpentine sequence to maximize reuse of A operand.
@@ -257,15 +228,11 @@ public:
               outer_row_serp = TileIterations::kRow - outer_row - 1;
             }
             int op_row = inner_row_serp + MmaIterations::kRow * outer_row_serp;
-            int op_idx = inner_row_serp + MmaIterations::kRow * 
-                         (inner_col + MmaIterations::kColumn * 
-                          (outer_row_serp + TileIterations::kRow * outer_col));
-            mma(
-              ptr_D[op_idx],
-              ptr_A[op_row],
-              ptr_B[op_col],
-              ptr_D[op_idx]);
-
+            int op_idx = inner_row_serp +
+                         MmaIterations::kRow *
+                           (inner_col + MmaIterations::kColumn *
+                                          (outer_row_serp + TileIterations::kRow * outer_col));
+            mma(ptr_D[op_idx], ptr_A[op_row], ptr_B[op_col], ptr_D[op_idx]);
           }
         }
       }
@@ -275,6 +242,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass

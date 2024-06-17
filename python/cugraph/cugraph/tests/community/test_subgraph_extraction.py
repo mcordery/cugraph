@@ -13,13 +13,13 @@
 
 import gc
 
+import cudf
+import networkx as nx
 import numpy as np
 import pytest
-import networkx as nx
+from cugraph.testing import DEFAULT_DATASETS, utils
 
-import cudf
 import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
 from cugraph.datasets import karate
 
 
@@ -118,7 +118,7 @@ def test_subgraph_extraction_Graph_nx(graph_file):
     cu_verts = cudf.Series(verts)
     cu_sub = cugraph.induced_subgraph(G, cu_verts)[0]
 
-    for (u, v) in cu_sub.edges():
+    for u, v in cu_sub.edges():
         assert nx_sub.has_edge(u, v)
 
 

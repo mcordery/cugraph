@@ -27,7 +27,6 @@
 #include <cugraph/graph_view.hpp>
 #include <cugraph/utilities/host_scalar_comm.hpp>
 
-#include <hip/functional>
 #include <thrust/count.h>
 #include <thrust/distance.h>
 #include <thrust/iterator/counting_iterator.h>
@@ -39,6 +38,7 @@
 #include <thrust/transform_reduce.h>
 
 #include <cmath>
+#include <hip/functional>
 
 namespace cugraph {
 

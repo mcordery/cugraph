@@ -13,13 +13,12 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
-
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
-
-from pylibcugraph import ResourceHandle, triangle_count as pylibcugraph_triangle_count
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import triangle_count as pylibcugraph_triangle_count
 
 
 def _call_triangle_count(

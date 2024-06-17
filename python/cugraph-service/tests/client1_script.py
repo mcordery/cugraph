@@ -21,7 +21,6 @@ from pathlib import Path
 
 from cugraph_service_client import CugraphServiceClient
 
-
 _data_dir = (Path(__file__).parent) / "data"
 
 edgelist_csv_data = {

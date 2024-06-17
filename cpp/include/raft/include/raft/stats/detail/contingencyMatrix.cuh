@@ -20,12 +20,12 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/device_ptr.h>
 #include <thrust/execution_policy.h>
 #include <thrust/extrema.h>
 #include <thrust/reduce.h>
 
+#include <hipcub/hipcub.hpp>
 #include <math.h>
 
 namespace raft {
@@ -139,15 +139,15 @@ void contingencyMatrixWSort(const T* groundTruth,
   // binning-reordering operation
   ///@todo: future work - explore "efficient" custom binning kernels vs cub sort
   RAFT_CUDA_TRY(hipcub::DeviceRadixSort::SortPairs(pWorkspaceCub,
-                                                workspaceSize,
-                                                groundTruth,
-                                                outKeys,
-                                                predictedLabel,
-                                                outValue,
-                                                nSamples,
-                                                0,
-                                                bitsToSort,
-                                                stream));
+                                                   workspaceSize,
+                                                   groundTruth,
+                                                   outKeys,
+                                                   predictedLabel,
+                                                   outValue,
+                                                   nSamples,
+                                                   0,
+                                                   bitsToSort,
+                                                   stream));
   auto outDimM_N = int(maxLabel - minLabel + 1);
   computeCMatWAtomics<T, OutT>(outKeys, outValue, nSamples, outMat, minLabel, outDimM_N, stream);
 }

@@ -14,13 +14,11 @@
 
 import time
 
-import pytest
-
 import cugraph.dask.comms as Comms
+import pytest
+from cugraph.dask.common.mg_utils import get_visible_devices
 from dask.distributed import Client
 from dask_cuda import LocalCUDACluster as CUDACluster
-from cugraph.dask.common.mg_utils import get_visible_devices
-
 
 # Maximal number of verifications of the number of workers
 DEFAULT_MAX_ATTEMPT = 100

@@ -12,7 +12,7 @@
 
 #if !defined(__HIPCC_RTC__)
 // Fetch utility to get primary template for ::std::tuple_size necessary for the specialization of
-// ::std::tuple_size<hip::std::tuple> to enable structured bindings. See https://github.com/NVIDIA/libcudacxx/issues/316 
+// ::std::tuple_size<hip::std::tuple> to enable structured bindings. See https://github.com/NVIDIA/libcudacxx/issues/316
 #include <utility>
 #endif
 

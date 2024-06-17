@@ -333,12 +333,16 @@ def _create_entity_nodes(
             {
                 key: cudf.core.column.as_column(col),
                 NODEID: _prepend_str(col, cat + DELIM),
-                CATEGORY: cat
-                if not categorical_metadata
-                else _str_scalar_to_category(len(col), cat),
-                NODETYPE: key
-                if not categorical_metadata
-                else _str_scalar_to_category(len(col), key),
+                CATEGORY: (
+                    cat
+                    if not categorical_metadata
+                    else _str_scalar_to_category(len(col), cat)
+                ),
+                NODETYPE: (
+                    key
+                    if not categorical_metadata
+                    else _str_scalar_to_category(len(col), key)
+                ),
             }
         )
         df.reset_index(drop=True, inplace=True)

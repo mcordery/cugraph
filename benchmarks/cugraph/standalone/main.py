@@ -11,21 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
-from cugraph.dask.common.mg_utils import get_visible_devices
-
-from reporting import (
-    generate_console_report,
-    update_csv_report,
-)
-
-import cugraph_funcs
-import cugraph_dask_funcs
-from benchmark import BenchmarkRun
-
 import json
+import sys
 from pathlib import Path
+
+import cugraph_dask_funcs
+import cugraph_funcs
+from benchmark import BenchmarkRun
+from cugraph.dask.common.mg_utils import get_visible_devices
+from reporting import generate_console_report, update_csv_report
 
 
 def store_results_json(

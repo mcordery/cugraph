@@ -51,79 +51,73 @@ namespace detail {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ElementA_,
-  typename LayoutA_,
-  ComplexTransform TransformA,
-  int AlignmentA,
-  typename ElementB_,
-  typename LayoutB_,
-  ComplexTransform TransformB,
-  int AlignmentB,
-  typename LayoutC_,
-  FillMode FillModeC_,
-  bool Transpose
->
+template <typename ElementA_,
+          typename LayoutA_,
+          ComplexTransform TransformA,
+          int AlignmentA,
+          typename ElementB_,
+          typename LayoutB_,
+          ComplexTransform TransformB,
+          int AlignmentB,
+          typename LayoutC_,
+          FillMode FillModeC_,
+          bool Transpose>
 struct Rank2KMapArguments {
-  using ElementA = ElementA_;
-  using LayoutA = LayoutA_;
+  using ElementA                            = ElementA_;
+  using LayoutA                             = LayoutA_;
   static ComplexTransform const kTransformA = TransformA;
-  static int const kAlignmentA = AlignmentA;
-  using ElementB = ElementB_;
-  using LayoutB = LayoutB_;
+  static int const kAlignmentA              = AlignmentA;
+  using ElementB                            = ElementB_;
+  using LayoutB                             = LayoutB_;
   static ComplexTransform const kTransformB = TransformB;
-  static int const kAlignmentB = AlignmentB;
-  using LayoutC = LayoutC_;
-  static FillMode const kFillModeC = FillModeC_;
+  static int const kAlignmentB              = AlignmentB;
+  using LayoutC                             = LayoutC_;
+  static FillMode const kFillModeC          = FillModeC_;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename ElementA_,
-  typename LayoutA_,
-  ComplexTransform TransformA,
-  int AlignmentA,
-  typename ElementB_,
-  typename LayoutB_,
-  ComplexTransform TransformB,
-  int AlignmentB,
-  typename LayoutC_,
-  FillMode FillModeC_
->
-struct Rank2KMapArguments<
-  ElementA_,
-  LayoutA_,
-  TransformA,
-  AlignmentA,
-  ElementB_,
-  LayoutB_,
-  TransformB,
-  AlignmentB,
-  LayoutC_,
-  FillModeC_,
-  true
-> {
-  using ElementA = ElementB_;
-  using LayoutA = LayoutB_;
+template <typename ElementA_,
+          typename LayoutA_,
+          ComplexTransform TransformA,
+          int AlignmentA,
+          typename ElementB_,
+          typename LayoutB_,
+          ComplexTransform TransformB,
+          int AlignmentB,
+          typename LayoutC_,
+          FillMode FillModeC_>
+struct Rank2KMapArguments<ElementA_,
+                          LayoutA_,
+                          TransformA,
+                          AlignmentA,
+                          ElementB_,
+                          LayoutB_,
+                          TransformB,
+                          AlignmentB,
+                          LayoutC_,
+                          FillModeC_,
+                          true> {
+  using ElementA                            = ElementB_;
+  using LayoutA                             = LayoutB_;
   static ComplexTransform const kTransformA = TransformB;
-  static int const kAlignmentA = AlignmentB;
-  using ElementB = ElementA_;
-  using LayoutB = LayoutA_;
+  static int const kAlignmentA              = AlignmentB;
+  using ElementB                            = ElementA_;
+  using LayoutB                             = LayoutA_;
   static ComplexTransform const kTransformB = TransformA;
-  static int const kAlignmentB = AlignmentA;
-  using LayoutC = typename layout::LayoutTranspose<LayoutC_>::type;
-  static FillMode const kFillModeC = InvertFillMode<FillModeC_>::mode;
+  static int const kAlignmentB              = AlignmentA;
+  using LayoutC                             = typename layout::LayoutTranspose<LayoutC_>::type;
+  static FillMode const kFillModeC          = InvertFillMode<FillModeC_>::mode;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-}
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-}
-}
-}
+}  // namespace kernel
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

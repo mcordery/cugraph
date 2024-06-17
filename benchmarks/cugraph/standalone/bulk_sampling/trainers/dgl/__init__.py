@@ -12,5 +12,5 @@
 # limitations under the License.
 
 
-from .trainers_dgl import DGLTrainer
 from .trainers_cugraph_dgl import DGLCuGraphTrainer
+from .trainers_dgl import DGLTrainer

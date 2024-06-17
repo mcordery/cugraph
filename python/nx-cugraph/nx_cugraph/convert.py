@@ -21,7 +21,6 @@ from typing import TYPE_CHECKING
 import cupy as cp
 import networkx as nx
 import numpy as np
-
 import nx_cugraph as nxcg
 
 from .utils import index_dtype

@@ -28,10 +28,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  **************************************************************************************************/
-/*! 
+/*!
   \file
-  \brief The universal GEMM accommodates serial reductions, parallel reductions, batched strided, and 
-    batched array variants.
+  \brief The universal GEMM accommodates serial reductions, parallel reductions, batched strided,
+  and batched array variants.
 */
 
 #pragma once
@@ -50,55 +50,52 @@ namespace device {
 
 template <typename GemmKernel_>
 class GemmUniversalAdapter {
-public:
-
+ public:
   using GemmKernel = GemmKernel_;
 
-  static bool const kInternalTranspose = 
+  static bool const kInternalTranspose =
     platform::is_same<typename GemmKernel::LayoutC, cutlass::layout::RowMajor>::value;
 
   using ThreadblockShape = typename GemmKernel::Mma::Shape;
-  using WarpShape = typename GemmKernel::WarpShape;
+  using WarpShape        = typename GemmKernel::WarpShape;
   using InstructionShape = typename GemmKernel::InstructionShape;
 
-  // warp-level, arch-level (instruction), math operator 
+  // warp-level, arch-level (instruction), math operator
   using WarpMmaOperator = typename GemmKernel::Mma::Policy::Operator;
   using ArchMmaOperator = typename WarpMmaOperator::ArchMmaOperator;
-  using MathOperator = typename WarpMmaOperator::MathOperator;
-  
-  // Operator class and arch tag extract bottom-up 
+  using MathOperator    = typename WarpMmaOperator::MathOperator;
+
+  // Operator class and arch tag extract bottom-up
   // set it for top-level gemm device-level template
   using OperatorClass = typename WarpMmaOperator::OperatorClass;
-  using ArchTag = typename WarpMmaOperator::ArchTag;
+  using ArchTag       = typename WarpMmaOperator::ArchTag;
 
   // Type, layout, and complex transform deliberately exchanged with B
-  using MapArguments = kernel::detail::MapArguments<
-    typename GemmKernel::ElementA,
-    typename GemmKernel::LayoutA,
-    GemmKernel::kTransformA,
-    GemmKernel::kAlignmentA,
-    typename GemmKernel::ElementB,
-    typename GemmKernel::LayoutB,
-    GemmKernel::kTransformB,
-    GemmKernel::kAlignmentB,
-    typename GemmKernel::LayoutC,
-    kInternalTranspose
-  >;
+  using MapArguments = kernel::detail::MapArguments<typename GemmKernel::ElementA,
+                                                    typename GemmKernel::LayoutA,
+                                                    GemmKernel::kTransformA,
+                                                    GemmKernel::kAlignmentA,
+                                                    typename GemmKernel::ElementB,
+                                                    typename GemmKernel::LayoutB,
+                                                    GemmKernel::kTransformB,
+                                                    GemmKernel::kAlignmentB,
+                                                    typename GemmKernel::LayoutC,
+                                                    kInternalTranspose>;
 
-  using ElementA = typename MapArguments::ElementA;
-  using LayoutA = typename MapArguments::LayoutA;
+  using ElementA                            = typename MapArguments::ElementA;
+  using LayoutA                             = typename MapArguments::LayoutA;
   static ComplexTransform const kTransformA = MapArguments::kTransformA;
-  static int const kAlignmentA = MapArguments::kAlignmentA;
+  static int const kAlignmentA              = MapArguments::kAlignmentA;
 
-  using ElementB = typename MapArguments::ElementB;
-  using LayoutB = typename MapArguments::LayoutB;
+  using ElementB                            = typename MapArguments::ElementB;
+  using LayoutB                             = typename MapArguments::LayoutB;
   static ComplexTransform const kTransformB = MapArguments::kTransformB;
-  static int const kAlignmentB = MapArguments::kAlignmentB;
-  
-  using ElementC = typename GemmKernel::ElementC;
-  using LayoutC = typename MapArguments::LayoutC;
+  static int const kAlignmentB              = MapArguments::kAlignmentB;
+
+  using ElementC               = typename GemmKernel::ElementC;
+  using LayoutC                = typename MapArguments::LayoutC;
   static int const kAlignmentC = GemmKernel::kAlignmentC;
- 
+
   using TensorRefA = TensorRef<ElementA const, LayoutA>;
   using TensorRefB = TensorRef<ElementB const, LayoutB>;
   using TensorRefC = TensorRef<ElementC const, LayoutC>;
@@ -106,88 +103,78 @@ public:
 
   static int const kStages = GemmKernel::Mma::kStages;
 
-  using EpilogueOutputOp = typename GemmKernel::EpilogueOutputOp;
+  using EpilogueOutputOp   = typename GemmKernel::EpilogueOutputOp;
   using ElementAccumulator = typename EpilogueOutputOp::ElementAccumulator;
   using ThreadblockSwizzle = typename GemmKernel::ThreadblockSwizzle;
 
   using UnderlyingOperator = GemmUniversalBase<GemmKernel>;
-  using Arguments = typename UnderlyingOperator::Arguments;
+  using Arguments          = typename UnderlyingOperator::Arguments;
 
-private:
-
+ private:
   UnderlyingOperator underlying_operator_;
 
-public:
-
+ public:
   /// Constructs the GEMM.
-  GemmUniversalAdapter() { }
+  GemmUniversalAdapter() {}
 
   /// Helper to construct a transposed equivalent for the underying GEMM operator
-  static Arguments to_underlying_arguments(Arguments const &args) {
+  static Arguments to_underlying_arguments(Arguments const& args)
+  {
     if (kInternalTranspose) {
       return args.transposed_problem();
-    }
-    else {
+    } else {
       return args;
     }
   }
 
   /// Determines whether the GEMM can execute the given problem.
-  static Status can_implement(Arguments const &args) {
-
+  static Status can_implement(Arguments const& args)
+  {
     return UnderlyingOperator::can_implement(to_underlying_arguments(args));
   }
 
   /// Gets the workspace size
-  static size_t get_workspace_size(Arguments const &args) {
-    
+  static size_t get_workspace_size(Arguments const& args)
+  {
     return UnderlyingOperator::get_workspace_size(to_underlying_arguments(args));
   }
 
   /// Computes the grid shape
-  static dim3 get_grid_shape(Arguments const &args) { 
+  static dim3 get_grid_shape(Arguments const& args)
+  {
     return UnderlyingOperator::get_grid_shape(to_underlying_arguments(args));
   }
 
   /// Computes the maximum number of active blocks per multiprocessor
-  static int maximum_active_blocks(int smem_capacity = -1) {
+  static int maximum_active_blocks(int smem_capacity = -1)
+  {
     return UnderlyingOperator::maximum_active_blocks(smem_capacity);
   }
 
   /// Initializes GEMM state from arguments.
-  Status initialize(Arguments const &args, void *workspace = nullptr, hipStream_t stream = nullptr) {
-
+  Status initialize(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     return underlying_operator_.initialize(to_underlying_arguments(args), workspace, stream);
   }
 
   /// Lightweight update given a subset of arguments
-  Status update(Arguments const &args, void *workspace = nullptr) {
-
+  Status update(Arguments const& args, void* workspace = nullptr)
+  {
     return underlying_operator_.update(to_underlying_arguments(args), workspace);
   }
 
   /// Runs the kernel using initialized state.
-  Status run(hipStream_t stream = nullptr) {
-
-    return underlying_operator_.run(stream);
-  }
+  Status run(hipStream_t stream = nullptr) { return underlying_operator_.run(stream); }
 
   /// Runs the kernel using initialized state.
-  Status operator()(hipStream_t stream = nullptr) {
-    return run(stream);
-  }
+  Status operator()(hipStream_t stream = nullptr) { return run(stream); }
 
   /// Runs the kernel using initialized state.
-  Status operator()(
-    Arguments const &args, 
-    void *workspace = nullptr, 
-    hipStream_t stream = nullptr) {
-    
+  Status operator()(Arguments const& args, void* workspace = nullptr, hipStream_t stream = nullptr)
+  {
     Status status = initialize(args, workspace, stream);
-    
-    if (status == Status::kSuccess) {
-      status = run(stream);
-    }
+
+    if (status == Status::kSuccess) { status = run(stream); }
 
     return status;
   }
@@ -195,8 +182,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace device
-} // namespace gemm
-} // namespace cutlass
+}  // namespace device
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -13,15 +13,15 @@
 import gc
 import random
 
-import pytest
-
-import cupy
 import cudf
+import cupy
+import pytest
+from cugraph.testing import UNDIRECTED_DATASETS
+from pylibcugraph.testing.utils import gen_fixture_params_product
+
 import cugraph
 from cugraph import uniform_neighbor_sample
-from cugraph.testing import UNDIRECTED_DATASETS
 from cugraph.datasets import email_Eu_core, small_tree
-from pylibcugraph.testing.utils import gen_fixture_params_product
 
 
 # =============================================================================

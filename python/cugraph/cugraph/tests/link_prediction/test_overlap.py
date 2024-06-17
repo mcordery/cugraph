@@ -13,14 +13,14 @@
 
 import gc
 
-import pytest
-import numpy as np
-import scipy
-
 import cudf
-import cugraph
-from cugraph.testing import utils, UNDIRECTED_DATASETS
+import numpy as np
+import pytest
+import scipy
 from cudf.testing import assert_series_equal
+from cugraph.testing import UNDIRECTED_DATASETS, utils
+
+import cugraph
 
 SRC_COL = "0"
 DST_COL = "1"

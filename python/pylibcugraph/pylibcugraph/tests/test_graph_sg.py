@@ -13,7 +13,6 @@
 
 import pytest
 
-
 # =============================================================================
 # Pytest fixtures
 # =============================================================================
@@ -70,11 +69,7 @@ def test_resource_handle():
 
 
 def test_sg_graph(graph_data):
-    from pylibcugraph import (
-        SGGraph,
-        ResourceHandle,
-        GraphProperties,
-    )
+    from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 
     # is_valid will only be True if the arrays are expected to produce a valid
     # graph. If False, ensure SGGraph() raises the proper exception.
@@ -124,11 +119,7 @@ def test_SGGraph_create_from_cudf():
 
     # Importing this cugraph class seems to cause a crash more reliably (2023-01-22)
     # from cugraph.structure.graph_implementation import simpleGraphImpl
-    from pylibcugraph import (
-        ResourceHandle,
-        GraphProperties,
-        SGGraph,
-    )
+    from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 
     edgelist = cudf.DataFrame(
         {

@@ -62,7 +62,6 @@ gmem.
 
 #pragma once
 
-#include <hip/hip_cooperative_groups.h>
 #include <cooperative_groups/reduce.h>
 
 #include <cutlass/arch/arch.h>
@@ -77,6 +76,7 @@ gmem.
 #include <cutlass/numeric_types.h>
 #include <cutlass/tensor_ref.h>
 #include <cutlass/transform/pitch_linear_thread_map.h>
+#include <hip/hip_cooperative_groups.h>
 
 namespace cg = cooperative_groups;
 

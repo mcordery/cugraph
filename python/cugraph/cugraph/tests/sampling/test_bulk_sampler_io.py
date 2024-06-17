@@ -14,10 +14,9 @@
 import os
 import shutil
 
-import pytest
-
-import cupy
 import cudf
+import cupy
+import pytest
 from cugraph.gnn.data_loading.bulk_sampler_io import write_samples
 from cugraph.utilities.utils import create_directory_with_overwrite
 

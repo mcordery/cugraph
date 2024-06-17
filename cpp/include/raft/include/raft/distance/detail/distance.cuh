@@ -502,7 +502,7 @@ void distance_impl(raft::resources const& handle,
                    bool is_row_major,
                    DataT)  // metric_arg unused
 {
-  bool perform_sqrt   = false;
+  bool perform_sqrt  = false;
   hipStream_t stream = raft::resource::get_cuda_stream(handle);
   distance_impl_l2_expanded(
     perform_sqrt, x, y, out, m, n, k, workspace, worksize, fin_op, stream, is_row_major);
@@ -523,7 +523,7 @@ void distance_impl(raft::resources const& handle,
                    bool is_row_major,
                    DataT)  // metric_arg unused
 {
-  bool perform_sqrt   = true;
+  bool perform_sqrt  = true;
   hipStream_t stream = raft::resource::get_cuda_stream(handle);
   distance_impl_l2_expanded(
     perform_sqrt, x, y, out, m, n, k, workspace, worksize, fin_op, stream, is_row_major);

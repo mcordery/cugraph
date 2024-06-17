@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
 #pragma GCC system_header
@@ -20,14 +20,16 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS add_volatile {
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS add_volatile {
   typedef _LIBCUDACXX_NODEBUG_TYPE volatile _Tp type;
 };
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using add_volatile_t = typename add_volatile<_Tp>::type;
+template <class _Tp>
+using add_volatile_t = typename add_volatile<_Tp>::type;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_ADD_VOLATILE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_ADD_VOLATILE_H

@@ -30,10 +30,10 @@
  **************************************************************************************************/
 
 /*! \file
-    \brief 
+    \brief
       Default kernel-level GEMM definitions combine threadblock-scoped matrix multiply-add with
       the appropriate threadblock-scoped epilogue.
-  
+
       Note, CUTLASS epilogues universally target row-major outputs. Column-major outputs are
       accommodated by exchanging A and B operands and assuming transposed layouts. Partial
       specializations here choose 'device::GemmTransposed' to implement this functionality.
@@ -42,17 +42,14 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-
 #include "cutlass/complex.h"
-#include "cutlass/layout/matrix.h"
-#include "cutlass/numeric_types.h"
-
-#include "cutlass/gemm/kernel/gemm_universal.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/kernel/default_gemm.h"
 #include "cutlass/gemm/kernel/default_gemm_complex.h"
-
+#include "cutlass/gemm/kernel/gemm_universal.h"
+#include "cutlass/layout/matrix.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,59 +60,58 @@ namespace kernel {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA_,
-    /// Layout type for A matrix operand
-    typename LayoutA_,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB_,
-    /// Layout type for B matrix operand
-    typename LayoutB_,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC_,
-    /// Layout type for C and D matrix operands
-    typename LayoutC_,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Operation performed by GEMM
-    typename Operator,
-    /// Use zfill or predicate for out-of-bound cp.async
-    SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone,
-    /// Gather operand A by using an index array
-    bool GatherA = false,
-    /// Gather operand B by using an index array
-    bool GatherB = false,
-    /// Scatter result D by using an index array
-    bool ScatterD = false,
-    /// Permute result D
-    typename PermuteDLayout = layout::NoPermute,
-    ///
-    typename Enable = void
-    >
+  /// Element type for A matrix operand
+  typename ElementA_,
+  /// Layout type for A matrix operand
+  typename LayoutA_,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB_,
+  /// Layout type for B matrix operand
+  typename LayoutB_,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC_,
+  /// Layout type for C and D matrix operands
+  typename LayoutC_,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Operation performed by GEMM
+  typename Operator,
+  /// Use zfill or predicate for out-of-bound cp.async
+  SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone,
+  /// Gather operand A by using an index array
+  bool GatherA = false,
+  /// Gather operand B by using an index array
+  bool GatherB = false,
+  /// Scatter result D by using an index array
+  bool ScatterD = false,
+  /// Permute result D
+  typename PermuteDLayout = layout::NoPermute,
+  ///
+  typename Enable = void>
 struct DefaultGemmUniversal;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,61 +120,60 @@ struct DefaultGemmUniversal;
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Operation performed by GEMM
-    typename Operator,
-    /// Use zfill or predicate for out-of-bound cp.async
-    SharedMemoryClearOption SharedMemoryClear,
-    /// Gather operand A by using an index array
-    bool GatherA,
-    /// Gather operand B by using an index array
-    bool GatherB,
-    /// Scatter result D by using an index array
-    bool ScatterD,
-    /// Permute result D
-    typename PermuteDLayout
->
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Operation performed by GEMM
+  typename Operator,
+  /// Use zfill or predicate for out-of-bound cp.async
+  SharedMemoryClearOption SharedMemoryClear,
+  /// Gather operand A by using an index array
+  bool GatherA,
+  /// Gather operand B by using an index array
+  bool GatherB,
+  /// Scatter result D by using an index array
+  bool ScatterD,
+  /// Permute result D
+  typename PermuteDLayout>
 struct DefaultGemmUniversal<
   ElementA,
   LayoutA,
-  ComplexTransform::kNone,   // transform A
+  ComplexTransform::kNone,  // transform A
   kAlignmentA,
   ElementB,
   LayoutB,
-  ComplexTransform::kNone,   // transform B
+  ComplexTransform::kNone,  // transform B
   kAlignmentB,
   ElementC,
   LayoutC,
@@ -197,42 +192,36 @@ struct DefaultGemmUniversal<
   GatherB,
   ScatterD,
   PermuteDLayout,
-  typename platform::enable_if< ! cutlass::is_complex<ElementAccumulator>::value>::type
-> {
+  typename platform::enable_if<!cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultGemmKernel = typename kernel::DefaultGemm<ElementA,
+                                                         LayoutA,
+                                                         kAlignmentA,
+                                                         ElementB,
+                                                         LayoutB,
+                                                         kAlignmentB,
+                                                         ElementC,
+                                                         LayoutC,
+                                                         ElementAccumulator,
+                                                         OperatorClass,
+                                                         ArchTag,
+                                                         ThreadblockShape,
+                                                         WarpShape,
+                                                         InstructionShape,
+                                                         EpilogueOutputOp,
+                                                         ThreadblockSwizzle,
+                                                         Stages,
+                                                         true,
+                                                         Operator,
+                                                         SharedMemoryClear,
+                                                         GatherA,
+                                                         GatherB,
+                                                         ScatterD,
+                                                         PermuteDLayout>::GemmKernel;
 
-  using DefaultGemmKernel = typename kernel::DefaultGemm<
-    ElementA,
-    LayoutA,
-    kAlignmentA,
-    ElementB,
-    LayoutB,
-    kAlignmentB,
-    ElementC,
-    LayoutC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    true,
-    Operator,
-    SharedMemoryClear,
-    GatherA,
-    GatherB,
-    ScatterD,
-    PermuteDLayout
-  >::GemmKernel;
-
-    /// Define the kernel in terms of the default kernel
-  using GemmKernel = kernel::GemmUniversal<
-    typename DefaultGemmKernel::Mma,
-    typename DefaultGemmKernel::Epilogue,
-    ThreadblockSwizzle
-  >;
+  /// Define the kernel in terms of the default kernel
+  using GemmKernel = kernel::GemmUniversal<typename DefaultGemmKernel::Mma,
+                                           typename DefaultGemmKernel::Epilogue,
+                                           ThreadblockSwizzle>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -242,49 +231,48 @@ struct DefaultGemmUniversal<
 //
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Complex elementwise transformation on A operand
-    ComplexTransform TransformA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Complex elementwise transformation on B operand
-    ComplexTransform TransformB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for C and D matrix operands
-    typename ElementC,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Operator class tag
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Epilogue output operator
-    typename EpilogueOutputOp,
-    /// Threadblock-level swizzling operator
-    typename ThreadblockSwizzle,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Operation performed by GEMM
-    typename Operator,
-    /// Use zfill or predicate for out-of-bound cp.async
-    SharedMemoryClearOption SharedMemoryClear
-  >
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Complex elementwise transformation on A operand
+  ComplexTransform TransformA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Complex elementwise transformation on B operand
+  ComplexTransform TransformB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for C and D matrix operands
+  typename ElementC,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Operator class tag
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Epilogue output operator
+  typename EpilogueOutputOp,
+  /// Threadblock-level swizzling operator
+  typename ThreadblockSwizzle,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Operation performed by GEMM
+  typename Operator,
+  /// Use zfill or predicate for out-of-bound cp.async
+  SharedMemoryClearOption SharedMemoryClear>
 struct DefaultGemmUniversal<
   ElementA,
   LayoutA,
@@ -311,37 +299,31 @@ struct DefaultGemmUniversal<
   false,
   false,
   layout::NoPermute,
-  typename platform::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type
-> {
-
-  using DefaultGemmKernel = typename kernel::DefaultGemmComplex<
-    ElementA,
-    LayoutA,
-    ElementB,
-    LayoutB,
-    ElementC,
-    LayoutC,
-    ElementAccumulator,
-    OperatorClass,
-    ArchTag,
-    ThreadblockShape,
-    WarpShape,
-    InstructionShape,
-    EpilogueOutputOp,
-    ThreadblockSwizzle,
-    Stages,
-    TransformA,
-    TransformB,
-    Operator,
-    false
-  >::GemmKernel;
+  typename platform::enable_if<cutlass::is_complex<ElementAccumulator>::value>::type> {
+  using DefaultGemmKernel = typename kernel::DefaultGemmComplex<ElementA,
+                                                                LayoutA,
+                                                                ElementB,
+                                                                LayoutB,
+                                                                ElementC,
+                                                                LayoutC,
+                                                                ElementAccumulator,
+                                                                OperatorClass,
+                                                                ArchTag,
+                                                                ThreadblockShape,
+                                                                WarpShape,
+                                                                InstructionShape,
+                                                                EpilogueOutputOp,
+                                                                ThreadblockSwizzle,
+                                                                Stages,
+                                                                TransformA,
+                                                                TransformB,
+                                                                Operator,
+                                                                false>::GemmKernel;
 
   /// Define the kernel in terms of the default kernel
-  using GemmKernel = kernel::GemmUniversal<
-    typename DefaultGemmKernel::Mma,
-    typename DefaultGemmKernel::Epilogue, 
-    ThreadblockSwizzle
-  >;
+  using GemmKernel = kernel::GemmUniversal<typename DefaultGemmKernel::Mma,
+                                           typename DefaultGemmKernel::Epilogue,
+                                           ThreadblockSwizzle>;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

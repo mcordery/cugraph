@@ -30,7 +30,6 @@
 #include <raft/util/cudart_utils.hpp>
 
 #include <hip/hip_runtime.h>
-
 #include <hiprand.h>
 
 #include <cmath>
@@ -109,7 +108,7 @@ int performLanczosIteration(raft::resources const& handle,
   value_type_t alpha;
 
   auto hipblas.h = resource::get_cublas_handle(handle);
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
 
   RAFT_EXPECTS(A != nullptr, "Null matrix pointer.");
 
@@ -124,10 +123,10 @@ int performLanczosIteration(raft::resources const& handle,
     // Apply matrix
     if (shift != 0)
       RAFT_CUDA_TRY(hipMemcpyAsync(lanczosVecs_dev + n,
-                                    lanczosVecs_dev,
-                                    n * sizeof(value_type_t),
-                                    hipMemcpyDeviceToDevice,
-                                    stream));
+                                   lanczosVecs_dev,
+                                   n * sizeof(value_type_t),
+                                   hipMemcpyDeviceToDevice,
+                                   stream));
     A->mv(1, lanczosVecs_dev, shift, lanczosVecs_dev + n);
 
     // Orthogonalize Lanczos vector
@@ -157,10 +156,10 @@ int performLanczosIteration(raft::resources const& handle,
     // Apply matrix
     if (shift != 0)
       RAFT_CUDA_TRY(hipMemcpyAsync(lanczosVecs_dev + (*iter) * n,
-                                    lanczosVecs_dev + (*iter - 1) * n,
-                                    n * sizeof(value_type_t),
-                                    hipMemcpyDeviceToDevice,
-                                    stream));
+                                   lanczosVecs_dev + (*iter - 1) * n,
+                                   n * sizeof(value_type_t),
+                                   hipMemcpyDeviceToDevice,
+                                   stream));
     A->mv(1, lanczosVecs_dev + IDX(0, *iter - 1, n), shift, lanczosVecs_dev + IDX(0, *iter, n));
 
     // Full reorthogonalization
@@ -195,10 +194,10 @@ int performLanczosIteration(raft::resources const& handle,
                                  stream));
 
       RAFT_CUDA_TRY(hipMemcpyAsync(alpha_host + (*iter - 1),
-                                    work_dev + (*iter - 1),
-                                    sizeof(value_type_t),
-                                    hipMemcpyDeviceToHost,
-                                    stream));
+                                   work_dev + (*iter - 1),
+                                   sizeof(value_type_t),
+                                   hipMemcpyDeviceToHost,
+                                   stream));
 
       RAFT_CUBLAS_TRY(cublasgemv(cublas_h,
                                  HIPBLAS_OP_T,
@@ -567,7 +566,7 @@ static int lanczosRestart(raft::resources const& handle,
   constexpr value_type_t one  = 1;
 
   auto hipblas.h = resource::get_cublas_handle(handle);
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
 
   // Loop index
   index_type_t i;
@@ -674,17 +673,17 @@ static int lanczosRestart(raft::resources const& handle,
                              stream));
 
   RAFT_CUDA_TRY(hipMemcpyAsync(lanczosVecs_dev,
-                                work_dev,
-                                n * iter_new * sizeof(value_type_t),
-                                hipMemcpyDeviceToDevice,
-                                stream));
+                               work_dev,
+                               n * iter_new * sizeof(value_type_t),
+                               hipMemcpyDeviceToDevice,
+                               stream));
 
   // Normalize residual to obtain new Lanczos vector
   RAFT_CUDA_TRY(hipMemcpyAsync(lanczosVecs_dev + IDX(0, iter_new, n),
-                                lanczosVecs_dev + IDX(0, iter, n),
-                                n * sizeof(value_type_t),
-                                hipMemcpyDeviceToDevice,
-                                stream));
+                               lanczosVecs_dev + IDX(0, iter, n),
+                               n * sizeof(value_type_t),
+                               hipMemcpyDeviceToDevice,
+                               stream));
 
   RAFT_CUBLAS_TRY(cublasnrm2(
     hipblas.h, n, lanczosVecs_dev + IDX(0, iter_new, n), 1, beta_host + iter_new - 1, stream));
@@ -799,7 +798,7 @@ int computeSmallestEigenvectors(
   RAFT_EXPECTS(restartIter >= nEigVecs, "Invalid restartIter.");
 
   auto hipblas.h = resource::get_cublas_handle(handle);
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
 
   // -------------------------------------------------------
   // Variable initialization
@@ -952,16 +951,13 @@ int computeSmallestEigenvectors(
 
   // Copy results to device memory
   RAFT_CUDA_TRY(hipMemcpyAsync(eigVals_dev,
-                                work_host + 2 * (*effIter),
-                                nEigVecs * sizeof(value_type_t),
-                                hipMemcpyHostToDevice,
-                                stream));
+                               work_host + 2 * (*effIter),
+                               nEigVecs * sizeof(value_type_t),
+                               hipMemcpyHostToDevice,
+                               stream));
 
-  RAFT_CUDA_TRY(hipMemcpyAsync(work_dev,
-                                Z_host,
-                                (*effIter) * nEigVecs * sizeof(value_type_t),
-                                hipMemcpyHostToDevice,
-                                stream));
+  RAFT_CUDA_TRY(hipMemcpyAsync(
+    work_dev, Z_host, (*effIter) * nEigVecs * sizeof(value_type_t), hipMemcpyHostToDevice, stream));
   RAFT_CHECK_CUDA(stream);
 
   // Convert eigenvectors from Lanczos basis to standard basis
@@ -1143,7 +1139,7 @@ int computeLargestEigenvectors(
   RAFT_EXPECTS(restartIter >= nEigVecs, "Invalid restartIter.");
 
   auto hipblas.h = resource::get_cublas_handle(handle);
-  auto stream   = resource::get_cuda_stream(handle);
+  auto stream    = resource::get_cuda_stream(handle);
 
   // -------------------------------------------------------
   // Variable initialization
@@ -1297,17 +1293,17 @@ int computeLargestEigenvectors(
   // Copy results to device memory
   // skip smallest eigenvalue if needed
   RAFT_CUDA_TRY(hipMemcpyAsync(eigVals_dev,
-                                work_host + 2 * (*effIter) + top_eigenparis_idx_offset,
-                                nEigVecs * sizeof(value_type_t),
-                                hipMemcpyHostToDevice,
-                                stream));
+                               work_host + 2 * (*effIter) + top_eigenparis_idx_offset,
+                               nEigVecs * sizeof(value_type_t),
+                               hipMemcpyHostToDevice,
+                               stream));
 
   // skip smallest eigenvector if needed
   RAFT_CUDA_TRY(hipMemcpyAsync(work_dev,
-                                Z_host + (top_eigenparis_idx_offset * (*effIter)),
-                                (*effIter) * nEigVecs * sizeof(value_type_t),
-                                hipMemcpyHostToDevice,
-                                stream));
+                               Z_host + (top_eigenparis_idx_offset * (*effIter)),
+                               (*effIter) * nEigVecs * sizeof(value_type_t),
+                               hipMemcpyHostToDevice,
+                               stream));
 
   RAFT_CHECK_CUDA(stream);
 

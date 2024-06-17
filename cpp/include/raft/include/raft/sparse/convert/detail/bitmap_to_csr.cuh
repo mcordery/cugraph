@@ -24,15 +24,16 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <hip/hip_cooperative_groups.h>
-#include <cooperative_groups/reduce.h>
 #include <thrust/copy.h>
 #include <thrust/functional.h>
 #include <thrust/iterator/discard_iterator.h>
 #include <thrust/reduce.h>
 #include <thrust/sequence.h>
 
+#include <cooperative_groups/reduce.h>
+
 #include <assert.h>
+#include <hip/hip_cooperative_groups.h>
 
 namespace cg = cooperative_groups;
 

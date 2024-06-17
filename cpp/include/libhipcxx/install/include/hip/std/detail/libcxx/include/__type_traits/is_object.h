@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__type_traits/is_array.h"
@@ -28,10 +28,9 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if defined(_LIBCUDACXX_IS_OBJECT) && !defined(_LIBCUDACXX_USE_IS_OBJECT_FALLBACK)
 
-template<class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_object 
-    : public integral_constant<bool, _LIBCUDACXX_IS_OBJECT(_Tp)> 
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_object
+  : public integral_constant<bool, _LIBCUDACXX_IS_OBJECT(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -40,19 +39,19 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_object_v = _LIBCUDACXX_IS_OBJECT(_Tp);
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_object
-    : public integral_constant<bool, is_scalar<_Tp>::value ||
-                                     is_array<_Tp>::value  ||
-                                     is_union<_Tp>::value  ||
-                                     is_class<_Tp>::value  > {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_object
+  : public integral_constant<bool,
+                             is_scalar<_Tp>::value || is_array<_Tp>::value ||
+                               is_union<_Tp>::value || is_class<_Tp>::value> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_object_v = is_object<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_OBJECT) && !defined(_LIBCUDACXX_USE_IS_OBJECT_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_OBJECT) && !defined(_LIBCUDACXX_USE_IS_OBJECT_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_OBJECT_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_OBJECT_H

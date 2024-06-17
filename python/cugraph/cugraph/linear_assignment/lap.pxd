@@ -18,6 +18,7 @@
 
 from cugraph.structure.graph_primtypes cimport *
 
+
 cdef extern from "cugraph/algorithms.hpp" namespace "cugraph":
 
     cdef weight_t hungarian[vertex_t,edge_t,weight_t](

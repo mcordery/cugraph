@@ -14,14 +14,14 @@
 from __future__ import annotations
 
 import logging
+import time
+from typing import TYPE_CHECKING
+
 import torch
 import torch.distributed as td
 import torch.nn.functional as F
 from torchmetrics import Accuracy
 from trainers import Trainer
-import time
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cugraph.gnn import FeatureStore

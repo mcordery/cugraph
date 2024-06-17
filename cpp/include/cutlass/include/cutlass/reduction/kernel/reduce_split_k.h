@@ -34,15 +34,14 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/tensor_ref.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
+#include "cutlass/layout/matrix.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_conversion.h"
-
-#include "cutlass/layout/matrix.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/tensor_ref.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,32 +51,30 @@ namespace kernel {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <
-  typename Shape_,              ///< shape of CTA        (concept: MatrixShape)
-  typename OutputOp_ ,          ///< output operator     (concept: epilogue::thread operator)
-  typename ReductionOp_,        ///< reduction operator  (concept: ReductionOperator)
-  int PartitionsPerStage = 4    ///< number of partitions to issue 
->
+template <typename Shape_,            ///< shape of CTA        (concept: MatrixShape)
+          typename OutputOp_,         ///< output operator     (concept: epilogue::thread operator)
+          typename ReductionOp_,      ///< reduction operator  (concept: ReductionOperator)
+          int PartitionsPerStage = 4  ///< number of partitions to issue
+          >
 class ReduceSplitK {
-public:
-
-  using Shape = Shape_;
-  using ReductionOp = ReductionOp_;
-  using OutputOp = OutputOp_;
-  static int const kElementsPerAccess = OutputOp::kCount;
+ public:
+  using Shape                          = Shape_;
+  using ReductionOp                    = ReductionOp_;
+  using OutputOp                       = OutputOp_;
+  static int const kElementsPerAccess  = OutputOp::kCount;
   static int const kPartitionsPerStage = PartitionsPerStage;
 
-  using ElementWorkspace = typename ReductionOp::Element;
+  using ElementWorkspace   = typename ReductionOp::Element;
   using ElementAccumulator = typename ReductionOp::ElementAccumulator;
-  using ElementOutput = typename OutputOp::ElementOutput;
+  using ElementOutput      = typename OutputOp::ElementOutput;
 
   using WorkspaceTensorRef = TensorRef<ElementWorkspace, layout::RowMajor>;
-  using OutputTensorRef = TensorRef<ElementOutput, layout::RowMajor>;
-  using StrideIndex = typename WorkspaceTensorRef::Layout::Stride::Index;
+  using OutputTensorRef    = TensorRef<ElementOutput, layout::RowMajor>;
+  using StrideIndex        = typename WorkspaceTensorRef::Layout::Stride::Index;
 
-  using FragmentWorkspace = AlignedArray<ElementWorkspace, kElementsPerAccess>;
+  using FragmentWorkspace   = AlignedArray<ElementWorkspace, kElementsPerAccess>;
   using FragmentAccumulator = Array<ElementAccumulator, kElementsPerAccess>;
-  using FragmentOutput = AlignedArray<ElementOutput, kElementsPerAccess>;
+  using FragmentOutput      = AlignedArray<ElementOutput, kElementsPerAccess>;
 
   //
   // Types
@@ -85,7 +82,6 @@ public:
 
   /// Params structure
   struct Params {
-
     MatrixCoord problem_size;
     int partitions;
     size_t partition_stride;
@@ -100,90 +96,78 @@ public:
     //
 
     CUTLASS_HOST_DEVICE
-    Params() { }
+    Params() {}
 
     CUTLASS_HOST_DEVICE
-    Params(
-      MatrixCoord problem_size_,
-      int partitions_,
-      size_t partition_stride_,
-      WorkspaceTensorRef workspace_,
-      OutputTensorRef destination_,
-      OutputTensorRef source_,
-      typename OutputOp::Params output_ = typename OutputOp::Params(),
-      typename ReductionOp::Params reduction_ = typename ReductionOp::Params()
-    ):
-      problem_size(problem_size_),
-      partitions(partitions_),
-      partition_stride(sizeof(FragmentWorkspace) * partition_stride_ / kElementsPerAccess),
-      workspace(workspace_),
-      destination(destination_),
-      source(source_),
-      output(output_),
-      reduction(reduction_) {
-
+    Params(MatrixCoord problem_size_,
+           int partitions_,
+           size_t partition_stride_,
+           WorkspaceTensorRef workspace_,
+           OutputTensorRef destination_,
+           OutputTensorRef source_,
+           typename OutputOp::Params output_       = typename OutputOp::Params(),
+           typename ReductionOp::Params reduction_ = typename ReductionOp::Params())
+      : problem_size(problem_size_),
+        partitions(partitions_),
+        partition_stride(sizeof(FragmentWorkspace) * partition_stride_ / kElementsPerAccess),
+        workspace(workspace_),
+        destination(destination_),
+        source(source_),
+        output(output_),
+        reduction(reduction_)
+    {
     }
   };
 
-  struct SharedStorage { };
+  struct SharedStorage {};
 
-
-public:
-
+ public:
   /// Computes the grid size given a chosen threadblock shape
   CUTLASS_HOST_DEVICE
-  static dim3 grid_shape(
-    cutlass::MatrixCoord problem_size) {
-
-    return dim3(
-      (problem_size.row() + Shape::kRow - 1) / Shape::kRow,
-      (problem_size.column() + Shape::kColumn - 1) / Shape::kColumn);
+  static dim3 grid_shape(cutlass::MatrixCoord problem_size)
+  {
+    return dim3((problem_size.row() + Shape::kRow - 1) / Shape::kRow,
+                (problem_size.column() + Shape::kColumn - 1) / Shape::kColumn);
   }
 
   /// Determines the threadblock shape
   CUTLASS_HOST_DEVICE
-  static dim3 block_shape() {
-    return dim3(Shape::kColumn / kElementsPerAccess, Shape::kRow);
-  }
+  static dim3 block_shape() { return dim3(Shape::kColumn / kElementsPerAccess, Shape::kRow); }
 
   /// Perform a reduction
   CUTLASS_DEVICE
-  void operator()(Params const &params, SharedStorage &storage) {
-
+  void operator()(Params const& params, SharedStorage& storage)
+  {
     // Determine CTA position
     MatrixCoord thread_offset(
       MatrixCoord::Index(int(blockIdx.x) * Shape::kRow + threadIdx.y),
-      MatrixCoord::Index(int(blockIdx.y) * Shape::kColumn + threadIdx.x * kElementsPerAccess)
-    );
+      MatrixCoord::Index(int(blockIdx.y) * Shape::kColumn + threadIdx.x * kElementsPerAccess));
 
     // One guard conditional
-    if (!(thread_offset.row() < params.problem_size.row() && 
+    if (!(thread_offset.row() < params.problem_size.row() &&
           thread_offset.column() < params.problem_size.column())) {
-
       return;
     }
-
 
     ReductionOp reduction_op(params.reduction);
 
     FragmentAccumulator accumulator;
 
-    accumulator.clear();  
-    
+    accumulator.clear();
+
     //
     // Load the first slice
     //
 
-    char const *workspace_ptr = 
-      reinterpret_cast<char const *>(
-        params.workspace.data() + params.workspace.offset(thread_offset));
+    char const* workspace_ptr = reinterpret_cast<char const*>(
+      params.workspace.data() + params.workspace.offset(thread_offset));
 
     FragmentWorkspace workspace_frag[kPartitionsPerStage];
-    
+
     //
     // Construct the output operator
     //
-    
+
     OutputOp output_op(params.output);
 
     //
@@ -192,14 +176,13 @@ public:
 
     CUTLASS_PRAGMA_NO_UNROLL
     for (int k = 0; k < params.partitions; k += kPartitionsPerStage) {
-
       CUTLASS_PRAGMA_UNROLL
       for (int i = 0; i < kPartitionsPerStage; ++i) {
         if (k + i < params.partitions) {
-          workspace_frag[i] = *reinterpret_cast<FragmentWorkspace const *>(workspace_ptr);
+          workspace_frag[i] = *reinterpret_cast<FragmentWorkspace const*>(workspace_ptr);
           workspace_ptr += params.partition_stride;
         }
-      }   
+      }
 
       CUTLASS_PRAGMA_UNROLL
       for (int i = 0; i < kPartitionsPerStage; ++i) {
@@ -217,13 +200,13 @@ public:
 
     source_frag.clear();
 
-    FragmentOutput const *source_ptr = reinterpret_cast<FragmentOutput const *>(
+    FragmentOutput const* source_ptr = reinterpret_cast<FragmentOutput const*>(
       params.source.data() + params.source.offset(thread_offset));
 
     if (output_op.is_source_needed()) {
-      reinterpret_cast<FragmentOutput &>(source_frag) = *source_ptr;
+      reinterpret_cast<FragmentOutput&>(source_frag) = *source_ptr;
     }
-    
+
     //
     // Compute the output
     //
@@ -234,15 +217,15 @@ public:
     // Store
     //
 
-    FragmentOutput *dest_ptr = reinterpret_cast<FragmentOutput *>(
+    FragmentOutput* dest_ptr = reinterpret_cast<FragmentOutput*>(
       params.destination.data() + params.destination.offset(thread_offset));
 
-    *dest_ptr = reinterpret_cast<FragmentOutput const &>(output_frag);
+    *dest_ptr = reinterpret_cast<FragmentOutput const&>(output_frag);
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace reduction
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace reduction
+}  // namespace cutlass

@@ -15,9 +15,8 @@ import os
 
 # to prevent rapids context being created when importing cugraph_dgl
 os.environ["RAPIDS_NO_INITIALIZE"] = "1"
-from cugraph_dgl.cugraph_storage import CuGraphStorage
-from cugraph_dgl.convert import cugraph_storage_from_heterograph
 import cugraph_dgl.dataloading
 import cugraph_dgl.nn
-
 from cugraph_dgl._version import __git_commit__, __version__
+from cugraph_dgl.convert import cugraph_storage_from_heterograph
+from cugraph_dgl.cugraph_storage import CuGraphStorage

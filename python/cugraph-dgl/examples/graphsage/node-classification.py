@@ -15,35 +15,33 @@
 # Example modified from:
 # https://github.com/dmlc/dgl/blob/master/examples/pytorch/graphsage/node_classification.py
 
+import argparse
+import time
+
 # Ignore Warning
 import warnings
-import time
+
 import cugraph_dgl
+import dgl
+import dgl.nn as dglnn
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics.functional as MF
-import dgl
-import dgl.nn as dglnn
-from dgl.data import AsNodePredDataset
-from dgl.dataloading import (
-    DataLoader,
-    NeighborSampler,
-    MultiLayerFullNeighborSampler,
-)
-from ogb.nodeproppred import DglNodePropPredDataset
 import tqdm
-import argparse
+from dgl.data import AsNodePredDataset
+from dgl.dataloading import DataLoader, MultiLayerFullNeighborSampler, NeighborSampler
+from ogb.nodeproppred import DglNodePropPredDataset
 
 warnings.filterwarnings("ignore")
 
 
 def set_allocators():
-    import rmm
     import cudf
     import cupy
-    from rmm.allocators.torch import rmm_torch_allocator
+    import rmm
     from rmm.allocators.cupy import rmm_cupy_allocator
+    from rmm.allocators.torch import rmm_torch_allocator
 
     mr = rmm.mr.CudaAsyncMemoryResource()
     rmm.mr.set_current_device_resource(mr)

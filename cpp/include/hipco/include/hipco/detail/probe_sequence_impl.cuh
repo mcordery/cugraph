@@ -41,6 +41,7 @@
 // #include <hip/hip_cooperative_groups.h>
 
 #include "../../hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
+
 #include <utility>
 
 namespace hipco {
@@ -91,7 +92,7 @@ template <typename Key,
           uint32_t CGSize>
 class probe_sequence_impl_base {
  protected:
-  using value_type         = hipco::pair<Key, Value>;     ///< Type of key/value pairs
+  using value_type         = hipco::pair<Key, Value>;          ///< Type of key/value pairs
   using key_type           = Key;                              ///< Key type
   using mapped_type        = Value;                            ///< Type of mapped values
   using atomic_key_type    = hip::atomic<key_type, Scope>;     ///< Type of atomic keys
@@ -164,7 +165,7 @@ class probe_sequence_impl_base {
  protected:
   iterator slots_;              ///< Pointer to beginning of the hash map slots
   const std::size_t capacity_;  ///< Total number of slots
-};                              // class probe_sequence_impl_base
+};  // class probe_sequence_impl_base
 
 /**
  * @brief Cooperative Groups based Linear probing scheme.
@@ -302,7 +303,7 @@ class linear_probing_impl
 
  private:
   Hash hash_;  ///< The unary callable used to hash the key
-};             // class linear_probing
+};  // class linear_probing
 
 /**
  * @brief Cooperative Groups based double hashing scheme.
@@ -450,7 +451,7 @@ class double_hashing_impl
   Hash1 hash1_;                    ///< The first unary callable used to hash the key
   Hash2 hash2_;                    ///< The second unary callable used to determine step size
   mutable std::size_t step_size_;  ///< The step stride when searching for the next slot
-};                                 // class double_hashing
+};  // class double_hashing
 
 /**
  * @brief (ONLY for benchmarking, not functional!) Probing scheme based on cooperative groups that
@@ -580,7 +581,7 @@ class coalesced_probing_impl
 
  private:
   mutable std::size_t step_size_;  ///< The step stride when searching for the next slot
-};                                 // class coalesced_probing_impl
+};  // class coalesced_probing_impl
 
 /**
  * @brief Probe sequence used internally by hash map.

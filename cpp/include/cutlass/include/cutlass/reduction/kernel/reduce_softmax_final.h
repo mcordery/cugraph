@@ -34,14 +34,14 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
+#include "cutlass/arch/memory.h"
+#include "cutlass/arch/memory_sm75.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
 #include "cutlass/matrix_shape.h"
 #include "cutlass/numeric_conversion.h"
-#include "cutlass/arch/memory.h"
-#include "cutlass/arch/memory_sm75.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -49,20 +49,17 @@ namespace cutlass {
 namespace reduction {
 namespace kernel {
 
-template <
-  typename ElementNorm_,
-  typename ElementSum_,
-  typename ElementSoftmaxCompute_,
-  typename ThreadblockShape_,
-  bool GroupedProblem = false
->
+template <typename ElementNorm_,
+          typename ElementSum_,
+          typename ElementSoftmaxCompute_,
+          typename ThreadblockShape_,
+          bool GroupedProblem = false>
 class ApplySoftmaxFinalReduction {
-public:
-
-  using ElementNorm = ElementNorm_;
-  using ElementSum = ElementSum_;
-  using ElementSoftmaxCompute = ElementSoftmaxCompute_;
-  using ThreadblockShape = ThreadblockShape_;
+ public:
+  using ElementNorm                  = ElementNorm_;
+  using ElementSum                   = ElementSum_;
+  using ElementSoftmaxCompute        = ElementSoftmaxCompute_;
+  using ThreadblockShape             = ThreadblockShape_;
   static const bool isGroupedProblem = GroupedProblem;
 
   //
@@ -70,83 +67,67 @@ public:
   //
 
   struct Arguments {
-
-    cutlass::gemm::GemmCoord*  problem_sizes;
-    cutlass::gemm::GemmCoord   problem_size;
-    ElementNorm*               block_Norm;
-    ElementSum*                block_Sum;
-    int64_t*                   offset_Norm_Device;
-    int64_t*                   offset_Sum_Device;
-    int64_t                    batch_stride_Max;
-    int64_t                    batch_stride_Sum;
+    cutlass::gemm::GemmCoord* problem_sizes;
+    cutlass::gemm::GemmCoord problem_size;
+    ElementNorm* block_Norm;
+    ElementSum* block_Sum;
+    int64_t* offset_Norm_Device;
+    int64_t* offset_Sum_Device;
+    int64_t batch_stride_Max;
+    int64_t batch_stride_Sum;
 
     //
     // Methods
     //
-    Arguments() { }
+    Arguments() {}
 
     // Non-grouped constructor without batching
-    Arguments(
-      cutlass::gemm::GemmCoord  problem_size,
-      ElementNorm*              block_Norm,
-      ElementSum*               block_Sum
-    ):
-      problem_size(problem_size),
-      block_Norm(block_Norm),
-      block_Sum(block_Sum),
-      problem_sizes(nullptr),
-      offset_Norm_Device(nullptr),
-      offset_Sum_Device(nullptr),
-      batch_stride_Max(0),
-      batch_stride_Sum(0)
+    Arguments(cutlass::gemm::GemmCoord problem_size, ElementNorm* block_Norm, ElementSum* block_Sum)
+      : problem_size(problem_size),
+        block_Norm(block_Norm),
+        block_Sum(block_Sum),
+        problem_sizes(nullptr),
+        offset_Norm_Device(nullptr),
+        offset_Sum_Device(nullptr),
+        batch_stride_Max(0),
+        batch_stride_Sum(0)
     {
-
     }
 
     // Non-grouped constructor with batching
-    Arguments(
-      cutlass::gemm::GemmCoord  problem_size,
-      ElementNorm*              block_Norm,
-      ElementSum*               block_Sum,
-      int64_t                   batch_stride_Max,
-      int64_t                   batch_stride_Sum
-    ):
-      problem_size(problem_size),
-      block_Norm(block_Norm),
-      block_Sum(block_Sum),
-      batch_stride_Max(batch_stride_Max),
-      batch_stride_Sum(batch_stride_Sum),
-      problem_sizes(nullptr),
-      offset_Norm_Device(nullptr),
-      offset_Sum_Device(nullptr)
+    Arguments(cutlass::gemm::GemmCoord problem_size,
+              ElementNorm* block_Norm,
+              ElementSum* block_Sum,
+              int64_t batch_stride_Max,
+              int64_t batch_stride_Sum)
+      : problem_size(problem_size),
+        block_Norm(block_Norm),
+        block_Sum(block_Sum),
+        batch_stride_Max(batch_stride_Max),
+        batch_stride_Sum(batch_stride_Sum),
+        problem_sizes(nullptr),
+        offset_Norm_Device(nullptr),
+        offset_Sum_Device(nullptr)
     {
-
     }
-
 
     // Grouped constructor
-    Arguments(
-      cutlass::gemm::GemmCoord  *problem_sizes,
-      ElementNorm*              block_Norm,
-      ElementSum*               block_Sum,
-      int64_t*                  offset_Norm_Device,
-      int64_t*                  offset_Sum_Device
-    ):
-      problem_sizes(problem_sizes),
-      problem_size(cutlass::gemm::GemmCoord(0, 0, 0)),
-      block_Norm(block_Norm),
-      block_Sum(block_Sum),
-      offset_Norm_Device(offset_Norm_Device),
-      offset_Sum_Device(offset_Sum_Device)
+    Arguments(cutlass::gemm::GemmCoord* problem_sizes,
+              ElementNorm* block_Norm,
+              ElementSum* block_Sum,
+              int64_t* offset_Norm_Device,
+              int64_t* offset_Sum_Device)
+      : problem_sizes(problem_sizes),
+        problem_size(cutlass::gemm::GemmCoord(0, 0, 0)),
+        block_Norm(block_Norm),
+        block_Sum(block_Sum),
+        offset_Norm_Device(offset_Norm_Device),
+        offset_Sum_Device(offset_Sum_Device)
     {
-
     }
   };
 
-  struct SharedStorage {
-
-
-  };
+  struct SharedStorage {};
 
   //
   // Params struct
@@ -158,73 +139,71 @@ public:
     //
     // Methods
     //
-    Params() { }
+    Params() {}
 
-    Params(Arguments const &args_): args(args_) { }
+    Params(Arguments const& args_) : args(args_) {}
   };
 
-private:
-
-public:
+ private:
+ public:
+  CUTLASS_DEVICE
+  ApplySoftmaxFinalReduction() {}
 
   CUTLASS_DEVICE
-  ApplySoftmaxFinalReduction() { }
-
-  CUTLASS_DEVICE
-  void operator()(Params const &params, SharedStorage &shared_storage) {
-
+  void operator()(Params const& params, SharedStorage& shared_storage)
+  {
     apply(params, shared_storage);
   }
 
-private:
-
+ private:
   /// Full reduction
   CUTLASS_DEVICE
-  void apply(Params const &params, SharedStorage &shared_storage) {
-
-    int tid = threadIdx.x;
-    int bid = blockIdx.x;
+  void apply(Params const& params, SharedStorage& shared_storage)
+  {
+    int tid  = threadIdx.x;
+    int bid  = blockIdx.x;
     int bdim = blockDim.x;
-    
+
     int block_batch = blockIdx.z;
 
     // defining three vars for a general reduction module
-    cutlass::gemm::GemmCoord problem_size = isGroupedProblem ? params.args.problem_sizes[bid] : params.args.problem_size;
+    cutlass::gemm::GemmCoord problem_size =
+      isGroupedProblem ? params.args.problem_sizes[bid] : params.args.problem_size;
     int m_dim_in_loop = isGroupedProblem ? problem_size.m() : tid + bdim;
     int access_offset = isGroupedProblem ? 0 : bid * bdim;
 
     if (!isGroupedProblem && access_offset + tid >= problem_size.m()) return;
 
-    ElementNorm *curr_ptr_Max = isGroupedProblem ? \
-              params.args.block_Norm + params.args.offset_Norm_Device[bid] : \
-              params.args.block_Norm + block_batch * params.args.batch_stride_Max;
-    ElementSum *curr_ptr_Sum = isGroupedProblem ? \
-              params.args.block_Sum + params.args.offset_Sum_Device[bid] : \
-              params.args.block_Sum + block_batch * params.args.batch_stride_Sum;
+    ElementNorm* curr_ptr_Max =
+      isGroupedProblem ? params.args.block_Norm + params.args.offset_Norm_Device[bid]
+                       : params.args.block_Norm + block_batch * params.args.batch_stride_Max;
+    ElementSum* curr_ptr_Sum =
+      isGroupedProblem ? params.args.block_Sum + params.args.offset_Sum_Device[bid]
+                       : params.args.block_Sum + block_batch * params.args.batch_stride_Sum;
 
     int threadblock_num = (problem_size.n() + ThreadblockShape::kN - 1) / ThreadblockShape::kN;
 
-    using ConvertSumOutput = cutlass::NumericConverter<ElementSum, ElementSoftmaxCompute>;
+    using ConvertSumOutput  = cutlass::NumericConverter<ElementSum, ElementSoftmaxCompute>;
     using ConvertNormOutput = cutlass::NumericConverter<ElementNorm, ElementSoftmaxCompute>;
 
-    using ConvertSum = cutlass::NumericConverter<ElementSoftmaxCompute, ElementSum>;
+    using ConvertSum  = cutlass::NumericConverter<ElementSoftmaxCompute, ElementSum>;
     using ConvertNorm = cutlass::NumericConverter<ElementSoftmaxCompute, ElementNorm>;
 
-    ConvertSum   convert_sum;
-    ConvertNorm  convert_norm;
+    ConvertSum convert_sum;
+    ConvertNorm convert_norm;
 
-    ConvertSumOutput   convert_sum_output;
-    ConvertNormOutput  convert_norm_output;
+    ConvertSumOutput convert_sum_output;
+    ConvertNormOutput convert_norm_output;
 
     uint32_t float_max_bits = 0xff7fffff;
-    float min_float = reinterpret_cast<float const &>(float_max_bits);
+    float min_float         = reinterpret_cast<float const&>(float_max_bits);
 
     CUTLASS_PRAGMA_UNROLL
     for (int idx_m = tid; idx_m < m_dim_in_loop; idx_m += bdim) {
-      ElementNorm *access_n = curr_ptr_Max + idx_m + access_offset;
-      ElementSum *access_s = curr_ptr_Sum + idx_m + access_offset;
-      ElementNorm *access_n_bak = access_n;
-      ElementSum *access_s_bak = access_s;
+      ElementNorm* access_n         = curr_ptr_Max + idx_m + access_offset;
+      ElementSum* access_s          = curr_ptr_Sum + idx_m + access_offset;
+      ElementNorm* access_n_bak     = access_n;
+      ElementSum* access_s_bak      = access_s;
       ElementSoftmaxCompute max_val = ElementSoftmaxCompute(min_float);
       ElementSoftmaxCompute sum_val = ElementSoftmaxCompute(0);
       ElementNorm fetch_n;
@@ -256,12 +235,11 @@ private:
       access_n[0] = convert_norm_output(max_val);
       access_s[0] = convert_sum_output(inv_sum);
     }
-
   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace kernel
-} // namespace reduction
-} // namespace cutlass
+}  // namespace kernel
+}  // namespace reduction
+}  // namespace cutlass

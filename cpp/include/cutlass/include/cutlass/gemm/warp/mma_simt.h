@@ -34,17 +34,15 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
-#include "cutlass/numeric_types.h"
-#include "cutlass/matrix_shape.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
-#include "cutlass/gemm/warp/mma.h"
-
 #include "cutlass/gemm/thread/mma.h"
-
-#include "cutlass/gemm/warp/mma_simt_tile_iterator.h"
+#include "cutlass/gemm/warp/mma.h"
 #include "cutlass/gemm/warp/mma_simt_policy.h"
+#include "cutlass/gemm/warp/mma_simt_tile_iterator.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,10 +77,9 @@ template <
   /// Complex transformation on operand B
   ComplexTransform TransformB = ComplexTransform::kNone,
   /// Used for partial specialization
-  typename Enable = bool
->
+  typename Enable = bool>
 class MmaSimt {
-public:
+ public:
   /// Shape of warp-level matrix operation (concept: GemmShape)
   using Shape = Shape_;
 
@@ -120,64 +117,60 @@ public:
   static ComplexTransform const kTransformB = TransformB;
 
   /// Layout of threads
-  using ThreadLayoutA = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutA >::value,
-                  layout::ColumnMajor,
-                  typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutA >::value,
-                      layout::RowMajor,
-                      LayoutA>::type
-                 >::type;
-  
-  using ThreadLayoutB = typename platform::conditional< platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutB >::value,
-                  layout::ColumnMajor,
-                  typename platform::conditional < platform::is_same< layout::RowMajorInterleaved<4>, LayoutB >::value,
-                      layout::RowMajor,
-                      LayoutB>::type
-                 >::type;
+  using ThreadLayoutA = typename platform::conditional<
+    platform::is_same<layout::ColumnMajorInterleaved<4>, LayoutA>::value,
+    layout::ColumnMajor,
+    typename platform::conditional<
+      platform::is_same<layout::RowMajorInterleaved<4>, LayoutA>::value,
+      layout::RowMajor,
+      LayoutA>::type>::type;
 
-  static constexpr bool use_dp4a = (platform::is_same< layout::ColumnMajorInterleaved<4>, LayoutA>::value || 
-                                    platform::is_same< layout::RowMajorInterleaved<4>, LayoutA >::value) && 
-                                    platform::is_same< ElementA, int8_t >::value && 
-                                    platform::is_same< ElementB, int8_t >::value;
+  using ThreadLayoutB = typename platform::conditional<
+    platform::is_same<layout::ColumnMajorInterleaved<4>, LayoutB>::value,
+    layout::ColumnMajor,
+    typename platform::conditional<
+      platform::is_same<layout::RowMajorInterleaved<4>, LayoutB>::value,
+      layout::RowMajor,
+      LayoutB>::type>::type;
 
-  using dp4a_type = typename platform::conditional< use_dp4a , int8_t, bool >::type;
+  static constexpr bool use_dp4a =
+    (platform::is_same<layout::ColumnMajorInterleaved<4>, LayoutA>::value ||
+     platform::is_same<layout::RowMajorInterleaved<4>, LayoutA>::value) &&
+    platform::is_same<ElementA, int8_t>::value && platform::is_same<ElementB, int8_t>::value;
+
+  using dp4a_type = typename platform::conditional<use_dp4a, int8_t, bool>::type;
 
   /// Thread-level matrix multiply accumulate operator
-  using ThreadMma = thread::Mma<
-    GemmShape<
-      Shape::kM / Policy::WarpShape::kRow,
-      Shape::kN / Policy::WarpShape::kColumn,
-      Policy::LaneMmaShape::kK>,
-    ElementA,
-    ThreadLayoutA,
-    ElementB,
-    ThreadLayoutB,
-    ElementC,
-    LayoutC,
-    arch::OpMultiplyAdd,
-    dp4a_type
-  >;
+  using ThreadMma = thread::Mma<GemmShape<Shape::kM / Policy::WarpShape::kRow,
+                                          Shape::kN / Policy::WarpShape::kColumn,
+                                          Policy::LaneMmaShape::kK>,
+                                ElementA,
+                                ThreadLayoutA,
+                                ElementB,
+                                ThreadLayoutB,
+                                ElementC,
+                                LayoutC,
+                                arch::OpMultiplyAdd,
+                                dp4a_type>;
 
   /// Underlying matrix multiply operator (concept: arch::Mma)
   using ArchMmaOperator = typename ThreadMma::ArchMmaOperator;
 
-  /// Indicates math operator 
+  /// Indicates math operator
   using MathOperator = typename ArchMmaOperator::Operator;
-  
+
   /// Shape of the underlying instruction
-  using InstructionShape = GemmShape<1,1,use_dp4a ? 4 : 1>;
+  using InstructionShape = GemmShape<1, 1, use_dp4a ? 4 : 1>;
 
-public:
-
+ public:
   /// Iterates over the A operand in memory
-  using IteratorA = MmaSimtTileIterator<
-    MatrixShape<Shape::kM, Policy::LaneMmaShape::kK>,
-    Operand::kA,
-    ElementA,
-    LayoutA,
-    Policy,
-    PartitionsK,
-    Shape::kK
-  >;
+  using IteratorA = MmaSimtTileIterator<MatrixShape<Shape::kM, Policy::LaneMmaShape::kK>,
+                                        Operand::kA,
+                                        ElementA,
+                                        LayoutA,
+                                        Policy,
+                                        PartitionsK,
+                                        Shape::kK>;
 
   /// Storage for A tile
   using FragmentA = typename IteratorA::Fragment;
@@ -186,15 +179,13 @@ public:
   using TransformedFragmentA = FragmentA;
 
   /// Iterates over the B operand in memory
-  using IteratorB = MmaSimtTileIterator<
-    MatrixShape<Policy::LaneMmaShape::kK, Shape::kN>,
-    Operand::kB,
-    ElementB,
-    LayoutB,
-    Policy,
-    PartitionsK,
-    Shape::kK
-  >;
+  using IteratorB = MmaSimtTileIterator<MatrixShape<Policy::LaneMmaShape::kK, Shape::kN>,
+                                        Operand::kB,
+                                        ElementB,
+                                        LayoutB,
+                                        Policy,
+                                        PartitionsK,
+                                        Shape::kK>;
 
   /// Storage for B tile
   using FragmentB = typename IteratorB::Fragment;
@@ -203,19 +194,13 @@ public:
   using TransformedFragmentB = FragmentB;
 
   /// Iterates over the C operand in memory
-  using IteratorC = MmaSimtTileIterator<
-    MatrixShape<Shape::kM, Shape::kN>,
-    Operand::kC,
-    ElementC,
-    LayoutC,
-    Policy
-  >;
+  using IteratorC =
+    MmaSimtTileIterator<MatrixShape<Shape::kM, Shape::kN>, Operand::kC, ElementC, LayoutC, Policy>;
 
   /// Storage for C tile
   using FragmentC = typename ThreadMma::FragmentC;
 
-public:
-
+ public:
   //
   // Methods
   //
@@ -227,11 +212,8 @@ public:
   /// Performs a warp-level matrix multiply-accumulate operation
   CUTLASS_DEVICE
   void operator()(
-    FragmentC &d, 
-    FragmentA a, 
-    FragmentB b, 
-    FragmentC const &c, int group_idx = 0) const {
-
+    FragmentC& d, FragmentA a, FragmentB b, FragmentC const& c, int group_idx = 0) const
+  {
     ThreadMma mma;
 
     if (kTransformA == ComplexTransform::kConjugate) {
@@ -249,9 +231,12 @@ public:
 
   /// Transform the mma operands to the required types
   CUTLASS_DEVICE
-  void transform(TransformedFragmentA &dst_A, TransformedFragmentB &dst_B,
-                 FragmentA const &A, FragmentB const &B) const {
-    //TODO: Implement this
+  void transform(TransformedFragmentA& dst_A,
+                 TransformedFragmentB& dst_B,
+                 FragmentA const& A,
+                 FragmentB const& B) const
+  {
+    // TODO: Implement this
     dst_A = A;
     dst_B = B;
   }
@@ -259,6 +244,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace gemm
+}  // namespace cutlass

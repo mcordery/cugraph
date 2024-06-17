@@ -15,36 +15,23 @@
 # cython: language_level = 3
 
 from libc.stdint cimport uintptr_t
-
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
 from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
     cugraph_type_erased_device_array_view_create,
     cugraph_type_erased_device_array_view_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
+    cugraph_type_erased_device_array_view_t,
 )
 from pylibcugraph._cugraph_c.centrality_algorithms cimport (
+    cugraph_centrality_result_free,
+    cugraph_centrality_result_get_values,
+    cugraph_centrality_result_get_vertices,
     cugraph_centrality_result_t,
     cugraph_katz_centrality,
-    cugraph_centrality_result_get_vertices,
-    cugraph_centrality_result_get_values,
-    cugraph_centrality_result_free,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
     assert_success,
     copy_to_cupy_array,

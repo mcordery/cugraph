@@ -34,12 +34,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/tensor_ref.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/tensor_ref.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -50,25 +50,20 @@ namespace thread {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Mixed-precision reduction
-template <
-  typename ElementAccumulator_,
-  typename Element_,
-  int Count = 1
->
+template <typename ElementAccumulator_, typename Element_, int Count = 1>
 struct ReduceAdd {
-
   //
   // Type definitions
   //
 
   using ElementAccumulator = ElementAccumulator_;
-  using Element = Element_;
-  static int const kCount = Count;
+  using Element            = Element_;
+  static int const kCount  = Count;
 
   using FragmentAccumulator = cutlass::Array<ElementAccumulator, kCount>;
-  using FragmentElement = cutlass::Array<Element, kCount>;
+  using FragmentElement     = cutlass::Array<Element, kCount>;
 
-  struct Params { };
+  struct Params {};
 
   //
   // Data members
@@ -83,21 +78,19 @@ struct ReduceAdd {
 
   /// Constructor
   CUTLASS_HOST_DEVICE
-  ReduceAdd(Params params_ = Params()): params(params_) { }
+  ReduceAdd(Params params_ = Params()) : params(params_) {}
 
   /// Operator
   CUTLASS_HOST_DEVICE
-  FragmentAccumulator operator()(
-    FragmentAccumulator accumulator, 
-    FragmentElement element) const {
-
+  FragmentAccumulator operator()(FragmentAccumulator accumulator, FragmentElement element) const
+  {
     plus<FragmentAccumulator> op;
 
-    NumericArrayConverter<
-      ElementAccumulator, 
-      Element, 
-      kCount, 
-      PreferredRoundingMode<ElementAccumulator, Element>::kRound> converter;
+    NumericArrayConverter<ElementAccumulator,
+                          Element,
+                          kCount,
+                          PreferredRoundingMode<ElementAccumulator, Element>::kRound>
+      converter;
 
     return op(accumulator, converter(element));
   }
@@ -110,15 +103,13 @@ namespace detail {
 /// Special handling for binary operators
 template <typename ReductionOp, typename Element, int N>
 struct VectorizeArrayOperation {
-
   using ValueType = Array<Element, N>;
 
   CUTLASS_HOST_DEVICE
-  ValueType operator()(
-    ReductionOp const &reduction_op, 
-    ValueType const &lhs, 
-    ValueType const &rhs) const {
-
+  ValueType operator()(ReductionOp const& reduction_op,
+                       ValueType const& lhs,
+                       ValueType const& rhs) const
+  {
     ValueType result;
 
     CUTLASS_PRAGMA_UNROLL
@@ -134,14 +125,11 @@ struct VectorizeArrayOperation {
 
 template <typename ReductionOp, typename Element, int N>
 struct ReduceArrayOperation {
-
   using ArrayType = Array<Element, N>;
 
   CUTLASS_HOST_DEVICE
-  Element operator()(
-    ReductionOp const &reduction_op, 
-    ArrayType const &array) const {
-
+  Element operator()(ReductionOp const& reduction_op, ArrayType const& array) const
+  {
     Element item = reduction_op(array[0], array[1]);
 
     CUTLASS_PRAGMA_UNROLL
@@ -155,21 +143,18 @@ struct ReduceArrayOperation {
 
 template <int N>
 struct ReduceArrayOperation<logical_and<uint1b_t>, uint1b_t, N> {
-
   using ArrayType = Array<uint1b_t, N>;
 
   CUTLASS_HOST_DEVICE
-  uint1b_t operator()(
-    logical_and<uint1b_t> const &reduction_op, 
-    ArrayType const &array) const {
-
-    uint8_t const *ptr = reinterpret_cast<uint8_t const *>(&array);
-    bool item = false;
+  uint1b_t operator()(logical_and<uint1b_t> const& reduction_op, ArrayType const& array) const
+  {
+    uint8_t const* ptr = reinterpret_cast<uint8_t const*>(&array);
+    bool item          = false;
 
     CUTLASS_PRAGMA_UNROLL
     for (int byte = 0; byte < (N + 7) / 8; ++byte) {
       uint8_t bits = ptr[byte];
-      item = (item || !bits);
+      item         = (item || !bits);
     }
 
     return uint1b_t(!item);
@@ -178,21 +163,18 @@ struct ReduceArrayOperation<logical_and<uint1b_t>, uint1b_t, N> {
 
 template <int N>
 struct ReduceArrayOperation<logical_or<uint1b_t>, uint1b_t, N> {
-
   using ArrayType = Array<uint1b_t, N>;
 
   CUTLASS_HOST_DEVICE
-  uint1b_t operator()(
-    logical_and<uint1b_t> const &reduction_op, 
-    ArrayType const &array) const {
-
-    uint8_t const *ptr = reinterpret_cast<uint8_t const *>(&array);
-    bool item = true;
+  uint1b_t operator()(logical_and<uint1b_t> const& reduction_op, ArrayType const& array) const
+  {
+    uint8_t const* ptr = reinterpret_cast<uint8_t const*>(&array);
+    bool item          = true;
 
     CUTLASS_PRAGMA_UNROLL
     for (int byte = 0; byte < (N + 7) / 8; ++byte) {
       uint8_t bits = ptr[byte];
-      item = (item || bits);
+      item         = (item || bits);
     }
 
     return uint1b_t(item);
@@ -203,12 +185,10 @@ struct ReduceArrayOperation<logical_or<uint1b_t>, uint1b_t, N> {
 
 /// Helper function to infer template argument types
 template <typename ReductionOp, typename Element, int N>
-CUTLASS_HOST_DEVICE
-Array<Element, N> ApplyArrayOperator(
-  ReductionOp const &reduction_op,
-  Array<Element, N> const &lhs, 
-  Array<Element, N> const &rhs) {
-
+CUTLASS_HOST_DEVICE Array<Element, N> ApplyArrayOperator(ReductionOp const& reduction_op,
+                                                         Array<Element, N> const& lhs,
+                                                         Array<Element, N> const& rhs)
+{
   VectorizeArrayOperation<ReductionOp, Element, N> vectorize_op;
 
   return vectorize_op(reduction_op, lhs, rhs);
@@ -216,7 +196,8 @@ Array<Element, N> ApplyArrayOperator(
 
 /// Helper to reduce an array
 template <typename ReductionOp, typename Element, int N>
-Element ReduceArray(ReductionOp const &reduction_op, Array<Element, N> const &array) {
+Element ReduceArray(ReductionOp const& reduction_op, Array<Element, N> const& array)
+{
   ReduceArrayOperation<ReductionOp, Element, N> reduce_array_op;
 
   return reduce_array_op(reduction_op, array);
@@ -224,12 +205,12 @@ Element ReduceArray(ReductionOp const &reduction_op, Array<Element, N> const &ar
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace detail
+}  // namespace detail
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace reduction
-} // namespace cutlass
+}  // namespace thread
+}  // namespace reduction
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/integral_constant.h"
 #include "../__type_traits/is_fundamental.h"
@@ -25,10 +25,9 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if defined(_LIBCUDACXX_IS_COMPOUND) && !defined(_LIBCUDACXX_USE_IS_COMPOUND_FALLBACK)
 
-template<class _Tp>
-struct _LIBCUDACXX_TEMPLATE_VIS is_compound 
-    : public integral_constant<bool, _LIBCUDACXX_IS_COMPOUND(_Tp)>
-    {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_compound
+  : public integral_constant<bool, _LIBCUDACXX_IS_COMPOUND(_Tp)> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
@@ -37,16 +36,17 @@ _LIBCUDACXX_INLINE_VAR constexpr bool is_compound_v = _LIBCUDACXX_IS_COMPOUND(_T
 
 #else
 
-template <class _Tp> struct _LIBCUDACXX_TEMPLATE_VIS is_compound
-    : public integral_constant<bool, !is_fundamental<_Tp>::value> {};
+template <class _Tp>
+struct _LIBCUDACXX_TEMPLATE_VIS is_compound
+  : public integral_constant<bool, !is_fundamental<_Tp>::value> {};
 
 #if _LIBCUDACXX_STD_VER > 11 && !defined(_LIBCUDACXX_HAS_NO_VARIABLE_TEMPLATES)
 template <class _Tp>
 _LIBCUDACXX_INLINE_VAR constexpr bool is_compound_v = is_compound<_Tp>::value;
 #endif
 
-#endif // defined(_LIBCUDACXX_IS_COMPOUND) && !defined(_LIBCUDACXX_USE_IS_COMPOUND_FALLBACK)
+#endif  // defined(_LIBCUDACXX_IS_COMPOUND) && !defined(_LIBCUDACXX_USE_IS_COMPOUND_FALLBACK)
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_COMPOUND_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_COMPOUND_H

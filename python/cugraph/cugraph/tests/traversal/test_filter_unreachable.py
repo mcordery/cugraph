@@ -14,12 +14,12 @@
 import gc
 import time
 
-import pytest
-import numpy as np
 import networkx as nx
+import numpy as np
+import pytest
+from cugraph.testing import DEFAULT_DATASETS
 
 import cugraph
-from cugraph.testing import DEFAULT_DATASETS
 
 
 # =============================================================================

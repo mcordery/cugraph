@@ -11,14 +11,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pandas as pd
 import cupy as cp
 import numpy as np
-
+import pandas as pd
 import pytest
-
 from pylibcugraph.testing import utils
-
 
 # Spoof the gpubenchmark fixture if it's not available so that asvdb and
 # rapids-pytest-benchmark do not need to be installed to run tests.
@@ -125,11 +122,7 @@ def create_SGGraph(device_srcs, device_dsts, device_weights, transposed=False):
     Creates and returns a SGGraph instance and the corresponding ResourceHandle
     using the parameters passed in.
     """
-    from pylibcugraph import (
-        SGGraph,
-        ResourceHandle,
-        GraphProperties,
-    )
+    from pylibcugraph import GraphProperties, ResourceHandle, SGGraph
 
     resource_handle = ResourceHandle()
     graph_props = GraphProperties(is_symmetric=False, is_multigraph=False)

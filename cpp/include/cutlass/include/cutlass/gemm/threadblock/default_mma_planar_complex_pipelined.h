@@ -29,17 +29,16 @@
  *
  **************************************************************************************************/
 /*! \file
-  \brief 
+  \brief
 */
 
 #pragma once
 
 #include "cutlass/cutlass.h"
-#include "cutlass/transform/threadblock/predicated_tile_iterator.h"
-
-#include "cutlass/gemm/warp/mma_planar_complex.h"
 #include "cutlass/gemm/threadblock/default_mma.h"
 #include "cutlass/gemm/threadblock/mma_planar_complex_pipelined.h"
+#include "cutlass/gemm/warp/mma_planar_complex.h"
+#include "cutlass/transform/threadblock/predicated_tile_iterator.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -83,48 +82,42 @@ template <
   /// Complex transformation on operand B
   ComplexTransform TransformB = ComplexTransform::kNone,
   /// Math operator tag (e.g. arch::OpMultiplyAdd)
-  typename Operator = arch::OpMultiplyAdd
->
+  typename Operator = arch::OpMultiplyAdd>
 struct DefaultMmaPlanarComplexPipelined {
-
   // Construct a planar complex variant from the real-valued variant
-  using RealMma = typename DefaultMma<
-    ElementA_,
-    LayoutA_,
-    kAlignmentA,
-    ElementB_,
-    LayoutB_,
-    kAlignmentB,
-    ElementAccumulator_,
-    LayoutC_,
-    OperatorClass_,
-    ArchTag_,
-    ThreadblockShape_,
-    WarpShape_,
-    InstructionShape_,
-    Stages,
-    Operator
-  >::ThreadblockMma;
+  using RealMma = typename DefaultMma<ElementA_,
+                                      LayoutA_,
+                                      kAlignmentA,
+                                      ElementB_,
+                                      LayoutB_,
+                                      kAlignmentB,
+                                      ElementAccumulator_,
+                                      LayoutC_,
+                                      OperatorClass_,
+                                      ArchTag_,
+                                      ThreadblockShape_,
+                                      WarpShape_,
+                                      InstructionShape_,
+                                      Stages,
+                                      Operator>::ThreadblockMma;
 
-  using ThreadblockMma = MmaPlanarComplexPipelined<
-    ThreadblockShape_,
-    typename RealMma::IteratorA,
-    typename RealMma::SmemIteratorA,
-    typename RealMma::IteratorB,
-    typename RealMma::SmemIteratorB,
-    ElementAccumulator_,
-    LayoutC_,
-    typename RealMma::Policy,
-    Stages,
-    TransformA,
-    TransformB
-  >;
+  using ThreadblockMma = MmaPlanarComplexPipelined<ThreadblockShape_,
+                                                   typename RealMma::IteratorA,
+                                                   typename RealMma::SmemIteratorA,
+                                                   typename RealMma::IteratorB,
+                                                   typename RealMma::SmemIteratorB,
+                                                   ElementAccumulator_,
+                                                   LayoutC_,
+                                                   typename RealMma::Policy,
+                                                   Stages,
+                                                   TransformA,
+                                                   TransformB>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace gemm
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

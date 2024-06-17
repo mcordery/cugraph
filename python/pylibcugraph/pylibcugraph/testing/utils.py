@@ -12,8 +12,8 @@
 # limitations under the License.
 
 import os
-from pathlib import Path
 from itertools import product
+from pathlib import Path
 
 import pytest
 
@@ -108,7 +108,7 @@ def gen_fixture_params_product(*args):
     paramLists = []
     ids = []
     paramType = pytest.param().__class__
-    for (paramList, paramId) in args:
+    for paramList, paramId in args:
         paramListCopy = paramList[:]  # do not modify the incoming lists!
         for i in range(len(paramList)):
             if not isinstance(paramList[i], paramType):
@@ -121,7 +121,7 @@ def gen_fixture_params_product(*args):
         values = [p.values[0] for p in paramCombo]
         marks = [m for p in paramCombo for m in p.marks]
         id_strings = []
-        for (p, paramId) in zip(paramCombo, ids):
+        for p, paramId in zip(paramCombo, ids):
             # Assume paramId is either a string or a callable
             if isinstance(paramId, str):
                 id_strings.append("%s:%s" % (paramId, p.values[0]))

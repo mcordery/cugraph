@@ -18,6 +18,7 @@ except ModuleNotFoundError:
     pytest.skip("cugraph_dgl not available", allow_module_level=True)
 
 from cugraph.utilities.utils import import_optional
+
 from .utils import (
     assert_same_edge_feats,
     assert_same_node_feats,

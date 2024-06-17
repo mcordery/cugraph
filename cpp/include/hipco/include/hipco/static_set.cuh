@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include <thrust/functional.h>
+
 #include <hipco/cuda_stream_ref.hpp>
 #include <hipco/detail/open_addressing/open_addressing_impl.cuh>
 #include <hipco/extent.cuh>
@@ -44,18 +46,16 @@
 #include <hipco/utility/allocator.hpp>
 #include <hipco/utility/traits.hpp>
 
-#include <thrust/functional.h>
-
 #include <hip/atomic>
 
 #if defined(HIPCO_HAS_CUDA_BARRIER)
 #include <hip/barrier>
 #endif
 
+#include "../hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
+
 #include <cstddef>
 #include <type_traits>
-
-#include "../hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh"
 
 namespace hipco {
 // Todo(HIP): Remove once we have the CG workaround implemented in ROCm
@@ -82,9 +82,9 @@ namespace experimental {
  * construction.
  *
  * @note Allows constant time concurrent modify or lookup operations from threads in device code.
- * @note hipCollections data stuctures always place the slot keys on the left-hand side when invoking
- * the key comparison predicate, i.e., `pred(slot_key, query_key)`. Order-sensitive `KeyEqual`
- * should be used with caution.
+ * @note hipCollections data stuctures always place the slot keys on the left-hand side when
+ * invoking the key comparison predicate, i.e., `pred(slot_key, query_key)`. Order-sensitive
+ * `KeyEqual` should be used with caution.
  * @note `ProbingScheme::cg_size` indicates how many threads are used to handle one independent
  * device operation. `cg_size == 1` uses the scalar (or non-CG) code paths.
  *
@@ -105,13 +105,13 @@ namespace experimental {
 #define HIPCO_STATIC_SET_CG_SIZE 1  // CG size, default for NVIDIA: 4
 #endif
 template <class Key,
-          class Extent             = hipco::experimental::extent<std::size_t>,
+          class Extent            = hipco::experimental::extent<std::size_t>,
           hip::thread_scope Scope = hip::thread_scope_device,
-          class KeyEqual           = thrust::equal_to<Key>,
-          class ProbingScheme      = experimental::double_hashing<HIPCO_STATIC_SET_CG_SIZE,  // CG size
+          class KeyEqual          = thrust::equal_to<Key>,
+          class ProbingScheme = experimental::double_hashing<HIPCO_STATIC_SET_CG_SIZE,  // CG size
                                                              hipco::default_hash_function<Key>>,
-          class Allocator          = hipco::cuda_allocator<Key>,
-          class Storage            = hipco::experimental::storage<1>>
+          class Allocator     = hipco::cuda_allocator<Key>,
+          class Storage       = hipco::experimental::storage<1>>
 class static_set {
   using impl_type = detail::
     open_addressing_impl<Key, Key, Extent, Scope, KeyEqual, ProbingScheme, Allocator, Storage>;
@@ -134,13 +134,13 @@ class static_set {
   template <typename... Operators>
   using ref_type =
     hipco::experimental::static_set_ref<key_type,
-                                       thread_scope,
-                                       key_equal,
-                                       probing_scheme_type,
-                                       storage_ref_type,
-                                       Operators...>;  ///< Non-owning container ref type
+                                        thread_scope,
+                                        key_equal,
+                                        probing_scheme_type,
+                                        storage_ref_type,
+                                        Operators...>;  ///< Non-owning container ref type
 
-  static_set(static_set const&) = delete;
+  static_set(static_set const&)            = delete;
   static_set& operator=(static_set const&) = delete;
 
   static_set(static_set&&) = default;  ///< Move constructor

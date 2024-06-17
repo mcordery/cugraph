@@ -44,32 +44,32 @@ namespace arch {
 /// Dot product operator - specialized for int32_t <- (int8_t * int8_t) x 4 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int8_t, 4> const &a, Array<int8_t, 4> const &b, int32_t accum) {
-
+int32_t dot(Array<int8_t, 4> const& a, Array<int8_t, 4> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint8_t * int8_t) x 4 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint8_t, 4> const &a, Array<int8_t, 4> const &b, int32_t accum) {
-
+int32_t dot(Array<uint8_t, 4> const& a, Array<int8_t, 4> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (int8_t * uint8_t) x 4 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int8_t, 4> const &a, Array<uint8_t, 4> const &b, int32_t accum) {
-
+int32_t dot(Array<int8_t, 4> const& a, Array<uint8_t, 4> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint8_t * uint8_t) x 4 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint8_t, 4> const &a, Array<uint8_t, 4> const &b, int32_t accum) {
-
+int32_t dot(Array<uint8_t, 4> const& a, Array<uint8_t, 4> const& b, int32_t accum)
+{
   return accum;
 }
 
@@ -78,32 +78,32 @@ int32_t dot(Array<uint8_t, 4> const &a, Array<uint8_t, 4> const &b, int32_t accu
 /// Dot product operator - specialized for int32_t <- (int16_t * int8_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int16_t, 2> const &a, Array<int8_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<int16_t, 2> const& a, Array<int8_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint16_t * int8_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint16_t, 2> const &a, Array<int8_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<uint16_t, 2> const& a, Array<int8_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (int16_t * int8_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int16_t, 2> const &a, Array<uint8_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<int16_t, 2> const& a, Array<uint8_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint16_t * int8_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint16_t, 2> const &a, Array<uint8_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<uint16_t, 2> const& a, Array<uint8_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
@@ -112,36 +112,36 @@ int32_t dot(Array<uint16_t, 2> const &a, Array<uint8_t, 2> const &b, int32_t acc
 /// Dot product operator - specialized for int32_t <- (int16_t * int16_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int16_t, 2> const &a, Array<int16_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<int16_t, 2> const& a, Array<int16_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint16_t * int16_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint16_t, 2> const &a, Array<int16_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<uint16_t, 2> const& a, Array<int16_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (int16_t * int16_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<int16_t, 2> const &a, Array<uint16_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<int16_t, 2> const& a, Array<uint16_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /// Dot product operator - specialized for int32_t <- (uint16_t * int16_t) x 2 + int32_t
 CUTLASS_HOST_DEVICE
 template <>
-int32_t dot(Array<uint16_t, 2> const &a, Array<uint16_t, 2> const &b, int32_t accum) {
-
+int32_t dot(Array<uint16_t, 2> const& a, Array<uint16_t, 2> const& b, int32_t accum)
+{
   return accum;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass

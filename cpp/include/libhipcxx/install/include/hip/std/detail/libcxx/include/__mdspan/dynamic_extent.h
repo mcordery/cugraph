@@ -48,8 +48,8 @@
 #include <__config>
 #include <cstddef>  // size_t
 #include <limits>   // numeric_limits
-#include <span>  // dynamic_extent
-#endif // __cuda_std__
+#include <span>     // dynamic_extent
+#endif              // __cuda_std__
 
 #include "../__mdspan/macros.h"
 
@@ -64,21 +64,23 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 namespace __detail {
 
 template <class>
-__MDSPAN_HOST_DEVICE constexpr auto __make_dynamic_extent() {
+__MDSPAN_HOST_DEVICE constexpr auto __make_dynamic_extent()
+{
   return dynamic_extent;
 }
 
 template <size_t>
-__MDSPAN_HOST_DEVICE constexpr auto __make_dynamic_extent_integral() {
+__MDSPAN_HOST_DEVICE constexpr auto __make_dynamic_extent_integral()
+{
   return dynamic_extent;
 }
 
-} // end namespace __detail
+}  // end namespace __detail
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
 //==============================================================================================================
 
-#endif // _LIBCUDACXX___MDSPAN_DYNAMIC_EXTENT_HPP
+#endif  // _LIBCUDACXX___MDSPAN_DYNAMIC_EXTENT_HPP

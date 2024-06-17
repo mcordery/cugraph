@@ -11,14 +11,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
 import warnings
+from typing import Union
 
 import cudf
-
-import cugraph
 from cugraph.structure import Graph
 from cugraph.utilities.utils import import_optional
+
+import cugraph
 
 # FIXME: the networkx.Graph type used in the type annotation for subgraph() is
 # specified using a string literal to avoid depending on and importing

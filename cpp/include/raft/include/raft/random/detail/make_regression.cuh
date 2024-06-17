@@ -207,9 +207,9 @@ void make_regression_caller(raft::resources const& handle,
   uniform(r, _coef, n_informative * n_targets, (DataT)1.0, (DataT)100.0, stream);
   if (coef && n_informative != n_cols) {
     RAFT_CUDA_TRY(hipMemsetAsync(_coef + n_informative * n_targets,
-                                  0,
-                                  (n_cols - n_informative) * n_targets * sizeof(DataT),
-                                  stream));
+                                 0,
+                                 (n_cols - n_informative) * n_targets * sizeof(DataT),
+                                 stream));
   }
 
   // Compute the output values

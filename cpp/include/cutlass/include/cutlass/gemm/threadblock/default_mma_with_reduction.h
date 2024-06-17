@@ -34,14 +34,13 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/arch/arch.h"
-
+#include "cutlass/cutlass.h"
+#include "cutlass/gemm/threadblock/default_mma_core_with_reduction.h"
 #include "cutlass/layout/matrix.h"
+#include "cutlass/numeric_types.h"
 #include "cutlass/transform/threadblock/predicated_tile_iterator.h"
 #include "cutlass/transform/threadblock/predicated_tile_iterator_2dthreadtile.h"
-#include "cutlass/gemm/threadblock/default_mma_core_with_reduction.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,90 +51,113 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Access granularity of A matrix in units of elements
-    int kAlignmentA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Access granularity of B matrix in units of elements
-    int kAlignmentB,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Layout type for C and D matrix operands
-    typename LayoutC,
-    /// Operator class tag
-    typename OperatorClass,
-    ///                                                                                               
-    bool ReduceKForA_,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Instruction-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Operation perfomed by GEMM
-    typename Operator,
-    /// Store the accumulators in row major or column major.  Row major is used
-    /// when output layout is interleaved.
-    bool AccumulatorsInRowMajor = false,
-    /// Use zfill or predicate for SM80 out-of-bound cp.async 
-    SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone
-    >
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Access granularity of A matrix in units of elements
+  int kAlignmentA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Access granularity of B matrix in units of elements
+  int kAlignmentB,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Layout type for C and D matrix operands
+  typename LayoutC,
+  /// Operator class tag
+  typename OperatorClass,
+  ///
+  bool ReduceKForA_,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Instruction-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Operation perfomed by GEMM
+  typename Operator,
+  /// Store the accumulators in row major or column major.  Row major is used
+  /// when output layout is interleaved.
+  bool AccumulatorsInRowMajor = false,
+  /// Use zfill or predicate for SM80 out-of-bound cp.async
+  SharedMemoryClearOption SharedMemoryClear = SharedMemoryClearOption::kNone>
 struct DefaultMmaWithReduction {
-
   static cutlass::arch::CacheOperation::Kind const CacheOpA =
-      ((sizeof_bits<ElementA>::value * kAlignmentA) == 128)
-          ? cutlass::arch::CacheOperation::Global
-          : cutlass::arch::CacheOperation::Always;
+    ((sizeof_bits<ElementA>::value * kAlignmentA) == 128) ? cutlass::arch::CacheOperation::Global
+                                                          : cutlass::arch::CacheOperation::Always;
 
   static cutlass::arch::CacheOperation::Kind const CacheOpB =
-      ((sizeof_bits<ElementB>::value * kAlignmentB) == 128)
-          ? cutlass::arch::CacheOperation::Global
-          : cutlass::arch::CacheOperation::Always;
+    ((sizeof_bits<ElementB>::value * kAlignmentB) == 128) ? cutlass::arch::CacheOperation::Global
+                                                          : cutlass::arch::CacheOperation::Always;
 
   // Define the MmaCore components
-  using MmaCore = typename cutlass::gemm::threadblock::DefaultMmaWithReductionCore<
-      ThreadblockShape, WarpShape, InstructionShape, ElementA, LayoutA,
-      ElementB, LayoutB, ElementAccumulator, layout::RowMajor, arch::OpClassTensorOp,
-      ReduceKForA_,  Stages, Operator, false, CacheOpA, CacheOpB>;
+  using MmaCore =
+    typename cutlass::gemm::threadblock::DefaultMmaWithReductionCore<ThreadblockShape,
+                                                                     WarpShape,
+                                                                     InstructionShape,
+                                                                     ElementA,
+                                                                     LayoutA,
+                                                                     ElementB,
+                                                                     LayoutB,
+                                                                     ElementAccumulator,
+                                                                     layout::RowMajor,
+                                                                     arch::OpClassTensorOp,
+                                                                     ReduceKForA_,
+                                                                     Stages,
+                                                                     Operator,
+                                                                     false,
+                                                                     CacheOpA,
+                                                                     CacheOpB>;
 
   // Define iterators over tiles from the A operand
-  using ThreadMapA = typename MmaCore::IteratorThreadMapA;
+  using ThreadMapA  = typename MmaCore::IteratorThreadMapA;
   using AccessTypeA = cutlass::Array<ElementA, kAlignmentA>;
-  using IteratorA =
-      cutlass::transform::threadblock::PredicatedTileAccessIterator<
-          cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
-          ElementA, LayoutA, 1, ThreadMapA, AccessTypeA>;
+  using IteratorA   = cutlass::transform::threadblock::PredicatedTileAccessIterator<
+      cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
+      ElementA,
+      LayoutA,
+      1,
+      ThreadMapA,
+      AccessTypeA>;
 
   // Define iterators over tiles from the B operand
-  using ThreadMapB = typename MmaCore::IteratorThreadMapB;
+  using ThreadMapB  = typename MmaCore::IteratorThreadMapB;
   using AccessTypeB = cutlass::Array<ElementB, kAlignmentB>;
-  using IteratorB =
-      cutlass::transform::threadblock::PredicatedTileAccessIterator<
-          cutlass::MatrixShape<ThreadblockShape::kK, ThreadblockShape::kN>,
-          ElementB, LayoutB, 0, ThreadMapB, AccessTypeB>;
+  using IteratorB   = cutlass::transform::threadblock::PredicatedTileAccessIterator<
+      cutlass::MatrixShape<ThreadblockShape::kK, ThreadblockShape::kN>,
+      ElementB,
+      LayoutB,
+      0,
+      ThreadMapB,
+      AccessTypeB>;
 
   // Define the threadblock-scoped multistage matrix multiply
-  using ThreadblockMma = cutlass::gemm::threadblock::MmaWithReductionMultistage<
-      typename MmaCore::Shape, IteratorA, typename MmaCore::SmemIteratorA,
-      MmaCore::kCacheOpA, IteratorB, typename MmaCore::SmemIteratorB,
-      MmaCore::kCacheOpB, ElementAccumulator, layout::RowMajor,
-      typename MmaCore::MmaPolicy, Stages, SharedMemoryClear>;
+  using ThreadblockMma =
+    cutlass::gemm::threadblock::MmaWithReductionMultistage<typename MmaCore::Shape,
+                                                           IteratorA,
+                                                           typename MmaCore::SmemIteratorA,
+                                                           MmaCore::kCacheOpA,
+                                                           IteratorB,
+                                                           typename MmaCore::SmemIteratorB,
+                                                           MmaCore::kCacheOpB,
+                                                           ElementAccumulator,
+                                                           layout::RowMajor,
+                                                           typename MmaCore::MmaPolicy,
+                                                           Stages,
+                                                           SharedMemoryClear>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace gemm
-} // namespace cutlass 
+}  // namespace threadblock
+}  // namespace gemm
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,13 +18,13 @@
 #include <rmm/aligned.hpp>
 #include <rmm/detail/aligned.hpp>
 #include <rmm/detail/error.hpp>
-//#include <rmm/detail/nvtx/ranges.hpp>
+// #include <rmm/detail/nvtx/ranges.hpp>
 
-#include <hip/memory_resource>
-#include <hip/stream_ref>
 #include <hip/hip_runtime_api.h>
 
 #include <cstddef>
+#include <hip/memory_resource>
+#include <hip/stream_ref>
 #include <utility>
 
 namespace rmm::mr {

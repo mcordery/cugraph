@@ -13,13 +13,12 @@
 
 import gc
 
-import pytest
-import networkx as nx
-
 import cudf
-import cugraph
-from cugraph.testing import utils, DEFAULT_DATASETS
+import networkx as nx
+import pytest
+from cugraph.testing import DEFAULT_DATASETS, utils
 
+import cugraph
 
 print("Networkx version : {} ".format(nx.__version__))
 

@@ -11,20 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.structure.graph_classes import Graph
-from typing import Union
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    cugraph_to_nx,
-)
-
-from pylibcugraph import k_truss_subgraph as pylibcugraph_k_truss_subgraph
-from pylibcugraph import ResourceHandle
 import warnings
+from typing import Union
 
-from numba import cuda
 import cudf
+from cugraph.structure.graph_classes import Graph
+from cugraph.utilities import cugraph_to_nx, ensure_cugraph_obj_for_nx
 from cugraph.utilities.utils import import_optional
+from numba import cuda
+from pylibcugraph import ResourceHandle
+from pylibcugraph import k_truss_subgraph as pylibcugraph_k_truss_subgraph
 
 # FIXME: the networkx.Graph type used in the type annotation for
 # ktruss_subgraph() is specified using a string literal to avoid depending on

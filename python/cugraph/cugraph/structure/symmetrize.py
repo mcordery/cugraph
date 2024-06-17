@@ -11,11 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.structure import graph_classes as csg
+import warnings
+
 import cudf
 import dask_cudf
+from cugraph.structure import graph_classes as csg
 from dask.distributed import default_client
-import warnings
 
 
 def symmetrize_df(

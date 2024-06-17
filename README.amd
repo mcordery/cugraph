@@ -4,5 +4,3 @@ CUDA 12.2
 
    99  sudo ln -s /usr/bin/gcc-11 /usr/local/cuda/bin/gcc
   100  sudo ln -s /usr/bin/g++-11 /usr/local/cuda/bin/g++
-
-

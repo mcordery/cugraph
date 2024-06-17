@@ -34,8 +34,8 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -46,7 +46,6 @@ namespace cutlass {
 /// Array holding planar complex elements
 template <typename Element_, int N>
 struct ArrayPlanarComplex {
-
   /// Underlying real element
   using Element = Element_;
 
@@ -56,31 +55,26 @@ struct ArrayPlanarComplex {
   /// Underlying Fragment of real-valued elemenets
   using ArrayReal = Array<Element, N>;
 
-public:
-
+ public:
   /// Fragment of real-valued elements representing the real part
   ArrayReal real;
 
   /// Fragment of real-valued elements representing the imaginary part
   ArrayReal imag;
 
-public:
+ public:
+  /// Ctor
+  CUTLASS_HOST_DEVICE
+  ArrayPlanarComplex() {}
 
   /// Ctor
   CUTLASS_HOST_DEVICE
-  ArrayPlanarComplex() { }
-
-  /// Ctor
-  CUTLASS_HOST_DEVICE
-  ArrayPlanarComplex(
-    ArrayReal const &real_,
-    ArrayReal const &imag_
-  ):
-    real(real_), imag(imag_) { }
+  ArrayPlanarComplex(ArrayReal const& real_, ArrayReal const& imag_) : real(real_), imag(imag_) {}
 
   /// Sets the array to zero efficiently
   CUTLASS_HOST_DEVICE
-  void clear() {
+  void clear()
+  {
     real.clear();
     imag.clear();
   }
@@ -90,14 +84,14 @@ public:
 
 /// Helper to deduce template arguments
 template <typename Element, int N>
-CUTLASS_HOST_DEVICE
-ArrayPlanarComplex<Element, N> 
-make_ArrayPlanarComplex(Array<Element, N> const &real, Array<Element, N> const &imag) {
+CUTLASS_HOST_DEVICE ArrayPlanarComplex<Element, N> make_ArrayPlanarComplex(
+  Array<Element, N> const& real, Array<Element, N> const& imag)
+{
   return ArrayPlanarComplex<Element, N>(real, imag);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

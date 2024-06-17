@@ -14,13 +14,13 @@
 
 import os
 
-import pytest
-import numpy as np
-import cupy as cp
-from cugraph.testing.mg_utils import start_dask_client, stop_dask_client
 import cudf
+import cupy as cp
 import dask_cudf
+import numpy as np
+import pytest
 import rmm
+from cugraph.testing.mg_utils import start_dask_client, stop_dask_client
 
 # If the rapids-pytest-benchmark plugin is installed, the "gpubenchmark"
 # fixture will be available automatically. Check that this fixture is available
@@ -34,16 +34,12 @@ except ImportError:
 
     gpubenchmark = pytest_benchmark.plugin.benchmark
 
-from cugraph import (
-    MultiGraph,
-    uniform_neighbor_sample,
-)
-from cugraph.generators import rmat
-from cugraph import datasets
 from cugraph.dask import uniform_neighbor_sample as uniform_neighbor_sample_mg
-
+from cugraph.generators import rmat
 from cugraph_benchmarking import params
 from cugraph_benchmarking.timer import TimerContext
+
+from cugraph import MultiGraph, datasets, uniform_neighbor_sample
 
 _seed = 42
 

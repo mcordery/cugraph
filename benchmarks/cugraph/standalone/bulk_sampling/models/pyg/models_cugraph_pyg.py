@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import torch
-
 from cugraph_pyg.nn.conv import SAGEConv as CuGraphSAGEConv
 
 try:

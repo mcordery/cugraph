@@ -37,11 +37,10 @@
 #include <hipco/detail/bitwise_compare.cuh>
 #include <hipco/detail/utility/cuda.cuh>
 
+#include <hip/hip_cooperative_groups.h>
 #include <hipcub/block/block_reduce.hpp>
 
 #include <hip/atomic>
-
-#include <hip/hip_cooperative_groups.h>
 
 namespace hipco {
 namespace experimental {

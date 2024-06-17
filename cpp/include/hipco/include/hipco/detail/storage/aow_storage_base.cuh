@@ -35,10 +35,9 @@
 
 #include <hipco/detail/storage/storage_base.cuh>
 
-#include <hip/std/array>
-
 #include <cstddef>
 #include <cstdint>
+#include <hip/std/array>
 
 namespace hipco {
 namespace experimental {

@@ -29,21 +29,22 @@
  *
  **************************************************************************************************/
 /*! \file
-  
+
   \brief Functor performing linear combination with elementwise
 */
 
 #pragma once
 
-#include <cutlass/half.h>
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
 #include "cutlass/constants.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/activation.h"
 #include "cutlass/fast_math.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
-#include "cutlass/epilogue/thread/activation.h"
+#include "cutlass/numeric_types.h"
+
+#include <cutlass/half.h>
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,77 +58,72 @@ namespace thread {
 ///
 /// D = alpha * accumulator + beta * source + uniform
 ///
-template <
-  typename ElementCompute_,                            ///< Data type returned by this functor
-  typename ElementAccumulator_,                        ///< Data type of accumulators
-  typename ElementSource_,                             ///< Data type of source tensor
-  typename ElementTensor_,                             ///< Data type of additional tensor
-  int Count,                                           ///< Number of elements computed per operation
-                                                       ///< Usually it is 128/sizeof_bits<ElementOutput_>,
-                                                       ///< but we use 64 or 32 sometimes when there are not enough data to store
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
+template <typename ElementCompute_,      ///< Data type returned by this functor
+          typename ElementAccumulator_,  ///< Data type of accumulators
+          typename ElementSource_,       ///< Data type of source tensor
+          typename ElementTensor_,       ///< Data type of additional tensor
+          int Count,                     ///< Number of elements computed per operation
+                                         ///< Usually it is 128/sizeof_bits<ElementOutput_>,
+          ///< but we use 64 or 32 sometimes when there are not enough data to store
+          FloatRoundStyle Round = FloatRoundStyle::round_to_nearest>
 class LinearCombinationWithElementwise {
-public:
-
-  using ElementOutput = ElementSource_;
-  using ElementCompute = ElementCompute_;
+ public:
+  using ElementOutput      = ElementSource_;
+  using ElementCompute     = ElementCompute_;
   using ElementAccumulator = ElementAccumulator_;
-  using ElementSource = ElementSource_;
-  using ElementTensor = ElementTensor_;
+  using ElementSource      = ElementSource_;
+  using ElementTensor      = ElementTensor_;
 
   static bool const kIsHeavy = true;
 
   static int const kCount = Count;
 
-  using FragmentCompute = Array<ElementCompute, kCount>;
+  using FragmentCompute     = Array<ElementCompute, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
-  using FragmentSource = Array<ElementSource, kCount>;
-  using FragmentTensor = Array<ElementTensor, kCount>;
+  using FragmentSource      = Array<ElementSource, kCount>;
+  using FragmentTensor      = Array<ElementTensor, kCount>;
 
   static FloatRoundStyle const kRound = Round;
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta;                   ///< scales source tensor
-    ElementCompute threshold;              ///< minimum value that is output 
-    ElementCompute const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
-    ElementCompute const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
+    ElementCompute alpha;      ///< scales accumulators
+    ElementCompute beta;       ///< scales source tensor
+    ElementCompute threshold;  ///< minimum value that is output
+    ElementCompute const*
+      alpha_ptr;  ///< pointer to accumulator scalar - if not null, loads it from memory
+    ElementCompute const*
+      beta_ptr;  ///< pointer to source scalar - if not null, loads it from memory
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta(ElementCompute(0)),
-      threshold(ElementCompute(0)), 
-      alpha_ptr(nullptr), 
-      beta_ptr(nullptr) { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta,
-      ElementCompute threshold = ElementCompute(0)
-    ): alpha(alpha), beta(beta), threshold(threshold), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params()
+      : alpha(ElementCompute(1)),
+        beta(ElementCompute(0)),
+        threshold(ElementCompute(0)),
+        alpha_ptr(nullptr),
+        beta_ptr(nullptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr,
-      ElementCompute const *beta_ptr,
-      ElementCompute threshold = ElementCompute(0)
-    ): alpha(0), beta(0), threshold(threshold), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) {
+    Params(ElementCompute alpha, ElementCompute beta, ElementCompute threshold = ElementCompute(0))
+      : alpha(alpha), beta(beta), threshold(threshold), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
+    }
 
+    CUTLASS_HOST_DEVICE
+    Params(ElementCompute const* alpha_ptr,
+           ElementCompute const* beta_ptr,
+           ElementCompute threshold = ElementCompute(0))
+      : alpha(0), beta(0), threshold(threshold), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr)
+    {
     }
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -137,58 +133,51 @@ private:
   ElementCompute threshold_;
   bool participates_in_reduction_;
 
-public:
-
+ public:
   /// Constructs the function object, possibly loading from pointers in host memory
   CUTLASS_HOST_DEVICE
-  LinearCombinationWithElementwise(Params const &params) {
-
-    alpha_ = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    beta_ = (params.beta_ptr ? *params.beta_ptr : params.beta);
-    threshold_ = params.threshold;
+  LinearCombinationWithElementwise(Params const& params)
+  {
+    alpha_                     = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
+    beta_                      = (params.beta_ptr ? *params.beta_ptr : params.beta);
+    threshold_                 = params.threshold;
     participates_in_reduction_ = true;
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
-    return beta_ != ElementCompute(0);
-  }
+  bool is_source_needed() const { return beta_ != ElementCompute(0); }
 
   /// Returns true if the threadblock computes the reduction
   CUTLASS_HOST_DEVICE
-  bool participates_in_reduction() const {
-    return participates_in_reduction_;
-  }
+  bool participates_in_reduction() const { return participates_in_reduction_; }
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    if (k_partition) {
-      beta_ = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition, int k_partition_count)
+  {
+    if (k_partition) { beta_ = ElementCompute(1); }
 
     if (k_partition != k_partition_count - 1) {
       // set to NaN to make ReLU no-op for all except last k partitions
       int64_t allones = -1;
-      threshold_ = reinterpret_cast<ElementCompute const &>(allones);
+      threshold_      = reinterpret_cast<ElementCompute const&>(allones);
       // Avoid computing the reduction if this isn't the final Split-K slice
       participates_in_reduction_ = false;
     }
   }
-  
+
   /// Computes linear scaling: D = alpha * accumulator + beta * source
   CUTLASS_HOST_DEVICE
-  FragmentCompute operator()(
-    FragmentAccumulator const &accumulator, 
-    FragmentSource const &source,
-    FragmentTensor const &tensor) const {
-
+  FragmentCompute operator()(FragmentAccumulator const& accumulator,
+                             FragmentSource const& source,
+                             FragmentTensor const& tensor) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementSource, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
-    FragmentCompute converted_source = source_converter(source);
+    FragmentCompute converted_source      = source_converter(source);
     FragmentCompute converted_accumulator = accumulator_converter(accumulator);
 
     // Perform binary operations
@@ -197,18 +186,18 @@ public:
     multiplies<FragmentCompute> mul_add_source;
     multiply_add<FragmentCompute> mul_add_accumulator;
 
-    intermediate = mul_add_source(beta_, converted_source);                             // X =  beta * C + uniform
-    intermediate = mul_add_accumulator(alpha_, converted_accumulator, intermediate);    // D = alpha * Accum + X
+    intermediate = mul_add_source(beta_, converted_source);  // X =  beta * C + uniform
+    intermediate =
+      mul_add_accumulator(alpha_, converted_accumulator, intermediate);  // D = alpha * Accum + X
 
     return intermediate;
   }
 
   /// Computes linear scaling: D = alpha * accumulator
   CUTLASS_HOST_DEVICE
-  FragmentCompute operator()(
-    FragmentAccumulator const &accumulator,
-    FragmentTensor const &tensor) const {
-
+  FragmentCompute operator()(FragmentAccumulator const& accumulator,
+                             FragmentTensor const& tensor) const
+  {
     // Convert source to interal compute numeric type
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
@@ -219,7 +208,7 @@ public:
 
     multiplies<FragmentCompute> mul_accumulator;
 
-    intermediate = mul_accumulator(alpha_, converted_accumulator);    // D = alpha * Accum
+    intermediate = mul_accumulator(alpha_, converted_accumulator);  // D = alpha * Accum
 
     return intermediate;
   }
@@ -227,8 +216,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

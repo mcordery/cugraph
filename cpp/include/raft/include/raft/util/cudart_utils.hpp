@@ -21,10 +21,9 @@
 
 #include <rmm/cuda_stream_view.hpp>
 
+#include <execinfo.h>
 #include <hip/hip_fp16.h>
 #include <hip/hip_runtime_api.h>
-
-#include <execinfo.h>
 
 #include <chrono>
 #include <cstdio>
@@ -261,7 +260,8 @@ inline int getSharedMemPerBlock()
   int devId;
   RAFT_CUDA_TRY(hipGetDevice(&devId));
   int smemPerBlk;
-  RAFT_CUDA_TRY(hipDeviceGetAttribute(&smemPerBlk, hipDeviceAttributeMaxSharedMemoryPerBlock, devId));
+  RAFT_CUDA_TRY(
+    hipDeviceGetAttribute(&smemPerBlk, hipDeviceAttributeMaxSharedMemoryPerBlock, devId));
   return smemPerBlk;
 }
 

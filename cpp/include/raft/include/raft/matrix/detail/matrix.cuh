@@ -25,10 +25,10 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/for_each.h>
 #include <thrust/iterator/counting_iterator.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsolver.h>
 
 #include <algorithm>
@@ -133,8 +133,8 @@ template <typename m_t, typename idx_t = int>
 void print(const m_t* in,
            idx_t n_rows,
            idx_t n_cols,
-           char h_separator    = ' ',
-           char v_separator    = '\n',
+           char h_separator   = ' ',
+           char v_separator   = '\n',
            hipStream_t stream = rmm::cuda_stream_default)
 {
   std::vector<m_t> h_matrix = std::vector<m_t>(n_cols * n_rows);
@@ -308,7 +308,7 @@ template <typename m_t, typename idx_t = int>
 m_t getL2Norm(raft::resources const& handle, const m_t* in, idx_t size, hipStream_t stream)
 {
   hipblasHandle_t cublasH = resource::get_cublas_handle(handle);
-  m_t normval            = 0;
+  m_t normval             = 0;
   RAFT_EXPECTS(
     std::is_integral_v<idx_t> && (std::size_t)size <= (std::size_t)std::numeric_limits<int>::max(),
     "Index type not supported");

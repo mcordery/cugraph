@@ -12,26 +12,21 @@
 # limitations under the License.
 
 
-from ogb.nodeproppred import NodePropPredDataset
-
-import time
 import argparse
 import gc
+import time
 import warnings
+from typing import List
 
-import torch
 import numpy as np
-
-from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
-
-import torch.nn as nn
-import torch.nn.functional as F
-
+import torch
 import torch.distributed as td
 import torch.multiprocessing as tmp
+import torch.nn as nn
+import torch.nn.functional as F
+from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
+from ogb.nodeproppred import NodePropPredDataset
 from torch.nn.parallel import DistributedDataParallel as ddp
-
-from typing import List
 
 
 class CuGraphSAGE(nn.Module):
@@ -98,8 +93,8 @@ def start_cugraph_dask_client(rank, dask_scheduler_file):
         "(warning: this may take a while depending on your configuration)"
     )
     start_time_connect_dask = time.perf_counter_ns()
-    from distributed import Client
     from cugraph.dask.comms import comms as Comms
+    from distributed import Client
 
     client = Client(scheduler_file=dask_scheduler_file)
     Comms.initialize(p2p=True)
@@ -158,9 +153,10 @@ def train(
 
     td.barrier()
 
-    import cugraph
     from cugraph_pyg.data import CuGraphStore
     from cugraph_pyg.loader import CuGraphNeighborLoader
+
+    import cugraph
 
     if rank == 0:
         print("Rank 0 downloading dataset")

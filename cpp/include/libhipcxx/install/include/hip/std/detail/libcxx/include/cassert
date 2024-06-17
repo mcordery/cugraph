@@ -22,4 +22,3 @@ Macros:
 #include <assert.h>
 #include <__pragma_pop>
 #endif //__cuda_std__
-

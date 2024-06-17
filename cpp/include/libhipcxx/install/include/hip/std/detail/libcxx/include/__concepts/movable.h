@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__concepts/assignable.h"
@@ -28,30 +28,25 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if _LIBCUDACXX_STD_VER > 17
 
-template<class _Tp>
+template <class _Tp>
 concept movable =
-  is_object_v<_Tp> && 
-  move_constructible<_Tp>&&
-  assignable_from<_Tp&, _Tp> &&
-  swappable<_Tp>;
+  is_object_v<_Tp> && move_constructible<_Tp> && assignable_from<_Tp&, _Tp> && swappable<_Tp>;
 
 #elif _LIBCUDACXX_STD_VER > 11
 
 // [concepts.object]
-template<class _Tp>
-_LIBCUDACXX_CONCEPT_FRAGMENT(
-  _Movable_,
-  requires()
-  (requires(is_object_v<_Tp>),
-   requires(move_constructible<_Tp>),
-   requires(assignable_from<_Tp&, _Tp>),
-   requires(swappable<_Tp>)));
+template <class _Tp>
+_LIBCUDACXX_CONCEPT_FRAGMENT(_Movable_,
+                             requires()(requires(is_object_v<_Tp>),
+                                        requires(move_constructible<_Tp>),
+                                        requires(assignable_from<_Tp&, _Tp>),
+                                        requires(swappable<_Tp>)));
 
-template<class _Tp>
+template <class _Tp>
 _LIBCUDACXX_CONCEPT movable = _LIBCUDACXX_FRAGMENT(_Movable_, _Tp);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_MOVABLE_H
+#endif  // _LIBCUDACXX___CONCEPTS_MOVABLE_H

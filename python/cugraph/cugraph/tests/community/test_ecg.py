@@ -13,12 +13,12 @@
 
 import gc
 
-import pytest
 import networkx as nx
+import pytest
+from cugraph.testing import utils
 
 import cugraph
-from cugraph.testing import utils
-from cugraph.datasets import karate, dolphins, netscience
+from cugraph.datasets import dolphins, karate, netscience
 
 
 def cugraph_call(G, min_weight, ensemble_size):

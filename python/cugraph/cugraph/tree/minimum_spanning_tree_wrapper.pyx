@@ -16,17 +16,20 @@
 # cython: embedsignature = True
 # cython: language_level = 3
 
-from cugraph.tree.minimum_spanning_tree cimport minimum_spanning_tree as c_mst
 from cugraph.structure.graph_primtypes cimport *
+from cugraph.tree.minimum_spanning_tree cimport minimum_spanning_tree as c_mst
+
 from cugraph.structure import graph_primtypes_wrapper
+
 from libc.stdint cimport uintptr_t
 
 import cudf
+import cupy as cp
 
 # FIXME: these are transitive dependencies and are not currently listed in the
 # conda recipe. Either make them optional or add them to the conda recipe.
 import numpy as np
-import cupy as cp
+
 
 def mst_float(num_verts, num_edges, offsets, indices, weights):
     cdef unique_ptr[handle_t] handle_ptr

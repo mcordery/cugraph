@@ -14,12 +14,12 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
+#from cugraph.dask.traversal cimport mg_bfs as c_bfs
+from pylibcugraph cimport resource_handle as c_resource_handle
 from pylibcugraph._cugraph_c.resource_handle cimport (
     cugraph_create_resource_handle,
     cugraph_free_resource_handle,
 )
-#from cugraph.dask.traversal cimport mg_bfs as c_bfs
-from pylibcugraph cimport resource_handle as c_resource_handle
 
 
 cdef class ResourceHandle:

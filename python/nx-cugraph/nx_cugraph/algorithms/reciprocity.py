@@ -13,7 +13,6 @@
 import cupy as cp
 import networkx as nx
 import numpy as np
-
 from nx_cugraph.convert import _to_directed_graph
 from nx_cugraph.utils import networkx_algorithm, not_implemented_for
 

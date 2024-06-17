@@ -35,13 +35,12 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/activation.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_conversion.h"
-
-#include "cutlass/epilogue/thread/activation.h"
+#include "cutlass/numeric_types.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,36 +52,33 @@ namespace thread {
 
 /// This base class is meant to define the concept required of the
 /// EpilogueWithBroadcast::OutputOp
-template <
-  typename ElementC_,
-  typename ElementAccumulator_,
-  typename ElementCompute_,
-  typename ElementZ_,
-  typename ElementT_,
-  int ElementsPerAccess,
-  typename ElementwiseOp_ = Identity<ElementCompute_>,
-  typename BinaryOp_ = plus<ElementCompute_>
->
+template <typename ElementC_,
+          typename ElementAccumulator_,
+          typename ElementCompute_,
+          typename ElementZ_,
+          typename ElementT_,
+          int ElementsPerAccess,
+          typename ElementwiseOp_ = Identity<ElementCompute_>,
+          typename BinaryOp_      = plus<ElementCompute_>>
 class LinearCombinationBiasElementwise {
-public:
-
-  using ElementOutput = ElementC_;
-  using ElementC = ElementC_;
-  using ElementAccumulator = ElementAccumulator_;
-  using ElementCompute = ElementCompute_;
-  using ElementZ = ElementZ_;
-  using ElementT = ElementT_;
+ public:
+  using ElementOutput                 = ElementC_;
+  using ElementC                      = ElementC_;
+  using ElementAccumulator            = ElementAccumulator_;
+  using ElementCompute                = ElementCompute_;
+  using ElementZ                      = ElementZ_;
+  using ElementT                      = ElementT_;
   static int const kElementsPerAccess = ElementsPerAccess;
-  static int const kCount = kElementsPerAccess;
+  static int const kCount             = kElementsPerAccess;
 
   using ElementwiseOp = ElementwiseOp_;
-  using BinaryOp = BinaryOp_;
+  using BinaryOp      = BinaryOp_;
 
   using FragmentAccumulator = Array<ElementAccumulator, kElementsPerAccess>;
-  using FragmentCompute = Array<ElementCompute, kElementsPerAccess>;
-  using FragmentC = Array<ElementOutput, kElementsPerAccess>;
-  using FragmentZ = Array<ElementZ, kElementsPerAccess>;
-  using FragmentT = Array<ElementT, kElementsPerAccess>;
+  using FragmentCompute     = Array<ElementCompute, kElementsPerAccess>;
+  using FragmentC           = Array<ElementOutput, kElementsPerAccess>;
+  using FragmentZ           = Array<ElementZ, kElementsPerAccess>;
+  using FragmentT           = Array<ElementT, kElementsPerAccess>;
 
   using FragmentOutput = FragmentZ;
 
@@ -96,56 +92,46 @@ public:
 
   /// Host-constructable parameters structure
   struct Params {
-
-    ElementCompute alpha;                  ///< scales accumulators
-    ElementCompute beta;                   ///< scales source tensor
-    ElementCompute const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
-    ElementCompute const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
+    ElementCompute alpha;  ///< scales accumulators
+    ElementCompute beta;   ///< scales source tensor
+    ElementCompute const*
+      alpha_ptr;  ///< pointer to accumulator scalar - if not null, loads it from memory
+    ElementCompute const*
+      beta_ptr;  ///< pointer to source scalar - if not null, loads it from memory
 
     //
     // Methods
     //
 
     CUTLASS_HOST_DEVICE
-    Params(): 
-      alpha(ElementCompute(1)), 
-      beta(ElementCompute(0)), 
-      alpha_ptr(nullptr), 
-      beta_ptr(nullptr) { }
-
-    CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha,
-      ElementCompute beta
-    ): alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params()
+      : alpha(ElementCompute(1)), beta(ElementCompute(0)), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute alpha
-    ): alpha(alpha), beta(0), alpha_ptr(nullptr), beta_ptr(nullptr) {
-
+    Params(ElementCompute alpha, ElementCompute beta)
+      : alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr,
-      ElementCompute const *beta_ptr
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) {
+    Params(ElementCompute alpha) : alpha(alpha), beta(0), alpha_ptr(nullptr), beta_ptr(nullptr) {}
 
+    CUTLASS_HOST_DEVICE
+    Params(ElementCompute const* alpha_ptr, ElementCompute const* beta_ptr)
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr)
+    {
     }
 
     CUTLASS_HOST_DEVICE
-    Params(
-      ElementCompute const *alpha_ptr
-    ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(nullptr) {
-
+    Params(ElementCompute const* alpha_ptr)
+      : alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(nullptr)
+    {
     }
   };
 
-private:
-
+ private:
   //
   // Data members
   //
@@ -154,61 +140,56 @@ private:
   ElementCompute beta_;
   bool skip_elementwise_;
 
-public:
-
+ public:
   //
   // Methods
   //
 
   /// Constructor from Params
   CUTLASS_HOST_DEVICE
-  LinearCombinationBiasElementwise(Params const &params) {
-
-    alpha_ = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
-    beta_ = (params.beta_ptr ? *params.beta_ptr : params.beta);
+  LinearCombinationBiasElementwise(Params const& params)
+  {
+    alpha_            = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
+    beta_             = (params.beta_ptr ? *params.beta_ptr : params.beta);
     skip_elementwise_ = false;
   }
 
   /// Returns true if source is needed
   CUTLASS_HOST_DEVICE
-  bool is_source_needed() const {
-    return beta_ != ElementCompute(0);
-  }
+  bool is_source_needed() const { return beta_ != ElementCompute(0); }
 
   /// Functionally required for serial reduction in the epilogue
   CUTLASS_HOST_DEVICE
-  void set_k_partition(int k_partition, int k_partition_count) {
-    if (k_partition) {
-      beta_ = ElementCompute(1);
-    }
+  void set_k_partition(int k_partition, int k_partition_count)
+  {
+    if (k_partition) { beta_ = ElementCompute(1); }
 
-    if (k_partition != k_partition_count - 1) {
-      skip_elementwise_ = true;
-    }
+    if (k_partition != k_partition_count - 1) { skip_elementwise_ = true; }
   }
 
   /// Applies the operation when is_source_needed() is true
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentZ &frag_Z, 
-    FragmentT &frag_T, 
-    FragmentAccumulator const &AB,
-    FragmentC const &frag_C,
-    FragmentCompute const &V) const {
-
+  void operator()(FragmentZ& frag_Z,
+                  FragmentT& frag_T,
+                  FragmentAccumulator const& AB,
+                  FragmentC const& frag_C,
+                  FragmentCompute const& V) const
+  {
     ElementwiseOp elementwise_op;
     BinaryOp binary_op;
 
-    FragmentCompute tmp_Accum = NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
-    FragmentCompute tmp_C = NumericArrayConverter<ElementCompute, ElementC, kElementsPerAccess>()(frag_C);
+    FragmentCompute tmp_Accum =
+      NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
+    FragmentCompute tmp_C =
+      NumericArrayConverter<ElementCompute, ElementC, kElementsPerAccess>()(frag_C);
     FragmentCompute result_Z;
     FragmentCompute result_T;
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kElementsPerAccess; ++i) {
       ElementCompute z = binary_op(alpha_ * tmp_Accum[i] + beta_ * tmp_C[i], V[i]);
-      result_T[i] = z;
-      result_Z[i] = skip_elementwise_ ? z : elementwise_op(z);
+      result_T[i]      = z;
+      result_Z[i]      = skip_elementwise_ ? z : elementwise_op(z);
     }
 
     NumericArrayConverter<ElementZ, ElementCompute, kElementsPerAccess> convert_z;
@@ -220,24 +201,24 @@ public:
 
   /// Applies the operation when is_source_needed() is false
   CUTLASS_HOST_DEVICE
-  void operator()(
-    FragmentZ &frag_Z, 
-    FragmentT &frag_T, 
-    FragmentAccumulator const &AB,
-    FragmentCompute const &V) const {
-
+  void operator()(FragmentZ& frag_Z,
+                  FragmentT& frag_T,
+                  FragmentAccumulator const& AB,
+                  FragmentCompute const& V) const
+  {
     ElementwiseOp elementwise_op;
     BinaryOp binary_op;
 
-    FragmentCompute tmp_Accum = NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
+    FragmentCompute tmp_Accum =
+      NumericArrayConverter<ElementCompute, ElementAccumulator, kElementsPerAccess>()(AB);
     FragmentCompute result_Z;
     FragmentCompute result_T;
 
     CUTLASS_PRAGMA_UNROLL
     for (int i = 0; i < kElementsPerAccess; ++i) {
       ElementCompute z = binary_op(alpha_ * tmp_Accum[i], V[i]);
-      result_T[i] = z;
-      result_Z[i] = skip_elementwise_ ? z : elementwise_op(z);
+      result_T[i]      = z;
+      result_Z[i]      = skip_elementwise_ ? z : elementwise_op(z);
     }
 
     NumericArrayConverter<ElementZ, ElementCompute, kElementsPerAccess> convert_z;
@@ -250,8 +231,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace thread
+}  // namespace epilogue
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

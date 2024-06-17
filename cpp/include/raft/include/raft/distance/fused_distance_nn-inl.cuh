@@ -26,7 +26,6 @@
 #include <raft/util/cuda_utils.cuh>
 
 #include <hipcub/hipcub.hpp>
-
 #include <stdint.h>
 
 #include <limits>

@@ -16,14 +16,11 @@
 # with cuGraph directly.  This example is intented for users who want
 # to extend cuGraph within a PyTorch workflow.
 
-import pandas
-import numpy as np
-
 import cudf
-
-from pylibcugraph import SGGraph, ResourceHandle, GraphProperties, degrees
-
+import numpy as np
+import pandas
 from ogb.nodeproppred import NodePropPredDataset
+from pylibcugraph import GraphProperties, ResourceHandle, SGGraph, degrees
 
 
 def calc_degree(edgelist):

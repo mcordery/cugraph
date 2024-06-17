@@ -36,8 +36,8 @@
 
 #if !defined(__CUDACC_RTC__)
 #include <cmath>
-#include <limits>
 #include <cstdint>
+#include <limits>
 #endif
 
 #include "cutlass/cutlass.h"
@@ -48,7 +48,6 @@ namespace cutlass {
 
 /// Tensor Float 32 data type
 struct alignas(4) tfloat32_t {
-
   //
   // Data members
   //
@@ -62,7 +61,8 @@ struct alignas(4) tfloat32_t {
 
   /// Constructs from an unsigned int
   CUTLASS_HOST_DEVICE
-  static tfloat32_t bitcast(uint32_t x) {
+  static tfloat32_t bitcast(uint32_t x)
+  {
     tfloat32_t h;
     h.storage = x;
     return h;
@@ -70,168 +70,141 @@ struct alignas(4) tfloat32_t {
 
   /// Emulated rounding is fast in device code
   CUTLASS_HOST_DEVICE
-  static tfloat32_t round_half_ulp_truncate(float const &s) {
-    uint32_t x = reinterpret_cast<uint32_t const &>(s);
+  static tfloat32_t round_half_ulp_truncate(float const& s)
+  {
+    uint32_t x = reinterpret_cast<uint32_t const&>(s);
 
-    #if defined(__CUDA_ARCH__)
-    if (::isfinite(s)) {
-      x += 0x1000u;
-    }
-    #else
-    if (std::isfinite(s)) {
-      x += 0x1000u;
-    }
-    #endif
+#if defined(__CUDA_ARCH__)
+    if (::isfinite(s)) { x += 0x1000u; }
+#else
+    if (std::isfinite(s)) { x += 0x1000u; }
+#endif
 
     return tfloat32_t::bitcast(x);
   }
 
   /// Default constructor
   CUTLASS_HOST_DEVICE
-  tfloat32_t() : storage(0) { }
+  tfloat32_t() : storage(0) {}
 
   /// Floating-point conversion - round toward nearest even
   CUTLASS_HOST_DEVICE
-  explicit tfloat32_t(float x): storage(round_half_ulp_truncate(x).storage) { }
+  explicit tfloat32_t(float x) : storage(round_half_ulp_truncate(x).storage) {}
 
   /// Floating-point conversion - round toward nearest even
   CUTLASS_HOST_DEVICE
-  explicit tfloat32_t(double x): tfloat32_t(float(x)) {
-
-  }
+  explicit tfloat32_t(double x) : tfloat32_t(float(x)) {}
 
   /// Integer conversion - round toward zero
   CUTLASS_HOST_DEVICE
-  explicit tfloat32_t(int x) {
+  explicit tfloat32_t(int x)
+  {
     float flt = static_cast<float>(x);
-    #if defined(__CUDA_ARCH__)
-    storage = reinterpret_cast<uint32_t const &>(flt);
-    #else
+#if defined(__CUDA_ARCH__)
+    storage = reinterpret_cast<uint32_t const&>(flt);
+#else
     std::memcpy(&storage, &flt, sizeof(storage));
-    #endif
+#endif
   }
 
   /// Converts to float
   CUTLASS_HOST_DEVICE
-  operator float() const {
-
+  operator float() const
+  {
     // Conversions to IEEE single-precision requires clearing dont-care bits
     // of the mantissa.
     unsigned bits = (storage & ~0x1fffu);
 
-    #if defined(__CUDA_ARCH__)    
-    return reinterpret_cast<float const &>(bits);
-    #else
+#if defined(__CUDA_ARCH__)
+    return reinterpret_cast<float const&>(bits);
+#else
     float flt;
     std::memcpy(&flt, &bits, sizeof(flt));
     return flt;
-    #endif
+#endif
   }
 
   /// Converts to float
   CUTLASS_HOST_DEVICE
-  explicit operator double() const {
-    return double(float(*this));
-  }
+  explicit operator double() const { return double(float(*this)); }
 
   /// Converts to int
   CUTLASS_HOST_DEVICE
-  explicit operator int() const {
-    return int(float(*this));
-  }
+  explicit operator int() const { return int(float(*this)); }
 
   /// Casts to bool
   CUTLASS_HOST_DEVICE
-  explicit operator bool() const {
-    return (float(*this) != 0.0f);
-  }
+  explicit operator bool() const { return (float(*this) != 0.0f); }
 
   /// Obtains raw bits
   CUTLASS_HOST_DEVICE
-  uint32_t raw() const {
-    return storage;
-  }
+  uint32_t raw() const { return storage; }
 
   /// Returns the sign bit
   CUTLASS_HOST_DEVICE
-  bool signbit() const {
-    return ((raw() & 0x80000000) != 0);
-  }
+  bool signbit() const { return ((raw() & 0x80000000) != 0); }
 
   /// Returns the biased exponent
   CUTLASS_HOST_DEVICE
-  int exponent_biased() const {
-    return int((raw() >> 23) & 0x0ff);
-  }
+  int exponent_biased() const { return int((raw() >> 23) & 0x0ff); }
 
   /// Returns the unbiased exponent
   CUTLASS_HOST_DEVICE
-  int exponent() const {
-    return exponent_biased() - 127;
-  }
+  int exponent() const { return exponent_biased() - 127; }
 
   /// Returns the mantissa
   CUTLASS_HOST_DEVICE
-  int mantissa() const {
-    return int(raw() & 0x7fffff);
-  }
+  int mantissa() const { return int(raw() & 0x7fffff); }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 CUTLASS_HOST_DEVICE
-bool signbit(cutlass::tfloat32_t const& h) {
-  return h.signbit();
-}
+bool signbit(cutlass::tfloat32_t const& h) { return h.signbit(); }
 
 CUTLASS_HOST_DEVICE
-cutlass::tfloat32_t abs(cutlass::tfloat32_t const& h) {
+cutlass::tfloat32_t abs(cutlass::tfloat32_t const& h)
+{
   return cutlass::tfloat32_t::bitcast(h.raw() & 0x7fffffff);
 }
 
 CUTLASS_HOST_DEVICE
-bool isnan(cutlass::tfloat32_t const& h) {
-  return (h.exponent_biased() == 0x0ff) && h.mantissa();
-}
+bool isnan(cutlass::tfloat32_t const& h) { return (h.exponent_biased() == 0x0ff) && h.mantissa(); }
 
 CUTLASS_HOST_DEVICE
-bool isfinite(cutlass::tfloat32_t const& h) {
-  return (h.exponent_biased() != 0x0ff);
-}
+bool isfinite(cutlass::tfloat32_t const& h) { return (h.exponent_biased() != 0x0ff); }
 
 CUTLASS_HOST_DEVICE
-cutlass::tfloat32_t nan_tf32(const char*) {
+cutlass::tfloat32_t nan_tf32(const char*)
+{
   // NVIDIA canonical NaN
   return cutlass::tfloat32_t::bitcast(0x7fffffff);
 }
 
 CUTLASS_HOST_DEVICE
-bool isinf(cutlass::tfloat32_t const& h) {
-  return (h.exponent_biased() == 0x0ff) && !h.mantissa();
-}
+bool isinf(cutlass::tfloat32_t const& h) { return (h.exponent_biased() == 0x0ff) && !h.mantissa(); }
 
 CUTLASS_HOST_DEVICE
-bool isnormal(cutlass::tfloat32_t const& h) {
+bool isnormal(cutlass::tfloat32_t const& h)
+{
   return h.exponent_biased() && h.exponent_biased() != 0x0ff;
 }
 
 CUTLASS_HOST_DEVICE
-int fpclassify(cutlass::tfloat32_t const& h) {
-  int exp = h.exponent_biased();
+int fpclassify(cutlass::tfloat32_t const& h)
+{
+  int exp      = h.exponent_biased();
   int mantissa = h.mantissa();
   if (exp == 0x0ff) {
     if (mantissa) {
       return FP_NAN;
-    }
-    else {
+    } else {
       return FP_INFINITE;
     }
-  }
-  else if (!exp) {
+  } else if (!exp) {
     if (mantissa) {
       return FP_SUBNORMAL;
-    }
-    else {
+    } else {
       return FP_ZERO;
     }
   }
@@ -239,7 +212,8 @@ int fpclassify(cutlass::tfloat32_t const& h) {
 }
 
 CUTLASS_HOST_DEVICE
-cutlass::tfloat32_t sqrt(cutlass::tfloat32_t const& h) {
+cutlass::tfloat32_t sqrt(cutlass::tfloat32_t const& h)
+{
 #if defined(__CUDACC_RTC__)
   return cutlass::tfloat32_t(sqrtf(float(h)));
 #else
@@ -248,18 +222,18 @@ cutlass::tfloat32_t sqrt(cutlass::tfloat32_t const& h) {
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t copysign(tfloat32_t const& a, tfloat32_t const& b) {
-
-  uint32_t a_mag = (reinterpret_cast<uint32_t const &>(a) & 0x7fffffff);  
-  uint32_t b_sign = (reinterpret_cast<uint32_t const &>(b) & 0x80000000);
+tfloat32_t copysign(tfloat32_t const& a, tfloat32_t const& b)
+{
+  uint32_t a_mag  = (reinterpret_cast<uint32_t const&>(a) & 0x7fffffff);
+  uint32_t b_sign = (reinterpret_cast<uint32_t const&>(b) & 0x80000000);
   uint32_t result = (a_mag | b_sign);
 
-  return reinterpret_cast<tfloat32_t const &>(result);
+  return reinterpret_cast<tfloat32_t const&>(result);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -273,20 +247,20 @@ namespace std {
 /// Numeric limits
 template <>
 struct numeric_limits<cutlass::tfloat32_t> {
-  static bool const is_specialized = true;
-  static bool const is_signed = true;
-  static bool const is_integer = false;
-  static bool const is_exact = false;
-  static bool const has_infinity = true;
-  static bool const has_quiet_NaN = true;
-  static bool const has_signaling_NaN = false;
+  static bool const is_specialized                = true;
+  static bool const is_signed                     = true;
+  static bool const is_integer                    = false;
+  static bool const is_exact                      = false;
+  static bool const has_infinity                  = true;
+  static bool const has_quiet_NaN                 = true;
+  static bool const has_signaling_NaN             = false;
   static std::float_denorm_style const has_denorm = std::denorm_present;
-  static bool const has_denorm_loss = true;
+  static bool const has_denorm_loss               = true;
   static std::float_round_style const round_style = std::round_to_nearest;
-  static bool const is_iec559 = false;
-  static bool const is_bounded = true;
-  static bool const is_modulo = false;
-  static int const digits = 19;
+  static bool const is_iec559                     = false;
+  static bool const is_bounded                    = true;
+  static bool const is_modulo                     = false;
+  static int const digits                         = 19;
 
   /// Least positive value
   static cutlass::tfloat32_t min() { return cutlass::tfloat32_t::bitcast(0x01); }
@@ -319,7 +293,7 @@ struct numeric_limits<cutlass::tfloat32_t> {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace std
+}  // namespace std
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -332,93 +306,91 @@ namespace cutlass {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 CUTLASS_HOST_DEVICE
-bool operator==(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) == float(rhs);
-}
+bool operator==(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) == float(rhs); }
 
 CUTLASS_HOST_DEVICE
-bool operator!=(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) != float(rhs);
-}
+bool operator!=(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) != float(rhs); }
 
 CUTLASS_HOST_DEVICE
-bool operator<(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) < float(rhs);
-}
+bool operator<(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) < float(rhs); }
 
 CUTLASS_HOST_DEVICE
-bool operator<=(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) <= float(rhs);
-}
+bool operator<=(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) <= float(rhs); }
 
 CUTLASS_HOST_DEVICE
-bool operator>(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) > float(rhs);
-}
+bool operator>(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) > float(rhs); }
 
 CUTLASS_HOST_DEVICE
-bool operator>=(tfloat32_t const& lhs, tfloat32_t const& rhs) {
-  return float(lhs) >= float(rhs);
-}
+bool operator>=(tfloat32_t const& lhs, tfloat32_t const& rhs) { return float(lhs) >= float(rhs); }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator+(tfloat32_t const& lhs, tfloat32_t const& rhs) {
+tfloat32_t operator+(tfloat32_t const& lhs, tfloat32_t const& rhs)
+{
   return tfloat32_t(float(lhs) + float(rhs));
 }
 
-
 CUTLASS_HOST_DEVICE
-tfloat32_t operator-(tfloat32_t const& lhs) {
+tfloat32_t operator-(tfloat32_t const& lhs)
+{
   union u_tff32 {
     float val_f32;
     tfloat32_t val_tf;
-    CUTLASS_HOST_DEVICE u_tff32() : val_f32(0) { }
+    CUTLASS_HOST_DEVICE u_tff32() : val_f32(0) {}
   };
-  union u_tff32 x; x.val_f32 = -reinterpret_cast<float const &>(lhs);
+  union u_tff32 x;
+  x.val_f32 = -reinterpret_cast<float const&>(lhs);
   return x.val_tf;
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator-(tfloat32_t const& lhs, tfloat32_t const& rhs) {
+tfloat32_t operator-(tfloat32_t const& lhs, tfloat32_t const& rhs)
+{
   return tfloat32_t(float(lhs) - float(rhs));
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator*(tfloat32_t const& lhs, tfloat32_t const& rhs) {
+tfloat32_t operator*(tfloat32_t const& lhs, tfloat32_t const& rhs)
+{
   return tfloat32_t(float(lhs) * float(rhs));
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator/(tfloat32_t const& lhs, tfloat32_t const& rhs) {
+tfloat32_t operator/(tfloat32_t const& lhs, tfloat32_t const& rhs)
+{
   return tfloat32_t(float(lhs) / float(rhs));
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator+=(tfloat32_t & lhs, tfloat32_t const& rhs) {
+tfloat32_t& operator+=(tfloat32_t& lhs, tfloat32_t const& rhs)
+{
   lhs = tfloat32_t(float(lhs) + float(rhs));
   return lhs;
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator-=(tfloat32_t & lhs, tfloat32_t const& rhs) {
+tfloat32_t& operator-=(tfloat32_t& lhs, tfloat32_t const& rhs)
+{
   lhs = tfloat32_t(float(lhs) - float(rhs));
   return lhs;
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator*=(tfloat32_t & lhs, tfloat32_t const& rhs) {
+tfloat32_t& operator*=(tfloat32_t& lhs, tfloat32_t const& rhs)
+{
   lhs = tfloat32_t(float(lhs) * float(rhs));
   return lhs;
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator/=(tfloat32_t & lhs, tfloat32_t const& rhs) {
+tfloat32_t& operator/=(tfloat32_t& lhs, tfloat32_t const& rhs)
+{
   lhs = tfloat32_t(float(lhs) / float(rhs));
   return lhs;
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator++(tfloat32_t & lhs) {
+tfloat32_t& operator++(tfloat32_t& lhs)
+{
   float tmp(lhs);
   ++tmp;
   lhs = tfloat32_t(tmp);
@@ -426,7 +398,8 @@ tfloat32_t& operator++(tfloat32_t & lhs) {
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t& operator--(tfloat32_t & lhs) {
+tfloat32_t& operator--(tfloat32_t& lhs)
+{
   float tmp(lhs);
   --tmp;
   lhs = tfloat32_t(tmp);
@@ -434,7 +407,8 @@ tfloat32_t& operator--(tfloat32_t & lhs) {
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator++(tfloat32_t & lhs, int) {
+tfloat32_t operator++(tfloat32_t& lhs, int)
+{
   tfloat32_t ret(lhs);
   float tmp(lhs);
   tmp++;
@@ -443,7 +417,8 @@ tfloat32_t operator++(tfloat32_t & lhs, int) {
 }
 
 CUTLASS_HOST_DEVICE
-tfloat32_t operator--(tfloat32_t & lhs, int) {
+tfloat32_t operator--(tfloat32_t& lhs, int)
+{
   tfloat32_t ret(lhs);
   float tmp(lhs);
   tmp--;
@@ -453,7 +428,7 @@ tfloat32_t operator--(tfloat32_t & lhs, int) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace cutlass
+}  // namespace cutlass
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -462,12 +437,11 @@ tfloat32_t operator--(tfloat32_t & lhs, int) {
 //
 
 CUTLASS_HOST_DEVICE
-cutlass::tfloat32_t operator "" _tf32(long double x) {
-  return cutlass::tfloat32_t(float(x));
-}
+cutlass::tfloat32_t operator"" _tf32(long double x) { return cutlass::tfloat32_t(float(x)); }
 
 CUTLASS_HOST_DEVICE
-cutlass::tfloat32_t operator "" _tf32(unsigned long long int x) {
+cutlass::tfloat32_t operator"" _tf32(unsigned long long int x)
+{
   return cutlass::tfloat32_t(int(x));
 }
 

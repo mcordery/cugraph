@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING
 
 import cupy as cp
 import numpy as np
-
 from nx_cugraph.convert import _to_graph
 from nx_cugraph.utils import index_dtype, networkx_algorithm
 

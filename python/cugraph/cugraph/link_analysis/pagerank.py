@@ -15,19 +15,12 @@ import warnings
 
 import cudf
 import numpy as np
-
-from pylibcugraph import (
-    pagerank as plc_pagerank,
-    personalized_pagerank as plc_p_pagerank,
-    exceptions as plc_exceptions,
-    ResourceHandle,
-)
-
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    df_score_to_dictionary,
-)
 from cugraph.exceptions import FailedToConvergeError
+from cugraph.utilities import df_score_to_dictionary, ensure_cugraph_obj_for_nx
+from pylibcugraph import ResourceHandle
+from pylibcugraph import exceptions as plc_exceptions
+from pylibcugraph import pagerank as plc_pagerank
+from pylibcugraph import personalized_pagerank as plc_p_pagerank
 
 
 def renumber_vertices(input_graph, input_df):

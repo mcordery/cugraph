@@ -16,7 +16,7 @@
 
 #pragma once
 
-//#include <raft/common/nvtx.hpp>
+// #include <raft/common/nvtx.hpp>
 #include <raft/core/operators.hpp>
 #include <raft/linalg/norm_types.hpp>
 #include <raft/sparse/detail/cusparse_wrappers.h>
@@ -25,10 +25,10 @@
 #include <raft/util/cuda_utils.cuh>
 #include <raft/util/cudart_utils.hpp>
 
-#include <hip/hip_runtime.h>
 #include <thrust/device_ptr.h>
 #include <thrust/scan.h>
 
+#include <hip/hip_runtime.h>
 #include <hipsparse.h>
 #include <stdio.h>
 

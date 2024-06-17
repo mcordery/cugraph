@@ -15,68 +15,48 @@
 # cython: language_level = 3
 
 from libc.stdint cimport uintptr_t
-
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-    cugraph_type_erased_device_array_view_create,
-    cugraph_type_erased_device_array_view_free,
-    cugraph_type_erased_host_array_view_t,
-    cugraph_type_erased_host_array_view_create,
-    cugraph_type_erased_host_array_view_free,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
 from pylibcugraph._cugraph_c.algorithms cimport (
-    cugraph_sample_result_t,
-    cugraph_prior_sources_behavior_t,
     cugraph_compression_type_t,
-    cugraph_sampling_options_t,
+    cugraph_prior_sources_behavior_t,
+    cugraph_sample_result_t,
     cugraph_sampling_options_create,
     cugraph_sampling_options_free,
-    cugraph_sampling_set_with_replacement,
-    cugraph_sampling_set_return_hops,
-    cugraph_sampling_set_prior_sources_behavior,
-    cugraph_sampling_set_dedupe_sources,
-    cugraph_sampling_set_renumber_results,
+    cugraph_sampling_options_t,
     cugraph_sampling_set_compress_per_hop,
     cugraph_sampling_set_compression_type,
+    cugraph_sampling_set_dedupe_sources,
+    cugraph_sampling_set_prior_sources_behavior,
+    cugraph_sampling_set_renumber_results,
     cugraph_sampling_set_retain_seeds,
+    cugraph_sampling_set_return_hops,
+    cugraph_sampling_set_with_replacement,
 )
-from pylibcugraph._cugraph_c.sampling_algorithms cimport (
-    cugraph_uniform_neighbor_sample,
-
+from pylibcugraph._cugraph_c.array cimport (
+    cugraph_type_erased_device_array_view_create,
+    cugraph_type_erased_device_array_view_free,
+    cugraph_type_erased_device_array_view_t,
+    cugraph_type_erased_host_array_view_create,
+    cugraph_type_erased_host_array_view_free,
+    cugraph_type_erased_host_array_view_t,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
-)
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.random cimport cugraph_rng_state_t
+from pylibcugraph._cugraph_c.resource_handle cimport bool_t, cugraph_resource_handle_t
+from pylibcugraph._cugraph_c.sampling_algorithms cimport cugraph_uniform_neighbor_sample
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.internal_types.sampling_result cimport SamplingResult
+from pylibcugraph.random cimport CuGraphRandomState
+from pylibcugraph.resource_handle cimport ResourceHandle
 from pylibcugraph.utils cimport (
-    assert_success,
-    assert_CAI_type,
     assert_AI_type,
+    assert_CAI_type,
+    assert_success,
     get_c_type_from_numpy_type,
 )
-from pylibcugraph.internal_types.sampling_result cimport (
-    SamplingResult,
-)
-from pylibcugraph._cugraph_c.random cimport (
-    cugraph_rng_state_t
-)
-from pylibcugraph.random cimport (
-    CuGraphRandomState
-)
+
 import warnings
+
 
 # TODO accept cupy/numpy random state in addition to raw seed.
 def uniform_neighbor_sample(ResourceHandle resource_handle,

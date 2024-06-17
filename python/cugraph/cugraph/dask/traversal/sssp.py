@@ -14,12 +14,13 @@
 #
 
 
-from dask.distributed import wait, default_client
+import cudf
 import cugraph.dask.comms.comms as Comms
 import cupy
-import cudf
 import dask_cudf
-from pylibcugraph import sssp as pylibcugraph_sssp, ResourceHandle
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import sssp as pylibcugraph_sssp
 
 
 def _call_plc_sssp(

@@ -11,12 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from cugraph.tree import minimum_spanning_tree_wrapper
 from cugraph.structure.graph_classes import Graph
-from cugraph.utilities import (
-    ensure_cugraph_obj_for_nx,
-    cugraph_to_nx,
-)
+from cugraph.tree import minimum_spanning_tree_wrapper
+from cugraph.utilities import cugraph_to_nx, ensure_cugraph_obj_for_nx
 
 
 def _minimum_spanning_tree_subgraph(G):

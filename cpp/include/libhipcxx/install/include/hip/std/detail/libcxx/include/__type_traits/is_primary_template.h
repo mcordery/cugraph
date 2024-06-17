@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/enable_if.h"
 #include "../__type_traits/is_same.h"
@@ -25,14 +25,11 @@
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 template <class _Tp>
-using __test_for_primary_template = __enable_if_t<
-    _IsSame<_Tp, typename _Tp::__primary_template>::value
-  >;
+using __test_for_primary_template =
+  __enable_if_t<_IsSame<_Tp, typename _Tp::__primary_template>::value>;
 template <class _Tp>
-using __is_primary_template = _IsValidExpansion<
-    __test_for_primary_template, _Tp
-  >;
+using __is_primary_template = _IsValidExpansion<__test_for_primary_template, _Tp>;
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_IS_PRIMARY_TEMPLATE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_IS_PRIMARY_TEMPLATE_H

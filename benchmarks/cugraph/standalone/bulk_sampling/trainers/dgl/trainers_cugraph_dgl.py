@@ -11,22 +11,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import time
 import re
+import time
+import warnings
+from typing import List
 
-from .trainers_dgl import DGLTrainer
+import numpy as np
+import torch
+from cugraph.gnn import FeatureStore
+from cugraph_dgl.dataloading import HomogenousBulkSamplerDataset
 from models.dgl import GraphSAGE
+from torch.nn.parallel import DistributedDataParallel as ddp
+
 from datasets import Dataset
 
-import torch
-import numpy as np
-import warnings
-
-from torch.nn.parallel import DistributedDataParallel as ddp
-from cugraph_dgl.dataloading import HomogenousBulkSamplerDataset
-from cugraph.gnn import FeatureStore
-
-from typing import List
+from .trainers_dgl import DGLTrainer
 
 
 def get_dataloader(

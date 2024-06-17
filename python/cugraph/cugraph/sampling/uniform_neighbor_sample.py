@@ -13,19 +13,15 @@
 
 from __future__ import annotations
 
-from pylibcugraph import ResourceHandle
-from pylibcugraph import uniform_neighbor_sample as pylibcugraph_uniform_neighbor_sample
-
-from cugraph.sampling.sampling_utilities import sampling_results_from_cupy_array_dict
-
-import numpy
+import warnings
+from typing import TYPE_CHECKING, List, Sequence, Tuple, Union
 
 import cudf
 import cupy as cp
-import warnings
-
-from typing import Union, Tuple, Sequence, List
-from typing import TYPE_CHECKING
+import numpy
+from cugraph.sampling.sampling_utilities import sampling_results_from_cupy_array_dict
+from pylibcugraph import ResourceHandle
+from pylibcugraph import uniform_neighbor_sample as pylibcugraph_uniform_neighbor_sample
 
 if TYPE_CHECKING:
     from cugraph import Graph
@@ -348,9 +344,9 @@ def uniform_neighbor_sample(
         resource_handle=ResourceHandle(),
         input_graph=G._plc_graph,
         start_list=start_list[start_col_name],
-        batch_id_list=start_list[batch_col_name]
-        if batch_col_name in start_list
-        else None,
+        batch_id_list=(
+            start_list[batch_col_name] if batch_col_name in start_list else None
+        ),
         h_fan_out=fanout_vals,
         with_replacement=with_replacement,
         do_expensive_check=False,

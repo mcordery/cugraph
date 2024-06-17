@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import pytest
-
 from cugraph_service_server.testing import utils
 
 graph_creation_extension1_file_contents = """

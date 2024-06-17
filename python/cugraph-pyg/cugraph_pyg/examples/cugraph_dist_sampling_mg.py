@@ -20,25 +20,21 @@ import os
 import re
 import tempfile
 
+import cudf
 import numpy as np
 import torch
-import torch.multiprocessing as tmp
 import torch.distributed as dist
-
-import cudf
-
+import torch.multiprocessing as tmp
 from cugraph.gnn import (
-    cugraph_comms_init,
-    cugraph_comms_shutdown,
-    cugraph_comms_create_unique_id,
-    cugraph_comms_get_raft_handle,
     DistSampleWriter,
     UniformNeighborSampler,
+    cugraph_comms_create_unique_id,
+    cugraph_comms_get_raft_handle,
+    cugraph_comms_init,
+    cugraph_comms_shutdown,
 )
-
-from pylibcugraph import MGGraph, ResourceHandle, GraphProperties
-
 from ogb.nodeproppred import NodePropPredDataset
+from pylibcugraph import GraphProperties, MGGraph, ResourceHandle
 
 
 def init_pytorch(rank, world_size):

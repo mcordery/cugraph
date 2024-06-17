@@ -38,7 +38,6 @@ Macros:
 */
 
 #include <__config>
-
 #include <__pragma_push>
 
 #if defined(_LIBCUDACXX_USE_PRAGMA_GCC_SYSTEM_HEADER)
@@ -61,7 +60,7 @@ Macros:
 // Get the ISO C defines
 #undef _GCC_LIMITS_H_
 #include_next <limits.h>
-#endif // __GNUC__
+#endif  // __GNUC__
 
 #include <__pragma_pop>
 

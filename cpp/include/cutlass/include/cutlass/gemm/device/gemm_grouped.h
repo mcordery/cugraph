@@ -48,14 +48,14 @@ namespace device {
 /// GEMM Grouped
 template <typename GemmKernel_>
 class GemmGrouped : public BaseGrouped<GemmKernel_> {
-public:
+ public:
   using GemmKernel = GemmKernel_;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace device
-} // namespace gemm
-} // namespace cutlass
+}  // namespace device
+}  // namespace gemm
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////

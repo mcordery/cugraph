@@ -105,8 +105,8 @@ template <int32_t CGSize, int32_t WindowSize, typename SizeType, std::size_t N>
     return window_extent<SizeType,
                          static_cast<std::size_t>(
                            *hipco::detail::lower_bound(hipco::detail::primes.begin(),
-                                                      hipco::detail::primes.end(),
-                                                      static_cast<uint64_t>(size)) *
+                                                       hipco::detail::primes.end(),
+                                                       static_cast<uint64_t>(size)) *
                            CGSize)>{};
   }
 }
@@ -120,12 +120,10 @@ template <int32_t CGSize, int32_t WindowSize, typename SizeType>
 namespace detail {
 
 template <typename...>
-struct is_window_extent : std::false_type {
-};
+struct is_window_extent : std::false_type {};
 
 template <typename SizeType, std::size_t N>
-struct is_window_extent<window_extent<SizeType, N>> : std::true_type {
-};
+struct is_window_extent<window_extent<SizeType, N>> : std::true_type {};
 
 template <typename T>
 inline constexpr bool is_window_extent_v = is_window_extent<T>::value;

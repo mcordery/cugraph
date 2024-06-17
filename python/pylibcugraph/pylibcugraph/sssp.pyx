@@ -14,39 +14,25 @@
 # Have cython use python 3 syntax
 # cython: language_level = 3
 
-from pylibcugraph._cugraph_c.resource_handle cimport (
-    bool_t,
-    data_type_id_t,
-    cugraph_resource_handle_t,
-)
-from pylibcugraph._cugraph_c.error cimport (
-    cugraph_error_code_t,
-    cugraph_error_t,
-)
-from pylibcugraph._cugraph_c.array cimport (
-    cugraph_type_erased_device_array_view_t,
-)
-from pylibcugraph._cugraph_c.graph cimport (
-    cugraph_graph_t,
-)
 from pylibcugraph._cugraph_c.algorithms cimport (
-    cugraph_sssp,
-    cugraph_paths_result_t,
-    cugraph_paths_result_get_vertices,
+    cugraph_paths_result_free,
     cugraph_paths_result_get_distances,
     cugraph_paths_result_get_predecessors,
-    cugraph_paths_result_free,
+    cugraph_paths_result_get_vertices,
+    cugraph_paths_result_t,
+    cugraph_sssp,
 )
-from pylibcugraph.resource_handle cimport (
-    ResourceHandle,
+from pylibcugraph._cugraph_c.array cimport cugraph_type_erased_device_array_view_t
+from pylibcugraph._cugraph_c.error cimport cugraph_error_code_t, cugraph_error_t
+from pylibcugraph._cugraph_c.graph cimport cugraph_graph_t
+from pylibcugraph._cugraph_c.resource_handle cimport (
+    bool_t,
+    cugraph_resource_handle_t,
+    data_type_id_t,
 )
-from pylibcugraph.graphs cimport (
-    _GPUGraph,
-)
-from pylibcugraph.utils cimport (
-    assert_success,
-    copy_to_cupy_array,
-)
+from pylibcugraph.graphs cimport _GPUGraph
+from pylibcugraph.resource_handle cimport ResourceHandle
+from pylibcugraph.utils cimport assert_success, copy_to_cupy_array
 
 
 def sssp(ResourceHandle resource_handle,

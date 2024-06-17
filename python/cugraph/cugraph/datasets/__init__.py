@@ -16,11 +16,12 @@ from pathlib import Path
 # datasets module
 from cugraph.datasets.dataset import (
     Dataset,
-    download_all,
-    set_download_dir,
-    get_download_dir,
     default_download_dir,
+    download_all,
+    get_download_dir,
+    set_download_dir,
 )
+
 from cugraph.datasets import metadata
 
 # metadata path for .yaml files

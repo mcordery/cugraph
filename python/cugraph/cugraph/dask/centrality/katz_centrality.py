@@ -13,12 +13,14 @@
 # limitations under the License.
 #
 
-from dask.distributed import wait, default_client
-from pylibcugraph import ResourceHandle, katz_centrality as pylibcugraph_katz
+import warnings
+
+import cudf
 import cugraph.dask.comms.comms as Comms
 import dask_cudf
-import cudf
-import warnings
+from dask.distributed import default_client, wait
+from pylibcugraph import ResourceHandle
+from pylibcugraph import katz_centrality as pylibcugraph_katz
 
 
 def _call_plc_katz_centrality(

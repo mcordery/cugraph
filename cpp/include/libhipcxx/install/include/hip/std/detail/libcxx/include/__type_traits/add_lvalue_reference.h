@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif // __cuda_std__
+#endif  // __cuda_std__
 
 #include "../__type_traits/is_referenceable.h"
 
@@ -22,7 +22,8 @@
 
 _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
-#if defined(_LIBCUDACXX_ADD_LVALUE_REFERENCE) && !defined(_LIBCUDACXX_USE_ADD_LVALUE_REFERENCE_FALLBACK)
+#if defined(_LIBCUDACXX_ADD_LVALUE_REFERENCE) && \
+  !defined(_LIBCUDACXX_USE_ADD_LVALUE_REFERENCE_FALLBACK)
 
 template <class _Tp>
 using __add_lvalue_reference_t = _LIBCUDACXX_ADD_LVALUE_REFERENCE(_Tp);
@@ -33,7 +34,7 @@ template <class _Tp, bool = __libcpp_is_referenceable<_Tp>::value>
 struct __add_lvalue_reference_impl {
   typedef _LIBCUDACXX_NODEBUG_TYPE _Tp type;
 };
-template <class _Tp >
+template <class _Tp>
 struct __add_lvalue_reference_impl<_Tp, true> {
   typedef _LIBCUDACXX_NODEBUG_TYPE _Tp& type;
 };
@@ -41,7 +42,8 @@ struct __add_lvalue_reference_impl<_Tp, true> {
 template <class _Tp>
 using __add_lvalue_reference_t = typename __add_lvalue_reference_impl<_Tp>::type;
 
-#endif // defined(_LIBCUDACXX_ADD_LVALUE_REFERENCE) && !defined(_LIBCUDACXX_USE_ADD_LVALUE_REFERENCE_FALLBACK)
+#endif  // defined(_LIBCUDACXX_ADD_LVALUE_REFERENCE) &&
+        // !defined(_LIBCUDACXX_USE_ADD_LVALUE_REFERENCE_FALLBACK)
 
 template <class _Tp>
 struct add_lvalue_reference {
@@ -49,9 +51,10 @@ struct add_lvalue_reference {
 };
 
 #if _LIBCUDACXX_STD_VER > 11
-template <class _Tp> using add_lvalue_reference_t = __add_lvalue_reference_t<_Tp>;
+template <class _Tp>
+using add_lvalue_reference_t = __add_lvalue_reference_t<_Tp>;
 #endif
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___TYPE_TRAITS_ADD_LVALUE_REFERENCE_H
+#endif  // _LIBCUDACXX___TYPE_TRAITS_ADD_LVALUE_REFERENCE_H

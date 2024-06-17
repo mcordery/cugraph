@@ -85,8 +85,8 @@ struct fast_int {
  private:
   using intermediate_type =
     hip::std::conditional_t<sizeof(value_type) == 4,
-                             std::uint64_t,
-                             unsigned __int128>;  ///< Intermediate type for multiplication
+                            std::uint64_t,
+                            unsigned __int128>;  ///< Intermediate type for multiplication
   using unsigned_value_type = hip::std::make_unsigned_t<value_type>;  ///< Unsigned value type
   using signed_value_type   = hip::std::make_signed_t<value_type>;    ///< Signed value type
 

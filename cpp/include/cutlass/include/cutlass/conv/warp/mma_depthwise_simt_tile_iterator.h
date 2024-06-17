@@ -35,18 +35,15 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/array.h"
-#include "cutlass/tensor_ref.h"
-#include "cutlass/matrix_shape.h"
-
 #include "cutlass/arch/memory_sm75.h"
-
-#include "cutlass/layout/matrix.h"
-
+#include "cutlass/array.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/warp/mma_simt_policy.h"
 #include "cutlass/gemm/warp/mma_simt_tile_iterator.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_shape.h"
+#include "cutlass/tensor_ref.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -74,8 +71,7 @@ template <
   /// Number of partitions along K dimension - used in sliced-K
   int PartitionsK = 1,
   /// Group Size along kPartition - used in sliced-K
-  int PartitionGroupSize = 1
->
+  int PartitionGroupSize = 1>
 class DepthwiseMmaSimtTileIterator;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,16 +81,16 @@ class DepthwiseMmaSimtTileIterator;
 /// Concept: MutableRandomAccessContiguousTileIteratorConcept
 ///
 template <
-    /// Size of the matrix to load (concept: MatrixShape)
-    typename Shape_,
-    /// Data type of A elements
-    typename Element_,
-    /// Shape of the warp in units of thread (concept: MmaSimtPolicy)
-    typename Policy_,
-    /// Number of partitions along K dimension
-    int PartitionsK,
-    /// Group Size along kPartition - used in sliced-K
-    int PartitionGroupSize>
+  /// Size of the matrix to load (concept: MatrixShape)
+  typename Shape_,
+  /// Data type of A elements
+  typename Element_,
+  /// Shape of the warp in units of thread (concept: MmaSimtPolicy)
+  typename Policy_,
+  /// Number of partitions along K dimension
+  int PartitionsK,
+  /// Group Size along kPartition - used in sliced-K
+  int PartitionGroupSize>
 class DepthwiseMmaSimtTileIterator<Shape_,
                                    cutlass::gemm::Operand::kB,
                                    Element_,
@@ -102,21 +98,21 @@ class DepthwiseMmaSimtTileIterator<Shape_,
                                    Policy_,
                                    PartitionsK,
                                    PartitionGroupSize>
-    : public cutlass::gemm::warp::MmaSimtTileIterator<Shape_,
-                                               cutlass::gemm::Operand::kB,
-                                               Element_,
-                                               layout::RowMajor,
-                                               Policy_,
-                                               PartitionsK,
-                                               PartitionGroupSize> {
-
+  : public cutlass::gemm::warp::MmaSimtTileIterator<Shape_,
+                                                    cutlass::gemm::Operand::kB,
+                                                    Element_,
+                                                    layout::RowMajor,
+                                                    Policy_,
+                                                    PartitionsK,
+                                                    PartitionGroupSize> {
   using Base = cutlass::gemm::warp::MmaSimtTileIterator<Shape_,
-                                               cutlass::gemm::Operand::kB,
-                                               Element_,
-                                               layout::RowMajor,
-                                               Policy_,
-                                               PartitionsK,
-                                               PartitionGroupSize>;
+                                                        cutlass::gemm::Operand::kB,
+                                                        Element_,
+                                                        layout::RowMajor,
+                                                        Policy_,
+                                                        PartitionsK,
+                                                        PartitionGroupSize>;
+
  public:
   /// Shape of tile to load (concept: MatrixShape)
   using Shape = Shape_;
@@ -149,77 +145,72 @@ class DepthwiseMmaSimtTileIterator<Shape_,
   using ThreadShape = typename Base::ThreadShape;
 
   /// Number of individual loads
-  using Iterations =  typename Base::Iterations;
+  using Iterations = typename Base::Iterations;
 
   /// Fragment object holding a thread's part of a tile
   using Fragment = typename Base::Fragment;
 
-  static_assert(Policy::LaneMmaShape::kN == 1, "Each thread should be 1 element per LDS along the k-dim");
-  
-private:
+  static_assert(Policy::LaneMmaShape::kN == 1,
+                "Each thread should be 1 element per LDS along the k-dim");
 
+ private:
   MatrixCoord lane_offset_;
   int channel_idx_;
   int base_channel_idx_;
   int warps_n_;
 
  public:
-  
   /// Default ctor constructs null iterator
   CUTLASS_HOST_DEVICE
-  DepthwiseMmaSimtTileIterator():Base() { }
+  DepthwiseMmaSimtTileIterator() : Base() {}
 
   /// Constructor from TensorRef
   CUTLASS_HOST_DEVICE
-  DepthwiseMmaSimtTileIterator(
-    TensorRef ref, 
-    int lane_id
-  ) : Base(ref, lane_id) {
-
+  DepthwiseMmaSimtTileIterator(TensorRef ref, int lane_id) : Base(ref, lane_id)
+  {
     // compute offset based on thread ID and lane layout
     typename Policy::LaneLayout lane_layout = Policy::get_lane_layout();
 
-    warps_n_ = -1;
-    channel_idx_ = 0;
+    warps_n_          = -1;
+    channel_idx_      = 0;
     base_channel_idx_ = 0;
-    lane_offset_ = lane_layout.inverse(lane_id) * MatrixCoord(0, Policy::LaneMmaShape::kN);
+    lane_offset_      = lane_layout.inverse(lane_id) * MatrixCoord(0, Policy::LaneMmaShape::kN);
   }
-  
+
   /// Advances an iterator along logical dimensions of matrix in units of whole tiles
   CUTLASS_HOST_DEVICE
-  DepthwiseMmaSimtTileIterator &add_tile_offset(TensorCoord const &coord) {
+  DepthwiseMmaSimtTileIterator& add_tile_offset(TensorCoord const& coord)
+  {
+    if (warps_n_ == -1) { warps_n_ = coord.column(); }
 
-    if(warps_n_ == -1){
-        warps_n_ = coord.column();
-    }
-    
     Base::add_tile_offset(coord);
     return *this;
   }
 
   /// Loads a fragment from memory at the location pointed to by the iterator. (vector loads)
   CUTLASS_HOST_DEVICE
-  void load_with_pointer_offset(Fragment &frag, Index pointer_offset) const {
-    Array<Element, Policy::LaneMmaShape::kN> *dst_ptr =
-        reinterpret_cast<Array<Element, Policy::LaneMmaShape::kN> *>(&frag);
+  void load_with_pointer_offset(Fragment& frag, Index pointer_offset) const
+  {
+    Array<Element, Policy::LaneMmaShape::kN>* dst_ptr =
+      reinterpret_cast<Array<Element, Policy::LaneMmaShape::kN>*>(&frag);
 
     CUTLASS_PRAGMA_UNROLL
     for (int k = 0; k < Iterations::kRow; ++k) {
       CUTLASS_PRAGMA_UNROLL
       for (int n = 0; n < Iterations::kColumn; ++n) {
-
-        void const *ptr = this->ref_.data() +
-                          this->ref_.offset({-(channel_idx_ - base_channel_idx_),
-                                             n * Policy::WarpShape::kColumn}) +
-                          pointer_offset / Policy::LaneMmaShape::kN;
+        void const* ptr =
+          this->ref_.data() +
+          this->ref_.offset({-(channel_idx_ - base_channel_idx_), n * Policy::WarpShape::kColumn}) +
+          pointer_offset / Policy::LaneMmaShape::kN;
 
         // Base_k of a warp +  Base_k of current threads.
         int thread_k_base_idx =
-            warps_n_ * Shape::kColumn / Policy::LaneMmaShape::kN + lane_offset_.column();
+          warps_n_ * Shape::kColumn / Policy::LaneMmaShape::kN + lane_offset_.column();
 
         if (channel_idx_ + k == thread_k_base_idx + n * Policy::WarpShape::kColumn) {
           // Depthwise kernel would only do computation when channel == k.
-          // Loads an element when the current computation channel == the k corresponding to this thread.
+          // Loads an element when the current computation channel == the k corresponding to this
+          // thread.
           arch::shared_load(dst_ptr[n + k * Iterations::kColumn], ptr);
         } else {
           // Reduce SMEM load
@@ -231,25 +222,22 @@ private:
 
   /// Loads a fragment from memory at the location pointed to by the iterator.
   CUTLASS_HOST_DEVICE
-  void load(Fragment &frag) const {
-    load_with_pointer_offset(frag, 0);
-  }
-  
+  void load(Fragment& frag) const { load_with_pointer_offset(frag, 0); }
+
   /// Notify the iterator which k-group it is currently pointing to.
   ///
   /// This does not advance the iterator. Rather, it overrides its internal
   /// tracking with constant-valued k-group index
   CUTLASS_DEVICE
-  void set_kgroup_index(int k_group) {
-    if(k_group % PartitionGroupSize == 0 && k_group != 0){
-      base_channel_idx_ = k_group;
-    }
+  void set_kgroup_index(int k_group)
+  {
+    if (k_group % PartitionGroupSize == 0 && k_group != 0) { base_channel_idx_ = k_group; }
     channel_idx_ = k_group;
   }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace gemm
-} // namespace cutlass
+}  // namespace warp
+}  // namespace conv
+}  // namespace cutlass

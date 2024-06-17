@@ -35,15 +35,15 @@
 
 #include <hipco/operator.hpp>
 
-#include <hip/atomic>
-
 #include <hip_extensions/hip_cooperative_groups_ext/amd_cooperative_groups_ext.cuh>
+
+#include <hip/atomic>
 
 namespace hipco {
 namespace experimental {
 
 // Todo(HIP): change once we have the workarounds in ROCm.
-namespace cooperative_groups = hip_extensions::hip_cooperative_groups_ext ;
+namespace cooperative_groups = hip_extensions::hip_cooperative_groups_ext;
 
 template <typename Key,
           hip::thread_scope Scope,
@@ -139,7 +139,8 @@ template <typename Key,
           typename StorageRef,
           typename... Operators>
 template <typename... NewOperators>
-__host__ __device__ auto static_set_ref<Key, Scope, KeyEqual, ProbingScheme, StorageRef, Operators...>::with(
+__host__ __device__ auto
+static_set_ref<Key, Scope, KeyEqual, ProbingScheme, StorageRef, Operators...>::with(
   NewOperators...) && noexcept
 {
   return static_set_ref<Key, Scope, KeyEqual, ProbingScheme, StorageRef, NewOperators...>(

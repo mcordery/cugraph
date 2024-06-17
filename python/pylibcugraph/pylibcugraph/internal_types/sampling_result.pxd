@@ -15,9 +15,7 @@
 # cython: language_level = 3
 
 
-from pylibcugraph._cugraph_c.algorithms cimport (
-    cugraph_sample_result_t,
-)
+from pylibcugraph._cugraph_c.algorithms cimport cugraph_sample_result_t
 
 
 cdef class SamplingResult:

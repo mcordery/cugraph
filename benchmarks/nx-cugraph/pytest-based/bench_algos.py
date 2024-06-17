@@ -14,10 +14,11 @@
 import random
 
 import networkx as nx
+import nx_cugraph as nxcg
 import pandas as pd
 import pytest
+
 from cugraph import datasets
-import nx_cugraph as nxcg
 
 # Attempt to import the NetworkX dispatching module, which is only needed when
 # testing with NX <3.2 in order to dynamically switch backends. NX >=3.2 allows

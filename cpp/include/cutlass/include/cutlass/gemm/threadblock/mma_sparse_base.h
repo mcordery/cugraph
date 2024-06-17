@@ -52,16 +52,16 @@ namespace threadblock {
 
 /// Policy object describing MmaTensorOp
 template <
-    /// Warp-level GEMM operator (concept: gemm::warp::Mma)
-    typename Operator_,
-    /// Padding used for A operand in shared memory (concept: MatrixShape)
-    typename SmemPaddingA_,
-    /// Padding used for B operand in shared memory (concept: MatrixShape)
-    typename SmemPaddingB_,
-    /// Padding used for E operand in shared memory (concept: MatrixShape)
-    typename SmemPaddingE_,
-    /// Number of partitions of K dimension of GEMM
-    int PartitionsK = 1>
+  /// Warp-level GEMM operator (concept: gemm::warp::Mma)
+  typename Operator_,
+  /// Padding used for A operand in shared memory (concept: MatrixShape)
+  typename SmemPaddingA_,
+  /// Padding used for B operand in shared memory (concept: MatrixShape)
+  typename SmemPaddingB_,
+  /// Padding used for E operand in shared memory (concept: MatrixShape)
+  typename SmemPaddingE_,
+  /// Number of partitions of K dimension of GEMM
+  int PartitionsK = 1>
 struct SparseMmaPolicy {
   /// Warp-level GEMM operator (concept: gemm::warp::MmaTensorOp or gemm::warp::MmaSimt)
   using Operator = Operator_;
@@ -84,14 +84,14 @@ struct SparseMmaPolicy {
 /// Structure to compute the matrix product targeting CUDA cores and SIMT math
 /// instructions.
 template <
-    /// Size of the Gemm problem - concept: gemm::GemmShape<>
-    typename Shape_,
-    /// Policy describing tuning details (concept: MmaPolicy)
-    typename Policy_,
-    /// Number of stages,
-    int Stages,
-    /// Used for partial specialization
-    typename Enable = bool>
+  /// Size of the Gemm problem - concept: gemm::GemmShape<>
+  typename Shape_,
+  /// Policy describing tuning details (concept: MmaPolicy)
+  typename Policy_,
+  /// Number of stages,
+  int Stages,
+  /// Used for partial specialization
+  typename Enable = bool>
 class SparseMmaBase {
  public:
   ///< Size of the Gemm problem - concept: gemm::GemmShape<>
@@ -112,20 +112,17 @@ class SparseMmaBase {
   using WarpGemm = typename Policy::Operator::Shape;
 
   /// Shape describing the number of warps filling the CTA
-  using WarpCount = GemmShape<Shape::kM / WarpGemm::kM,
-                              Shape::kN / WarpGemm::kN,
-                              Shape::kK / WarpGemm::kK>;
+  using WarpCount =
+    GemmShape<Shape::kM / WarpGemm::kM, Shape::kN / WarpGemm::kN, Shape::kK / WarpGemm::kK>;
 
   /// Number of warp-level GEMM oeprations
-  static int const kWarpGemmIterations =
-      (WarpGemm::kK / Operator::Policy::MmaShape::kK);
+  static int const kWarpGemmIterations = (WarpGemm::kK / Operator::Policy::MmaShape::kK);
 
   static_assert(kWarpGemmIterations > 1,
                 "The pipelined structure requires at least two warp-level "
                 "GEMM operations.");
 
-  static_assert((kWarpGemmIterations % 2) == 0,
-                "Inner loop iteration must be an even number.");
+  static_assert((kWarpGemmIterations % 2) == 0, "Inner loop iteration must be an even number.");
 
   /// Number of stages
   static int const kStages = Stages;
@@ -156,19 +153,16 @@ class SparseMmaBase {
 
     /// Shape of the A matrix operand in shared memory
     using ShapeA = MatrixShape<Shape::kM + Policy::SmemPaddingA::kRow,
-                               Shape::kK / kSparse * kStages +
-                                   Policy::SmemPaddingA::kColumn>;
+                               Shape::kK / kSparse * kStages + Policy::SmemPaddingA::kColumn>;
 
     /// Shape of the B matrix operand in shared memory
-    using ShapeB =
-        MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
-                    Shape::kN + Policy::SmemPaddingB::kColumn>;
+    using ShapeB = MatrixShape<Shape::kK * kStages + Policy::SmemPaddingB::kRow,
+                               Shape::kN + Policy::SmemPaddingB::kColumn>;
 
     /// Shape of the E matrix operand in shared memory
-    using ShapeE =
-        MatrixShape<Shape::kM * 2 + Policy::SmemPaddingE::kRow,
-                    Shape::kK / kSparse / kElementsPerElementE / 2 * kStages +
-                        Policy::SmemPaddingE::kColumn>;
+    using ShapeE = MatrixShape<Shape::kM * 2 + Policy::SmemPaddingE::kRow,
+                               Shape::kK / kSparse / kElementsPerElementE / 2 * kStages +
+                                 Policy::SmemPaddingE::kColumn>;
 
    public:
     //
@@ -185,50 +179,45 @@ class SparseMmaBase {
     AlignedBuffer<typename Operator::ElementE, ShapeE::kCount> operand_E;
 
    public:
-
     //
     // Methods
     //
 
     /// Returns a layout object for the A matrix
     CUTLASS_DEVICE
-    static typename Operator::LayoutA LayoutA() {
+    static typename Operator::LayoutA LayoutA()
+    {
       return Operator::LayoutA::packed({ShapeA::kRow, ShapeA::kColumn});
     }
 
     /// Returns a layout object for the B matrix
     CUTLASS_HOST_DEVICE
-    static typename Operator::LayoutB LayoutB() {
+    static typename Operator::LayoutB LayoutB()
+    {
       return Operator::LayoutB::packed({ShapeB::kRow, ShapeB::kColumn});
     }
 
     /// Returns a layout object for the E matrix
     CUTLASS_HOST_DEVICE
-    static typename Operator::LayoutE LayoutE() {
+    static typename Operator::LayoutE LayoutE()
+    {
       return Operator::LayoutE::packed({ShapeE::kRow, ShapeE::kColumn});
     }
 
     /// Returns a TensorRef to the A operand
     CUTLASS_HOST_DEVICE
-    TensorRefA operand_A_ref() {
-      return TensorRefA{operand_A.data(), LayoutA()};
-    }
+    TensorRefA operand_A_ref() { return TensorRefA{operand_A.data(), LayoutA()}; }
 
     /// Returns a TensorRef to the B operand
     CUTLASS_HOST_DEVICE
-    TensorRefB operand_B_ref() {
-      return TensorRefB{operand_B.data(), LayoutB()};
-    }
+    TensorRefB operand_B_ref() { return TensorRefB{operand_B.data(), LayoutB()}; }
 
     /// Returns a TensorRef to the E operand
     CUTLASS_HOST_DEVICE
-    TensorRefE operand_E_ref() {
-      return TensorRefE{operand_E.data(), LayoutE()};
-    }
+    TensorRefE operand_E_ref() { return TensorRefE{operand_E.data(), LayoutE()}; }
   };
 
  protected:
-
   //
   // Data members
   //
@@ -242,25 +231,22 @@ class SparseMmaBase {
   /// Iterator to load a warp-scoped tile of E operand from shared memory
   typename Operator::IteratorE warp_tile_iterator_E_;
 
-
-public:
-
+ public:
   /// Construct from tensor references
   CUTLASS_DEVICE
   SparseMmaBase(
-      ///< Shared storage needed for internal use by threadblock-scoped GEMM
-      SharedStorage &shared_storage,
-      ///< ID within the threadblock
-      int thread_idx,
-      ///< ID of warp
-      int warp_idx,
-      ///< ID of each thread within a warp
-      int lane_idx
-    ):
-      warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
+    ///< Shared storage needed for internal use by threadblock-scoped GEMM
+    SharedStorage& shared_storage,
+    ///< ID within the threadblock
+    int thread_idx,
+    ///< ID of warp
+    int warp_idx,
+    ///< ID of each thread within a warp
+    int lane_idx)
+    : warp_tile_iterator_A_(shared_storage.operand_A_ref(), lane_idx),
       warp_tile_iterator_B_(shared_storage.operand_B_ref(), lane_idx),
-      warp_tile_iterator_E_(shared_storage.operand_E_ref(), lane_idx) {
-
+      warp_tile_iterator_E_(shared_storage.operand_E_ref(), lane_idx)
+  {
   }
 };
 

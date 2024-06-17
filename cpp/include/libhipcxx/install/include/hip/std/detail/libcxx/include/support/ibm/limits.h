@@ -10,19 +10,19 @@
 #ifndef _LIBCUDACXX_SUPPORT_IBM_LIMITS_H
 #define _LIBCUDACXX_SUPPORT_IBM_LIMITS_H
 
-#if !defined(_AIX) // Linux
-#include <math.h> // for HUGE_VAL, HUGE_VALF, HUGE_VALL, and NAN
+#if !defined(_AIX)  // Linux
+#include <math.h>   // for HUGE_VAL, HUGE_VALF, HUGE_VALL, and NAN
 
 static const unsigned int _QNAN_F = 0x7fc00000;
-#define NANF (*((float *)(&_QNAN_F)))
+#define NANF (*((float*)(&_QNAN_F)))
 static const unsigned int _QNAN_LDBL128[4] = {0x7ff80000, 0x0, 0x0, 0x0};
-#define NANL (*((long double *)(&_QNAN_LDBL128)))
-static const unsigned int _SNAN_F= 0x7f855555;
-#define NANSF (*((float *)(&_SNAN_F)))
+#define NANL (*((long double*)(&_QNAN_LDBL128)))
+static const unsigned int _SNAN_F = 0x7f855555;
+#define NANSF (*((float*)(&_SNAN_F)))
 static const unsigned int _SNAN_D[2] = {0x7ff55555, 0x55555555};
-#define NANS (*((double *)(&_SNAN_D)))
+#define NANS (*((double*)(&_SNAN_D)))
 static const unsigned int _SNAN_LDBL128[4] = {0x7ff55555, 0x55555555, 0x0, 0x0};
-#define NANSL (*((long double *)(&_SNAN_LDBL128)))
+#define NANSL (*((long double*)(&_SNAN_LDBL128)))
 
 #define __builtin_huge_val()     HUGE_VAL
 #define __builtin_huge_valf()    HUGE_VALF
@@ -36,18 +36,18 @@ static const unsigned int _SNAN_LDBL128[4] = {0x7ff55555, 0x55555555, 0x0, 0x0};
 
 #else
 
+#include <float.h>  // limit constants
 #include <math.h>
-#include <float.h> // limit constants
 
-#define __builtin_huge_val()     HUGE_VAL  //0x7ff0000000000000
-#define __builtin_huge_valf()    HUGE_VALF //0x7f800000
-#define __builtin_huge_vall()    HUGE_VALL //0x7ff0000000000000
-#define __builtin_nan(__dummy)   nan(__dummy) //0x7ff8000000000000
-#define __builtin_nanf(__dummy)  nanf(__dummy) // 0x7ff80000
-#define __builtin_nanl(__dummy)  nanl(__dummy) //0x7ff8000000000000
-#define __builtin_nans(__dummy)  DBL_SNAN //0x7ff5555555555555
-#define __builtin_nansf(__dummy) FLT_SNAN //0x7f855555
-#define __builtin_nansl(__dummy) DBL_SNAN //0x7ff5555555555555
+#define __builtin_huge_val()     HUGE_VAL       // 0x7ff0000000000000
+#define __builtin_huge_valf()    HUGE_VALF      // 0x7f800000
+#define __builtin_huge_vall()    HUGE_VALL      // 0x7ff0000000000000
+#define __builtin_nan(__dummy)   nan(__dummy)   // 0x7ff8000000000000
+#define __builtin_nanf(__dummy)  nanf(__dummy)  // 0x7ff80000
+#define __builtin_nanl(__dummy)  nanl(__dummy)  // 0x7ff8000000000000
+#define __builtin_nans(__dummy)  DBL_SNAN       // 0x7ff5555555555555
+#define __builtin_nansf(__dummy) FLT_SNAN       // 0x7f855555
+#define __builtin_nansl(__dummy) DBL_SNAN       // 0x7ff5555555555555
 
 #define __FLT_MANT_DIG__   FLT_MANT_DIG
 #define __FLT_DIG__        FLT_DIG
@@ -91,8 +91,8 @@ static const unsigned int _SNAN_LDBL128[4] = {0x7ff55555, 0x55555555, 0x0, 0x0};
 #endif
 
 // predefined by XLC on LoP
-#define __CHAR_BIT__    8
+#define __CHAR_BIT__ 8
 
-#endif // _AIX
+#endif  // _AIX
 
-#endif // _LIBCUDACXX_SUPPORT_IBM_LIMITS_H
+#endif  // _LIBCUDACXX_SUPPORT_IBM_LIMITS_H

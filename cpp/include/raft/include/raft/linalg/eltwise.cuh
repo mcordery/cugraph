@@ -59,15 +59,13 @@ void scalarMultiply(OutType* out, const InType* in, InType scalar, IdxType len, 
  * @{
  */
 template <typename InType, typename IdxType, typename OutType = InType>
-void eltwiseAdd(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
+void eltwiseAdd(OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseAdd(out, in1, in2, len, stream);
 }
 
 template <typename InType, typename IdxType, typename OutType = InType>
-void eltwiseSub(
-  OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
+void eltwiseSub(OutType* out, const InType* in1, const InType* in2, IdxType len, hipStream_t stream)
 {
   detail::eltwiseSub(out, in1, in2, len, stream);
 }

@@ -36,8 +36,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "cutlass/epilogue/threadblock/epilogue_direct_store.h"
 #include "cutlass/epilogue/threadblock/direct_store_epilogue_iterator.h"
+#include "cutlass/epilogue/threadblock/epilogue_direct_store.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -50,25 +50,23 @@ namespace threadblock {
 /// Given a properly constructed epilogue, returns a direct store epilogue
 template <typename EpilogueTensorOp>
 struct DefaultEpilogueDirectStore {
+  using OutputTileIterator =
+    DirectStoreEpilogueIterator<typename EpilogueTensorOp::OutputTileIterator::Element>;
 
-  using OutputTileIterator = DirectStoreEpilogueIterator<typename EpilogueTensorOp::OutputTileIterator::Element>;
-
-  using Epilogue = EpilogueDirectStore<
-    typename EpilogueTensorOp::Shape,
-    typename EpilogueTensorOp::WarpMmaOperator,
-    EpilogueTensorOp::kPartitionsK,
-    OutputTileIterator,
-    typename EpilogueTensorOp::AccumulatorFragmentIterator,
-    typename EpilogueTensorOp::WarpTileIterator,
-    typename EpilogueTensorOp::SharedLoadIterator,
-    typename EpilogueTensorOp::OutputOp
-  >;
+  using Epilogue = EpilogueDirectStore<typename EpilogueTensorOp::Shape,
+                                       typename EpilogueTensorOp::WarpMmaOperator,
+                                       EpilogueTensorOp::kPartitionsK,
+                                       OutputTileIterator,
+                                       typename EpilogueTensorOp::AccumulatorFragmentIterator,
+                                       typename EpilogueTensorOp::WarpTileIterator,
+                                       typename EpilogueTensorOp::SharedLoadIterator,
+                                       typename EpilogueTensorOp::OutputOp>;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

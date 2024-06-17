@@ -31,15 +31,15 @@
 
 /*! \file
   \brief Basic include for CUTLASS BLAS3/HPC code.
-    
-  
+
+
 */
 
 #pragma once
 
-#include "cutlass/cutlass.h"
 #include "cutlass/array.h"
 #include "cutlass/coord.h"
+#include "cutlass/cutlass.h"
 #include "cutlass/functional.h"
 #include "cutlass/numeric_types.h"
 
@@ -49,21 +49,15 @@ namespace cutlass {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Enumerated type describing the type of kernel (based on input or output matrices).
-enum class BlasMode {
-  kGemm,
-  kSymmetric,
-  kHermitian,
-  kTriangular,
-  kInvalid
-};
+enum class BlasMode { kGemm, kSymmetric, kHermitian, kTriangular, kInvalid };
 
 /// Enumerated type describing the fill mode for matrices for BLAS functions.
 enum class FillMode {
-  kFull,              /// The entire tensor is covered.
-  kLower,             /// The 'lower' part of a tensor is covered including diagonal
-  kUpper,             /// The 'upper' part of a tensor is covered including diaognal
-  kDiagonal,          /// Only diagonal elements are covered.
-  kNone,              /// No element is covered.
+  kFull,      /// The entire tensor is covered.
+  kLower,     /// The 'lower' part of a tensor is covered including diagonal
+  kUpper,     /// The 'upper' part of a tensor is covered including diaognal
+  kDiagonal,  /// Only diagonal elements are covered.
+  kNone,      /// No element is covered.
   kInvalid
 };
 
@@ -71,16 +65,12 @@ enum class FillMode {
 enum class DiagType {
   kNonUnit,
   kUnit,
-  kZero, // Only used internally for computing SYMM/HEMM
-  kInvalid
-}; 
-
-/// Enumerated type describing the side dense matrix is in matrix equation for BLAS functions.
-enum class SideMode {
-  kLeft,
-  kRight,
+  kZero,  // Only used internally for computing SYMM/HEMM
   kInvalid
 };
+
+/// Enumerated type describing the side dense matrix is in matrix equation for BLAS functions.
+enum class SideMode { kLeft, kRight, kInvalid };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Defines FillMode inversions
@@ -121,28 +111,22 @@ struct InvertSideMode<SideMode::kRight> {
 template <FillMode kFillMode, DiagType kDiagType = DiagType::kNonUnit>
 struct TrMatrixCompareOp {
   using Index = int32_t;
-  using Type = typename platform::conditional<
-                        (kFillMode == FillMode::kLower), 
-                        greater_equal<Index>, 
-                        less_equal<Index>>::type;
+  using Type  = typename platform::
+    conditional<(kFillMode == FillMode::kLower), greater_equal<Index>, less_equal<Index>>::type;
 };
 
 template <FillMode kFillMode>
-struct TrMatrixCompareOp <kFillMode, DiagType::kUnit> {
-   using Index = int32_t;
-   using Type = typename platform::conditional<
-                        (kFillMode == FillMode::kLower), 
-                        greater_equal<Index>, 
-                        less_equal<Index>>::type;
+struct TrMatrixCompareOp<kFillMode, DiagType::kUnit> {
+  using Index = int32_t;
+  using Type  = typename platform::
+    conditional<(kFillMode == FillMode::kLower), greater_equal<Index>, less_equal<Index>>::type;
 };
 
 template <FillMode kFillMode>
-struct TrMatrixCompareOp <kFillMode, DiagType::kZero> {
-   using Index = int32_t;
-   using Type = typename platform::conditional<
-                        (kFillMode == FillMode::kLower), 
-                        greater<Index>, 
-                        less<Index>>::type;
+struct TrMatrixCompareOp<kFillMode, DiagType::kZero> {
+  using Index = int32_t;
+  using Type  = typename platform::
+    conditional<(kFillMode == FillMode::kLower), greater<Index>, less<Index>>::type;
 };
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Returns precision in terms of bits (based on datatype) to fill tensors with.
@@ -150,20 +134,20 @@ struct TrMatrixCompareOp <kFillMode, DiagType::kZero> {
 // Also defines acceptable mantissa result variance/error.
 template <typename Element>
 struct MantissaInBits {
-  static int constexpr bits = 5;
+  static int constexpr bits     = 5;
   static double constexpr error = 1.0e-7;
 };
 
 // Full precision is supported for FP64
 template <>
 struct MantissaInBits<double> {
-  static int constexpr bits = 30;
+  static int constexpr bits     = 30;
   static double constexpr error = 1.0e-15;
 };
 
 template <>
 struct MantissaInBits<cutlass::complex<double>> {
-  static int constexpr bits = 30;
+  static int constexpr bits     = 30;
   static double constexpr error = 1.0e-15;
 };
 
@@ -172,4 +156,3 @@ struct MantissaInBits<cutlass::complex<double>> {
 }  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-

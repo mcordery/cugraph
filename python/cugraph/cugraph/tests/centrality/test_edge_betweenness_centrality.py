@@ -12,18 +12,17 @@
 # limitations under the License.
 
 import gc
-
-import pytest
 import random
+
+import cudf
+import cupy
 import networkx as nx
 import numpy as np
+import pytest
+from cugraph.testing import SMALL_DATASETS, utils
 
-import cupy
-import cudf
 import cugraph
 from cugraph.datasets import karate_disjoint
-from cugraph.testing import utils, SMALL_DATASETS
-
 
 # NOTE: Endpoint parameter is not currently being tested, there could be a test
 #       to verify that python raise an error if it is used

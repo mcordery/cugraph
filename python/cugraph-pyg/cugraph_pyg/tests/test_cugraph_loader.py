@@ -11,24 +11,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-
-import tempfile
 import os
+import tempfile
+from typing import Dict, Tuple
 
 import cudf
 import cupy
 import numpy as np
-
-from cugraph_pyg.loader import CuGraphNeighborLoader
-from cugraph_pyg.loader import BulkSampleLoader
-from cugraph_pyg.data import CuGraphStore
-from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
-
+import pytest
 from cugraph.gnn import FeatureStore
-from cugraph.utilities.utils import import_optional, MissingModule
-
-from typing import Dict, Tuple
+from cugraph.utilities.utils import MissingModule, import_optional
+from cugraph_pyg.data import CuGraphStore
+from cugraph_pyg.loader import BulkSampleLoader, CuGraphNeighborLoader
+from cugraph_pyg.nn import SAGEConv as CuGraphSAGEConv
 
 torch = import_optional("torch")
 torch_geometric = import_optional("torch_geometric")

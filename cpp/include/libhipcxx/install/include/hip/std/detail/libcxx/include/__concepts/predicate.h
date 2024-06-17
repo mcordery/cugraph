@@ -12,7 +12,7 @@
 
 #ifndef __cuda_std__
 #include <__config>
-#endif //__cuda_std__
+#endif  //__cuda_std__
 
 #include "../__concepts/__concept_macros.h"
 #include "../__concepts/boolean_testable.h"
@@ -27,25 +27,24 @@ _LIBCUDACXX_BEGIN_NAMESPACE_STD
 
 #if _LIBCUDACXX_STD_VER > 17
 
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 concept predicate =
   regular_invocable<_Fn, _Args...> && __boolean_testable<invoke_result_t<_Fn, _Args...>>;
 
 #elif _LIBCUDACXX_STD_VER > 11
 
 // [concept.predicate]
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 _LIBCUDACXX_CONCEPT_FRAGMENT(
   _Predicate_,
-  requires()
-  (requires(regular_invocable<_Fn, _Args...>),
-   requires(__boolean_testable<invoke_result_t<_Fn, _Args...>>)));
+  requires()(requires(regular_invocable<_Fn, _Args...>),
+             requires(__boolean_testable<invoke_result_t<_Fn, _Args...>>)));
 
-template<class _Fn, class... _Args>
+template <class _Fn, class... _Args>
 _LIBCUDACXX_CONCEPT predicate = _LIBCUDACXX_FRAGMENT(_Predicate_, _Fn, _Args...);
 
-#endif // _LIBCUDACXX_STD_VER > 11
+#endif  // _LIBCUDACXX_STD_VER > 11
 
 _LIBCUDACXX_END_NAMESPACE_STD
 
-#endif // _LIBCUDACXX___CONCEPTS_PREDICATE_H
+#endif  // _LIBCUDACXX___CONCEPTS_PREDICATE_H

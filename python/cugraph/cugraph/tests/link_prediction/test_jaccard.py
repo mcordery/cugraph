@@ -15,14 +15,14 @@
 
 import gc
 
-import pytest
-import networkx as nx
-
 import cudf
+import networkx as nx
+import pytest
+from cudf.testing import assert_series_equal
+from cugraph.testing import UNDIRECTED_DATASETS, utils
+
 import cugraph
 from cugraph.datasets import netscience
-from cugraph.testing import utils, UNDIRECTED_DATASETS
-from cudf.testing import assert_series_equal
 
 SRC_COL = "0"
 DST_COL = "1"

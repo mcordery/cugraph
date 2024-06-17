@@ -23,6 +23,7 @@ from libcpp.vector cimport vector
 from pylibraft.common.handle cimport *
 from rmm._lib.device_buffer cimport device_buffer
 
+
 cdef extern from "cugraph/legacy/graph.hpp" namespace "cugraph::legacy":
 
     ctypedef enum PropType:

@@ -37,8 +37,8 @@
 #pragma once
 
 #include "cutlass/arch/wmma.h"
-#include "cutlass/matrix_shape.h"
 #include "cutlass/layout/matrix.h"
+#include "cutlass/matrix_shape.h"
 
 #if defined(CUTLASS_ARCH_WMMA_ENABLED)
 
@@ -51,33 +51,28 @@ namespace warp {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Policy details related to the epilogue
-template <
-  typename WarpShape,     ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape, ///< matrix multiply operation shape (concept: gemm:GemmShape)
-  typename Layout         ///< target shared memory layout
->
-struct WmmaTensorOpPolicy; 
+template <typename WarpShape,      ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape,  ///< matrix multiply operation shape (concept: gemm:GemmShape)
+          typename Layout          ///< target shared memory layout
+          >
+struct WmmaTensorOpPolicy;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Partial specialization for row-major
-template <
-  typename WarpShape,           ///< shape of warp-level GEMM (concept: MatrixShape)
-  typename OperatorShape        ///< matrix multiply operation shape (concept: gemm::GemmShape)
->
+template <typename WarpShape,     ///< shape of warp-level GEMM (concept: MatrixShape)
+          typename OperatorShape  ///< matrix multiply operation shape (concept: gemm::GemmShape)
+          >
 struct WmmaTensorOpPolicy<WarpShape, OperatorShape, layout::RowMajor> {
-
   /// Number of operations
-  using OperatorCount = MatrixShape<
-    WarpShape::kM / OperatorShape::kM,
-    WarpShape::kN / OperatorShape::kN
-  >;
+  using OperatorCount =
+    MatrixShape<WarpShape::kM / OperatorShape::kM, WarpShape::kN / OperatorShape::kN>;
 
   //
   // Hard-coded constants regarding Tensor Operations
   //
-  static int const kElementsPerAccess = 2;
-  static int const kRowsPerIteration = OperatorShape::kM;
+  static int const kElementsPerAccess      = 2;
+  static int const kRowsPerIteration       = OperatorShape::kM;
   static int const kWmmaFragmentsPerAccess = 1;
 
   //
@@ -86,16 +81,14 @@ struct WmmaTensorOpPolicy<WarpShape, OperatorShape, layout::RowMajor> {
 
   // Number of externally visible iterations
   static int const kIterations = OperatorCount::kRow;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace warp
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace warp
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif
-

@@ -54,13 +54,13 @@ void serialize(const raft::resources& res,
   auto src = dataset.view();
   auto dst = make_host_matrix<DataT, IdxT>(n_rows, dim);
   RAFT_CUDA_TRY(hipMemcpy2DAsync(dst.data_handle(),
-                                  sizeof(DataT) * dim,
-                                  src.data_handle(),
-                                  sizeof(DataT) * stride,
-                                  sizeof(DataT) * dim,
-                                  n_rows,
-                                  hipMemcpyDefault,
-                                  resource::get_cuda_stream(res)));
+                                 sizeof(DataT) * dim,
+                                 src.data_handle(),
+                                 sizeof(DataT) * stride,
+                                 sizeof(DataT) * dim,
+                                 n_rows,
+                                 hipMemcpyDefault,
+                                 resource::get_cuda_stream(res)));
   resource::sync_stream(res);
   serialize_mdspan(res, os, dst.view());
 }
@@ -122,16 +122,16 @@ void serialize(const raft::resources& res, std::ostream& os, const dataset<IdxT>
 }
 
 template <typename IdxT>
-auto deserialize_empty(raft::resources const& res, std::istream& is)
-  -> std::unique_ptr<empty_dataset<IdxT>>
+auto deserialize_empty(raft::resources const& res,
+                       std::istream& is) -> std::unique_ptr<empty_dataset<IdxT>>
 {
   auto suggested_dim = deserialize_scalar<uint32_t>(res, is);
   return std::make_unique<empty_dataset<IdxT>>(suggested_dim);
 }
 
 template <typename DataT, typename IdxT>
-auto deserialize_strided(raft::resources const& res, std::istream& is)
-  -> std::unique_ptr<strided_dataset<DataT, IdxT>>
+auto deserialize_strided(raft::resources const& res,
+                         std::istream& is) -> std::unique_ptr<strided_dataset<DataT, IdxT>>
 {
   auto n_rows     = deserialize_scalar<IdxT>(res, is);
   auto dim        = deserialize_scalar<uint32_t>(res, is);
@@ -142,8 +142,8 @@ auto deserialize_strided(raft::resources const& res, std::istream& is)
 }
 
 template <typename MathT, typename IdxT>
-auto deserialize_vpq(raft::resources const& res, std::istream& is)
-  -> std::unique_ptr<vpq_dataset<MathT, IdxT>>
+auto deserialize_vpq(raft::resources const& res,
+                     std::istream& is) -> std::unique_ptr<vpq_dataset<MathT, IdxT>>
 {
   auto n_rows             = deserialize_scalar<IdxT>(res, is);
   auto dim                = deserialize_scalar<uint32_t>(res, is);
@@ -165,8 +165,8 @@ auto deserialize_vpq(raft::resources const& res, std::istream& is)
 }
 
 template <typename IdxT>
-auto deserialize_dataset(raft::resources const& res, std::istream& is)
-  -> std::unique_ptr<dataset<IdxT>>
+auto deserialize_dataset(raft::resources const& res,
+                         std::istream& is) -> std::unique_ptr<dataset<IdxT>>
 {
   switch (deserialize_scalar<dataset_instance_tag>(res, is)) {
     case kSerializeEmptyDataset: return deserialize_empty<IdxT>(res, is);

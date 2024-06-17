@@ -98,32 +98,32 @@ extern "C" int sgeev_(char* jobvl,
                       int* info);
 
 extern "C" hipsolverStatus_t cusolverDnSgemmHost(hipblasOperation_t transa,
-                                                hipblasOperation_t transb,
-                                                int m,
-                                                int n,
-                                                int k,
-                                                const float* alpha,
-                                                const float* A,
-                                                int lda,
-                                                const float* B,
-                                                int ldb,
-                                                const float* beta,
-                                                float* C,
-                                                int ldc);
+                                                 hipblasOperation_t transb,
+                                                 int m,
+                                                 int n,
+                                                 int k,
+                                                 const float* alpha,
+                                                 const float* A,
+                                                 int lda,
+                                                 const float* B,
+                                                 int ldb,
+                                                 const float* beta,
+                                                 float* C,
+                                                 int ldc);
 
 extern "C" hipsolverStatus_t cusolverDnDgemmHost(hipblasOperation_t transa,
-                                                hipblasOperation_t transb,
-                                                int m,
-                                                int n,
-                                                int k,
-                                                const double* alpha,
-                                                const double* A,
-                                                int lda,
-                                                const double* B,
-                                                int ldb,
-                                                const double* beta,
-                                                double* C,
-                                                int ldc);
+                                                 hipblasOperation_t transb,
+                                                 int m,
+                                                 int n,
+                                                 int k,
+                                                 const double* alpha,
+                                                 const double* A,
+                                                 int lda,
+                                                 const double* B,
+                                                 int ldb,
+                                                 const double* beta,
+                                                 double* C,
+                                                 int ldc);
 
 extern "C" hipsolverStatus_t cusolverDnSsterfHost(int n, float* d, float* e, int* info);
 
@@ -133,13 +133,13 @@ extern "C" hipsolverStatus_t cusolverDnSsteqrHost(
   const signed char* compz, int n, float* d, float* e, float* z, int ldz, float* work, int* info);
 
 extern "C" hipsolverStatus_t cusolverDnDsteqrHost(const signed char* compz,
-                                                 int n,
-                                                 double* d,
-                                                 double* e,
-                                                 double* z,
-                                                 int ldz,
-                                                 double* work,
-                                                 int* info);
+                                                  int n,
+                                                  double* d,
+                                                  double* e,
+                                                  double* z,
+                                                  int ldz,
+                                                  double* work,
+                                                  int* info);
 
 template <typename T>
 class Lapack {

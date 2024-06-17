@@ -13,13 +13,11 @@
 
 import math
 
-from raft_dask.common.nccl import nccl
-from raft_dask.common.comms_utils import inject_comms_on_handle_coll_only
-
-from pylibraft.common.handle import Handle
-from rmm._cuda.gpu import getDevice, setDevice
-
 from cugraph.dask.comms.comms_wrapper import init_subcomms
+from pylibraft.common.handle import Handle
+from raft_dask.common.comms_utils import inject_comms_on_handle_coll_only
+from raft_dask.common.nccl import nccl
+from rmm._cuda.gpu import getDevice, setDevice
 
 __nccl_comms = None
 __raft_handle = None

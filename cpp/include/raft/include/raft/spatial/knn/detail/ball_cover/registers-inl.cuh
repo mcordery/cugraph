@@ -1388,10 +1388,10 @@ void rbc_eps_pass(raft::resources const& handle,
     value_idx sum = thrust::reduce(resource::get_thrust_policy(handle), vd, vd + n_query_rows);
     // copy sum to last element
     RAFT_CUDA_TRY(hipMemcpyAsync(vd + n_query_rows,
-                                  &sum,
-                                  sizeof(value_idx),
-                                  hipMemcpyHostToDevice,
-                                  resource::get_cuda_stream(handle)));
+                                 &sum,
+                                 sizeof(value_idx),
+                                 hipMemcpyHostToDevice,
+                                 resource::get_cuda_stream(handle)));
   }
 
   resource::sync_stream(handle);
@@ -1595,10 +1595,10 @@ void rbc_eps_pass(raft::resources const& handle,
   if (vd != nullptr && (max_k != nullptr || adj_ja == nullptr)) {
     // copy sum to last element
     RAFT_CUDA_TRY(hipMemcpyAsync(vd + n_query_rows,
-                                  adj_ia + n_query_rows,
-                                  sizeof(value_idx),
-                                  hipMemcpyDeviceToDevice,
-                                  resource::get_cuda_stream(handle)));
+                                 adj_ia + n_query_rows,
+                                 sizeof(value_idx),
+                                 hipMemcpyDeviceToDevice,
+                                 resource::get_cuda_stream(handle)));
   }
 
   resource::sync_stream(handle);

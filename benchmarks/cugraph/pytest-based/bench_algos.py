@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
 import numpy as np
+import pytest
 import pytest_benchmark
 
 # FIXME: Remove this when rapids_pytest_benchmark.gpubenchmark is available
@@ -33,23 +33,23 @@ except ImportError:
         pass
 
 
-import rmm
+import cugraph.dask as dask_cugraph
 import dask_cudf
+import rmm
+from cugraph.generators import rmat
+from cugraph.structure.number_map import NumberMap
+from cugraph.testing import mg_utils, utils
+from cugraph.utilities.utils import is_device_version_less_than
+from cugraph_benchmarking.params import (
+    directed_datasets,
+    managed_memory,
+    pool_allocator,
+    undirected_datasets,
+)
 from pylibcugraph.testing import gen_fixture_params_product
 
 import cugraph
-import cugraph.dask as dask_cugraph
-from cugraph.structure.number_map import NumberMap
-from cugraph.generators import rmat
-from cugraph.testing import utils, mg_utils
-from cugraph.utilities.utils import is_device_version_less_than
 
-from cugraph_benchmarking.params import (
-    directed_datasets,
-    undirected_datasets,
-    managed_memory,
-    pool_allocator,
-)
 
 # duck-type compatible Dataset for RMAT data
 class RmatDataset:
@@ -167,6 +167,7 @@ dataset_fixture_params = gen_fixture_params_product(
 # conftest.py
 RMM_SETTINGS = {"managed_mem": False, "pool_alloc": False}
 
+
 # FIXME: this only changes the RMM config in a SG environment. The dask config
 # that applies to RMM in an MG environment is not changed by this!
 def reinitRMM(managed_mem, pool_alloc):
@@ -209,7 +210,6 @@ def rmm_config(request):
 
 @pytest.fixture(scope="module", params=dataset_fixture_params)
 def dataset(request, rmm_config):
-
     """
     Fixture which provides a Dataset instance, setting up a Dask cluster and
     client if necessary for MG, to tests and other fixtures. When all

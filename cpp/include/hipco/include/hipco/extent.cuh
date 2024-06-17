@@ -33,7 +33,7 @@
 
 #pragma once
 
-//#include <hipco/detail/prime.hpp>
+// #include <hipco/detail/prime.hpp>
 
 #include <cstddef>
 #include <cstdint>

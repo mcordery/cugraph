@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import cupy
-import cudf
-
 import warnings
+
+import cudf
+import cupy
 
 
 def sampling_results_from_cupy_array_dict(

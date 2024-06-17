@@ -38,33 +38,26 @@
 
 #pragma once
 
-#include "cutlass/cutlass.h"
-#include "cutlass/numeric_types.h"
 #include "cutlass/array.h"
-
-#include "cutlass/gemm/gemm.h"
-
+#include "cutlass/cutlass.h"
+#include "cutlass/epilogue/thread/conversion_op.h"
 #include "cutlass/epilogue/thread/linear_combination.h"
 #include "cutlass/epilogue/thread/linear_combination_clamp.h"
-#include "cutlass/epilogue/thread/linear_combination_relu.h"
 #include "cutlass/epilogue/thread/linear_combination_gelu.h"
-#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/linear_combination_planar_complex.h"
-
-#include "cutlass/epilogue/thread/conversion_op.h"
+#include "cutlass/epilogue/thread/linear_combination_relu.h"
+#include "cutlass/epilogue/thread/linear_combination_sigmoid.h"
 #include "cutlass/epilogue/thread/reduction_op.h"
-
-#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
-
-#include "cutlass/epilogue/warp/fragment_iterator_wmma_tensor_op.h"
-#include "cutlass/epilogue/warp/tile_iterator_wmma_tensor_op.h"
 #include "cutlass/epilogue/threadblock/default_thread_map_wmma_tensor_op.h"
+#include "cutlass/epilogue/threadblock/epilogue.h"
 #include "cutlass/epilogue/threadblock/predicated_tile_iterator.h"
 #include "cutlass/epilogue/threadblock/shared_load_iterator.h"
-
-#include "cutlass/epilogue/threadblock/epilogue.h"
-
+#include "cutlass/epilogue/warp/fragment_iterator_wmma_tensor_op.h"
+#include "cutlass/epilogue/warp/tile_iterator_wmma_tensor_op.h"
+#include "cutlass/gemm/gemm.h"
 #include "cutlass/layout/permute.h"
+#include "cutlass/numeric_types.h"
+#include "cutlass/transform/threadblock/regular_tile_iterator_pitch_linear.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,25 +68,22 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Defines sensible defaults for epilogues for WMMA TensorOps.
-template <
-  typename Shape_,
-  typename WarpMmaTensorOp_,
-  int PartitionsK,
-  typename OutputOp_,
-  int ElementsPerAccess,
-  bool ScatterD = false,
-  typename PermuteDLayout = layout::NoPermute
->
+template <typename Shape_,
+          typename WarpMmaTensorOp_,
+          int PartitionsK,
+          typename OutputOp_,
+          int ElementsPerAccess,
+          bool ScatterD           = false,
+          typename PermuteDLayout = layout::NoPermute>
 struct DefaultEpilogueWmmaTensorOp {
-
-  using Shape = Shape_;
-  using WarpMmaTensorOp = WarpMmaTensorOp_;
-  static int const kPartitionsK = PartitionsK;
-  using OutputOp = OutputOp_;
+  using Shape                         = Shape_;
+  using WarpMmaTensorOp               = WarpMmaTensorOp_;
+  static int const kPartitionsK       = PartitionsK;
+  using OutputOp                      = OutputOp_;
   static int const kElementsPerAccess = ElementsPerAccess;
 
-  using ElementOutput = typename OutputOp::ElementOutput;
-  using LayoutC = typename WarpMmaTensorOp::LayoutC;
+  using ElementOutput      = typename OutputOp::ElementOutput;
+  using LayoutC            = typename WarpMmaTensorOp::LayoutC;
   using ElementAccumulator = typename WarpMmaTensorOp::ElementC;
 
   //
@@ -106,60 +96,48 @@ struct DefaultEpilogueWmmaTensorOp {
     typename WarpMmaTensorOp::Policy::Operator::Shape,
     kPartitionsK,
     ElementOutput,
-    kElementsPerAccess
-  >::Type;
+    kElementsPerAccess>::Type;
 
-  using OutputTileIterator = cutlass::epilogue::threadblock::PredicatedTileIterator<
-    OutputTileThreadMap,
-    ElementOutput,
-    ScatterD,
-    PermuteDLayout
-  >;
+  using OutputTileIterator = cutlass::epilogue::threadblock::
+    PredicatedTileIterator<OutputTileThreadMap, ElementOutput, ScatterD, PermuteDLayout>;
 
   using AccumulatorFragmentIterator = cutlass::epilogue::warp::FragmentIteratorWmmaTensorOp<
     typename WarpMmaTensorOp::Shape,
     typename WarpMmaTensorOp::Policy::Operator::Shape,
     typename WarpMmaTensorOp::Policy::Operator::ElementC,
     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-    LayoutC
-  >;
+    LayoutC>;
 
   using WarpTileIterator = cutlass::epilogue::warp::TileIteratorWmmaTensorOp<
     typename WarpMmaTensorOp::Shape,
     typename WarpMmaTensorOp::Policy::Operator::Shape,
     typename WarpMmaTensorOp::Policy::Operator::FragmentC,
-    LayoutC
-  >;
+    LayoutC>;
 
-  using SharedLoadIterator = cutlass::epilogue::threadblock::SharedLoadIterator<
-    typename OutputTileThreadMap::CompactedThreadMap,
-    ElementAccumulator
-  >;
+  using SharedLoadIterator = cutlass::epilogue::threadblock::
+    SharedLoadIterator<typename OutputTileThreadMap::CompactedThreadMap, ElementAccumulator>;
 
-  /// Hard-coded padding elements added 
+  /// Hard-coded padding elements added
   using Padding = typename WarpTileIterator::Padding;
 
   //
   // Define the epilogue
   //
-  using Epilogue = cutlass::epilogue::threadblock::Epilogue<
-    Shape,
-    WarpMmaTensorOp,
-    kPartitionsK,
-    OutputTileIterator,
-    AccumulatorFragmentIterator,
-    WarpTileIterator,
-    SharedLoadIterator,
-    OutputOp,
-    Padding
-  >;
+  using Epilogue = cutlass::epilogue::threadblock::Epilogue<Shape,
+                                                            WarpMmaTensorOp,
+                                                            kPartitionsK,
+                                                            OutputTileIterator,
+                                                            AccumulatorFragmentIterator,
+                                                            WarpTileIterator,
+                                                            SharedLoadIterator,
+                                                            OutputOp,
+                                                            Padding>;
 };
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-} // namespace threadblock
-} // namespace epilogue
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace epilogue
+}  // namespace cutlass
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -38,9 +38,9 @@
 #include "cutlass/arch/arch.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/threadblock/default_mma_core_sm80.h"
+#include "cutlass/gemm/threadblock/default_multistage_mma_complex_core_sm80.h"
 #include "cutlass/numeric_types.h"
 #include "cutlass/transform/threadblock/predicated_tile_iterator.h"
-#include "cutlass/gemm/threadblock/default_multistage_mma_complex_core_sm80.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,105 +51,139 @@ namespace threadblock {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <
-    /// Element type for A matrix operand
-    typename ElementA_,
-    /// Layout type for A matrix operand
-    typename LayoutA_,
-    /// Element type for B matrix operand
-    typename ElementB_,
-    /// Layout type for B matrix operand
-    typename LayoutB_,
-    /// Element type for internal accumulation
-    typename ElementAccumulator_,
-    /// Layout type for C and D matrix operands
-    typename LayoutC_,
-    /// Operator class tag
-    typename OperatorClass_,
-    /// Tag indicating architecture to tune for
-    typename ArchTag_,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape_,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape_,
-    /// Instruction-level tile size (concept: GemmShape)
-    typename InstructionShape_,
-    /// Number of stages used in the pipelined mainloop
-    int Stages,
-    /// Complex transformation on operand A
-    ComplexTransform TransformA = ComplexTransform::kNone,
-    /// Complex transformation on operand B
-    ComplexTransform TransformB = ComplexTransform::kNone,
-    /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
-    typename Operator = arch::OpMultiplyAddComplex,
-    /// Store the accumulators in row major or column major.  Row major is used
-    /// when output layout is interleaved.
-    bool AccumulatorsInRowMajor = false>
+  /// Element type for A matrix operand
+  typename ElementA_,
+  /// Layout type for A matrix operand
+  typename LayoutA_,
+  /// Element type for B matrix operand
+  typename ElementB_,
+  /// Layout type for B matrix operand
+  typename LayoutB_,
+  /// Element type for internal accumulation
+  typename ElementAccumulator_,
+  /// Layout type for C and D matrix operands
+  typename LayoutC_,
+  /// Operator class tag
+  typename OperatorClass_,
+  /// Tag indicating architecture to tune for
+  typename ArchTag_,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape_,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape_,
+  /// Instruction-level tile size (concept: GemmShape)
+  typename InstructionShape_,
+  /// Number of stages used in the pipelined mainloop
+  int Stages,
+  /// Complex transformation on operand A
+  ComplexTransform TransformA = ComplexTransform::kNone,
+  /// Complex transformation on operand B
+  ComplexTransform TransformB = ComplexTransform::kNone,
+  /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
+  typename Operator = arch::OpMultiplyAddComplex,
+  /// Store the accumulators in row major or column major.  Row major is used
+  /// when output layout is interleaved.
+  bool AccumulatorsInRowMajor = false>
 struct DefaultMultistageMmaComplex;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Specialization for row-major output
 template <
-    /// Element type for A matrix operand
-    typename ElementA,
-    /// Layout type for A matrix operand
-    typename LayoutA,
-    /// Element type for B matrix operand
-    typename ElementB,
-    /// Layout type for B matrix operand
-    typename LayoutB,
-    /// Element type for internal accumulation
-    typename ElementAccumulator,
-    /// Tag indicating architecture to tune for
-    typename OperatorClass,
-    /// Tag indicating architecture to tune for
-    typename ArchTag,
-    /// Threadblock-level tile size (concept: GemmShape)
-    typename ThreadblockShape,
-    /// Warp-level tile size (concept: GemmShape)
-    typename WarpShape,
-    /// Instruction-level tile size (concept: GemmShape)
-    typename InstructionShape,
-    /// Number of stages used in the multistage mainloop
-    int Stages,
-    /// Complex transformation on operand A
-    ComplexTransform TransformA,
-    /// Complex transformation on operand B
-    ComplexTransform TransformB,
-    /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
-    typename Operator>
-struct DefaultMultistageMmaComplex<ElementA, LayoutA, ElementB, LayoutB,
-                            ElementAccumulator, layout::RowMajor, OperatorClass,
-                            ArchTag, ThreadblockShape, WarpShape,
-                            InstructionShape, Stages, TransformA, TransformB, Operator> {
+  /// Element type for A matrix operand
+  typename ElementA,
+  /// Layout type for A matrix operand
+  typename LayoutA,
+  /// Element type for B matrix operand
+  typename ElementB,
+  /// Layout type for B matrix operand
+  typename LayoutB,
+  /// Element type for internal accumulation
+  typename ElementAccumulator,
+  /// Tag indicating architecture to tune for
+  typename OperatorClass,
+  /// Tag indicating architecture to tune for
+  typename ArchTag,
+  /// Threadblock-level tile size (concept: GemmShape)
+  typename ThreadblockShape,
+  /// Warp-level tile size (concept: GemmShape)
+  typename WarpShape,
+  /// Instruction-level tile size (concept: GemmShape)
+  typename InstructionShape,
+  /// Number of stages used in the multistage mainloop
+  int Stages,
+  /// Complex transformation on operand A
+  ComplexTransform TransformA,
+  /// Complex transformation on operand B
+  ComplexTransform TransformB,
+  /// Multiply-add operator (arch::OpMultiplyAddComplex, arch::OpMultiplyGaussianComplex)
+  typename Operator>
+struct DefaultMultistageMmaComplex<ElementA,
+                                   LayoutA,
+                                   ElementB,
+                                   LayoutB,
+                                   ElementAccumulator,
+                                   layout::RowMajor,
+                                   OperatorClass,
+                                   ArchTag,
+                                   ThreadblockShape,
+                                   WarpShape,
+                                   InstructionShape,
+                                   Stages,
+                                   TransformA,
+                                   TransformB,
+                                   Operator> {
   // Define the MmaCore components
-  using MmaCore = typename cutlass::gemm::threadblock::DefaultMultistageMmaComplexCore<
-      ThreadblockShape, WarpShape, InstructionShape, ElementA, LayoutA, 
-      ElementB, LayoutB, ElementAccumulator, layout::RowMajor, OperatorClass,
-      Stages, TransformA, TransformB, Operator>;
+  using MmaCore =
+    typename cutlass::gemm::threadblock::DefaultMultistageMmaComplexCore<ThreadblockShape,
+                                                                         WarpShape,
+                                                                         InstructionShape,
+                                                                         ElementA,
+                                                                         LayoutA,
+                                                                         ElementB,
+                                                                         LayoutB,
+                                                                         ElementAccumulator,
+                                                                         layout::RowMajor,
+                                                                         OperatorClass,
+                                                                         Stages,
+                                                                         TransformA,
+                                                                         TransformB,
+                                                                         Operator>;
 
   // Define iterators over tiles from the A operand
-  using ThreadMapA = typename MmaCore::IteratorThreadMapA;
+  using ThreadMapA  = typename MmaCore::IteratorThreadMapA;
   using AccessTypeA = cutlass::Array<ElementA, ThreadMapA::kElementsPerAccess>;
-  using IteratorA =
-      cutlass::transform::threadblock::PredicatedTileAccessIterator<
-          cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
-          ElementA, LayoutA, 1, ThreadMapA, AccessTypeA>;
+  using IteratorA   = cutlass::transform::threadblock::PredicatedTileAccessIterator<
+      cutlass::MatrixShape<ThreadblockShape::kM, ThreadblockShape::kK>,
+      ElementA,
+      LayoutA,
+      1,
+      ThreadMapA,
+      AccessTypeA>;
 
   // Define iterators over tiles from the B operand
-  using ThreadMapB = typename MmaCore::IteratorThreadMapB;
+  using ThreadMapB  = typename MmaCore::IteratorThreadMapB;
   using AccessTypeB = cutlass::Array<ElementB, ThreadMapB::kElementsPerAccess>;
-  using IteratorB =
-      cutlass::transform::threadblock::PredicatedTileAccessIterator<
-          cutlass::MatrixShape<ThreadblockShape::kK, ThreadblockShape::kN>,
-          ElementB, LayoutB, 0, ThreadMapB, AccessTypeB>;
+  using IteratorB   = cutlass::transform::threadblock::PredicatedTileAccessIterator<
+      cutlass::MatrixShape<ThreadblockShape::kK, ThreadblockShape::kN>,
+      ElementB,
+      LayoutB,
+      0,
+      ThreadMapB,
+      AccessTypeB>;
 
   // Define the threadblock-scoped multistage matrix multiply
-  using ThreadblockMma = cutlass::gemm::threadblock::MmaMultistage<
-      typename MmaCore::Shape, IteratorA, typename MmaCore::SmemIteratorA,
-      MmaCore::kCacheOpA, IteratorB, typename MmaCore::SmemIteratorB,
-      MmaCore::kCacheOpB, ElementAccumulator, layout::RowMajor,
-      typename MmaCore::MmaPolicy, Stages>;
+  using ThreadblockMma = cutlass::gemm::threadblock::MmaMultistage<typename MmaCore::Shape,
+                                                                   IteratorA,
+                                                                   typename MmaCore::SmemIteratorA,
+                                                                   MmaCore::kCacheOpA,
+                                                                   IteratorB,
+                                                                   typename MmaCore::SmemIteratorB,
+                                                                   MmaCore::kCacheOpB,
+                                                                   ElementAccumulator,
+                                                                   layout::RowMajor,
+                                                                   typename MmaCore::MmaPolicy,
+                                                                   Stages>;
 };
 
 }  // namespace threadblock

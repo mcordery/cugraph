@@ -48,7 +48,8 @@ namespace arch {
 
 CUTLASS_HOST_DEVICE
 template <typename T, int N>
-Array<T, N> operator*(Array<T, N> const &a, Array<T, N> const &b) {
+Array<T, N> operator*(Array<T, N> const& a, Array<T, N> const& b)
+{
   Array<T, N> d;
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < N; ++i) {
@@ -59,7 +60,8 @@ Array<T, N> operator*(Array<T, N> const &a, Array<T, N> const &b) {
 
 CUTLASS_HOST_DEVICE
 template <typename T, int N>
-Array<T, N> operator+(Array<T, N> const &a, Array<T, N> const &b) {
+Array<T, N> operator+(Array<T, N> const& a, Array<T, N> const& b)
+{
   Array<T, N> d;
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < N; ++i) {
@@ -70,7 +72,8 @@ Array<T, N> operator+(Array<T, N> const &a, Array<T, N> const &b) {
 
 CUTLASS_HOST_DEVICE
 template <typename T, int N>
-Array<T, N> operator-(Array<T, N> const &a, Array<T, N> const &b) {
+Array<T, N> operator-(Array<T, N> const& a, Array<T, N> const& b)
+{
   Array<T, N> d;
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < N; ++i) {
@@ -87,7 +90,8 @@ Array<T, N> operator-(Array<T, N> const &a, Array<T, N> const &b) {
 
 CUTLASS_HOST_DEVICE
 template <typename T, int N>
-Array<T, N> mac(Array<T, N> const &a, Array<T, N> const &b, Array<T, N> const &c) {
+Array<T, N> mac(Array<T, N> const& a, Array<T, N> const& b, Array<T, N> const& c)
+{
   Array<T, N> d;
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < N; ++i) {
@@ -104,7 +108,8 @@ Array<T, N> mac(Array<T, N> const &a, Array<T, N> const &b, Array<T, N> const &c
 
 CUTLASS_HOST_DEVICE
 template <typename Element, typename Accumulator, int N>
-Accumulator dot(Array<T, N> const &a, Array<T, N> const &b, Accumulator accum) {
+Accumulator dot(Array<T, N> const& a, Array<T, N> const& b, Accumulator accum)
+{
   CUTLASS_PRAGMA_UNROLL
   for (int i = 0; i < N; ++i) {
     accum += a[i] * b[i];
@@ -114,8 +119,8 @@ Accumulator dot(Array<T, N> const &a, Array<T, N> const &b, Accumulator accum) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-} // namespace arch
-} // namespace cutlass
+}  // namespace arch
+}  // namespace cutlass
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 

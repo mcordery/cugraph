@@ -55,7 +55,7 @@ class hip_stream {
    * @return A reference to this hip_stream
    */
   hip_stream& operator=(hip_stream&&) = default;
-  ~hip_stream()                        = default;
+  ~hip_stream()                       = default;
   hip_stream(hip_stream const&)       = delete;  // Copying disallowed: one stream one owner
   hip_stream& operator=(hip_stream&)  = delete;
 

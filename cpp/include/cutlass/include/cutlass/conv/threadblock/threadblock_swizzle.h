@@ -29,19 +29,19 @@
  *
  **************************************************************************************************/
 /*! \file
-    \brief Implements several possible threadblock-swizzling functions mapping blockIdx to 
+    \brief Implements several possible threadblock-swizzling functions mapping blockIdx to
       Convolution problems.
 */
 
 #pragma once
 
+#include "cutlass/conv/conv2d_problem_size.h"
+#include "cutlass/conv/convolution.h"
 #include "cutlass/cutlass.h"
-#include "cutlass/layout/matrix.h"
-#include "cutlass/platform/platform.h"
 #include "cutlass/gemm/gemm.h"
 #include "cutlass/gemm/threadblock/threadblock_swizzle.h"
-#include "cutlass/conv/convolution.h"
-#include "cutlass/conv/conv2d_problem_size.h"
+#include "cutlass/layout/matrix.h"
+#include "cutlass/platform/platform.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -51,32 +51,31 @@ namespace threadblock {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 CUTLASS_HOST_DEVICE
-static int get_strided_dgrad_tile_m(
-  cutlass::conv::Conv2dProblemSize const &problem_size,
-  int tile_size_m) {
-
+static int get_strided_dgrad_tile_m(cutlass::conv::Conv2dProblemSize const& problem_size,
+                                    int tile_size_m)
+{
   // CTAs in M dimension per starting filter position
   int tile_m_per_filter = strided_dgrad_tile_m_per_filter(problem_size, tile_size_m);
 
   // Inflate number of CTAs in M dimension to cover every strating filter position even those that
-  // may fall out of valid MMA (Dy * w) but are needed to apply epilogue (beta * Dx_source) 
+  // may fall out of valid MMA (Dy * w) but are needed to apply epilogue (beta * Dx_source)
   // and point-wise fusion
   int tile_m = tile_m_per_filter * int(problem_size.stride().product());
 
-  // There is a possible performance optimization here that leads up to 2x speeds than the current 
+  // There is a possible performance optimization here that leads up to 2x speeds than the current
   // CUTLASS strided dgrad performance for stride > filter, i.e., stride={2x2} and filter={1x1})
   //
-  // * Optimization * 
+  // * Optimization *
   // Only launch CTAs in M dimenstion which contribute to a row in Dx output
-  // 
-  // 
+  //
+  //
   // * Constraints *
-  // (A) stride <= filter, for example, stride={2x2} and filter={3x3}: 
-  //       - (A.1): There are no constraints for this case and the optimization does 
-  //                affect this case functionality or performance. 
-  // (B) stride > filter, for example, stride={2x2} and filter={1x1}: 
+  // (A) stride <= filter, for example, stride={2x2} and filter={3x3}:
+  //       - (A.1): There are no constraints for this case and the optimization does
+  //                affect this case functionality or performance.
+  // (B) stride > filter, for example, stride={2x2} and filter={1x1}:
   //       - (B.1): Dx output tensor should be zero initialized
-  //       - (B.2): The kernel epilogue cannot apply beta. Thus, beta should be zero 
+  //       - (B.2): The kernel epilogue cannot apply beta. Thus, beta should be zero
 
   return tile_m;
 }
@@ -84,88 +83,77 @@ static int get_strided_dgrad_tile_m(
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Threadblock swizzling function for strided dgrad convolution
-struct StridedDgradHorizontalThreadblockSwizzle : 
-  public gemm::threadblock::GemmHorizontalThreadblockSwizzle {
-
+struct StridedDgradHorizontalThreadblockSwizzle
+  : public gemm::threadblock::GemmHorizontalThreadblockSwizzle {
   using Base = gemm::threadblock::GemmHorizontalThreadblockSwizzle;
 
   CUTLASS_HOST_DEVICE
-  StridedDgradHorizontalThreadblockSwizzle() { }
+  StridedDgradHorizontalThreadblockSwizzle() {}
 
   /// Returns the shape of the problem in units of logical tiles
   /// For ImplicitGemmConvolution Conv2d problem size: conv_operator(NPQK, NHWC, KRSC)
   CUTLASS_HOST_DEVICE
-  gemm::GemmCoord get_tiled_shape(
-    cutlass::conv::Operator conv_operator,
-    cutlass::conv::Conv2dProblemSize const &problem_size,
-    gemm::GemmCoord tile_size,
-    int split_k_slices) const {
-
-    gemm::GemmCoord implicit_gemm_problem_size = 
-    cutlass::conv::implicit_gemm_problem_size(conv_operator, problem_size);
+  gemm::GemmCoord get_tiled_shape(cutlass::conv::Operator conv_operator,
+                                  cutlass::conv::Conv2dProblemSize const& problem_size,
+                                  gemm::GemmCoord tile_size,
+                                  int split_k_slices) const
+  {
+    gemm::GemmCoord implicit_gemm_problem_size =
+      cutlass::conv::implicit_gemm_problem_size(conv_operator, problem_size);
 
     // compute number of tiles in m dimension
     int tile_m = get_strided_dgrad_tile_m(problem_size, tile_size.m());
 
-    // compute number of tiles in n dimenstion 
+    // compute number of tiles in n dimenstion
     int tile_n = (implicit_gemm_problem_size.n() + tile_size.n() - 1) / tile_size.n();
 
-    return gemm::GemmCoord(
-      tile_m,
-      tile_n,
-      split_k_slices);
+    return gemm::GemmCoord(tile_m, tile_n, split_k_slices);
   }
 
   /// Returns the shape of the problem in units of logical tiles
   /// For GEMM problem size (MxNxK) (Do not use base class get_tiled_shape())
-  private:
-    using Base::get_tiled_shape;
+ private:
+  using Base::get_tiled_shape;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Threadblock swizzling function for strided dgrad convolution
 template <int N = 1>
-struct StridedDgradIdentityThreadblockSwizzle : 
-  public gemm::threadblock::GemmIdentityThreadblockSwizzle<N> {
-
+struct StridedDgradIdentityThreadblockSwizzle
+  : public gemm::threadblock::GemmIdentityThreadblockSwizzle<N> {
   using Base = gemm::threadblock::GemmIdentityThreadblockSwizzle<N>;
 
   CUTLASS_HOST_DEVICE
-  StridedDgradIdentityThreadblockSwizzle() { }
+  StridedDgradIdentityThreadblockSwizzle() {}
 
   /// Returns the shape of the problem in units of logical tiles
   /// For ImplicitGemmConvolution Conv2d problem size: conv_operator(NPQK, NHWC, KRSC)
   CUTLASS_HOST_DEVICE
-  gemm::GemmCoord get_tiled_shape(
-    cutlass::conv::Operator conv_operator,
-    cutlass::conv::Conv2dProblemSize const &problem_size,
-    gemm::GemmCoord tile_size,
-    int split_k_slices) const {
-
-    gemm::GemmCoord implicit_gemm_problem_size = 
-    cutlass::conv::implicit_gemm_problem_size(conv_operator, problem_size);
+  gemm::GemmCoord get_tiled_shape(cutlass::conv::Operator conv_operator,
+                                  cutlass::conv::Conv2dProblemSize const& problem_size,
+                                  gemm::GemmCoord tile_size,
+                                  int split_k_slices) const
+  {
+    gemm::GemmCoord implicit_gemm_problem_size =
+      cutlass::conv::implicit_gemm_problem_size(conv_operator, problem_size);
 
     // compute number of tiles in m dimension
     int tile_m = get_strided_dgrad_tile_m(problem_size, tile_size.m());
 
-    // compute number of tiles in n dimenstion 
+    // compute number of tiles in n dimenstion
     int tile_n = (implicit_gemm_problem_size.n() + tile_size.n() - 1) / tile_size.n();
 
-    return gemm::GemmCoord(
-      tile_m,
-      tile_n,
-      split_k_slices);
+    return gemm::GemmCoord(tile_m, tile_n, split_k_slices);
   }
 
   /// Returns the shape of the problem in units of logical tiles
   /// For GEMM problem size (MxNxK) (Do not use base class get_tiled_shape())
-  private:
-    using Base::get_tiled_shape;
+ private:
+  using Base::get_tiled_shape;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-} // namespace threadblock
-} // namespace gemm
-} // namespace cutlass
+}  // namespace threadblock
+}  // namespace conv
+}  // namespace cutlass
