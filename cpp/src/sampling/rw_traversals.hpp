@@ -159,7 +159,12 @@ struct uniform_selector_t {
       auto weight_value =
         (values_ == nullptr ? weight_t{1}
                             : values_[start_row + col_indx]);  // account for un-weighted graphs
-      return thrust::optional{thrust::make_tuple(col_indices_[start_row + col_indx], weight_value)};
+
+      auto p = thrust::make_tuple(col_indices_[start_row + col_indx], weight_value);
+      return thrust::optional<decltype(p)>{p};
+
+      // return thrust::optional{thrust::make_tuple(col_indices_[start_row + col_indx],
+      // weight_value)};
     }
 
    private:
@@ -237,8 +242,13 @@ struct biased_selector_t {
         run_sum_w += values_[col_indx];
         prev_col_indx = col_indx;
       }
-      return thrust::optional{
-        thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
+
+      // Fixes problems with hip clang compiler not liking the format following the next two lines
+      auto p = thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx]);
+      return thrust::optional<decltype(p)>{p};
+
+      // return thrust::optional{
+      //   thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
     }
 
    private:
@@ -362,9 +372,14 @@ struct node2vec_selector_t {
           run_sum_w += crt_weight;
           prev_offset_indx = offset_indx;
         }
-        return thrust::optional{
-          thrust::make_tuple(col_indices_[prev_offset_indx],
-                             values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
+
+        auto p = thrust::make_tuple(col_indices_[prev_offset_indx],
+                                    values_ == nullptr ? weight_t{1} : values_[prev_offset_indx]);
+        return thrust::optional<decltype(p)>{p};
+
+        // return thrust::optional{
+        //   thrust::make_tuple(col_indices_[prev_offset_indx],
+        //                      values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
       }
 
       // cached solution, for increased performance, but memory expensive:
@@ -405,9 +420,14 @@ struct node2vec_selector_t {
           run_sum_w += ptr_d_scaled_weights[start_alpha_offset + nghbr_indx];
           prev_offset_indx = offset_indx;
         }
-        return thrust::optional{
-          thrust::make_tuple(col_indices_[prev_offset_indx],
-                             values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
+
+        auto p = thrust::make_tuple(col_indices_[prev_offset_indx],
+                                    values_ == nullptr ? weight_t{1} : values_[prev_offset_indx]);
+        return thrust::optional<decltype(p)>{p};
+
+        // return thrust::optional{
+        //   thrust::make_tuple(col_indices_[prev_offset_indx],
+        //                      values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
 
       } else {  // uncached solution, with much lower memory footprint but not as efficient
 
@@ -438,9 +458,14 @@ struct node2vec_selector_t {
           run_sum_w += scaled_weight;
           prev_offset_indx = offset_indx;
         }
-        return thrust::optional{
-          thrust::make_tuple(col_indices_[prev_offset_indx],
-                             values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
+
+        auto p = thrust::make_tuple(col_indices_[prev_offset_indx],
+                                    values_ == nullptr ? weight_t{1} : values_[prev_offset_indx]);
+        return thrust::optional<decltype(p)>{p};
+
+        // return thrust::optional{
+        //   thrust::make_tuple(col_indices_[prev_offset_indx],
+        //                     values_ == nullptr ? weight_t{1} : values_[prev_offset_indx])};
       }
     }
 

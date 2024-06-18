@@ -214,13 +214,18 @@ message(VERBOSE "ROCGRAPH: HIP_STATIC_RUNTIME=${HIP_STATIC_RUNTIME}")
 # NB check the flags here
 
 set(ROCGRAPH_CXX_FLAGS
-    -DNO_CUGRAPH_OPS -DCUTLASS_NAMESPACE=raft_cutlass -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE
-    -DRAFT_SYSTEM_LITTLE_ENDIAN=1 -DSPDLOG_FMT_EXTERNAL -DTHRUST_DISABLE_ABI_NAMESPACE
-    -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR -Drocgraph_EXPORTS)
-set(ROCGRAPH_HIP_FLAGS "")
+    -DNO_CUGRAPH_OPS
+    -DCUTLASS_NAMESPACE=raft_cutlass
+    -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE
+    -DRAFT_SYSTEM_LITTLE_ENDIAN=1
+    -DSPDLOG_FMT_EXTERNAL
+    -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP
+    -DTHRUST_DISABLE_ABI_NAMESPACE
+    -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP
+    -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR
+    -Drocgraph_EXPORTS)
 
-set(THRUST_HOST_SYSTEM THRUST_HOST_SYSTEM_CPP)
-set(THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_HIP)
+set(ROCGRAPH_HIP_FLAGS "")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     list(APPEND ROCGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations)
@@ -288,6 +293,7 @@ endif()
 # should give us a better parallel schedule.
 
 set(ROCGRAPH_SOURCES
+    src/sampling/random_walks.cpp
     src/utilities/shuffle_vertices.cpp
     src/detail/permute_range.cpp
     src/utilities/shuffle_vertex_pairs.cpp
@@ -322,7 +328,7 @@ set(ROCGRAPH_SOURCES
     src/community/legacy/ecg.cpp
     src/community/egonet_sg.cpp
     src/community/egonet_mg.cpp
-    # src/community/k_truss_sg.cpp src/sampling/random_walks.cpp
+    # src/community/k_truss_sg.cpp
     src/sampling/random_walks_sg.cpp
     src/sampling/detail/prepare_next_frontier_sg.cpp
     src/sampling/detail/prepare_next_frontier_mg.cpp

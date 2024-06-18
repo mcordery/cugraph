@@ -40,6 +40,9 @@
     src/traversal/sssp_mg.cpp
 
    ...................................................................
+
+ >>>>>> FIXED <<<<<<
+
    In file included from /home/mcordery/cugraph/cpp/src/layout/legacy/force_atlas2.cpp:17:
 /home/mcordery/cugraph/cpp/src/layout/legacy/barnes_hut.cuh:189:3: error: no matching function for call to 'hipFuncSetCacheConfig'
 
@@ -74,6 +77,8 @@ NB some later errors show up with CUDA intrinsics that seem to lack HIP equivale
   src/community/triangle_count_mg.cpp
 
   ................................................................
+
+>>>>>> FIXED <<<<<<
 
   /home/mcordery/cugraph/cpp/src/sampling/rw_traversals.hpp:239:14: error: no viable constructor or deduction guide for deduction of template arguments of 'optional'
   239 |       return thrust::optional{
