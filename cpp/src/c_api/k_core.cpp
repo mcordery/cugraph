@@ -35,7 +35,7 @@ struct k_core_functor : public cugraph::c_api::abstract_functor {
   raft::handle_t const& handle_;
   cugraph::c_api::cugraph_graph_t* graph_{};
   size_t k_;
-  cugraph_k_core_degree_type_t degree_type_;
+  cugraph::k_core_degree_type_t degree_type_;
   cugraph::c_api::cugraph_core_result_t const* core_result_{};
   bool do_expensive_check_{};
   cugraph::c_api::cugraph_k_core_result_t* result_{};
@@ -50,7 +50,7 @@ struct k_core_functor : public cugraph::c_api::abstract_functor {
       handle_(*reinterpret_cast<cugraph::c_api::cugraph_resource_handle_t const*>(handle)->handle_),
       graph_(reinterpret_cast<cugraph::c_api::cugraph_graph_t*>(graph)),
       k_(k),
-      degree_type_(degree_type),
+      degree_type_(static_cast<cugraph::k_core_degree_type_t>(degree_type)),
       core_result_(reinterpret_cast<cugraph::c_api::cugraph_core_result_t const*>(core_result)),
       do_expensive_check_(do_expensive_check)
   {
@@ -119,7 +119,7 @@ struct k_core_functor : public cugraph::c_api::abstract_functor {
             do_expensive_check_);
       }
 
-      auto degree_type = reinterpret_cast<cugraph::k_core_degree_type_t>(degree_type);
+      auto degree_type = reinterpret_cast<cugraph::k_core_degree_type_t>(degree_type_);
 
       auto [result_src, result_dst, result_wgt] =
         cugraph::k_core<vertex_t, edge_t, weight_t, multi_gpu>(

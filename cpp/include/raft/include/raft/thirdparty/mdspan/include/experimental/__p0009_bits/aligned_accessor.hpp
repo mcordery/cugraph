@@ -64,14 +64,14 @@ namespace stdex = std::experimental;
 // Otherwise, use a compiler-specific equivalent if available.
 
 // NOTE (mfh 2022/08/08) BYTE_ALIGNMENT must be unsigned and a power of 2.
-#if defined(__cpp_lib_assume_aligned)
+#if 0 && defined(__cpp_lib_assume_aligned)
 #define _MDSPAN_ASSUME_ALIGNED(ELEMENT_TYPE, POINTER, BYTE_ALIGNMENT) \
   (std::assume_aligned<BYTE_ALIGNMENT>(POINTER))
 constexpr char assume_aligned_method[] = "std::assume_aligned";
-#elif defined(__ICL)
+#elif 0 && defined(__ICL)
 #define _MDSPAN_ASSUME_ALIGNED(ELEMENT_TYPE, POINTER, BYTE_ALIGNMENT) POINTER
 constexpr char assume_aligned_method[] = "(none)";
-#elif defined(__ICC)
+#elif 0 && defined(__ICC)
 #define _MDSPAN_ASSUME_ALIGNED(ELEMENT_TYPE, POINTER, BYTE_ALIGNMENT) POINTER
 constexpr char assume_aligned_method[] = "(none)";
 #elif defined(__clang__)
