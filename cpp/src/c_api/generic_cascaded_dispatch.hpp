@@ -135,6 +135,7 @@ constexpr decltype(auto) edge_type_type_dispatcher(cugraph_data_type_id_t edge_t
       // std::stringstream ss;
       // ss << "ERROR: Unknown type enum:" << static_cast<int>(edge_type_type);
       // throw std::runtime_error(ss.str());
+      // TODO: need c++23 to have std::stringstream inside a constexpr function
       throw std::runtime_error("ERROR: Unknown type enum");
     }
   }
@@ -178,6 +179,7 @@ constexpr decltype(auto) weight_dispatcher(cugraph_data_type_id_t weight_type,
       // std::stringstream ss;
       // ss << "ERROR: Unknown type enum:" << static_cast<int>(weight_type);
       // throw std::runtime_error(ss.str());
+      // TODO: need c++23 to have std::stringstream inside a constexpr function
       throw std::runtime_error("ERROR: Unknown type enum");
     }
   }
@@ -218,6 +220,7 @@ constexpr decltype(auto) edge_dispatcher(cugraph_data_type_id_t edge_type,
       // std::stringstream ss;
       // ss << "ERROR: Unknown type enum:" << static_cast<int>(edge_type);
       // throw std::runtime_error(ss.str());
+      // TODO: need c++23 to have std::stringstream inside a constexpr function
       throw std::runtime_error("ERROR: Unknown type enum");
     }
   }
@@ -259,6 +262,7 @@ inline decltype(auto) vertex_dispatcher(cugraph_data_type_id_t vertex_type,
       // std::stringstream ss;
       // ss << "ERROR: Unknown type enum:" << static_cast<int>(vertex_type);
       // throw std::runtime_error(ss.str());
+      // TODO: need c++23 to have std::stringstream inside a constexpr function
       throw std::runtime_error("ERROR: Unknown type enum");
     }
   }
