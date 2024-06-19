@@ -336,7 +336,7 @@ extern "C" cugraph_error_code_t cugraph_generate_edge_weights(
         std::make_unique<cugraph::c_api::cugraph_type_erased_device_array_t>(tmp, dtype);
       break;
     }
-    otherwise: {
+    default: {
       *error = reinterpret_cast<::cugraph_error_t*>(new cugraph::c_api::cugraph_error_t(
         "Only FLOAT and DOUBLE supported as generated edge weights"));
       return CUGRAPH_INVALID_INPUT;
