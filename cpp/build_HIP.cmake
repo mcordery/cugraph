@@ -242,6 +242,7 @@ list(APPEND ROCGRAPH_CXX_FLAGS -DFMT_HEADER_ONLY -DUSE_LIBHIPCXX_PRT)
 
 message(STATUS "HID ${HIP_INCLUDE_DIRS}")
 
+list(APPEND ROCGRAPH_CXX_FLAGS -Wno-c++11-narrowing)
 list(APPEND ROCGRAPH_CXX_FLAGS -Wno-unused-result)
 
 list(APPEND ROCGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS})
@@ -409,8 +410,8 @@ set_target_properties(
                HIP_STANDARD 17
                HIP_STANDARD_REQUIRED ON
                HIP_EXTENSIONS ON
-               POSITION_INDEPENDENT_CODE OFF
-               INTERFACE_POSITION_INDEPENDENT_CODE OFF)
+               POSITION_INDEPENDENT_CODE ON
+               INTERFACE_POSITION_INDEPENDENT_CODE ON)
 target_compile_options(rocgraph PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
                                         "$<$<COMPILE_LANGUAGE:HIP>:${ROCGRAPH_HIP_FLAGS}>")
 
@@ -495,12 +496,12 @@ set_target_properties(
     PROPERTIES BUILD_RPATH "\$ORIGIN"
                INSTALL_RPATH "\$ORIGIN"
                # set target compile options
-               CXX_STANDARD 20
+               CXX_STANDARD 17
                CXX_STANDARD_REQUIRED ON
-               HIP_STANDARD 20
+               HIP_STANDARD 17
                HIP_STANDARD_REQUIRED ON
-               POSITION_INDEPENDENT_CODE OFF
-               INTERFACE_POSITION_INDEPENDENT_CODE OFF)
+               POSITION_INDEPENDENT_CODE ON
+               INTERFACE_POSITION_INDEPENDENT_CODE ON)
 
 target_compile_options(rocgraph_c PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${ROCGRAPH_CXX_FLAGS}>"
                                           "$<$<COMPILE_LANGUAGE:HIP>:${ROCGRAPH_HIP_FLAGS}>")
