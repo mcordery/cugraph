@@ -16,11 +16,11 @@
 #=============================================================================
 enable_testing()
 
-include(rapids-test)
-rapids_test_init()
-
 ###################################################################################################
-# - set rapids dataset path ----------------------------------------------------------------------
+# - set a path to the dataset for testing ----------------------------------------------------------------------
+# I am leaving the name RAPIDS_DATASET_ROOT_DIR for now but this no longer has anything to do with rapids-cmake.
+# It is simply the base path where tests are looking for their input using the get_rapids_dataset_root_dir function
+# in misc_utulities.hpp
 if(RAPIDS_DATASET_ROOT_DIR)
     message(STATUS "setting default RAPIDS_DATASET_ROOT_DIR to: ${RAPIDS_DATASET_ROOT_DIR}")
     string(CONCAT CMAKE_C_FLAGS ${CMAKE_C_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
@@ -171,14 +171,10 @@ function(ConfigureTest CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    rapids_test_add(
+    add_test(   
         NAME ${CMAKE_TEST_NAME}
         COMMAND ${CMAKE_TEST_NAME}
-        GPUS ${_CUGRAPH_TEST_GPUS}
-        PERCENT ${_CUGRAPH_TEST_PERCENT}
-        INSTALL_COMPONENT_SET testing
     )
-    set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH")
 endfunction()
 
 function(ConfigureTestMG CMAKE_TEST_NAME)
@@ -197,21 +193,10 @@ function(ConfigureTestMG CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    rapids_test_add(
+    add_test(   
         NAME ${CMAKE_TEST_NAME}
-        COMMAND ${MPIEXEC_EXECUTABLE}
-             "--noprefix"
-             ${MPIEXEC_NUMPROC_FLAG}
-             ${GPU_COUNT}
-             ${MPIEXEC_PREFLAGS}
-             ${CMAKE_TEST_NAME}
-             ${MPIEXEC_POSTFLAGS}
-        GPUS ${GPU_COUNT}
-        PERCENT 100
-        INSTALL_COMPONENT_SET testing_mg
+        COMMAND ${CMAKE_TEST_NAME}
     )
-    set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_MG")
-
 endfunction()
 
 function(ConfigureCTest CMAKE_TEST_NAME)
@@ -243,15 +228,10 @@ function(ConfigureCTest CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    rapids_test_add(
+    add_test(   
         NAME ${CMAKE_TEST_NAME}
         COMMAND ${CMAKE_TEST_NAME}
-        GPUS ${_CUGRAPH_TEST_GPUS}
-        PERCENT ${_CUGRAPH_TEST_PERCENT}
-        INSTALL_COMPONENT_SET testing_c
     )
-    set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_C")
-
 endfunction()
 
 function(ConfigureCTestMG CMAKE_TEST_NAME)
@@ -271,22 +251,10 @@ function(ConfigureCTestMG CMAKE_TEST_NAME)
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib")
 
-    rapids_test_add(
+    add_test(   
         NAME ${CMAKE_TEST_NAME}
-        COMMAND ${MPIEXEC_EXECUTABLE}
-             "--noprefix"
-             ${MPIEXEC_NUMPROC_FLAG}
-             ${GPU_COUNT}
-             ${MPIEXEC_PREFLAGS}
-             ${CMAKE_TEST_NAME}
-             ${MPIEXEC_POSTFLAGS}
-        GPUS ${GPU_COUNT}
-        PERCENT 100
-        INSTALL_COMPONENT_SET testing_mg
+        COMMAND ${CMAKE_TEST_NAME}
     )
-    set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH_C_MG")
-
-
 endfunction()
 
 ###################################################################################################
@@ -489,11 +457,6 @@ ConfigureTest(TRIANGLE_COUNT_TEST community/triangle_count_test.cpp)
 ###################################################################################################
 # - K-hop Neighbors tests -------------------------------------------------------------------------
 ConfigureTest(K_HOP_NBRS_TEST traversal/k_hop_nbrs_test.cpp)
-
-
-###################################################################################################
-# - install tests ---------------------------------------------------------------------------------
-rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing DESTINATION bin/gtests/libcugraph)
 
 
 ###################################################################################################
@@ -735,9 +698,6 @@ if(BUILD_CUGRAPH_MG_TESTS)
     ConfigureCTestMG(MG_CAPI_DEGREES c_api/mg_degrees_test.c)
     ConfigureCTestMG(MG_CAPI_EGONET_TEST c_api/mg_egonet_test.c)
     ConfigureCTestMG(MG_CAPI_TWO_HOP_NEIGHBORS_TEST c_api/mg_two_hop_neighbors_test.c)
-
-    rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing_mg DESTINATION bin/gtests/libcugraph_mg)
-
 endif()
 
 ###################################################################################################
@@ -763,14 +723,6 @@ ConfigureCTest(CAPI_TRIANGLE_COUNT_TEST c_api/triangle_count_test.c)
 ConfigureCTest(CAPI_LOUVAIN_TEST c_api/louvain_test.c)
 ConfigureCTest(CAPI_LEIDEN_TEST c_api/leiden_test.c)
 ConfigureCTest(CAPI_ECG_TEST c_api/ecg_test.c)
-#############################################################################
-# Skipping due to CUDA 12.2 failure that traces back to RAFT                #
-# TODO: Uncomment this once the issue is fixed.                             #
-#                                                                           #
-# xref: https://github.com/rapidsai/cugraph/issues/4173                     #
-# xref: https://github.com/rapidsai/raft/issues/2186                        #
-#############################################################################
-# ConfigureCTest(CAPI_LEGACY_SPECTRAL_TEST c_api/legacy_spectral_test.c)
 ConfigureCTest(CAPI_LEGACY_ECG_TEST c_api/legacy_ecg_test.c)
 ConfigureCTest(CAPI_CORE_NUMBER_TEST c_api/core_number_test.c)
 ConfigureCTest(CAPI_SIMILARITY_TEST c_api/similarity_test.c)
@@ -828,5 +780,3 @@ if (BUILD_CUGRAPH_MTMG_TESTS)
                              )
     endif(BUILD_CUGRAPH_MG_TESTS)
 endif(BUILD_CUGRAPH_MTMG_TESTS)
-
-rapids_test_install_relocatable(INSTALL_COMPONENT_SET testing_c DESTINATION bin/gtests/libcugraph_c)
