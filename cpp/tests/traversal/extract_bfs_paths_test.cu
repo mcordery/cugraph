@@ -72,7 +72,7 @@ class Tests_ExtractBfsPaths
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -83,7 +83,7 @@ class Tests_ExtractBfsPaths
         handle, input_usecase, true, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -152,11 +152,11 @@ class Tests_ExtractBfsPaths
 
     rmm::device_uvector<vertex_t> d_paths(0, handle.get_stream());
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Extract BFS paths");
     }
 
-    RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+    RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
 
     int32_t max_path_length{};
 
@@ -168,7 +168,7 @@ class Tests_ExtractBfsPaths
                                                            d_destinations.size());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

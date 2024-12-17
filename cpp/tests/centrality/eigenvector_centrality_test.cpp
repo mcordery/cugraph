@@ -126,7 +126,7 @@ class Tests_EigenvectorCentrality
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -135,7 +135,7 @@ class Tests_EigenvectorCentrality
         handle, input_usecase, eigenvector_usecase.test_weighted, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -157,7 +157,7 @@ class Tests_EigenvectorCentrality
                                                  handle.get_stream());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Eigenvector centrality");
     }
 
@@ -171,7 +171,7 @@ class Tests_EigenvectorCentrality
                                       false);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

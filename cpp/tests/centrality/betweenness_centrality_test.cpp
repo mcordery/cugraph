@@ -69,7 +69,7 @@ class Tests_BetweennessCentrality
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -78,7 +78,7 @@ class Tests_BetweennessCentrality
         handle, input_usecase, betweenness_usecase.test_weighted, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -105,7 +105,7 @@ class Tests_BetweennessCentrality
       true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Betweenness centrality");
     }
 
@@ -120,7 +120,7 @@ class Tests_BetweennessCentrality
       do_expensive_check);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

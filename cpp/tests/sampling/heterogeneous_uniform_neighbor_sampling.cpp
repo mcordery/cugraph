@@ -62,7 +62,7 @@ class Tests_Heterogeneous_Uniform_Neighbor_Sampling
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -71,7 +71,7 @@ class Tests_Heterogeneous_Uniform_Neighbor_Sampling
         handle, input_usecase, true, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -127,7 +127,7 @@ class Tests_Heterogeneous_Uniform_Neighbor_Sampling
     }
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Uniform neighbor sampling");
     }
 
@@ -158,7 +158,7 @@ class Tests_Heterogeneous_Uniform_Neighbor_Sampling
           heterogeneous_uniform_neighbor_sampling_usecase.flag_replacement});
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

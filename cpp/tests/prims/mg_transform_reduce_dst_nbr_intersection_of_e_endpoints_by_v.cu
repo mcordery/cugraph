@@ -91,7 +91,7 @@ class Tests_MGTransformReduceDstNbrIntersectionOfEEndpointsByV
     // 1. create MG graph
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -103,7 +103,7 @@ class Tests_MGTransformReduceDstNbrIntersectionOfEEndpointsByV
         *handle_, input_usecase, false, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -137,7 +137,7 @@ class Tests_MGTransformReduceDstNbrIntersectionOfEEndpointsByV
       mg_graph_view.local_vertex_partition_range_size(), handle_->get_stream());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG transform_reduce_dst_nbr_intersection_of_e_endpoints_by_v");
     }
@@ -152,7 +152,7 @@ class Tests_MGTransformReduceDstNbrIntersectionOfEEndpointsByV
       mg_result_buffer.begin());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);

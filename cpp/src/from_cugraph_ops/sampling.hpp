@@ -14,7 +14,7 @@
 
 #include <raft/random/rng_state.hpp>
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 
 #include <cstdint>
 
@@ -47,13 +47,13 @@ void get_sampling_index(int32_t* index,
                         int32_t n_sizes,
                         int32_t sample_size,
                         bool replace,
-                        cudaStream_t stream);
+                        hipStream_t stream);
 void get_sampling_index(int64_t* index,
                         raft::random::RngState& rng,
                         const int64_t* sizes,
                         int64_t n_sizes,
                         int32_t sample_size,
                         bool replace,
-                        cudaStream_t stream);
+                        hipStream_t stream);
 
 }  // namespace cugraph::legacy::ops::graph

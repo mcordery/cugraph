@@ -83,7 +83,7 @@ class resource_manager_t {
                     "cannot register same global_rank multiple times");
 
     int num_gpus_this_node;
-    RAFT_CUDA_TRY(cudaGetDeviceCount(&num_gpus_this_node));
+    RAFT_CUDA_TRY(hipGetDeviceCount(&num_gpus_this_node));
 
     CUGRAPH_EXPECTS(
       (local_device_id.value() >= 0) && (local_device_id.value() < num_gpus_this_node),

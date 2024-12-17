@@ -76,7 +76,7 @@ void get_sampling_index_replace(IdxT* index,
                                 const IdxT* sizes,
                                 IdxT n_sizes,
                                 int32_t sample_size,
-                                cudaStream_t stream)
+                                hipStream_t stream)
 {
   // keep thread per block fairly low since we can expect sample_size < warp_size
   // thus we want to have as many blocks as possible to increase parallelism
@@ -87,7 +87,7 @@ void get_sampling_index_replace(IdxT* index,
     rng, (index_replace_kernel<<<n_blks, TPB, 0, stream>>>), index, sizes, n_sizes, sample_size);
   auto thread_rs = utils::ceil_div<IdxT>(IdxT{sample_size}, utils::WARP_SIZE);
   rng.advance(static_cast<uint64_t>(n_blks * TPB), thread_rs * sizeof(IdxT) / sizeof(int32_t));
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <int N_WARPS, typename IdxT, typename GenT>
@@ -134,7 +134,7 @@ void get_sampling_index_reservoir(IdxT* index,
                                   const IdxT* sizes,
                                   IdxT n_sizes,
                                   int32_t sample_size,
-                                  cudaStream_t stream)
+                                  hipStream_t stream)
 {
   // same TPB as in algo R: increased SM occupancy is most important here
   static constexpr int TPB     = 512;
@@ -152,7 +152,7 @@ void get_sampling_index_reservoir(IdxT* index,
     std::max(IdxT{0}, std::min(std::numeric_limits<IdxT>::max(), n_sizes) - IdxT{sample_size}),
     utils::WARP_SIZE);
   rng.advance(static_cast<uint64_t>(n_blks * TPB), thread_rs * sizeof(IdxT) / sizeof(int32_t));
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 template <typename IdxT>
@@ -162,7 +162,7 @@ void get_sampling_index_impl(IdxT* index,
                              IdxT n_sizes,
                              int32_t sample_size,
                              bool replace,
-                             cudaStream_t stream)
+                             hipStream_t stream)
 {
   if (replace) {
     get_sampling_index_replace<IdxT>(index, rng, sizes, n_sizes, sample_size, stream);

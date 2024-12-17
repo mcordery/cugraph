@@ -253,7 +253,7 @@ class Tests_CoarsenGraph
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -262,7 +262,7 @@ class Tests_CoarsenGraph
         handle, input_usecase, coarsen_graph_usecase.test_weighted, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -295,7 +295,7 @@ class Tests_CoarsenGraph
     raft::update_device(d_labels.data(), h_labels.data(), h_labels.size(), handle.get_stream());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Graph coarsening");
     }
 
@@ -303,7 +303,7 @@ class Tests_CoarsenGraph
       cugraph::coarsen_graph(handle, graph_view, edge_weight_view, d_labels.begin(), true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

@@ -444,10 +444,10 @@ class concurrent_unordered_map {
 
       m_hashtbl_values = m_allocator.allocate(m_capacity, stream);
     }
-    RAFT_CUDA_TRY(cudaMemcpyAsync(m_hashtbl_values,
+    RAFT_CUDA_TRY(hipMemcpyAsync(m_hashtbl_values,
                                   other.m_hashtbl_values,
                                   m_capacity * sizeof(value_type),
-                                  cudaMemcpyDefault,
+                                  hipMemcpyDefault,
                                   stream.value()));
   }
 
@@ -468,14 +468,14 @@ class concurrent_unordered_map {
 
   void prefetch(int const dev_id, rmm::cuda_stream_view stream)
   {
-    cudaPointerAttributes hashtbl_values_ptr_attributes;
-    cudaError_t status = cudaPointerGetAttributes(&hashtbl_values_ptr_attributes, m_hashtbl_values);
+    hipPointerAttribute_t hashtbl_values_ptr_attributes;
+    hipError_t status = hipPointerGetAttributes(&hashtbl_values_ptr_attributes, m_hashtbl_values);
 
-    if (cudaSuccess == status && isPtrManaged(hashtbl_values_ptr_attributes)) {
-      RAFT_CUDA_TRY(cudaMemPrefetchAsync(
+    if (hipSuccess == status && isPtrManaged(hashtbl_values_ptr_attributes)) {
+      RAFT_CUDA_TRY(hipMemPrefetchAsync(
         m_hashtbl_values, m_capacity * sizeof(value_type), dev_id, stream.value()));
     }
-    RAFT_CUDA_TRY(cudaMemPrefetchAsync(this, sizeof(*this), dev_id, stream.value()));
+    RAFT_CUDA_TRY(hipMemPrefetchAsync(this, sizeof(*this), dev_id, stream.value()));
   }
 
   /**
@@ -538,14 +538,14 @@ class concurrent_unordered_map {
     m_hashtbl_values         = m_allocator.allocate(m_capacity, stream);
     constexpr int block_size = 128;
     {
-      cudaPointerAttributes hashtbl_values_ptr_attributes;
-      cudaError_t status =
-        cudaPointerGetAttributes(&hashtbl_values_ptr_attributes, m_hashtbl_values);
+      hipPointerAttribute_t hashtbl_values_ptr_attributes;
+      hipError_t status =
+        hipPointerGetAttributes(&hashtbl_values_ptr_attributes, m_hashtbl_values);
 
-      if (cudaSuccess == status && isPtrManaged(hashtbl_values_ptr_attributes)) {
+      if (hipSuccess == status && isPtrManaged(hashtbl_values_ptr_attributes)) {
         int dev_id = 0;
-        RAFT_CUDA_TRY(cudaGetDevice(&dev_id));
-        RAFT_CUDA_TRY(cudaMemPrefetchAsync(
+        RAFT_CUDA_TRY(hipGetDevice(&dev_id));
+        RAFT_CUDA_TRY(hipMemPrefetchAsync(
           m_hashtbl_values, m_capacity * sizeof(value_type), dev_id, stream.value()));
       }
     }

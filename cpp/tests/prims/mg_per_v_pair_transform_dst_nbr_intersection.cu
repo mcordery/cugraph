@@ -94,7 +94,7 @@ class Tests_MGPerVPairTransformDstNbrIntersection
     // 1. create MG graph
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -106,7 +106,7 @@ class Tests_MGPerVPairTransformDstNbrIntersection
         *handle_, input_usecase, false, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -168,7 +168,7 @@ class Tests_MGPerVPairTransformDstNbrIntersection
     auto mg_out_degrees = mg_graph_view.compute_out_degrees(*handle_);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG per_v_pair_transform_dst_nbr_intersection");
     }
@@ -184,7 +184,7 @@ class Tests_MGPerVPairTransformDstNbrIntersection
       cugraph::get_dataframe_buffer_begin(mg_result_buffer));
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);

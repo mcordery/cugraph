@@ -68,7 +68,7 @@ class Tests_MGWeaklyConnectedComponents
     // 1. create MG graph
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -80,7 +80,7 @@ class Tests_MGWeaklyConnectedComponents
         *handle_, input_usecase, false, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -94,7 +94,7 @@ class Tests_MGWeaklyConnectedComponents
                                                   handle_->get_stream());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG weakly_connected_components");
     }
@@ -102,7 +102,7 @@ class Tests_MGWeaklyConnectedComponents
     cugraph::weakly_connected_components(*handle_, mg_graph_view, d_mg_components.data());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);

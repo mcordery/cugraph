@@ -25,7 +25,7 @@
 
 std::unique_ptr<raft::handle_t> initialize_sg_handle()
 {
-  RAFT_CUDA_TRY(cudaSetDevice(0));
+  RAFT_CUDA_TRY(hipSetDevice(0));
   std::shared_ptr<rmm::mr::device_memory_resource> resource =
     std::make_shared<rmm::mr::cuda_memory_resource>();
   rmm::mr::set_current_device_resource(resource.get());
@@ -145,7 +145,7 @@ void run_graph_algorithms(
                false,
                std::numeric_limits<vertex_t>::max());
 
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
 
   auto distances_title = std::string("distances");
   raft::print_device_vector(
@@ -180,7 +180,7 @@ void run_graph_algorithms(
   std::cout << "modularity : " << modularity << std::endl;
 
   auto cluster_assignments_title = std::string("cluster_assignments");
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
   raft::print_device_vector(cluster_assignments_title.c_str(),
                             d_cluster_assignments.begin(),
                             d_cluster_assignments.size(),

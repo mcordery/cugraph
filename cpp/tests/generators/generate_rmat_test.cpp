@@ -191,7 +191,7 @@ class Tests_GenerateRmat : public ::testing::TestWithParam<GenerateRmat_Usecase>
       rmm::device_uvector<vertex_t> d_dsts(0, handle.get_stream());
 
       if (cugraph::test::g_perf) {
-        RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+        RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
         hr_timer.start("Generate edge list");
       }
 
@@ -211,7 +211,7 @@ class Tests_GenerateRmat : public ::testing::TestWithParam<GenerateRmat_Usecase>
       }
 
       if (cugraph::test::g_perf) {
-        RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+        RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
         hr_timer.stop();
         hr_timer.display_and_clear(std::cout);
       }
@@ -345,7 +345,7 @@ class Tests_GenerateRmats : public ::testing::TestWithParam<GenerateRmats_Usecas
     raft::random::RngState rng_state(0);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Generate edge list");
     }
 
@@ -359,7 +359,7 @@ class Tests_GenerateRmats : public ::testing::TestWithParam<GenerateRmats_Usecas
                                                               configuration.edge_distribution);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

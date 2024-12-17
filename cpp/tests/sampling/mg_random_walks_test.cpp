@@ -127,7 +127,7 @@ class Tests_MGRandomWalks : public ::testing::TestWithParam<tuple_t> {
     auto [randomwalks_usecase, input_usecase] = param;
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("MG construct graph");
     }
 
@@ -137,7 +137,7 @@ class Tests_MGRandomWalks : public ::testing::TestWithParam<tuple_t> {
         *handle_, input_usecase, randomwalks_usecase.test_weighted, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -161,7 +161,7 @@ class Tests_MGRandomWalks : public ::testing::TestWithParam<tuple_t> {
     }
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("MG Random walks");
     }
 
@@ -183,7 +183,7 @@ class Tests_MGRandomWalks : public ::testing::TestWithParam<tuple_t> {
                             max_length);
 
       if (cugraph::test::g_perf) {
-        RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+        RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
         handle_->get_comms().barrier();
         hr_timer.stop();
         hr_timer.display_and_clear(std::cout);

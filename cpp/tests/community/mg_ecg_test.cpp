@@ -75,7 +75,7 @@ class Tests_MGEcg : public ::testing::TestWithParam<std::tuple<Ecg_Usecase, inpu
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -85,7 +85,7 @@ class Tests_MGEcg : public ::testing::TestWithParam<std::tuple<Ecg_Usecase, inpu
         *handle_, input_usecase, true, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -96,7 +96,7 @@ class Tests_MGEcg : public ::testing::TestWithParam<std::tuple<Ecg_Usecase, inpu
       mg_edge_weights ? std::make_optional((*mg_edge_weights).view()) : std::nullopt;
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG ECG");
     }
@@ -115,7 +115,7 @@ class Tests_MGEcg : public ::testing::TestWithParam<std::tuple<Ecg_Usecase, inpu
                                                    ecg_usecase.resolution_);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);

@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2022-2024, NVIDIA CORPORATION.
  *
@@ -29,8 +30,8 @@
 #include <thrust/pair.h>
 #include <thrust/sort.h>
 
-#include <cuda.h>
-#include <cuda_runtime_api.h>
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
 
 #include <hash/concurrent_unordered_map.cuh>
 
@@ -787,7 +788,7 @@ struct renumber_functor {
         const_cast<str_offset_type*>(str_col_view.offsets().data<str_offset_type>()));
     }
 
-    cudaStream_t exec_strm = handle.get_stream();
+    hipStream_t exec_strm = handle.get_stream();
 
     auto mr                         = rmm::mr::new_delete_resource();
     size_t hist_size                = sizeof(accum_type) * 32;
@@ -797,7 +798,7 @@ struct renumber_functor {
     float load_factor = 0.7;
 
     rmm::device_uvector<accum_type> atomic_agg(32, exec_strm);  // just padded to 32
-    RAFT_CHECK_CUDA(cudaMemsetAsync(atomic_agg.data(), 0, sizeof(accum_type), exec_strm));
+    RAFT_CHECK_CUDA(hipMemsetAsync(atomic_agg.data(), 0, sizeof(accum_type), exec_strm));
 
     auto cuda_map_obj = cudf_map_type::create(
                           std::max(static_cast<size_t>(static_cast<double>(num_rows) / load_factor),
@@ -835,9 +836,9 @@ struct renumber_functor {
                                                                          *cuda_map_obj,
                                                                          atomic_agg.data());
 
-    RAFT_CHECK_CUDA(cudaMemcpy(
-      hist_insert_counter, atomic_agg.data(), sizeof(accum_type), cudaMemcpyDeviceToHost));
-    RAFT_CHECK_CUDA(cudaStreamSynchronize(exec_strm));
+    RAFT_CHECK_CUDA(hipMemcpy(
+      hist_insert_counter, atomic_agg.data(), sizeof(accum_type), hipMemcpyDeviceToHost));
+    RAFT_CHECK_CUDA(hipStreamSynchronize(exec_strm));
 
     accum_type key_value_count = hist_insert_counter[0];
     // {row, count} pairs, sortDesecending on count w/ custom comparator
@@ -846,7 +847,7 @@ struct renumber_functor {
     rmm::device_uvector<size_type> atomic_idx(32, exec_strm);              // just padded to 32
 
     int32_t num_blocks = 0;
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, assign_histogram_idx, block.x, 0);
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, assign_histogram_idx, block.x, 0);
     grid.x = num_multiprocessors * num_blocks;
     assign_histogram_idx<<<grid, block, 0, exec_strm>>>(*cuda_map_obj,
                                                         cuda_map_obj->capacity(),
@@ -864,7 +865,7 @@ struct renumber_functor {
                         sort_value.begin(),
                         struct_sort_descending());
 
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, set_vertex_indices, block.x, 0);
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, set_vertex_indices, block.x, 0);
     grid.x = num_multiprocessors * num_blocks;
     set_vertex_indices<<<grid, block, 0, exec_strm>>>(sort_key.data(), hist_insert_counter[0]);
 
@@ -873,7 +874,7 @@ struct renumber_functor {
     rmm::device_uvector<str_offset_type> out_col1_length(key_value_count, exec_strm);
     rmm::device_uvector<str_offset_type> out_col2_length(key_value_count, exec_strm);
 
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, set_output_col_offsets, block.x, 0);
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, set_output_col_offsets, block.x, 0);
     grid.x = num_multiprocessors * num_blocks;
     // k-v count pair, out_offset_ptr, inputcol offset ptrs (to measure length)
     set_output_col_offsets<<<grid, block, 0, exec_strm>>>(sort_key.data(),
@@ -897,20 +898,20 @@ struct renumber_functor {
     rmm::device_uvector<str_offset_type> out_col2_offsets(key_value_count + 1, exec_strm);
 
     size_t tmp_storage_bytes = 0;
-    cub::DeviceScan::ExclusiveSum(nullptr,
+    hipcub::DeviceScan::ExclusiveSum(nullptr,
                                   tmp_storage_bytes,
                                   out_col1_length.data(),
                                   out_col1_offsets.data(),
                                   key_value_count,
                                   exec_strm);
     rmm::device_buffer tmp_storage(tmp_storage_bytes, exec_strm);
-    cub::DeviceScan::ExclusiveSum(tmp_storage.data(),
+    hipcub::DeviceScan::ExclusiveSum(tmp_storage.data(),
                                   tmp_storage_bytes,
                                   out_col1_length.data(),
                                   out_col1_offsets.data(),
                                   key_value_count,
                                   exec_strm);
-    cub::DeviceScan::ExclusiveSum(tmp_storage.data(),
+    hipcub::DeviceScan::ExclusiveSum(tmp_storage.data(),
                                   tmp_storage_bytes,
                                   out_col2_length.data(),
                                   out_col2_offsets.data(),
@@ -918,7 +919,7 @@ struct renumber_functor {
                                   exec_strm);
 
     // reduce to get size of column allocations
-    // just reusing exscan output instead of using cub::Reduce::Sum() again
+    // just reusing exscan output instead of using hipcub::Reduce::Sum() again
     // also sets last value of offset buffer that exscan didnt set
     offset_buffer_size_comp<<<1, 32, 0, exec_strm>>>(out_col1_length.data(),
                                                      out_col2_length.data(),
@@ -927,13 +928,13 @@ struct renumber_functor {
                                                      key_value_count,
                                                      hist_insert_counter);
 
-    RAFT_CHECK_CUDA(cudaStreamSynchronize(exec_strm));
+    RAFT_CHECK_CUDA(hipStreamSynchronize(exec_strm));
     // allocate output columns buffers
     rmm::device_buffer unrenumber_col1_chars(hist_insert_counter[0], exec_strm);
     rmm::device_buffer unrenumber_col2_chars(hist_insert_counter[1], exec_strm);
 
     // select string kernel
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(
       &num_blocks, select_unrenumber_string, block.x, 0);
     grid.x = num_multiprocessors * num_blocks;
     select_unrenumber_string<<<grid, block, 0, exec_strm>>>(
@@ -951,7 +952,7 @@ struct renumber_functor {
       reinterpret_cast<char_type*>(unrenumber_col2_chars.data()),
       out_col1_offsets.data(),
       out_col2_offsets.data());
-    RAFT_CHECK_CUDA(cudaStreamSynchronize(exec_strm));  // do we need sync here??
+    RAFT_CHECK_CUDA(hipStreamSynchronize(exec_strm));  // do we need sync here??
 
     std::vector<std::unique_ptr<cudf::column>> renumber_table_vectors;
 
@@ -1007,7 +1008,7 @@ struct renumber_functor {
     grid.x = (key_value_count - 1) / block.x + 1;
     create_mapping_histogram<<<grid, block, 0, exec_strm>>>(
       sort_value.data(), sort_key.data(), *cuda_map_obj_mapping, key_value_count);
-    RAFT_CHECK_CUDA(cudaStreamSynchronize(exec_strm));
+    RAFT_CHECK_CUDA(hipStreamSynchronize(exec_strm));
 
     rmm::device_buffer src_buffer(sizeof(Dtype) * num_rows, exec_strm);
     rmm::device_buffer dst_buffer(sizeof(Dtype) * num_rows, exec_strm);
@@ -1023,7 +1024,7 @@ struct renumber_functor {
       num_rows,
       *cuda_map_obj_mapping,
       reinterpret_cast<Dtype*>(src_buffer.data()));
-    RAFT_CHECK_CUDA(cudaStreamSynchronize(exec_strm));
+    RAFT_CHECK_CUDA(hipStreamSynchronize(exec_strm));
     set_dst_vertex_idx<<<grid, block, smem_size, exec_strm>>>(
       dst_vertex_chars_ptrs[0],
       dst_vertex_offset_ptrs[0],
@@ -1050,7 +1051,7 @@ struct renumber_functor {
                                                          rmm::device_buffer{},
                                                          0));
 
-    RAFT_CHECK_CUDA(cudaDeviceSynchronize());
+    RAFT_CHECK_CUDA(hipDeviceSynchronize());
 
     mr.deallocate(hist_insert_counter, hist_size);
 

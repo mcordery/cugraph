@@ -1,3 +1,4 @@
+#include "hip/hip_runtime.h"
 /*
  * Copyright (c) 2023-2024, NVIDIA CORPORATION. All rights reserved.
  *
@@ -24,7 +25,7 @@
 #define CUGRAPH_OPS_CONSTEXPR_D constexpr __device__
 #endif
 
-#if defined(__CUDACC__) || defined(__CUDA__)
+#if defined(__HIPCC__) || defined(__CUDA__)
 #define CUGRAPH_OPS_HD __host__ __device__
 #else
 #define CUGRAPH_OPS_HD

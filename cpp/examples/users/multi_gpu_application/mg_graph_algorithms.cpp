@@ -33,8 +33,8 @@ void initialize_mpi_and_set_device(int argc, char** argv)
   RAFT_MPI_TRY(MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank));
 
   int num_gpus_per_node{};
-  RAFT_CUDA_TRY(cudaGetDeviceCount(&num_gpus_per_node));
-  RAFT_CUDA_TRY(cudaSetDevice(comm_rank % num_gpus_per_node));
+  RAFT_CUDA_TRY(hipGetDeviceCount(&num_gpus_per_node));
+  RAFT_CUDA_TRY(hipSetDevice(comm_rank % num_gpus_per_node));
 }
 
 std::unique_ptr<raft::handle_t> initialize_mg_handle()
@@ -205,7 +205,7 @@ void run_graph_algorithms(
                false,
                std::numeric_limits<vertex_t>::max());
 
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
 
   auto distances_title = std::string("distances_").append(std::to_string(comm_rank));
   raft::print_device_vector(
@@ -241,7 +241,7 @@ void run_graph_algorithms(
 
   auto cluster_assignments_title =
     std::string("cluster_assignments_").append(std::to_string(comm_rank));
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
   raft::print_device_vector(cluster_assignments_title.c_str(),
                             d_cluster_assignments.begin(),
                             d_cluster_assignments.size(),

@@ -17,7 +17,7 @@ void get_sampling_index(int32_t* index,
                         int32_t n_sizes,
                         int32_t sample_size,
                         bool replace,
-                        cudaStream_t stream)
+                        hipStream_t stream)
 {
   get_sampling_index_impl(index, rng, sizes, n_sizes, sample_size, replace, stream);
 }
@@ -28,7 +28,7 @@ void get_sampling_index(int64_t* index,
                         int64_t n_sizes,
                         int32_t sample_size,
                         bool replace,
-                        cudaStream_t stream)
+                        hipStream_t stream)
 {
   get_sampling_index_impl(index, rng, sizes, n_sizes, sample_size, replace, stream);
 }

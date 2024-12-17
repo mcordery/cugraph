@@ -179,7 +179,7 @@ void algo_r_impl(IdxT* neighbors,
                  IdxT g_n_dst_nodes,
                  IdxT sample_size,
                  IdxT max_val,
-                 cudaStream_t stream)
+                 hipStream_t stream)
 {
   if (nodes == nullptr) { n_dst_nodes = g_n_dst_nodes; }
   ASSERT(n_dst_nodes <= g_n_dst_nodes,
@@ -233,7 +233,7 @@ void algo_r_impl(IdxT* neighbors,
   auto thread_rs = utils::ceil_div<IdxT>(
     std::max(IdxT{0}, std::min(max_val, g_n_dst_nodes) - sample_size), utils::WARP_SIZE);
   rng.advance(static_cast<uint64_t>(n_blks * TPB), thread_rs);
-  RAFT_CUDA_TRY(cudaGetLastError());
+  RAFT_CUDA_TRY(hipGetLastError());
 }
 
 }  // namespace cugraph::ops::graph

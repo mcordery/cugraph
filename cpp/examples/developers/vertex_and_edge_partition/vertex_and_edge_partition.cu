@@ -37,8 +37,8 @@ void initialize_mpi_and_set_device(int argc, char** argv)
   RAFT_MPI_TRY(MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank));
 
   int num_gpus_per_node{};
-  RAFT_CUDA_TRY(cudaGetDeviceCount(&num_gpus_per_node));
-  RAFT_CUDA_TRY(cudaSetDevice(comm_rank % num_gpus_per_node));
+  RAFT_CUDA_TRY(hipGetDeviceCount(&num_gpus_per_node));
+  RAFT_CUDA_TRY(hipSetDevice(comm_rank % num_gpus_per_node));
 }
 
 std::unique_ptr<raft::handle_t> initialize_mg_handle()
@@ -204,7 +204,7 @@ void look_into_vertex_and_edge_partitions(
   // Print verties mapped to this process
   //
 
-  RAFT_CUDA_TRY(cudaDeviceSynchronize());
+  RAFT_CUDA_TRY(hipDeviceSynchronize());
 
   if (renumber_map) {
     auto vertex_partition_title = std::string("vertices@rank_").append(std::to_string(comm_rank));
@@ -388,7 +388,7 @@ void look_into_vertex_and_edge_partitions(
 
       assert(number_of_edges_in_edge_partition == edge_counts[ep_idx]);
 
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());
+      RAFT_CUDA_TRY(hipDeviceSynchronize());
       auto weights_title = std::string("weights_")
                              .append(std::to_string(comm_rank))
                              .append("_")

@@ -53,7 +53,7 @@ class Tests_MGNegative_Sampling : public ::testing::TestWithParam<input_usecase_
     HighResTimer hr_timer{};
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -62,7 +62,7 @@ class Tests_MGNegative_Sampling : public ::testing::TestWithParam<input_usecase_
         *handle_, param, true, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -121,7 +121,7 @@ class Tests_MGNegative_Sampling : public ::testing::TestWithParam<input_usecase_
     }
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Negative sampling");
     }
 
@@ -138,7 +138,7 @@ class Tests_MGNegative_Sampling : public ::testing::TestWithParam<input_usecase_
                                  do_expensive_check);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

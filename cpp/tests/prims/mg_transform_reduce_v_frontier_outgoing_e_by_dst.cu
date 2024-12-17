@@ -132,7 +132,7 @@ class Tests_MGTransformReduceVFrontierOutgoingEBySrcDst
     constexpr bool store_transposed =
       false;  // needs to be false for using transform_reduce_v_frontier_outgoing_e_by_dst
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -144,7 +144,7 @@ class Tests_MGTransformReduceVFrontierOutgoingEBySrcDst
         *handle_, input_usecase, false, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -201,7 +201,7 @@ class Tests_MGTransformReduceVFrontierOutgoingEBySrcDst
               cugraph::get_dataframe_buffer_end(mg_key_buffer));
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG transform_reduce_v_frontier_outgoing_e_by_dst");
     }
@@ -236,7 +236,7 @@ class Tests_MGTransformReduceVFrontierOutgoingEBySrcDst
     }
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);

@@ -63,7 +63,7 @@ class Tests_Egonet : public ::testing::TestWithParam<std::tuple<Egonet_Usecase, 
     bool renumber = true;
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Construct graph");
     }
 
@@ -72,7 +72,7 @@ class Tests_Egonet : public ::testing::TestWithParam<std::tuple<Egonet_Usecase, 
         handle, input_usecase, egonet_usecase.test_weighted_, renumber);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }
@@ -97,7 +97,7 @@ class Tests_Egonet : public ::testing::TestWithParam<std::tuple<Egonet_Usecase, 
                                                     graph_view.local_vertex_partition_range_last());
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.start("Egonet");
     }
 
@@ -110,7 +110,7 @@ class Tests_Egonet : public ::testing::TestWithParam<std::tuple<Egonet_Usecase, 
         egonet_usecase.radius_);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
     }

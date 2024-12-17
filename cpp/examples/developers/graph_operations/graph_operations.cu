@@ -41,8 +41,8 @@ void initialize_mpi_and_set_device(int argc, char** argv)
   RAFT_MPI_TRY(MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank));
 
   int num_gpus_per_node{};
-  RAFT_CUDA_TRY(cudaGetDeviceCount(&num_gpus_per_node));
-  RAFT_CUDA_TRY(cudaSetDevice(comm_rank % num_gpus_per_node));
+  RAFT_CUDA_TRY(hipGetDeviceCount(&num_gpus_per_node));
+  RAFT_CUDA_TRY(hipSetDevice(comm_rank % num_gpus_per_node));
 }
 
 std::unique_ptr<raft::handle_t> initialize_mg_handle()
@@ -244,7 +244,7 @@ void perform_example_graph_operations(
 
     auto weighted_averages_title =
       std::string("weighted_averages_").append(std::to_string(comm_rank));
-    RAFT_CUDA_TRY(cudaDeviceSynchronize());
+    RAFT_CUDA_TRY(hipDeviceSynchronize());
     raft::print_device_vector(weighted_averages_title.c_str(),
                               weighted_averages.begin(),
                               weighted_averages.size(),
@@ -288,7 +288,7 @@ void perform_example_graph_operations(
     auto weighted_averages_title =
       std::string("weighted_averages_").append(std::to_string(comm_rank));
 
-    RAFT_CUDA_TRY(cudaDeviceSynchronize());
+    RAFT_CUDA_TRY(hipDeviceSynchronize());
     raft::print_device_vector(weighted_averages_title.c_str(),
                               weighted_averages.begin(),
                               weighted_averages.size(),

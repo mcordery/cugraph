@@ -61,7 +61,7 @@ class Tests_MGSimilarity
     // 1. create MG graph
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.start("MG Construct graph");
     }
@@ -71,7 +71,7 @@ class Tests_MGSimilarity
         *handle_, input_usecase, false, true);
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
@@ -107,7 +107,7 @@ class Tests_MGSimilarity
 
     if (similarity_usecase.all_pairs) {
       if (cugraph::test::g_perf) {
-        RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+        RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
         handle_->get_comms().barrier();
         hr_timer.start("MG similarity test");
       }
@@ -165,7 +165,7 @@ class Tests_MGSimilarity
         {v1.data(), v1.size()}, {v2.data(), v2.size()}};
 
       if (cugraph::test::g_perf) {
-        RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+        RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
         handle_->get_comms().barrier();
         hr_timer.start("MG similarity test");
       }
@@ -175,7 +175,7 @@ class Tests_MGSimilarity
     }
 
     if (cugraph::test::g_perf) {
-      RAFT_CUDA_TRY(cudaDeviceSynchronize());  // for consistent performance measurement
+      RAFT_CUDA_TRY(hipDeviceSynchronize());  // for consistent performance measurement
       handle_->get_comms().barrier();
       hr_timer.stop();
       hr_timer.display_and_clear(std::cout);
