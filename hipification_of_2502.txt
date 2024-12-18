@@ -1,0 +1,81 @@
+
+Fork branch 25-02
+Pushes are to
+    git push origin
+Hipify with hipconvertinplace-perl.sh
+    Only about half a dozen warnings about __shfl_sync
+Modify VERSION to point at 24.06
+Modify root level rapids_cmake.config to point at rocm directory for rapids-cmake based on VERSION number
+apt-get install ninja-build
+
+Building only libcugraph
+Setting CMAKE_CXX_COMPILER and CMAKE_C_COMPILER  in build.sh  otherwise gtest fails to build
+
+In cpp/CMakelists.txt
+    include(rapids-cuda) to include(rapids-hip)
+
+    rapids_cuda_init_architectures to rapids_hip_init_architectures
+
+    project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX CUDA) to
+    project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX HIP)
+
+    Change
+    option(CUDA_STATIC_RUNTIME "Statically link the CUDA toolkit runtime and libraries" OFF)
+    to
+    option(HIP_STATIC_RUNTIME "Statically link the HIP toolkit runtime and libraries" OFF)
+
+
+    rapids_cuda_init_runtime(USE_STATIC ${CUDA_STATIC_RUNTIME}) to
+    rapids_hip_init_runtime(USE_STATIC ${HIP_STATIC_RUNTIME})
+
+    Change
+        rapids_find_package(CUDAToolkit REQUIRED
+        BUILD_EXPORT_SET    cugraph-exports
+        INSTALL_EXPORT_SET  cugraph-exports
+        )
+    TO
+                # conda environment
+        rapids_cmake_support_conda_env( conda_env MODIFY_PREFIX_PATH )
+
+        # Find the HIPToolkit
+        rapids_find_package(HIP REQUIRED
+                            BUILD_EXPORT_SET example-targets
+                            INSTALL_EXPORT_SET example-targets
+                            )
+
+
+
+
+    Fixed this
+        include(${rapids-cmake-dir}/cpm/init.cmake)
+        include(${rapids-cmake-dir}/cpm/cccl.cmake)
+        include(${rapids-cmake-dir}/cpm/rmm.cmake)
+        rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
+                    INSTALL_EXPORT_SET cugraph-exports)
+        include(${rapids-cmake-dir}/cpm/cuco.cmake)
+        rapids_cpm_cuco(BUILD_EXPORT_SET cugraph-exports INSTALL_EXPORT_SET cugraph-exports)
+        include(cmake/thirdparty/get_raft.cmake)
+
+    Added GIT_REPO and GIT_TAG from rocGraph's CMakelist.txt to cugraph's cpp/cmake/thirdparth/get_raft.cmake
+
+    Make sure doxygen is installed (sudo apt install doxygen). Do sudo apt update so you aren't missing any components it relies on.
+
+    Remove fatbin file write
+
+    Change target_link_libraries to
+
+        target_link_libraries(cugraph PRIVATE roc::rocprim hip::device hipblas
+                                            hipsparse hiprand hipsolver)
+        set(static_depends PACKAGE rocprim)
+
+    Removed
+        target_link_options(cugraph_c PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
+
+    Change CUGRAPH_CUDA_FLAGS to CUGRAPH_HIP_FLAGS and copy inputs from rocGRAPH
+
+    Changed target_compile_options to
+    target_compile_options(cugraph
+    PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
+            "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
+            -Wno-unused-command-line-argument -Wall
+)
