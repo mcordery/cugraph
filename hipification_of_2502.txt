@@ -73,6 +73,8 @@ In cpp/CMakelists.txt
 
     Change CUGRAPH_CUDA_FLAGS to CUGRAPH_HIP_FLAGS and copy inputs from rocGRAPH
 
+    Set LINKER_LANGUAGE to CXX in set_target_properties
+
     Changed target_compile_options to
     target_compile_options(cugraph
     PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"

@@ -469,6 +469,7 @@ set_target_properties(cugraph
     PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                INSTALL_RPATH                       "\$ORIGIN"
                # set target compile options
+               LINKER_LANGUAGE                     CXX
                CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
                HIP_STANDARD                       17
@@ -595,6 +596,7 @@ set_target_properties(cugraph_c
                # set target compile options
                CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
+               LINKER_LANGUAGE                     CXX
                CUDA_STANDARD                       17
                CUDA_STANDARD_REQUIRED              ON
                POSITION_INDEPENDENT_CODE           ON

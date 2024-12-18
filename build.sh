@@ -91,7 +91,7 @@ VERBOSE_FLAG=""
 CMAKE_VERBOSE_OPTION=""
 BUILD_TYPE=Release
 INSTALL_TARGET="--target install"
-BUILD_CPP_TESTS=ON
+BUILD_CPP_TESTS=OFF
 BUILD_CPP_MG_TESTS=OFF
 BUILD_CPP_MTMG_TESTS=OFF
 BUILD_ALL_GPU_ARCH=0
@@ -236,7 +236,7 @@ if buildDefault || hasArg libcugraph || hasArg all; then
         fi
     else
         if (( ${BUILD_ALL_GPU_ARCH} == 0 )); then
-            CUGRAPH_CMAKE_CUDA_ARCHITECTURES="NATIVE"
+            CUGRAPH_CMAKE_CUDA_ARCHITECTURES="gfx1100"
             echo "Building for the architecture of the GPU in the system..."
         else
             CUGRAPH_CMAKE_CUDA_ARCHITECTURES="RAPIDS"
