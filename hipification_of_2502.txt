@@ -81,3 +81,16 @@ In cpp/CMakelists.txt
             "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
             -Wno-unused-command-line-argument -Wall
 )
+
+----------------------------------------------------
+
+Build:
+
+    Diable building multigpu (_mg_) files
+
+    Can use C++23 to get rid of std::stringstream issues
+
+    <cuda/atomic> -> <hip/atomic>
+
+    Remove <cuda/functional>
+    proclaim_return_type() -> return type following lambda.

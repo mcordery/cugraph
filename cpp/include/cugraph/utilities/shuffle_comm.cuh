@@ -23,8 +23,8 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <cuda/atomic>
-#include <cuda/functional>
+#include <hip/atomic>
+// #include <cuda/funcational>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>

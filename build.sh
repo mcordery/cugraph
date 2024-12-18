@@ -247,6 +247,7 @@ if buildDefault || hasArg libcugraph || hasArg all; then
         cmake -B "${LIBCUGRAPH_BUILD_DIR}" -S "${REPODIR}/cpp" \
 	      -DCMAKE_CXX_COMPILER=/opt/rocm/bin/hipcc \
 	      -DCMAKE_C_COMPILER=/opt/rocm/bin/hipcc \
+              -DCMAKE_CXX_STANDARD=23 \
               -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
               -DCMAKE_CUDA_ARCHITECTURES=${CUGRAPH_CMAKE_CUDA_ARCHITECTURES} \
               -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
