@@ -19,13 +19,13 @@ cmake_minimum_required(VERSION 3.26.4 FATAL_ERROR)
 include(../rapids_config.cmake)
 include(rapids-cmake)
 include(rapids-cpm)
-include(rapids-cuda)
+include(rapids-hip)
 include(rapids-export)
 include(rapids-find)
 
-rapids_cuda_init_architectures(CUGRAPH)
+rapids_hip_init_architectures(CUGRAPH)
 
-project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX CUDA)
+project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX)
 
 if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
    CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
@@ -56,7 +56,7 @@ option(CMAKE_CUDA_LINEINFO "Enable the -lineinfo option for nvcc (useful for cud
 option(BUILD_TESTS "Configure CMake to build tests" ON)
 option(USE_RAFT_STATIC "Build raft as a static library" OFF)
 option(CUGRAPH_COMPILE_RAFT_LIB "Compile the raft library instead of using it header-only" ON)
-option(CUDA_STATIC_RUNTIME "Statically link the CUDA toolkit runtime and libraries" OFF)
+option(HIP_STATIC_RUNTIME "Statically link the HIP toolkit runtime and libraries" OFF)
 
 message(VERBOSE "CUGRAPH: CUDA_STATIC_RUNTIME=${CUDA_STATIC_RUNTIME}")
 
@@ -64,12 +64,31 @@ message(VERBOSE "CUGRAPH: CUDA_STATIC_RUNTIME=${CUDA_STATIC_RUNTIME}")
 # - compiler options -----------------------------------------------------------
 
 # CUDA runtime
-rapids_cuda_init_runtime(USE_STATIC ${CUDA_STATIC_RUNTIME})
+rapids_hip_init_runtime(USE_STATIC ${HIP_STATIC_RUNTIME})
 
-rapids_find_package(CUDAToolkit REQUIRED
-    BUILD_EXPORT_SET    cugraph-exports
-    INSTALL_EXPORT_SET  cugraph-exports
-    )
+# conda environment
+rapids_cmake_support_conda_env( conda_env MODIFY_PREFIX_PATH )
+
+# Find the HIPToolkit
+#rapids_find_package(HIP REQUIRED
+#                    BUILD_EXPORT_SET cugraph-exports
+#                    INSTALL_EXPORT_SET cugraph-exports
+#)
+
+find_package(HIP REQUIRED CONFIG PATHS ${HIP_PATH})
+find_package(hipcub REQUIRED CONFIG PATHS ${ROCM_PATH}/hipcub)
+find_package(rocprim REQUIRED CONFIG PATHS ${ROCM_PATH}/rocprim)
+find_package(rocthrust REQUIRED CONFIG PATHS ${ROCM_PATH}/rocthrust)
+find_package(hipblas REQUIRED CONFIG PATHS ${ROCM_PATH}/hipblas)
+find_package(hipsparse REQUIRED CONFIG PATHS ${ROCM_PATH}/hipsparse)
+find_package(hiprand REQUIRED CONFIG PATHS ${ROCM_PATH}/hiprand)
+find_package(hipsolver REQUIRED CONFIG PATHS ${ROCM_PATH}/hipsolver)
+
+if (HIP_FOUND)
+    message(STATUS "HIP package found")
+else()
+    message(FATAL_ERROR "HIP package not found.")
+endif()
 
 if (BUILD_CUGRAPH_MTMG_TESTS)
     if(NOT TARGET ucx::ucp)
@@ -83,7 +102,7 @@ endif()
 
 set(CUGRAPH_C_FLAGS "")
 set(CUGRAPH_CXX_FLAGS "")
-set(CUGRAPH_CUDA_FLAGS "")
+set(CUGRAPH_HIP_FLAGS "")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND CUGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations -Wno-deprecated-declarations -DRAFT_HIDE_DEPRECATION_WARNINGS)
@@ -92,21 +111,40 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 
 message("-- Building for GPU_ARCHS = ${CMAKE_CUDA_ARCHITECTURES}")
 
-list(APPEND CUGRAPH_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
-list(APPEND CUGRAPH_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -DRAFT_HIDE_DEPRECATION_WARNINGS -Xptxas=--disable-warnings)
-list(APPEND CUGRAPH_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
-list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
+#list(APPEND CUGRAPH_CUDA_FLAGS --expt-extended-lambda --expt-relaxed-constexpr)
+#list(APPEND CUGRAPH_CUDA_FLAGS -Werror=cross-execution-space-call -Wno-deprecated-declarations -DRAFT_HIDE_DEPRECATION_WARNINGS -Xptxas=--disable-warnings)
+#list(APPEND CUGRAPH_CUDA_FLAGS -Xcompiler=-Wall,-Wno-error=sign-compare,-Wno-error=unused-but-set-variable)
+#list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
 
-# Option to enable line info in CUDA device compilation to allow introspection when profiling /
-# memchecking
-if (CMAKE_CUDA_LINEINFO)
-    list(APPEND CUGRAPH_CUDA_FLAGS -lineinfo)
+list(APPEND CUGRAPH_CXX_FLAGS -DUSE_HIP)
+list(APPEND CUGRAPH_CXX_FLAGS -Wno-c++11-narrowing)
+list(APPEND CUGRAPH_CXX_FLAGS -Wno-unused-result)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS})
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/rocprim)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipcub)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipblas)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipsparse)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hiprand)
+list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/hipsolver)
+list(APPEND CUGRAPH_CXX_FLAGS
+     -I${CMAKE_CURRENT_SOURCE_DIR}/src/include/raft/include)
+list(APPEND CUGRAPH_CXX_FLAGS -cxx-isystem
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/src/)
+list(APPEND CUGRAPH_CXX_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+
+# Option to enable line info in HIP device compilation to allow introspection
+# when profiling / memchecking
+if(CMAKE_HIP_LINEINFO)
+  list(APPEND CUGRAPH_CXX_FLAGS -lineinfo)
 endif()
+
+
 
 # Debug options
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "Building with debugging flags")
-    list(APPEND CUGRAPH_CUDA_FLAGS -G -Xcompiler=-rdynamic)
+    list(APPEND CUGRAPH_HIP_FLAGS -G -Xcompiler=-rdynamic)
 endif()
 
 ###################################################################################################
@@ -130,7 +168,10 @@ rapids_cpm_init()
 
 # Need CCCL, then rmm, then cuCollections, then RAFT.
 # This ensures that libraries can be overridden for testing.
-include(cmake/thirdparty/get_cccl.cmake)
+##mjcinclude(cmake/thirdparty/get_cccl.cmake)
+##mjcinclude(${rapids-cmake-dir}/cpm/rmm.cmake)
+include(${rapids-cmake-dir}/cpm/init.cmake)
+include(${rapids-cmake-dir}/cpm/cccl.cmake)
 include(${rapids-cmake-dir}/cpm/rmm.cmake)
 rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
                INSTALL_EXPORT_SET cugraph-exports)
@@ -430,30 +471,21 @@ set_target_properties(cugraph
                # set target compile options
                CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
-               CUDA_STANDARD                       17
-               CUDA_STANDARD_REQUIRED              ON
+               HIP_STANDARD                       17
+               HIP_STANDARD_REQUIRED              ON
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON
 )
 
 target_compile_options(cugraph
             PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                    "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+                    "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
+                    -Wno-unused-command-line-argument -Wall
 )
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(cugraph PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
-
-file(WRITE "${CUGRAPH_BINARY_DIR}/fatbin.ld"
-[=[
-SECTIONS
-{
-  .nvFatBinSegment : { *(.nvFatBinSegment) }
-  .nv_fatbin : { *(.nv_fatbin) }
-}
-]=])
-target_link_options(cugraph PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
 
 add_library(cugraph::cugraph ALIAS cugraph)
 
@@ -479,15 +511,27 @@ endif()
 
 ################################################################################
 # - link libraries -------------------------------------------------------------
+
+#target_link_libraries(cugraph PRIVATE roc::rocprim hip::device hipblas
+#                                       hipsparse hiprand hipsolver)
+#set(static_depends PACKAGE rocprim)
+
+
 target_link_libraries(cugraph
     PUBLIC
         rmm::rmm
         raft::raft
-        $<BUILD_LOCAL_INTERFACE:CUDA::toolkit>
+#        $<BUILD_LOCAL_INTERFACE:hip::hip>
     PRIVATE
         ${COMPILED_RAFT_LIB}
-        cuco::cuco
-        rmm::rmm_logger_impl
+        roc::rocprim
+        hip::device
+        hipblas
+        hipsparse
+        hiprand
+        hipsolver
+        hipco
+#        rmm::rmm_logger_impl
     )
 
 ################################################################################
@@ -566,7 +610,7 @@ target_compile_options(cugraph_c
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(cugraph_c PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
 
-target_link_options(cugraph_c PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
+#target_link_options(cugraph_c PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
 
 ################################################################################
 # - C-API include paths --------------------------------------------------------

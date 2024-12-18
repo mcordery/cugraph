@@ -14,8 +14,14 @@
 # limitations under the License.
 #=============================================================================
 
-set(CUGRAPH_MIN_VERSION_raft "${CUGRAPH_VERSION_MAJOR}.${CUGRAPH_VERSION_MINOR}.00")
-set(CUGRAPH_BRANCH_VERSION_raft "${CUGRAPH_VERSION_MAJOR}.${CUGRAPH_VERSION_MINOR}")
+message(STATUS "Manually setting cugraph version since we're hacking things")
+
+
+set(CUGRAPH_MIN_VERSION_raft "24.06.00")
+set(CUGRAPH_BRANCH_VERSION_raft "24.06")
+#set(CUGRAPH_MIN_VERSION_raft "${CUGRAPH_VERSION_MAJOR}.${CUGRAPH_VERSION_MINOR}.00")
+#set(CUGRAPH_BRANCH_VERSION_raft "${CUGRAPH_VERSION_MAJOR}.${CUGRAPH_VERSION_MINOR}")
+
 
 function(find_and_configure_raft)
 
@@ -45,8 +51,10 @@ function(find_and_configure_raft)
       COMPONENTS ${RAFT_COMPONENTS}
         CPM_ARGS
             EXCLUDE_FROM_ALL TRUE
-            GIT_REPOSITORY https://github.com/${PKG_FORK}/raft.git
-            GIT_TAG        ${PKG_PINNED_TAG}
+            GIT_REPOSITORY
+            https://$ENV{GITHUB_USER}:$ENV{GITHUB_PASS}@github.com/AMD-AI/raft
+          # GIT_TAG 0302a0260a2debda40488fe1942c8acb65a63bd4
+            GIT_TAG amd-integration
             SOURCE_SUBDIR  cpp
             OPTIONS
                 "RAFT_COMPILE_LIBRARY ${PKG_COMPILE_RAFT_LIB}"

@@ -28,7 +28,7 @@ endif()
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")
   file(
     DOWNLOAD
-    "https://raw.githubusercontent.com/rapidsai/rapids-cmake/branch-${RAPIDS_VERSION_MAJOR_MINOR}/RAPIDS.cmake"
+    "https://raw.githubusercontent.com/ROCm/ROCmDS-CMake/branch-${RAPIDS_VERSION_MAJOR_MINOR}/RAPIDS.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")
 endif()
 include("${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")

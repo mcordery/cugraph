@@ -1,0 +1,1385 @@
+
+[HIPIFY] info: file './cpp/tests/traversal/mg_extract_bfs_paths_test.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 354
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/extract_bfs_paths_test.cu' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 267
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/traversal/ms_bfs_test.cu' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 281
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaProfilerStart => hipProfilerStart: 2
+  cudaProfilerStop => hipProfilerStop: 2
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/mtmg/threaded_test.cu' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 482
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+
+[HIPIFY] info: file './cpp/tests/mtmg/threaded_test_louvain.cu' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 535
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+
+[HIPIFY] info: file './cpp/tests/mtmg/multi_node_threaded_test.cu' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 532
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 2
+
+[HIPIFY] info: file './cpp/tests/mtmg/threaded_test_jaccard.cu' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 511
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+
+[HIPIFY] info: file './cpp/tests/linear_assignment/hungarian_test.cu' statistics:
+  CONVERTED refs count: 11
+  TOTAL lines of code: 417
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 1
+  cudaStream_t => hipStream_t: 1
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 1
+  curandState => hiprandState: 4
+  curand_init => hiprand_init: 1
+  curand_kernel.h => hiprand/hiprand_kernel.h: 1
+  curand_uniform => hiprand_uniform: 1
+
+[HIPIFY] info: file './cpp/tests/components/vertex_coloring_test.cu' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 231
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 3
+
+[HIPIFY] info: file './cpp/tests/components/scc_test.cu' statistics:
+  CONVERTED refs count: 17
+  TOTAL lines of code: 431
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceProp => hipDeviceProp_t: 3
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+  cudaGetDeviceProperties => hipGetDeviceProperties: 3
+  cudaMemcpy => hipMemcpy: 2
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 2
+  cudaProfilerStart => hipProfilerStart: 1
+  cudaProfilerStop => hipProfilerStop: 1
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/components/mg_vertex_coloring_test.cu' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 263
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 3
+
+[HIPIFY] info: file './cpp/tests/components/mis_test.cu' statistics:
+  CONVERTED refs count: 7
+  TOTAL lines of code: 227
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 7
+
+[HIPIFY] info: file './cpp/tests/components/mg_mis_test.cu' statistics:
+  CONVERTED refs count: 7
+  TOTAL lines of code: 261
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 7
+
+[HIPIFY] info: file './cpp/tests/tree/mst_test.cu' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 153
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaProfilerStart => hipProfilerStart: 1
+  cudaProfilerStop => hipProfilerStop: 1
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/community/mg_egonet_test.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 325
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/layout/legacy/force_atlas2_test.cu' statistics:
+  CONVERTED refs count: 13
+  TOTAL lines of code: 239
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaMemcpy => hipMemcpy: 4
+  cudaMemcpyDefault => hipMemcpyDefault: 3
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 1
+  cudaProfilerStart => hipProfilerStart: 1
+  cudaProfilerStop => hipProfilerStop: 1
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/structure/mg_induced_subgraph_test.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 348
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/streams.cu' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 60
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStreamSynchronize => hipStreamSynchronize: 1
+
+[HIPIFY] info: file './cpp/tests/prims/mg_per_v_transform_reduce_dst_key_aggregated_outgoing_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 594
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_reduce_v.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 356
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_reduce_e_by_src_dst_key.cu' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 476
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/prims/mg_per_v_random_select_transform_outgoing_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 725
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_per_v_pair_transform_dst_nbr_weighted_intersection.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 377
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 444
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_extract_transform_v_frontier_outgoing_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 486
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_extract_transform_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 384
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_reduce_dst_nbr_intersection_of_e_endpoints_by_v.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 283
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_reduce_v_frontier_outgoing_e_by_dst.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 577
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_per_v_pair_transform_dst_nbr_intersection.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 331
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_count_if_v.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 230
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_transform_reduce_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 350
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_reduce_v.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 332
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_count_if_e.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 334
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/prims/mg_per_v_transform_reduce_incoming_outgoing_e.cu' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 620
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/link_prediction/similarity_test.cu' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 353
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/examples/developers/graph_operations/graph_operations.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 334
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/examples/developers/vertex_and_edge_partition/vertex_and_edge_partition.cu' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 438
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/sampling_index.cu' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 36
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 2
+
+[HIPIFY] info: file './cpp/src/components/legacy/connectivity.cu' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 88
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 2
+
+[HIPIFY] info: file './cpp/src/structure/legacy/graph.cu' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 181
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 1
+
+[HIPIFY] info: file './cpp/libcugraph_etl/src/renumbering.cu' statistics:
+  CONVERTED refs count: 19
+  TOTAL lines of code: 1084
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cuda.h => hip/hip_runtime.h: 1
+  cudaDeviceSynchronize => hipDeviceSynchronize: 1
+  cudaMemcpy => hipMemcpy: 1
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 1
+  cudaMemsetAsync => hipMemsetAsync: 1
+  cudaOccupancyMaxActiveBlocksPerMultiprocessor => hipOccupancyMaxActiveBlocksPerMultiprocessor: 4
+  cudaStreamSynchronize => hipStreamSynchronize: 5
+  cudaStream_t => hipStream_t: 1
+  cuda_runtime_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/traversal/od_shortest_distances_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 286
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/sssp_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 320
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/mg_k_hop_nbrs_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 311
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/bfs_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 339
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/k_hop_nbrs_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 314
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/mg_sssp_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 334
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/traversal/mg_bfs_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 340
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 353
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/heterogeneous_biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 288
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/sampling_post_processing_test.cpp' statistics:
+  CONVERTED refs count: 8
+  TOTAL lines of code: 1170
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 8
+
+[HIPIFY] info: file './cpp/tests/sampling/homogeneous_biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 275
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_negative_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 292
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_heterogeneous_biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 363
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/sampling/uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 286
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_homogeneous_biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 356
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/sampling/homogeneous_uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 280
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 355
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/biased_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 290
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_homogeneous_uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 357
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/sampling/sg_random_walks_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 336
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_random_walks_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 388
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/negative_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 313
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/mg_heterogeneous_uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 363
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/sampling/heterogeneous_uniform_neighbor_sampling.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 285
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/sampling/sampling_heterogeneous_post_processing_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 823
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/lookup/mg_lookup_src_dst_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 337
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/lookup/lookup_src_dst_test.cpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 294
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+
+[HIPIFY] info: file './cpp/tests/components/mg_weakly_connected_components_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 235
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/components/weakly_connected_components_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 255
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/c_api/mg_test_utils.cpp' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 842
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaError_t => hipError_t: 1
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/tests/utilities/mg_utilities.cpp' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 97
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStreamSynchronize => hipStreamSynchronize: 1
+
+[HIPIFY] info: file './cpp/tests/centrality/mg_edge_betweenness_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 272
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/edge_betweenness_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 279
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/katz_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 317
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/mg_katz_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 289
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/eigenvector_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 314
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/mg_eigenvector_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 298
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/mg_betweenness_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 284
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/centrality/betweenness_centrality_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 232
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/leiden_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 224
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/louvain_test.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 293
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/community/triangle_count_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 324
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_louvain_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 301
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/k_truss_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 326
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_k_truss_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 279
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_triangle_count_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 291
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/weighted_matching_test.cpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 170
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+
+[HIPIFY] info: file './cpp/tests/community/egonet_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 200
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/edge_triangle_count_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 260
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_edge_triangle_count_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 246
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_weighted_matching_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 235
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_leiden_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 261
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/community/mg_ecg_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 230
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/link_analysis/pagerank_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 446
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/link_analysis/hits_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 390
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/link_analysis/mg_hits_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 326
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/link_analysis/mg_pagerank_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 355
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/mg_select_random_vertices_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 261
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/degree_test.cpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 158
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+
+[HIPIFY] info: file './cpp/tests/structure/weight_sum_test.cpp' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 270
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/structure/mg_count_self_loops_and_multi_edges_test.cpp' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 230
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/structure/symmetrize_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 500
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/mg_transpose_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 311
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/has_edge_and_compute_multiplicity_test.cpp' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 275
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/structure/mg_symmetrize_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 328
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/renumbering_test.cpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 183
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+
+[HIPIFY] info: file './cpp/tests/structure/coarsen_graph_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 434
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/mg_has_edge_and_compute_multiplicity_test.cpp' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 328
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/structure/mg_transpose_storage_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 316
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/induced_subgraph_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 326
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/transpose_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 252
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/mg_coarsen_graph_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 490
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/transpose_storage_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 269
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/structure/count_self_loops_and_multi_edges_test.cpp' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 229
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 6
+
+[HIPIFY] info: file './cpp/tests/link_prediction/mg_weighted_similarity_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 302
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/link_prediction/mg_similarity_test.cpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 348
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 5
+
+[HIPIFY] info: file './cpp/tests/link_prediction/weighted_similarity_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 348
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/cores/mg_k_core_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 250
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/cores/mg_core_number_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 282
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/cores/core_number_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 410
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/cores/k_core_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 176
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/tests/generators/generate_bipartite_rmat_test.cpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 367
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+
+[HIPIFY] info: file './cpp/tests/generators/generate_rmat_test.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 406
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 4
+
+[HIPIFY] info: file './cpp/examples/users/single_gpu_application/sg_graph_algorithms.cpp' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 233
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/examples/users/multi_gpu_application/mg_graph_algorithms.cpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 305
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 2
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/src/traversal/od_shortest_distances_impl.cuh' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 1096
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+
+[HIPIFY] info: file './cpp/src/sampling/random_walks.cuh' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 1262
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaMemGetInfo => hipMemGetInfo: 1
+  cudaMemcpy => hipMemcpy: 1
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 1
+
+[HIPIFY] info: file './cpp/src/sampling/sampling_post_processing_impl.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 3705
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  warning: ./cpp/src/from_cugraph_ops/device_warp_collectives.cuh:65: unsupported device function "__shfl_sync":   return __shfl_sync(mask, val, src_lane, width);
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/device_warp_collectives.cuh' statistics:
+  CONVERTED refs count: 0
+  TOTAL lines of code: 98
+  WARNINGS: 1
+[HIPIFY] info: CONVERTED refs by names:
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/sampling_index.cuh' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 174
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetLastError => hipGetLastError: 2
+  cudaStream_t => hipStream_t: 3
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/device_atomics.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 73
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cuda_fp16.h => hip/hip_fp16.h: 1
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/algo_R.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 239
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetLastError => hipGetLastError: 1
+  cudaStream_t => hipStream_t: 1
+
+[HIPIFY] info: file './cpp/src/components/legacy/weak_cc.cuh' statistics:
+  CONVERTED refs count: 14
+  TOTAL lines of code: 332
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaMemsetAsync => hipMemsetAsync: 1
+  cudaPeekAtLastError => hipPeekAtLastError: 3
+  cudaStreamSynchronize => hipStreamSynchronize: 2
+  cudaStream_t => hipStream_t: 4
+  cuda_runtime.h => hip/hip_runtime.h: 1
+
+[HIPIFY] info: file './cpp/src/components/legacy/scc_matrix.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 229
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 1
+
+[HIPIFY] info: file './cpp/src/utilities/collect_comm.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 326
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStreamSynchronize => hipStreamSynchronize: 1
+
+[HIPIFY] info: file './cpp/src/converters/legacy/COOtoCSR.cuh' statistics:
+  CONVERTED refs count: 12
+  TOTAL lines of code: 258
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaMemcpy => hipMemcpy: 6
+  cudaMemcpyDefault => hipMemcpyDefault: 6
+
+[HIPIFY] info: file './cpp/src/community/detail/common_methods.cuh' statistics:
+  CONVERTED refs count: 6
+  TOTAL lines of code: 473
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 6
+
+[HIPIFY] info: file './cpp/src/community/detail/refine_impl.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 889
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 1
+
+[HIPIFY] info: file './cpp/src/layout/legacy/barnes_hut.cuh' statistics:
+  CONVERTED refs count: 16
+  TOTAL lines of code: 346
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaFuncCachePreferL1 => hipFuncCachePreferL1: 6
+  cudaFuncCachePreferShared => hipFuncCachePreferShared: 2
+  cudaFuncSetCacheConfig => hipFuncSetCacheConfig: 8
+
+[HIPIFY] info: file './cpp/src/layout/legacy/exact_repulsion.cuh' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 72
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 1
+
+[HIPIFY] info: file './cpp/src/layout/legacy/fa2_kernels.cuh' statistics:
+  CONVERTED refs count: 10
+  TOTAL lines of code: 330
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 4
+
+[HIPIFY] info: file './cpp/src/layout/legacy/bh_kernels.cuh' statistics:
+  CONVERTED refs count: 12
+  TOTAL lines of code: 646
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+
+[HIPIFY] info: file './cpp/src/structure/detail/structure_utils.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 625
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/structure/graph_impl.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 514
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/prims/update_v_frontier.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 376
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 1
+
+[HIPIFY] info: file './cpp/src/prims/transform_reduce_v_frontier_outgoing_e_by_dst.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 1196
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+
+[HIPIFY] info: file './cpp/src/prims/transform_reduce_e_by_src_dst_key.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 971
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 2
+
+[HIPIFY] info: file './cpp/src/prims/fill_edge_src_dst_property.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 1220
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDeviceSynchronize => hipDeviceSynchronize: 1
+
+[HIPIFY] info: file './cpp/src/prims/property_op_utils.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 174
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  warning: ./cpp/src/prims/detail/extract_transform_v_frontier_e.cuh:111: unsupported device function "__shfl_sync":     warp_buffer_start_idx = __shfl_sync(raft::warp_full_mask(), warp_buffer_start_idx, int{0});
+
+[HIPIFY] info: file './cpp/src/prims/detail/extract_transform_v_frontier_e.cuh' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 1605
+  WARNINGS: 1
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/prims/detail/multi_stream_utils.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 156
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  warning: ./cpp/src/prims/detail/per_v_transform_reduce_e.cuh:606: unsupported device function "__shfl_sync":           first_valid_lane_id = __shfl_sync(raft::warp_full_mask(), first_valid_lane_id, int{0});
+  warning: ./cpp/src/prims/detail/per_v_transform_reduce_e.cuh:639: unsupported device function "__shfl_sync":           first_valid_lane_id = __shfl_sync(raft::warp_full_mask(), first_valid_lane_id, int{0});
+
+[HIPIFY] info: file './cpp/src/prims/detail/per_v_transform_reduce_e.cuh' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 4374
+  WARNINGS: 2
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+
+[HIPIFY] info: file './cpp/src/prims/detail/partition_v_frontier.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 91
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/prims/detail/transform_v_frontier_e.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 628
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  warning: ./cpp/src/prims/detail/sample_and_compute_local_nbr_indices.cuh:269: unsupported device function "__shfl_sync":       sum += __shfl_sync(raft::warp_full_mask(), inc, raft::warp_size() - 1);
+
+[HIPIFY] info: file './cpp/src/prims/detail/sample_and_compute_local_nbr_indices.cuh' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 2637
+  WARNINGS: 1
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/prims/per_v_random_select_transform_outgoing_e.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 798
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/prims/per_v_transform_reduce_dst_key_aggregated_outgoing_e.cuh' statistics:
+  CONVERTED refs count: 10
+  TOTAL lines of code: 1119
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 9
+
+[HIPIFY] info: file './cpp/src/prims/vertex_frontier.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 792
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStreamSynchronize => hipStreamSynchronize: 1
+
+[HIPIFY] info: file './cpp/src/cores/core_number_impl.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 328
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 2
+
+[HIPIFY] info: file './cpp/libcugraph_etl/include/hash/managed.cuh' statistics:
+  CONVERTED refs count: 7
+  TOTAL lines of code: 47
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaError_t => hipError_t: 1
+  cudaFree => hipFree: 1
+  cudaMallocManaged => hipMallocManaged: 1
+  cudaMemoryTypeManaged => hipMemoryTypeManaged: 1
+  cudaPointerAttributes => hipPointerAttribute_t: 1
+  cudaSuccess => hipSuccess: 2
+
+[HIPIFY] info: file './cpp/libcugraph_etl/include/hash/concurrent_unordered_map.cuh' statistics:
+  CONVERTED refs count: 14
+  TOTAL lines of code: 560
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaError_t => hipError_t: 2
+  cudaGetDevice => hipGetDevice: 1
+  cudaMemPrefetchAsync => hipMemPrefetchAsync: 3
+  cudaMemcpyAsync => hipMemcpyAsync: 1
+  cudaMemcpyDefault => hipMemcpyDefault: 1
+  cudaPointerAttributes => hipPointerAttribute_t: 2
+  cudaPointerGetAttributes => hipPointerGetAttributes: 2
+  cudaSuccess => hipSuccess: 2
+
+[HIPIFY] info: file './cpp/include/cugraph/edge_partition_device_view.cuh' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 871
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaMemsetAsync => hipMemsetAsync: 2
+
+[HIPIFY] info: file './cpp/include/cugraph/utilities/shuffle_comm.cuh' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 1227
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStreamSynchronize => hipStreamSynchronize: 1
+
+[HIPIFY] info: file './cpp/tests/c_api/c_test_utils.h' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 108
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cuda_runtime_api.h => hip/hip_runtime_api.h: 1
+
+[HIPIFY] info: file './cpp/tests/c_api/mg_test_utils.h' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 154
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaError_t => hipError_t: 1
+  cudaGetErrorName => hipGetErrorName: 1
+  cudaGetErrorString => hipGetErrorString: 1
+  cudaGetLastError => hipGetLastError: 1
+  cudaSuccess => hipSuccess: 1
+
+[HIPIFY] info: file './cpp/tests/utilities/base_fixture.hpp' statistics:
+  CONVERTED refs count: 2
+  TOTAL lines of code: 263
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  cudaSetDevice => hipSetDevice: 1
+
+[HIPIFY] info: file './cpp/tests/utilities/test_graphs.hpp' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 768
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cuMemAddressReserve => hipMemAddressReserve: 1
+
+[HIPIFY] info: file './cpp/src/sampling/rw_traversals.hpp' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 681
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cub/cub.cuh => hipcub/hipcub.hpp: 1
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/macros.hpp' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 50
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  __CUDACC__ => __HIPCC__: 1
+
+[HIPIFY] info: file './cpp/src/from_cugraph_ops/sampling.hpp' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 59
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 2
+  cuda_runtime.h => hip/hip_runtime.h: 1
+
+[HIPIFY] info: file './cpp/src/components/legacy/utils.h' statistics:
+  CONVERTED refs count: 11
+  TOTAL lines of code: 208
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaMemcpy => hipMemcpy: 1
+  cudaMemcpyAsync => hipMemcpyAsync: 2
+  cudaMemcpyDefault => hipMemcpyDefault: 1
+  cudaMemcpyDeviceToDevice => hipMemcpyDeviceToDevice: 1
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 1
+  cudaStream_t => hipStream_t: 4
+  cuda_runtime.h => hip/hip_runtime.h: 1
+
+[HIPIFY] info: file './cpp/src/layout/legacy/utils.hpp' statistics:
+  CONVERTED refs count: 3
+  TOTAL lines of code: 35
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaDevAttrMultiProcessorCount => hipDeviceAttributeMultiprocessorCount: 1
+  cudaDeviceGetAttribute => hipDeviceGetAttribute: 1
+  cudaGetDevice => hipGetDevice: 1
+
+[HIPIFY] info: file './cpp/include/cugraph/mtmg/resource_manager.hpp' statistics:
+  CONVERTED refs count: 1
+  TOTAL lines of code: 261
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaGetDeviceCount => hipGetDeviceCount: 1
+  warning: ./cpp/include/cugraph/legacy/graph.hpp:#348 :    * @param  stream                Specify the cudaStream, default = null
+  warning: ./cpp/include/cugraph/legacy/graph.hpp:#454 :    * @param  stream                Specify the cudaStream, default = null
+  warning: ./cpp/include/cugraph/legacy/graph.hpp:#524 :    * @param  stream                Specify the cudaStream, default = null
+
+[HIPIFY] info: file './cpp/include/cugraph/legacy/graph.hpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 577
+  WARNINGS: 3
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 4
+
+[HIPIFY] info: file './cpp/include/cugraph/utilities/host_scalar_comm.hpp' statistics:
+  CONVERTED refs count: 16
+  TOTAL lines of code: 447
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  cudaStream_t => hipStream_t: 16
+
+[HIPIFY] info: file './cpp/include/cugraph/utilities/thrust_tuple_utils.hpp' statistics:
+  CONVERTED refs count: 4
+  TOTAL lines of code: 337
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  __CUDACC__ => __HIPCC__: 4
+
+[HIPIFY] info: file './cpp/include/cugraph/partition_manager.hpp' statistics:
+  CONVERTED refs count: 5
+  TOTAL lines of code: 171
+  WARNINGS: 0
+[HIPIFY] info: CONVERTED refs by names:
+  __CUDACC__ => __HIPCC__: 5
+
+[HIPIFY] info: file 'GLOBAL' statistics:
+  CONVERTED refs count: 754
+  TOTAL lines of code: 200363
+  WARNINGS: 8
+[HIPIFY] info: CONVERTED refs by names:
+  __CUDACC__ => __HIPCC__: 10
+  cuMemAddressReserve => hipMemAddressReserve: 1
+  cub/cub.cuh => hipcub/hipcub.hpp: 13
+  cuda.h => hip/hip_runtime.h: 4
+  cudaDevAttrMultiProcessorCount => hipDeviceAttributeMultiprocessorCount: 1
+  cudaDeviceGetAttribute => hipDeviceGetAttribute: 1
+  cudaDeviceProp => hipDeviceProp_t: 3
+  cudaDeviceSynchronize => hipDeviceSynchronize: 464
+  cudaErrorInvalidDeviceFunction => hipErrorInvalidDeviceFunction: 19
+  cudaError_t => hipError_t: 5
+  cudaFree => hipFree: 1
+  cudaFuncCachePreferL1 => hipFuncCachePreferL1: 6
+  cudaFuncCachePreferShared => hipFuncCachePreferShared: 2
+  cudaFuncSetCacheConfig => hipFuncSetCacheConfig: 8
+  cudaGetDevice => hipGetDevice: 2
+  cudaGetDeviceCount => hipGetDeviceCount: 13
+  cudaGetDeviceProperties => hipGetDeviceProperties: 3
+  cudaGetErrorName => hipGetErrorName: 1
+  cudaGetErrorString => hipGetErrorString: 1
+  cudaGetLastError => hipGetLastError: 4
+  cudaMallocManaged => hipMallocManaged: 1
+  cudaMemGetInfo => hipMemGetInfo: 1
+  cudaMemPrefetchAsync => hipMemPrefetchAsync: 3
+  cudaMemcpy => hipMemcpy: 15
+  cudaMemcpyAsync => hipMemcpyAsync: 3
+  cudaMemcpyDefault => hipMemcpyDefault: 11
+  cudaMemcpyDeviceToDevice => hipMemcpyDeviceToDevice: 1
+  cudaMemcpyDeviceToHost => hipMemcpyDeviceToHost: 6
+  cudaMemoryTypeManaged => hipMemoryTypeManaged: 1
+  cudaMemsetAsync => hipMemsetAsync: 4
+  cudaOccupancyMaxActiveBlocksPerMultiprocessor => hipOccupancyMaxActiveBlocksPerMultiprocessor: 4
+  cudaPeekAtLastError => hipPeekAtLastError: 3
+  cudaPointerAttributes => hipPointerAttribute_t: 3
+  cudaPointerGetAttributes => hipPointerGetAttributes: 2
+  cudaProfilerStart => hipProfilerStart: 5
+  cudaProfilerStop => hipProfilerStop: 5
+  cudaSetDevice => hipSetDevice: 6
+  cudaStreamSynchronize => hipStreamSynchronize: 12
+  cudaStream_t => hipStream_t: 48
+  cudaSuccess => hipSuccess: 5
+  cuda_fp16.h => hip/hip_fp16.h: 1
+  cuda_profiler_api.h => hip/hip_runtime_api.h: 7
+  cuda_runtime.h => hip/hip_runtime.h: 4
+  cuda_runtime_api.h => hip/hip_runtime_api.h: 7
+  curandState => hiprandState: 4
+  curand_init => hiprand_init: 1
+  curand_kernel.h => hiprand/hiprand_kernel.h: 1
+  curand_uniform => hiprand_uniform: 1
