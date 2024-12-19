@@ -94,3 +94,12 @@ Build:
 
     Remove <cuda/functional>
     proclaim_return_type() -> return type following lambda.
+    Developed script to handle all instances of this in .cu and .cuh files
+
+    Updated cpp/CMakelists to use a cpp/cmake/thirdparty version of get_rmm (copied from get_raft) so that one pulls the right
+    version of rmm that handles the resource_ref issue
+
+    Fixed reinterpret_cast problem in k_core.cpp from
+    auto degree_type = reinterpret_cast<cugraph::k_core_degree_type_t>(degree_type_);
+    to
+    auto degree_type = *reinterpret_cast<cugraph::k_core_degree_type_t *>(&degree_type_);

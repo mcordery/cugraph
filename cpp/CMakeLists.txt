@@ -172,12 +172,14 @@ rapids_cpm_init()
 ##mjcinclude(${rapids-cmake-dir}/cpm/rmm.cmake)
 include(${rapids-cmake-dir}/cpm/init.cmake)
 include(${rapids-cmake-dir}/cpm/cccl.cmake)
-include(${rapids-cmake-dir}/cpm/rmm.cmake)
-rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
-               INSTALL_EXPORT_SET cugraph-exports)
+#include(${rapids-cmake-dir}/cpm/rmm.cmake)
+#rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
+#               INSTALL_EXPORT_SET cugraph-exports)
 include(${rapids-cmake-dir}/cpm/cuco.cmake)
 rapids_cpm_cuco(BUILD_EXPORT_SET cugraph-exports INSTALL_EXPORT_SET cugraph-exports)
 include(cmake/thirdparty/get_raft.cmake)
+include(cmake/thirdparty/get_rmm.cmake)
+include(cmake/thirdparty/get_libhipcxx.cmake)
 
 if(BUILD_TESTS)
   include(${rapids-cmake-dir}/cpm/gtest.cmake)
@@ -500,6 +502,9 @@ target_include_directories(cugraph
         "$<INSTALL_INTERFACE:include>"
 )
 
+set(COMPILE_RAFT_LIB OFF)
+set(COMPILE_RMM_LIB OFF)
+
 set(COMPILED_RAFT_LIB )
 if(CUGRAPH_COMPILE_RAFT_LIB)
   set(COMPILED_RAFT_LIB raft::compiled)
@@ -522,14 +527,12 @@ target_link_libraries(cugraph
         raft::raft
 #        $<BUILD_LOCAL_INTERFACE:hip::hip>
     PRIVATE
-        ${COMPILED_RAFT_LIB}
         roc::rocprim
         hip::device
         hipblas
         hipsparse
         hiprand
         hipsolver
-        hipco
 #        rmm::rmm_logger_impl
     )
 
