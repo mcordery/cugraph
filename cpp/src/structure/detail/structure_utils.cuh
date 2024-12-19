@@ -30,7 +30,6 @@
 #include <rmm/device_uvector.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/distance.h>
 #include <thrust/fill.h>
 #include <thrust/for_each.h>
@@ -42,6 +41,8 @@
 #include <thrust/scan.h>
 #include <thrust/sequence.h>
 #include <thrust/transform.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 #include <optional>
@@ -254,14 +255,13 @@ sort_and_compress_edgelist(rmm::device_uvector<vertex_t>&& edgelist_srcs,
     if ((sizeof(vertex_t) == 8) && (static_cast<size_t>(major_range_last - major_range_first) <=
                                     static_cast<size_t>(std::numeric_limits<uint32_t>::max()))) {
       rmm::device_uvector<uint32_t> edgelist_major_offsets(edgelist_majors.size(), stream_view);
-      thrust::transform(
-        rmm::exec_policy_nosync(stream_view),
-        edgelist_majors.begin(),
-        edgelist_majors.end(),
-        edgelist_major_offsets.begin(),
-        cuda::proclaim_return_type<uint32_t>([major_range_first] __device__(vertex_t major) {
-          return static_cast<uint32_t>(major - major_range_first);
-        }));
+      thrust::transform(rmm::exec_policy_nosync(stream_view),
+                        edgelist_majors.begin(),
+                        edgelist_majors.end(),
+                        edgelist_major_offsets.begin(),
+                        [major_range_first] __device__(vertex_t major) -> uint32_t {
+                          return static_cast<uint32_t>(major - major_range_first);
+                        });
       edgelist_majors.resize(0, stream_view);
       edgelist_majors.shrink_to_fit(stream_view);
 
@@ -421,30 +421,30 @@ void sort_adjacency_list(raft::handle_t const& handle,
       auto offset_first = thrust::make_transform_iterator(offsets.data() + h_vertex_offsets[i],
                                                           shift_left_t<edge_t>{h_edge_offsets[i]});
       hipcub::DeviceSegmentedSort::SortPairs(static_cast<void*>(nullptr),
-                                          tmp_storage_bytes,
-                                          index_first + h_edge_offsets[i],
-                                          segment_sorted_indices.data(),
-                                          edge_value_first + h_edge_offsets[i],
-                                          segment_sorted_values.data(),
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+                                             tmp_storage_bytes,
+                                             index_first + h_edge_offsets[i],
+                                             segment_sorted_indices.data(),
+                                             edge_value_first + h_edge_offsets[i],
+                                             segment_sorted_values.data(),
+                                             h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                             h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                             offset_first,
+                                             offset_first + 1,
+                                             handle.get_stream());
       if (tmp_storage_bytes > d_tmp_storage.size()) {
         d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
       }
       hipcub::DeviceSegmentedSort::SortPairs(d_tmp_storage.data(),
-                                          tmp_storage_bytes,
-                                          index_first + h_edge_offsets[i],
-                                          segment_sorted_indices.data(),
-                                          edge_value_first + h_edge_offsets[i],
-                                          segment_sorted_values.data(),
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+                                             tmp_storage_bytes,
+                                             index_first + h_edge_offsets[i],
+                                             segment_sorted_indices.data(),
+                                             edge_value_first + h_edge_offsets[i],
+                                             segment_sorted_values.data(),
+                                             h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                             h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                             offset_first,
+                                             offset_first + 1,
+                                             handle.get_stream());
       thrust::copy(handle.get_thrust_policy(),
                    segment_sorted_indices.begin(),
                    segment_sorted_indices.begin() + (h_edge_offsets[i + 1] - h_edge_offsets[i]),
@@ -469,30 +469,30 @@ void sort_adjacency_list(raft::handle_t const& handle,
       auto offset_first = thrust::make_transform_iterator(offsets.data() + h_vertex_offsets[i],
                                                           shift_left_t<edge_t>{h_edge_offsets[i]});
       hipcub::DeviceSegmentedSort::SortPairs(static_cast<void*>(nullptr),
-                                          tmp_storage_bytes,
-                                          index_first + h_edge_offsets[i],
-                                          segment_sorted_indices.data(),
-                                          input_edge_value_offsets.data(),
-                                          segment_sorted_edge_value_offsets.data(),
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+                                             tmp_storage_bytes,
+                                             index_first + h_edge_offsets[i],
+                                             segment_sorted_indices.data(),
+                                             input_edge_value_offsets.data(),
+                                             segment_sorted_edge_value_offsets.data(),
+                                             h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                             h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                             offset_first,
+                                             offset_first + 1,
+                                             handle.get_stream());
       if (tmp_storage_bytes > d_tmp_storage.size()) {
         d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
       }
       hipcub::DeviceSegmentedSort::SortPairs(d_tmp_storage.data(),
-                                          tmp_storage_bytes,
-                                          index_first + h_edge_offsets[i],
-                                          segment_sorted_indices.data(),
-                                          input_edge_value_offsets.data(),
-                                          segment_sorted_edge_value_offsets.data(),
-                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                          offset_first,
-                                          offset_first + 1,
-                                          handle.get_stream());
+                                             tmp_storage_bytes,
+                                             index_first + h_edge_offsets[i],
+                                             segment_sorted_indices.data(),
+                                             input_edge_value_offsets.data(),
+                                             segment_sorted_edge_value_offsets.data(),
+                                             h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                             h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                             offset_first,
+                                             offset_first + 1,
+                                             handle.get_stream());
       thrust::copy(handle.get_thrust_policy(),
                    segment_sorted_indices.begin(),
                    segment_sorted_indices.begin() + (h_edge_offsets[i + 1] - h_edge_offsets[i]),
@@ -549,26 +549,26 @@ void sort_adjacency_list(raft::handle_t const& handle,
     auto offset_first = thrust::make_transform_iterator(offsets.data() + h_vertex_offsets[i],
                                                         shift_left_t<edge_t>{h_edge_offsets[i]});
     hipcub::DeviceSegmentedSort::SortKeys(static_cast<void*>(nullptr),
-                                       tmp_storage_bytes,
-                                       index_first + h_edge_offsets[i],
-                                       segment_sorted_indices.data(),
-                                       h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                       h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                       offset_first,
-                                       offset_first + 1,
-                                       handle.get_stream());
+                                          tmp_storage_bytes,
+                                          index_first + h_edge_offsets[i],
+                                          segment_sorted_indices.data(),
+                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                          offset_first,
+                                          offset_first + 1,
+                                          handle.get_stream());
     if (tmp_storage_bytes > d_tmp_storage.size()) {
       d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
     }
     hipcub::DeviceSegmentedSort::SortKeys(d_tmp_storage.data(),
-                                       tmp_storage_bytes,
-                                       index_first + h_edge_offsets[i],
-                                       segment_sorted_indices.data(),
-                                       h_edge_offsets[i + 1] - h_edge_offsets[i],
-                                       h_vertex_offsets[i + 1] - h_vertex_offsets[i],
-                                       offset_first,
-                                       offset_first + 1,
-                                       handle.get_stream());
+                                          tmp_storage_bytes,
+                                          index_first + h_edge_offsets[i],
+                                          segment_sorted_indices.data(),
+                                          h_edge_offsets[i + 1] - h_edge_offsets[i],
+                                          h_vertex_offsets[i + 1] - h_vertex_offsets[i],
+                                          offset_first,
+                                          offset_first + 1,
+                                          handle.get_stream());
     thrust::copy(handle.get_thrust_policy(),
                  segment_sorted_indices.begin(),
                  segment_sorted_indices.begin() + (h_edge_offsets[i + 1] - h_edge_offsets[i]),

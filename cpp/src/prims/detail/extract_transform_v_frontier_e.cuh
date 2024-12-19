@@ -40,7 +40,6 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -51,6 +50,8 @@
 #include <thrust/optional.h>
 #include <thrust/sort.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 #include <cstdlib>
@@ -1007,9 +1008,8 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
                           frontier_key_first,
                           frontier_key_last,
                           tmps.begin(),
-                          cuda::proclaim_return_type<uint32_t>(
-                            [range_first = local_frontier_range_firsts[minor_comm_rank]] __device__(
-                              auto v) { return static_cast<uint32_t>(v - range_first); }));
+                          [range_first = local_frontier_range_firsts[minor_comm_rank]] __device__(
+                            auto v) -> uint32_t { return static_cast<uint32_t>(v - range_first); });
         compressed_frontier = std::move(tmps);
       }
     }
@@ -1260,11 +1260,10 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
               if (keys.index() == 0) {
                 auto major_first = thrust::make_transform_iterator(
                   std::get<0>(keys).begin(),
-                  cuda::proclaim_return_type<vertex_t>(
-                    [range_first =
-                       local_frontier_range_firsts[partition_idx]] __device__(uint32_t v_offset) {
-                      return range_first + static_cast<vertex_t>(v_offset);
-                    }));
+                  [range_first = local_frontier_range_firsts[partition_idx]] __device__(
+                    uint32_t v_offset) -> vertex_t {
+                    return range_first + static_cast<vertex_t>(v_offset);
+                  });
                 edge_partition.compute_number_of_edges_async(
                   major_first,
                   major_first + std::get<0>(keys).size(),
@@ -1325,14 +1324,12 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
           if (keys.index() == 0) {
             auto key_local_degree_first = thrust::make_transform_iterator(
               std::get<0>(keys).begin(),
-              cuda::proclaim_return_type<size_t>(
-                [edge_partition,
-                 range_first =
-                   local_frontier_range_firsts[partition_idx]] __device__(uint32_t v_offset) {
-                  auto major        = range_first + static_cast<vertex_t>(v_offset);
-                  auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
-                  return static_cast<size_t>(edge_partition.local_degree(major_offset));
-                }));
+              [edge_partition, range_first = local_frontier_range_firsts[partition_idx]] __device__(
+                uint32_t v_offset) -> size_t {
+                auto major        = range_first + static_cast<vertex_t>(v_offset);
+                auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
+                return static_cast<size_t>(edge_partition.local_degree(major_offset));
+              });
             thrust::inclusive_scan(rmm::exec_policy_nosync(loop_stream),
                                    key_local_degree_first,
                                    key_local_degree_first + key_segment_offsets[1],
@@ -1352,11 +1349,11 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
             }
           }
           auto key_local_degree_first = thrust::make_transform_iterator(
-            key_first, cuda::proclaim_return_type<size_t>([edge_partition] __device__(auto key) {
+            key_first, [edge_partition] __device__(auto key) -> size_t {
               auto major        = thrust_tuple_get_or_identity<key_t, 0>(key);
               auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
               return static_cast<size_t>(edge_partition.local_degree(major_offset));
-            }));
+            });
           thrust::inclusive_scan(rmm::exec_policy_nosync(loop_stream),
                                  key_local_degree_first,
                                  key_local_degree_first + key_segment_offsets[1],
@@ -1439,9 +1436,8 @@ extract_transform_v_frontier_e(raft::handle_t const& handle,
         if (keys.index() == 0) {
           auto edge_partition_frontier_key_first = thrust::make_transform_iterator(
             std::get<0>(keys).begin(),
-            cuda::proclaim_return_type<vertex_t>(
-              [range_first = local_frontier_range_firsts[partition_idx]] __device__(
-                uint32_t v_offset) { return range_first + static_cast<vertex_t>(v_offset); }));
+            [range_first = local_frontier_range_firsts[partition_idx]] __device__(uint32_t v_offset)
+              -> vertex_t { return range_first + static_cast<vertex_t>(v_offset); });
           auto edge_partition_frontier_key_last =
             edge_partition_frontier_key_first + std::get<0>(keys).size();
           extract_transform_v_frontier_e_edge_partition<GraphViewType>(

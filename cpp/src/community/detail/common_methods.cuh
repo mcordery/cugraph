@@ -179,7 +179,7 @@ weight_t compute_modularity(
     handle.get_thrust_policy(),
     cluster_weights.begin(),
     cluster_weights.end(),
-    cuda::proclaim_return_type<weight_t>([] __device__(weight_t p) -> weight_t { return p * p; }),
+    [] __device__(weight_t p) -> weight_t -> weight_t { return p * p; },
     weight_t{0},
     thrust::plus<weight_t>());
 

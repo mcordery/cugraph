@@ -88,8 +88,7 @@ rmm::device_uvector<vertex_t> maximal_independent_set(
     thrust::make_zip_iterator(thrust::make_tuple(out_degrees.begin(), in_degrees.begin())),
     thrust::make_zip_iterator(thrust::make_tuple(out_degrees.end(), in_degrees.end())),
     ranks.begin(),
-    cuda::proclaim_return_type<vertex_t>(
-      [] __device__(auto) { return std::numeric_limits<vertex_t>::max(); }),
+    [] __device__(auto) -> vertex_t { return std::numeric_limits<vertex_t>::max(); },
     [] __device__(auto in_out_degree) {
       return (thrust::get<0>(in_out_degree) == 0) && (thrust::get<1>(in_out_degree) == 0);
     });

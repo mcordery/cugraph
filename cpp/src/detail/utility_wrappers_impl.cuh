@@ -92,13 +92,12 @@ void transform_increment_ints(raft::device_span<value_t> values,
                               value_t incr,
                               rmm::cuda_stream_view const& stream_view)
 {
-  thrust::transform(rmm::exec_policy(stream_view),
-                    values.begin(),
-                    values.end(),
-                    values.begin(),
-                    cuda::proclaim_return_type<value_t>([incr] __device__(value_t value) {
-                      return static_cast<value_t>(value + incr);
-                    }));
+  thrust::transform(
+    rmm::exec_policy(stream_view),
+    values.begin(),
+    values.end(),
+    values.begin(),
+    [incr] __device__(value_t value) -> value_t { return static_cast<value_t>(value + incr); });
 }
 
 template <typename value_t>
@@ -112,9 +111,9 @@ void stride_fill(rmm::cuda_stream_view const& stream_view,
                     thrust::make_counting_iterator(size_t{0}),
                     thrust::make_counting_iterator(size),
                     d_value,
-                    cuda::proclaim_return_type<value_t>([start_value, stride] __device__(size_t i) {
+                    [start_value, stride] __device__(size_t i) -> value_t {
                       return static_cast<value_t>(start_value + stride * i);
-                    }));
+                    });
 }
 
 template <typename vertex_t>
@@ -129,8 +128,9 @@ vertex_t compute_maximum_vertex_id(rmm::cuda_stream_view const& stream_view,
     rmm::exec_policy(stream_view),
     edge_first,
     edge_first + num_edges,
-    cuda::proclaim_return_type<vertex_t>(
-      [] __device__(auto e) -> vertex_t { return std::max(thrust::get<0>(e), thrust::get<1>(e)); }),
+    [] __device__(auto e) -> vertex_t -> vertex_t {
+      return std::max(thrust::get<0>(e), thrust::get<1>(e));
+    },
     vertex_t{0},
     thrust::maximum<vertex_t>());
 }

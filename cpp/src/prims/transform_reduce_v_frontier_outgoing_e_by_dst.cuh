@@ -41,7 +41,6 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -61,6 +60,8 @@
 #include <thrust/tuple.h>
 #include <thrust/type_traits/integer_sequence.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <algorithm>
 #include <cstdlib>
@@ -315,12 +316,11 @@ sort_and_reduce_buffer_elements(
                          to_thrust_optional(invalid_key)});
       auto stencil_first = thrust::make_transform_iterator(
         thrust::make_counting_iterator(size_t{0}),
-        cuda::proclaim_return_type<bool>(
-          [keep_flags = raft::device_span<uint32_t const>(keep_flags.data(),
-                                                          keep_flags.size())] __device__(size_t i) {
-            return (keep_flags[packed_bool_offset(i)] & packed_bool_mask(i)) !=
-                   packed_bool_empty_mask();
-          }));
+        [keep_flags = raft::device_span<uint32_t const>(
+           keep_flags.data(), keep_flags.size())] __device__(size_t i) -> bool {
+          return (keep_flags[packed_bool_offset(i)] & packed_bool_mask(i)) !=
+                 packed_bool_empty_mask();
+        });
       if constexpr (std::is_same_v<payload_t, void>) {
         resize_dataframe_buffer(
           key_buffer,
@@ -360,14 +360,14 @@ sort_and_reduce_buffer_elements(
 
       if constexpr (compressed) {
         rmm::device_uvector<key_t> output_key_buffer(key_buffer.size(), handle.get_stream());
-        thrust::transform(handle.get_thrust_policy(),
-                          key_buffer.begin(),
-                          key_buffer.end(),
-                          output_key_buffer.begin(),
-                          cuda::proclaim_return_type<key_t>(
-                            [v_first = std::get<0>(vertex_range)] __device__(uint32_t v_offset) {
-                              return static_cast<key_t>(v_first + v_offset);
-                            }));
+        thrust::transform(
+          handle.get_thrust_policy(),
+          key_buffer.begin(),
+          key_buffer.end(),
+          output_key_buffer.begin(),
+          [v_first = std::get<0>(vertex_range)] __device__(uint32_t v_offset) -> key_t {
+            return static_cast<key_t>(v_first + v_offset);
+          });
         return std::make_tuple(std::move(output_key_buffer), std::move(payload_buffer));
       } else {
         return std::make_tuple(std::move(key_buffer), std::move(payload_buffer));
@@ -393,10 +393,9 @@ sort_and_reduce_buffer_elements(
         output_key_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
       auto input_key_first = thrust::make_transform_iterator(
         get_dataframe_buffer_begin(key_buffer),
-        cuda::proclaim_return_type<key_t>(
-          [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) {
-            return static_cast<key_t>(v_first + v_offset);
-          }));
+        [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) -> key_t {
+          return static_cast<key_t>(v_first + v_offset);
+        });
       resize_dataframe_buffer(
         output_key_buffer,
         thrust::distance(
@@ -406,16 +405,16 @@ sort_and_reduce_buffer_elements(
                           input_key_first + size_dataframe_buffer(key_buffer),
                           thrust::make_counting_iterator(size_t{0}),
                           get_dataframe_buffer_begin(output_key_buffer),
-                          cuda::proclaim_return_type<bool>(
                             [key_first   = get_dataframe_buffer_begin(key_buffer),
-                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) {
-                              auto key = *(key_first + i);
-                              if (invalid_key && (key == *invalid_key)) {
-                                return false;
-                              } else if ((i != 0) && (key == *(key_first + (i - 1)))) {
-                                return false;
+                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+        auto key = *(key_first + i);
+        if (invalid_key && (key == *invalid_key)) ->bool
+          {
+            return false;
+          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
+          return false;
                               } else {
-                                return true;
+          return true;
                               }
                             }))),
         handle.get_stream());
@@ -428,16 +427,16 @@ sort_and_reduce_buffer_elements(
                             get_dataframe_buffer_begin(key_buffer),
                             get_dataframe_buffer_end(key_buffer),
                             thrust::make_counting_iterator(size_t{0}),
-                            cuda::proclaim_return_type<bool>(
                               [key_first   = get_dataframe_buffer_begin(key_buffer),
-                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) {
-                                auto key = *(key_first + i);
-                                if (invalid_key && (key == *invalid_key)) {
-                                  return true;
-                                } else if ((i != 0) && (key == *(key_first + (i - 1)))) {
-                                  return true;
+                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+        auto key = *(key_first + i);
+        if (invalid_key && (key == *invalid_key)) ->bool
+          {
+            return true;
+          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
+          return true;
                                 } else {
-                                  return false;
+          return false;
                                 }
                               }))),
         handle.get_stream());
@@ -450,10 +449,9 @@ sort_and_reduce_buffer_elements(
         output_key_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
       auto input_key_first = thrust::make_transform_iterator(
         get_dataframe_buffer_begin(key_buffer),
-        cuda::proclaim_return_type<key_t>(
-          [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) {
-            return static_cast<key_t>(v_first + v_offset);
-          }));
+        [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) -> key_t {
+          return static_cast<key_t>(v_first + v_offset);
+        });
       auto tmp_payload_buffer = allocate_dataframe_buffer<payload_t>(
         size_dataframe_buffer(payload_buffer), handle.get_stream());
       auto input_pair_first =
@@ -470,16 +468,16 @@ sort_and_reduce_buffer_elements(
                           input_pair_first + size_dataframe_buffer(key_buffer),
                           thrust::make_counting_iterator(size_t{0}),
                           output_pair_first,
-                          cuda::proclaim_return_type<bool>(
                             [key_first   = get_dataframe_buffer_begin(key_buffer),
-                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) {
-                              auto key = *(key_first + i);
-                              if (invalid_key && (key == *invalid_key)) {
-                                return false;
-                              } else if ((i != 0) && (key == *(key_first + (i - 1)))) {
-                                return false;
+                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+        auto key = *(key_first + i);
+        if (invalid_key && (key == *invalid_key)) ->bool
+          {
+            return false;
+          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
+          return false;
                               } else {
-                                return true;
+          return true;
                               }
                             }))),
         handle.get_stream());
@@ -497,16 +495,16 @@ sort_and_reduce_buffer_elements(
                             pair_first,
                             pair_first + size_dataframe_buffer(key_buffer),
                             thrust::make_counting_iterator(size_t{0}),
-                            cuda::proclaim_return_type<bool>(
                               [key_first   = get_dataframe_buffer_begin(key_buffer),
-                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) {
-                                auto key = *(key_first + i);
-                                if (invalid_key && (key == *invalid_key)) {
-                                  return true;
-                                } else if ((i != 0) && (key == *(key_first + (i - 1)))) {
-                                  return true;
+                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+        auto key = *(key_first + i);
+        if (invalid_key && (key == *invalid_key)) ->bool
+          {
+            return true;
+          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
+          return true;
                                 } else {
-                                  return false;
+          return false;
                                 }
                               }))),
         handle.get_stream());
@@ -522,15 +520,15 @@ sort_and_reduce_buffer_elements(
                                                   get_dataframe_buffer_begin(payload_buffer));
       resize_dataframe_buffer(
         key_buffer,
-        thrust::distance(pair_first,
-                         thrust::remove_if(handle.get_thrust_policy(),
-                                           pair_first,
-                                           pair_first + size_dataframe_buffer(key_buffer),
-                                           cuda::proclaim_return_type<bool>(
-                                             [invalid_key = *invalid_key] __device__(auto kv) {
-                                               auto key = thrust::get<0>(kv);
-                                               return key == invalid_key;
-                                             }))),
+        thrust::distance(
+          pair_first,
+          thrust::remove_if(handle.get_thrust_policy(),
+                            pair_first,
+                            pair_first + size_dataframe_buffer(key_buffer),
+                            [invalid_key = *invalid_key] __device__(auto kv) -> bool {
+                              auto key = thrust::get<0>(kv);
+                              return key == invalid_key;
+                            })),
         handle.get_stream());
       resize_dataframe_buffer(
         payload_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
@@ -549,10 +547,9 @@ sort_and_reduce_buffer_elements(
     if constexpr (compressed) {
       auto input_key_first = thrust::make_transform_iterator(
         get_dataframe_buffer_begin(key_buffer),
-        cuda::proclaim_return_type<key_t>(
-          [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) {
-            return static_cast<key_t>(v_first + v_offset);
-          }));
+        [v_first = std::get<0>(vertex_range)] __device__(auto v_offset) -> key_t {
+          return static_cast<key_t>(v_first + v_offset);
+        });
       thrust::reduce_by_key(handle.get_thrust_policy(),
                             input_key_first,
                             input_key_first + size_dataframe_buffer(key_buffer),
@@ -810,16 +807,15 @@ transform_reduce_v_frontier_outgoing_e_by_dst(raft::handle_t const& handle,
             get_dataframe_buffer_begin(key_buffer),
             get_dataframe_buffer_end(key_buffer),
             (*compressed_v_buffer).begin(),
-            cuda::proclaim_return_type<uint32_t>(
-              [firsts = raft::device_span<vertex_t const>(d_vertex_partition_range_offsets.data(),
-                                                          static_cast<size_t>(major_comm_size)),
-               lasts  = raft::device_span<vertex_t const>(
-                 d_vertex_partition_range_offsets.data() + 1,
-                 static_cast<size_t>(major_comm_size))] __device__(auto v) {
-                auto major_comm_rank = thrust::distance(
-                  lasts.begin(), thrust::upper_bound(thrust::seq, lasts.begin(), lasts.end(), v));
-                return static_cast<uint32_t>(v - firsts[major_comm_rank]);
-              }));
+            [firsts = raft::device_span<vertex_t const>(d_vertex_partition_range_offsets.data(),
+                                                        static_cast<size_t>(major_comm_size)),
+             lasts  = raft::device_span<vertex_t const>(
+               d_vertex_partition_range_offsets.data() + 1,
+               static_cast<size_t>(major_comm_size))] __device__(auto v) -> uint32_t {
+              auto major_comm_rank = thrust::distance(
+                lasts.begin(), thrust::upper_bound(thrust::seq, lasts.begin(), lasts.end(), v));
+              return static_cast<uint32_t>(v - firsts[major_comm_rank]);
+            });
           resize_dataframe_buffer(key_buffer, 0, handle.get_stream());
           shrink_to_fit_dataframe_buffer(key_buffer, handle.get_stream());
         }

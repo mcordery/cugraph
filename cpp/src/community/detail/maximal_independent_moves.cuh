@@ -79,13 +79,13 @@ rmm::device_uvector<vertex_t> maximal_independent_moves(
   thrust::copy(handle.get_thrust_policy(), vertex_begin, vertex_end, ranks.begin());
 
   // Set ranks of zero out-degree vetices to std::numeric_limits<vertex_t>::lowest()
-  thrust::transform_if(handle.get_thrust_policy(),
-                       out_degrees.begin(),
-                       out_degrees.end(),
-                       ranks.begin(),
-                       cuda::proclaim_return_type<vertex_t>(
-                         [] __device__(auto) { return std::numeric_limits<vertex_t>::lowest(); }),
-                       [] __device__(auto deg) { return deg == 0; });
+  thrust::transform_if(
+    handle.get_thrust_policy(),
+    out_degrees.begin(),
+    out_degrees.end(),
+    ranks.begin(),
+    [] __device__(auto) -> vertex_t { return std::numeric_limits<vertex_t>::lowest(); },
+    [] __device__(auto deg) { return deg == 0; });
 
   out_degrees.resize(0, handle.get_stream());
   out_degrees.shrink_to_fit(handle.get_stream());

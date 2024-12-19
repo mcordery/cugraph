@@ -100,9 +100,8 @@ size_t count_intersection(raft::handle_t const& handle,
     handle.get_thrust_policy(),
     thrust::make_zip_iterator(src_out.begin(), dst_out.begin()),
     thrust::make_zip_iterator(src_out.end(), dst_out.end()),
-    cuda::proclaim_return_type<size_t>(
-      [src = raft::device_span<vertex_t const>{graph_src.data(), graph_src.size()},
-       dst = raft::device_span<vertex_t const>{graph_dst.data(),
+      [src = raft::device_span<vertex_t const>-> size_t {graph_src.data(), graph_src.size()},
+       dst = raft::device_span<vertex_t const>-> size_t {graph_dst.data(,
                                                graph_dst.size()}] __device__(auto tuple) {
 #if 0
         // FIXME: This fails on rocky linux CUDA 11.8, works on CUDA 12

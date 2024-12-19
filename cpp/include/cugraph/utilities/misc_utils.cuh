@@ -44,10 +44,11 @@ std::tuple<std::vector<vertex_t>, std::vector<offset_t>> compute_offset_aligned_
   offset_t num_elements,
   vertex_t approx_element_chunk_size)
 {
-  auto search_offset_first = thrust::make_transform_iterator(
-    thrust::make_counting_iterator(size_t{1}),
-    cuda::proclaim_return_type<size_t>(
-      [approx_element_chunk_size] __device__(auto i) { return i * approx_element_chunk_size; }));
+  auto search_offset_first =
+    thrust::make_transform_iterator(thrust::make_counting_iterator(size_t{1}),
+                                    [approx_element_chunk_size] __device__(auto i) -> size_t {
+                                      return i * approx_element_chunk_size;
+                                    });
   auto num_chunks = (num_elements + approx_element_chunk_size - 1) / approx_element_chunk_size;
 
   if (num_chunks > 1) {

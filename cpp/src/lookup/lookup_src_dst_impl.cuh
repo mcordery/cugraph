@@ -404,23 +404,19 @@ EdgeTypeAndIdToSrcDstLookupContainerType build_edge_id_and_type_to_src_dst_looku
     auto& minor_comm           = handle.get_subcomm(cugraph::partition_manager::minor_comm_name());
     auto const minor_comm_size = minor_comm.get_size();
 
-    auto [gpu_ids, edge_types] =
-      cugraph::extract_transform_e(
-        handle,
-        graph_view,
-        cugraph::edge_src_dummy_property_t{}.view(),
-        cugraph::edge_dst_dummy_property_t{}.view(),
-        view_concat(edge_id_view, edge_type_view),
-        cuda::proclaim_return_type<thrust::optional<thrust::tuple<int, edge_type_t>>>(
-          [key_func =
-             cugraph::detail::compute_gpu_id_from_ext_edge_id_t<edge_t>{
-               comm_size,
-               major_comm_size,
-               minor_comm_size}] __device__(auto,
-                                            auto,
-                                            thrust::nullopt_t,
-                                            thrust::nullopt_t,
-                                            thrust::tuple<edge_t, edge_type_t> id_and_type) {
+    auto [gpu_ids, edge_types] = cugraph::extract_transform_e(
+      handle,
+      graph_view,
+      cugraph::edge_src_dummy_property_t{}.view(),
+      cugraph::edge_dst_dummy_property_t{}.view(),
+      view_concat(edge_id_view, edge_type_view),
+      [key_func = cugraph::detail::compute_gpu_id_from_ext_edge_id_t<edge_t>->thrust::optional<thrust::tuple<int, edge_type_t>>{comm_size, major_comm_size, minor_comm_size}] __device__(
+        auto,
+        auto,
+        thrust::nullopt_t,
+        thrust::nullopt_t,
+        thrust::tuple<edge_t, edge_type_t> id_and_type
+          ->thrust::optional<thrust::tuple<int, edge_type_t>> {
             return thrust::optional<thrust::tuple<int, edge_type_t>>{thrust::make_tuple(
               key_func(thrust::get<0>(id_and_type)), thrust::get<1>(id_and_type))};
           }));
@@ -518,10 +514,10 @@ EdgeTypeAndIdToSrcDstLookupContainerType build_edge_id_and_type_to_src_dst_looku
       cugraph::edge_src_dummy_property_t{}.view(),
       cugraph::edge_dst_dummy_property_t{}.view(),
       edge_type_view,
-      cuda::proclaim_return_type<thrust::optional<edge_type_t>>(
-        [] __device__(auto, auto, thrust::nullopt_t, thrust::nullopt_t, edge_type_t et) {
-          return thrust::optional<edge_type_t>{et};
-        }));
+      [] __device__(auto, auto, thrust::nullopt_t, thrust::nullopt_t, edge_type_t et)
+        -> thrust::optional<edge_type_t> {
+        return thrust::optional<edge_type_t>->thrust::optional<edge_type_t>{et};
+      });
 
     thrust::sort(handle.get_thrust_policy(), edge_types.begin(), edge_types.end());
 

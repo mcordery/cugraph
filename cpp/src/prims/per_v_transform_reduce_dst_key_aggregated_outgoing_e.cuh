@@ -39,7 +39,6 @@
 #include <rmm/mr/device/per_device_resource.hpp>
 #include <rmm/mr/device/polymorphic_allocator.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/distance.h>
@@ -56,6 +55,8 @@
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <type_traits>
 
@@ -372,15 +373,18 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
           major_sparse_range_size + *(edge_partition.dcs_nzd_vertex_count()), handle.get_stream());
         auto major_first = thrust::make_transform_iterator(
           thrust::make_counting_iterator(vertex_t{0}),
-          cuda::proclaim_return_type<vertex_t>(
             [major_sparse_range_size,
              major_range_first = edge_partition.major_range_first(),
-             dcs_nzd_vertices  = *(edge_partition.dcs_nzd_vertices())] __device__(vertex_t i) {
-              if (i < major_sparse_range_size) {  // sparse
-                return major_range_first + i;
-              } else {  // hypersparse
-                return *(dcs_nzd_vertices + (i - major_sparse_range_size));
-              }
+             dcs_nzd_vertices  = *(edge_partition.dcs_nzd_vertices())] __device__(vertex_t i) -> vertex_t {
+          if (i < major_sparse_range_size) ->vertex_t
+            {  // sparse
+              return major_range_first + i;
+            }
+          else
+            ->vertex_t
+            {  // hypersparse
+                return *(dcs_nzd_vertices + (i - major_sparse_range_size);
+            }
             }));
         degrees_with_mask =
           edge_partition.compute_local_degrees_with_mask((*edge_partition_e_mask).value_first(),
@@ -524,14 +528,14 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
             handle.get_stream());
         } else {
           hipcub::DeviceSegmentedSort::SortKeys(static_cast<void*>(nullptr),
-                                             tmp_storage_bytes,
-                                             tmp_minor_keys.begin() + h_edge_offsets[j],
-                                             unreduced_minor_keys.begin(),
-                                             h_edge_offsets[j + 1] - h_edge_offsets[j],
-                                             h_vertex_offsets[j + 1] - h_vertex_offsets[j],
-                                             offset_first,
-                                             offset_first + 1,
-                                             handle.get_stream());
+                                                tmp_storage_bytes,
+                                                tmp_minor_keys.begin() + h_edge_offsets[j],
+                                                unreduced_minor_keys.begin(),
+                                                h_edge_offsets[j + 1] - h_edge_offsets[j],
+                                                h_vertex_offsets[j + 1] - h_vertex_offsets[j],
+                                                offset_first,
+                                                offset_first + 1,
+                                                handle.get_stream());
         }
         if (tmp_storage_bytes > d_tmp_storage.size()) {
           d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
@@ -555,14 +559,14 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
             handle.get_stream());
         } else {
           hipcub::DeviceSegmentedSort::SortKeys(d_tmp_storage.data(),
-                                             tmp_storage_bytes,
-                                             tmp_minor_keys.begin() + h_edge_offsets[j],
-                                             unreduced_minor_keys.begin(),
-                                             h_edge_offsets[j + 1] - h_edge_offsets[j],
-                                             h_vertex_offsets[j + 1] - h_vertex_offsets[j],
-                                             offset_first,
-                                             offset_first + 1,
-                                             handle.get_stream());
+                                                tmp_storage_bytes,
+                                                tmp_minor_keys.begin() + h_edge_offsets[j],
+                                                unreduced_minor_keys.begin(),
+                                                h_edge_offsets[j + 1] - h_edge_offsets[j],
+                                                h_vertex_offsets[j + 1] - h_vertex_offsets[j],
+                                                offset_first,
+                                                offset_first + 1,
+                                                handle.get_stream());
         }
 
         thrust::copy(handle.get_thrust_policy(),

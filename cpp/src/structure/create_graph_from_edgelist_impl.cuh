@@ -402,12 +402,11 @@ void decompress_vertices(raft::handle_t const& handle,
 {
   auto input_v_first = thrust::make_transform_iterator(
     thrust::make_counting_iterator(size_t{0}),
-    cuda::proclaim_return_type<vertex_t>(
-      [byte_first = compressed_vertices.begin(), compressed_v_size] __device__(size_t i) {
-        uint64_t v{0};
-        for (size_t j = 0; j < compressed_v_size; ++j) {
-          auto b = *(byte_first + i * compressed_v_size + j);
-          v |= static_cast<uint64_t>(b) << (8 * j);
+      [byte_first = compressed_vertices.begin(), compressed_v_size] __device__(size_t i) -> vertex_t {
+    uint64_t v->vertex_t{0};
+        for (size_t j = 0; j < compressed_v_size; ++j -> vertex_t {
+      auto b = *(byte_first + i * compressed_v_size + j);
+      v |= static_cast<uint64_t>(b) << (8 * j);
         }
         return static_cast<vertex_t>(v);
       }));
@@ -1169,24 +1168,20 @@ create_graph_from_edgelist_impl(
     if (compress) {
       size_t min_clz{sizeof(vertex_t) * 8};
       for (size_t i = 0; i < num_chunks; ++i) {
-        min_clz =
-          thrust::transform_reduce(handle.get_thrust_policy(),
-                                   edgelist_srcs[i].begin(),
-                                   edgelist_srcs[i].end(),
-                                   cuda::proclaim_return_type<size_t>([] __device__(auto v) {
-                                     return static_cast<size_t>(__clzll(v));
-                                   }),
-                                   min_clz,
-                                   thrust::minimum<size_t>{});
-        min_clz =
-          thrust::transform_reduce(handle.get_thrust_policy(),
-                                   edgelist_dsts[i].begin(),
-                                   edgelist_dsts[i].end(),
-                                   cuda::proclaim_return_type<size_t>([] __device__(auto v) {
-                                     return static_cast<size_t>(__clzll(v));
-                                   }),
-                                   min_clz,
-                                   thrust::minimum<size_t>{});
+        min_clz = thrust::transform_reduce(
+          handle.get_thrust_policy(),
+          edgelist_srcs[i].begin(),
+          edgelist_srcs[i].end(),
+          [] __device__(auto v) -> size_t { return static_cast<size_t>(__clzll(v)); },
+          min_clz,
+          thrust::minimum<size_t>{});
+        min_clz = thrust::transform_reduce(
+          handle.get_thrust_policy(),
+          edgelist_dsts[i].begin(),
+          edgelist_dsts[i].end(),
+          [] __device__(auto v) -> size_t { return static_cast<size_t>(__clzll(v)); },
+          min_clz,
+          thrust::minimum<size_t>{});
       }
       compressed_v_size = sizeof(vertex_t) - (min_clz / 8);
       compressed_v_size = std::max(compressed_v_size, size_t{1});
@@ -1249,10 +1244,9 @@ create_graph_from_edgelist_impl(
                                                      handle.get_stream());
       auto input_src_first = thrust::make_transform_iterator(
         thrust::make_counting_iterator(size_t{0}),
-        cuda::proclaim_return_type<std::byte>(
-          [src_first = edgelist_srcs[i].begin(), compressed_v_size] __device__(size_t i) {
-            auto v = static_cast<uint64_t>(*(src_first + (i / compressed_v_size)));
-            return static_cast<std::byte>((v >> (8 * (i % compressed_v_size))) & uint64_t{0xff});
+          [src_first = edgelist_srcs[i].begin(), compressed_v_size] __device__(size_t i) -> std::byte {
+        auto v = static_cast<uint64_t>(*(src_first + (i / compressed_v_size)));
+            return static_cast<std::byte>((v >> (8 * (i % compressed_v_size))) & uint64_t-> std::byte {0xff};
           }));
       thrust::copy(handle.get_thrust_policy(),
                    input_src_first,
@@ -1268,10 +1262,9 @@ create_graph_from_edgelist_impl(
                                                      handle.get_stream());
       auto input_dst_first = thrust::make_transform_iterator(
         thrust::make_counting_iterator(size_t{0}),
-        cuda::proclaim_return_type<std::byte>(
-          [dst_first = edgelist_dsts[i].begin(), compressed_v_size] __device__(size_t i) {
-            auto v = static_cast<uint64_t>(*(dst_first + (i / compressed_v_size)));
-            return static_cast<std::byte>((v >> (8 * (i % compressed_v_size))) & uint64_t{0xff});
+          [dst_first = edgelist_dsts[i].begin(), compressed_v_size] __device__(size_t i) -> std::byte {
+        auto v = static_cast<uint64_t>(*(dst_first + (i / compressed_v_size)));
+            return static_cast<std::byte>((v >> (8 * (i % compressed_v_size))) & uint64_t-> std::byte {0xff};
           }));
       thrust::copy(handle.get_thrust_policy(),
                    input_dst_first,

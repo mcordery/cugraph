@@ -216,10 +216,9 @@ void fill_edge_major_property(raft::handle_t const& handle,
             });
         } else {
           auto map_first = thrust::make_transform_iterator(
-            rx_vertices.begin(),
-            cuda::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
+            rx_vertices.begin(), [edge_partition] __device__(auto v) -> vertex_t {
               return edge_partition.major_offset_from_major_nocheck(v);
-            }));
+            });
           auto val_first = thrust::make_constant_iterator(input);
           // FIXME: this scatter is unnecessary if NCCL directly takes a permutation iterator (and
           // directly scatters from the internal buffer)
@@ -528,9 +527,8 @@ void fill_edge_minor_property(raft::handle_t const& handle,
                           sorted_unique_vertex_first,
                           sorted_unique_vertex_last,
                           tmps.begin(),
-                          cuda::proclaim_return_type<uint32_t>(
-                            [range_first = local_v_list_range_firsts[major_comm_rank]] __device__(
-                              auto v) { return static_cast<uint32_t>(v - range_first); }));
+                          [range_first = local_v_list_range_firsts[major_comm_rank]] __device__(
+                            auto v) -> uint32_t { return static_cast<uint32_t>(v - range_first); });
         compressed_v_list = std::move(tmps);
       }
     }
@@ -836,12 +834,12 @@ void fill_edge_minor_property(raft::handle_t const& handle,
                 if (compressed_v_list) {
                   auto map_first = thrust::make_transform_iterator(
                     std::get<1>(edge_partition_v_buffers[j]).begin(),
-                    cuda::proclaim_return_type<vertex_t>(
-                      [minor_range_first,
-                       range_first =
-                         local_v_list_range_firsts[partition_idx]] __device__(auto v_offset) {
-                        return static_cast<vertex_t>(v_offset + (range_first - minor_range_first));
-                      }));
+                    [minor_range_first,
+                     range_first =
+                       local_v_list_range_firsts[partition_idx]] __device__(auto v_offset)
+                      -> vertex_t {
+                      return static_cast<vertex_t>(v_offset + (range_first - minor_range_first));
+                    });
                   auto val_first = thrust::make_constant_iterator(input);
                   thrust::scatter(rmm::exec_policy_nosync(loop_stream),
                                   val_first,
@@ -851,8 +849,9 @@ void fill_edge_minor_property(raft::handle_t const& handle,
                 } else {
                   auto map_first = thrust::make_transform_iterator(
                     std::get<0>(edge_partition_v_buffers[j]).begin(),
-                    cuda::proclaim_return_type<vertex_t>(
-                      [minor_range_first] __device__(auto v) { return v - minor_range_first; }));
+                    [minor_range_first] __device__(auto v) -> vertex_t {
+                      return v - minor_range_first;
+                    });
                   auto val_first = thrust::make_constant_iterator(input);
                   thrust::scatter(rmm::exec_policy_nosync(loop_stream),
                                   val_first,
@@ -925,20 +924,19 @@ void fill_edge_minor_property(raft::handle_t const& handle,
             if (compressed_v_list) {
               auto map_first = thrust::make_transform_iterator(
                 thrust::make_counting_iterator(vertex_t{0}),
-                cuda::proclaim_return_type<vertex_t>(
-                  [range_firsts,
-                   loop_offsets,
-                   rx_firsts = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
-                   minor_range_first] __device__(auto i) {
-                    auto loop_idx = thrust::distance(
-                      loop_offsets.begin() + 1,
-                      thrust::upper_bound(
-                        thrust::seq, loop_offsets.begin() + 1, loop_offsets.end(), i));
-                    auto minor =
-                      range_firsts[loop_idx] + *(static_cast<uint32_t const*>(rx_firsts[loop_idx]) +
-                                                 (i - loop_offsets[loop_idx]));
-                    return minor - minor_range_first;
-                  }));
+                [range_firsts,
+                 loop_offsets,
+                 rx_firsts = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
+                 minor_range_first] __device__(auto i) -> vertex_t {
+                  auto loop_idx = thrust::distance(
+                    loop_offsets.begin() + 1,
+                    thrust::upper_bound(
+                      thrust::seq, loop_offsets.begin() + 1, loop_offsets.end(), i));
+                  auto minor =
+                    range_firsts[loop_idx] + *(static_cast<uint32_t const*>(rx_firsts[loop_idx]) +
+                                               (i - loop_offsets[loop_idx]));
+                  return minor - minor_range_first;
+                });
               thrust::scatter(handle.get_thrust_policy(),
                               val_first,
                               val_first + h_vertex_vars.back(),
@@ -947,18 +945,17 @@ void fill_edge_minor_property(raft::handle_t const& handle,
             } else {
               auto map_first = thrust::make_transform_iterator(
                 thrust::make_counting_iterator(vertex_t{0}),
-                cuda::proclaim_return_type<vertex_t>(
-                  [loop_offsets,
-                   rx_firsts = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
-                   minor_range_first] __device__(auto i) {
-                    auto loop_idx = thrust::distance(
-                      loop_offsets.begin() + 1,
-                      thrust::upper_bound(
-                        thrust::seq, loop_offsets.begin() + 1, loop_offsets.end(), i));
-                    auto minor = *(static_cast<vertex_t const*>(rx_firsts[loop_idx]) +
-                                   (i - loop_offsets[loop_idx]));
-                    return minor - minor_range_first;
-                  }));
+                [loop_offsets,
+                 rx_firsts = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
+                 minor_range_first] __device__(auto i) -> vertex_t {
+                  auto loop_idx = thrust::distance(
+                    loop_offsets.begin() + 1,
+                    thrust::upper_bound(
+                      thrust::seq, loop_offsets.begin() + 1, loop_offsets.end(), i));
+                  auto minor = *(static_cast<vertex_t const*>(rx_firsts[loop_idx]) +
+                                 (i - loop_offsets[loop_idx]));
+                  return minor - minor_range_first;
+                });
               thrust::scatter(handle.get_thrust_policy(),
                               val_first,
                               val_first + h_vertex_vars.back(),

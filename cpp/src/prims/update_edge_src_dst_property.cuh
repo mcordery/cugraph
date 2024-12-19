@@ -179,14 +179,13 @@ void update_edge_major_property(raft::handle_t const& handle,
                        handle.get_stream());
           auto bool_first = thrust::make_transform_iterator(
             (*edge_partition_keys)[i].begin(),
-            cuda::proclaim_return_type<bool>(
-              [rx_value_first,
-               v_first = graph_view.vertex_partition_range_first(
-                 major_range_vertex_partition_id)] __device__(auto v) {
-                auto v_offset = v - v_first;
-                return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
-                                         packed_bool_mask(v_offset));
-              }));
+            [rx_value_first,
+             v_first = graph_view.vertex_partition_range_first(
+               major_range_vertex_partition_id)] __device__(auto v) -> bool {
+              auto v_offset = v - v_first;
+              return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
+                                       packed_bool_mask(v_offset));
+            });
           pack_bools(handle,
                      bool_first,
                      bool_first + (*edge_partition_keys)[i].size(),
@@ -201,9 +200,10 @@ void update_edge_major_property(raft::handle_t const& handle,
 
           auto v_offset_first = thrust::make_transform_iterator(
             (*edge_partition_keys)[i].begin(),
-            cuda::proclaim_return_type<vertex_t>(
-              [v_first = graph_view.vertex_partition_range_first(
-                 major_range_vertex_partition_id)] __device__(auto v) { return v - v_first; }));
+            [v_first = graph_view.vertex_partition_range_first(
+               major_range_vertex_partition_id)] __device__(auto v) -> vertex_t {
+              return v - v_first;
+            });
           thrust::gather(handle.get_thrust_policy(),
                          v_offset_first,
                          v_offset_first + (*edge_partition_keys)[i].size(),
@@ -319,13 +319,12 @@ void update_edge_major_property(raft::handle_t const& handle,
         if constexpr (contains_packed_bool_element) {
           auto bool_first = thrust::make_transform_iterator(
             sorted_unique_vertex_first,
-            cuda::proclaim_return_type<bool>([vertex_property_input_first,
-                                              vertex_partition] __device__(auto v) {
+            [vertex_property_input_first, vertex_partition] __device__(auto v) -> bool {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
                 *(vertex_property_input_first + packed_bool_offset(v_offset)) &
                 packed_bool_mask(v_offset));
-            }));
+            });
           pack_bools(
             handle,
             bool_first,
@@ -333,10 +332,9 @@ void update_edge_major_property(raft::handle_t const& handle,
             rx_value_first);
         } else {
           auto map_first = thrust::make_transform_iterator(
-            sorted_unique_vertex_first,
-            cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+            sorted_unique_vertex_first, [vertex_partition] __device__(auto v) -> vertex_t {
               return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
-            }));
+            });
           // FIXME: this gather (and temporary buffer) is unnecessary if NCCL directly takes a
           // permutation iterator (and directly gathers to the internal buffer)
           thrust::gather(
@@ -407,10 +405,9 @@ void update_edge_major_property(raft::handle_t const& handle,
             });
         } else {
           auto map_first = thrust::make_transform_iterator(
-            rx_vertices.begin(),
-            cuda::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
+            rx_vertices.begin(), [edge_partition] __device__(auto v) -> vertex_t {
               return edge_partition.major_offset_from_major_nocheck(v);
-            }));
+            });
           // FIXME: this scatter is unnecessary if NCCL directly takes a permutation iterator (and
           // directly scatters from the internal buffer)
           thrust::scatter(handle.get_thrust_policy(),
@@ -618,14 +615,13 @@ void update_edge_minor_property(raft::handle_t const& handle,
 
                 auto bool_first = thrust::make_transform_iterator(
                   (*edge_partition_keys).begin() + key_offsets[j],
-                  cuda::proclaim_return_type<bool>(
-                    [rx_value_first,
-                     v_first = graph_view.vertex_partition_range_first(
-                       minor_range_vertex_partition_id)] __device__(auto v) {
-                      auto v_offset = v - v_first;
-                      return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
-                                               packed_bool_mask(v_offset));
-                    }));
+                  [rx_value_first,
+                   v_first = graph_view.vertex_partition_range_first(
+                     minor_range_vertex_partition_id)] __device__(auto v) -> bool {
+                    auto v_offset = v - v_first;
+                    return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
+                                             packed_bool_mask(v_offset));
+                  });
                 pack_unaligned_bools(
                   handle,
                   bool_first,
@@ -637,10 +633,10 @@ void update_edge_minor_property(raft::handle_t const& handle,
                   std::get<std::vector<size_t>>(key_offsets_or_rx_displacements);
                 auto bool_first = thrust::make_transform_iterator(
                   thrust::make_counting_iterator(vertex_t{0}),
-                  cuda::proclaim_return_type<bool>([rx_value_first] __device__(vertex_t v_offset) {
+                  [rx_value_first] __device__(vertex_t v_offset) -> bool {
                     return static_cast<bool>(*(rx_value_first + packed_bool_offset(v_offset)) &
                                              packed_bool_mask(v_offset));
-                  }));
+                  });
                 pack_unaligned_bools(
                   handle,
                   bool_first,
@@ -656,9 +652,10 @@ void update_edge_minor_property(raft::handle_t const& handle,
 
               auto v_offset_first = thrust::make_transform_iterator(
                 (*edge_partition_keys).begin() + key_offsets[j],
-                cuda::proclaim_return_type<vertex_t>(
-                  [v_first = graph_view.vertex_partition_range_first(
-                     minor_range_vertex_partition_id)] __device__(auto v) { return v - v_first; }));
+                [v_first = graph_view.vertex_partition_range_first(
+                   minor_range_vertex_partition_id)] __device__(auto v) -> vertex_t {
+                  return v - v_first;
+                });
               thrust::gather(handle.get_thrust_policy(),
                              v_offset_first,
                              v_offset_first + (key_offsets[j + 1] - key_offsets[j]),
@@ -789,13 +786,12 @@ void update_edge_minor_property(raft::handle_t const& handle,
         if constexpr (contains_packed_bool_element) {
           auto bool_first = thrust::make_transform_iterator(
             sorted_unique_vertex_first,
-            cuda::proclaim_return_type<bool>([vertex_property_input_first,
-                                              vertex_partition] __device__(auto v) {
+            [vertex_property_input_first, vertex_partition] __device__(auto v) -> bool {
               auto v_offset = vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
               return static_cast<bool>(
                 *(vertex_property_input_first + packed_bool_offset(v_offset)) &
                 packed_bool_mask(v_offset));
-            }));
+            });
           pack_bools(
             handle,
             bool_first,
@@ -803,10 +799,9 @@ void update_edge_minor_property(raft::handle_t const& handle,
             rx_value_first);
         } else {
           auto map_first = thrust::make_transform_iterator(
-            sorted_unique_vertex_first,
-            cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+            sorted_unique_vertex_first, [vertex_partition] __device__(auto v) -> vertex_t {
               return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
-            }));
+            });
           // FIXME: this gather (and temporary buffer) is unnecessary if NCCL directly takes a
           // permutation iterator (and directly gathers to the internal buffer)
           thrust::gather(
@@ -891,10 +886,9 @@ void update_edge_minor_property(raft::handle_t const& handle,
             });
         } else {
           auto map_first = thrust::make_transform_iterator(
-            rx_vertices.begin(),
-            cuda::proclaim_return_type<vertex_t>([edge_partition] __device__(auto v) {
+            rx_vertices.begin(), [edge_partition] __device__(auto v) -> vertex_t {
               return edge_partition.minor_offset_from_minor_nocheck(v);
-            }));
+            });
           // FIXME: this scatter is unnecessary if NCCL directly takes a permutation iterator (and
           // directly scatters from the internal buffer)
           thrust::scatter(handle.get_thrust_policy(),

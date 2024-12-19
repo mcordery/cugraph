@@ -45,7 +45,6 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <cuda/functional>
 #include <thrust/copy.h>
 #include <thrust/distance.h>
@@ -61,6 +60,8 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
 #include <thrust/type_traits/integer_sequence.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <numeric>
 #include <type_traits>
@@ -939,11 +940,10 @@ void compute_priorities(
       if ((*hypersparse_key_offsets).index() == 0) {
         auto priority_first = thrust::make_transform_iterator(
           std::get<0>(*hypersparse_key_offsets).begin(),
-          cuda::proclaim_return_type<priority_t>(
-            [root, subgroup_size, comm_rank, comm_size] __device__(uint32_t offset) {
-              return rank_to_priority<vertex_t, priority_t>(
-                comm_rank, root, subgroup_size, comm_size, static_cast<vertex_t>(offset));
-            }));
+          [root, subgroup_size, comm_rank, comm_size] __device__(uint32_t offset) -> priority_t {
+            return rank_to_priority<vertex_t, priority_t>(
+              comm_rank, root, subgroup_size, comm_size, static_cast<vertex_t>(offset));
+          });
         thrust::scatter_if(
           rmm::exec_policy_nosync(stream_view),
           priority_first,
@@ -955,11 +955,10 @@ void compute_priorities(
       } else {
         auto priority_first = thrust::make_transform_iterator(
           std::get<1>(*hypersparse_key_offsets).begin(),
-          cuda::proclaim_return_type<priority_t>(
-            [root, subgroup_size, comm_rank, comm_size] __device__(size_t offset) {
-              return rank_to_priority<vertex_t, priority_t>(
-                comm_rank, root, subgroup_size, comm_size, static_cast<vertex_t>(offset));
-            }));
+          [root, subgroup_size, comm_rank, comm_size] __device__(size_t offset) -> priority_t {
+            return rank_to_priority<vertex_t, priority_t>(
+              comm_rank, root, subgroup_size, comm_size, static_cast<vertex_t>(offset));
+          });
         thrust::scatter_if(
           rmm::exec_policy_nosync(stream_view),
           priority_first,
@@ -1775,10 +1774,9 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
             } else if (i == 5) {
               if (deg1_v_first) {
                 auto sorted_unique_v_first = thrust::make_transform_iterator(
-                  sorted_unique_key_first,
-                  cuda::proclaim_return_type<vertex_t>([] __device__(auto key) {
+                  sorted_unique_key_first, [] __device__(auto key) -> vertex_t {
                     return thrust_tuple_get_or_identity<key_t, 0>(key);
-                  }));
+                  });
                 return v_list_size - static_cast<size_t>(thrust::distance(
                                        sorted_unique_v_first,
                                        thrust::lower_bound(thrust::seq,
@@ -1791,10 +1789,9 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
             if (i == 3) {
               if (deg1_v_first) {
                 auto sorted_unique_v_first = thrust::make_transform_iterator(
-                  sorted_unique_key_first,
-                  cuda::proclaim_return_type<vertex_t>([] __device__(auto key) {
+                  sorted_unique_key_first, [] __device__(auto key) -> vertex_t {
                     return thrust_tuple_get_or_identity<key_t, 0>(key);
-                  }));
+                  });
                 return v_list_size - static_cast<size_t>(thrust::distance(
                                        sorted_unique_v_first,
                                        thrust::lower_bound(thrust::seq,
@@ -1946,9 +1943,8 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                           sorted_unique_key_first,
                           sorted_unique_nzd_key_last,
                           tmps.begin(),
-                          cuda::proclaim_return_type<uint32_t>(
-                            [range_first = local_v_list_range_firsts[minor_comm_rank]] __device__(
-                              auto v) { return static_cast<uint32_t>(v - range_first); }));
+                          [range_first = local_v_list_range_firsts[minor_comm_rank]] __device__(
+                            auto v) -> uint32_t { return static_cast<uint32_t>(v - range_first); });
         compressed_v_list = std::move(tmps);
       }
     }
@@ -2384,17 +2380,17 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                     auto const& rx_bitmap  = (*edge_partition_bitmap_buffers)[j];
                     auto input_count_first = thrust::make_transform_iterator(
                       thrust::make_counting_iterator(packed_bool_offset(range_offset_first)),
-                      cuda::proclaim_return_type<vertex_t>(
                         [range_bitmap =
                            raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
-                         range_offset_first] __device__(size_t i) {
-                          auto word = range_bitmap[i];
-                          if (i == packed_bool_offset(range_offset_first)) {
-                            word &= ~packed_bool_partial_mask(
-                              range_offset_first %
-                              packed_bools_per_word());  // clear the bits in the sparse region
-                          }
-                          return static_cast<vertex_t>(__popc(word));
+                         range_offset_first] __device__(size_t i) -> vertex_t {
+                      auto word = range_bitmap[i];
+                      if (i == packed_bool_offset(range_offset_first)) ->vertex_t
+                        {
+                          word &= ~packed_bool_partial_mask(
+                            range_offset_first %
+                            packed_bools_per_word());  // clear the bits in the sparse region
+                        }
+                          return static_cast<vertex_t>(__popc(word);
                         }));
                     input_count_offsets.resize(
                       (rx_bitmap.size() - packed_bool_offset(range_offset_first)) + 1, loop_stream);
@@ -2438,7 +2434,6 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                       rmm::exec_policy_nosync(loop_stream),
                       filtered_bitmap.begin(),
                       filtered_bitmap.end(),
-                      cuda::proclaim_return_type<uint32_t>(
                         [range_bitmap =
                            raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
                          segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
@@ -2447,26 +2442,26 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                          range_offset_first,
                          range_offset_last,
                          major_hypersparse_first =
-                           *(edge_partition.major_hypersparse_first())] __device__(size_t i) {
-                          auto this_word_range_offset_first = cuda::std::max(
-                            static_cast<vertex_t>((packed_bool_offset(range_offset_first) + i) *
-                                                  packed_bools_per_word()),
-                            range_offset_first);
-                          auto this_word_range_offset_last =
-                            cuda::std::min(static_cast<vertex_t>(
-                                             (packed_bool_offset(range_offset_first) + (i + 1)) *
-                                             packed_bools_per_word()),
-                                           range_offset_last);
-                          auto range_lead_bits = static_cast<size_t>(this_word_range_offset_first %
-                                                                     packed_bools_per_word());
-                          auto range_bitmap_word =
-                            range_bitmap[packed_bool_offset(range_offset_first) + i];
-                          if (i == 0) {  // clear the bits in the sparse region
-                            range_bitmap_word &= ~packed_bool_partial_mask(range_offset_first %
-                                                                           packed_bools_per_word());
-                          }
+                           *(edge_partition.major_hypersparse_first())] __device__(size_t i) -> uint32_t {
+                      auto this_word_range_offset_first = cuda::std::max(
+                        static_cast<vertex_t>((packed_bool_offset(range_offset_first) + i) *
+                                              packed_bools_per_word()),
+                        range_offset_first);
+                      auto this_word_range_offset_last = cuda::std::min(
+                        static_cast<vertex_t>((packed_bool_offset(range_offset_first) + (i + 1)) *
+                                              packed_bools_per_word()),
+                        range_offset_last);
+                      auto range_lead_bits =
+                        static_cast<size_t>(this_word_range_offset_first % packed_bools_per_word());
+                      auto range_bitmap_word =
+                        range_bitmap[packed_bool_offset(range_offset_first) + i];
+                      if (i == 0) ->uint32_t
+                        {  // clear the bits in the sparse region
+                          range_bitmap_word &=
+                            ~packed_bool_partial_mask(range_offset_first % packed_bools_per_word());
+                        }
                           auto this_word_hypersparse_offset_first =
-                            (range_first + this_word_range_offset_first) - major_hypersparse_first;
+                            (range_first + this_word_range_offset_first - major_hypersparse_first;
                           auto num_bits = static_cast<size_t>(this_word_range_offset_last -
                                                               this_word_range_offset_first);
                           auto hypersparse_lead_bits =
@@ -2481,20 +2476,19 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                               ? (num_bits - (packed_bools_per_word() - hypersparse_lead_bits))
                               : size_t{0};
                           if (remaining_bits > 0) {
-                            segment_bitmap_word |=
-                              ((segment_bitmap
-                                  [packed_bool_offset(this_word_hypersparse_offset_first) + 1] &
-                                packed_bool_partial_mask(remaining_bits))
-                               << ((packed_bools_per_word() - hypersparse_lead_bits) +
-                                   range_lead_bits));
+                        segment_bitmap_word |=
+                          ((segment_bitmap[packed_bool_offset(this_word_hypersparse_offset_first) +
+                                           1] &
+                            packed_bool_partial_mask(remaining_bits))
+                           << ((packed_bools_per_word() - hypersparse_lead_bits) +
+                               range_lead_bits));
                           }
                           return range_bitmap_word & segment_bitmap_word;
                         }));
                     auto output_count_first = thrust::make_transform_iterator(
-                      filtered_bitmap.begin(),
-                      cuda::proclaim_return_type<vertex_t>([] __device__(uint32_t word) {
+                      filtered_bitmap.begin(), [] __device__(uint32_t word) -> vertex_t {
                         return static_cast<vertex_t>(__popc(word));
-                      }));
+                      });
                     output_count_offsets.resize(filtered_bitmap.size() + 1, loop_stream);
                     output_count_offsets.set_element_to_zero_async(0, loop_stream);
                     thrust::inclusive_scan(rmm::exec_policy_nosync(loop_stream),
@@ -2791,18 +2785,17 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                   if (keys.index() == 0) {
                     auto flag_first = thrust::make_transform_iterator(
                       get_dataframe_buffer_begin(std::get<0>(keys)) + key_segment_offsets[3],
-                      cuda::proclaim_return_type<bool>(
-                        [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
-                                                                            segment_bitmap.size()),
-                         range_first    = local_v_list_range_firsts[partition_idx],
-                         major_hypersparse_first =
-                           *(edge_partition
-                               .major_hypersparse_first())] __device__(uint32_t v_offset) {
-                          auto v              = range_first + static_cast<vertex_t>(v_offset);
-                          auto segment_offset = v - major_hypersparse_first;
-                          return ((segment_bitmap[packed_bool_offset(segment_offset)] &
-                                   packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
-                        }));
+                      [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
+                                                                          segment_bitmap.size()),
+                       range_first    = local_v_list_range_firsts[partition_idx],
+                       major_hypersparse_first =
+                         *(edge_partition.major_hypersparse_first())] __device__(uint32_t v_offset)
+                        -> bool {
+                        auto v              = range_first + static_cast<vertex_t>(v_offset);
+                        auto segment_offset = v - major_hypersparse_first;
+                        return ((segment_bitmap[packed_bool_offset(segment_offset)] &
+                                 packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
+                      });
                     if (offsets.index() == 0) {
                       auto input_pair_first =
                         thrust::make_zip_iterator(get_dataframe_buffer_begin(std::get<0>(keys)),
@@ -2837,15 +2830,14 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                   } else {
                     auto flag_first = thrust::make_transform_iterator(
                       get_dataframe_buffer_begin(std::get<1>(keys)) + key_segment_offsets[3],
-                      cuda::proclaim_return_type<bool>(
-                        [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
-                                                                            segment_bitmap.size()),
-                         major_hypersparse_first =
-                           *(edge_partition.major_hypersparse_first())] __device__(vertex_t v) {
-                          auto segment_offset = v - major_hypersparse_first;
-                          return ((segment_bitmap[packed_bool_offset(segment_offset)] &
-                                   packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
-                        }));
+                      [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
+                                                                          segment_bitmap.size()),
+                       major_hypersparse_first = *(
+                         edge_partition.major_hypersparse_first())] __device__(vertex_t v) -> bool {
+                        auto segment_offset = v - major_hypersparse_first;
+                        return ((segment_bitmap[packed_bool_offset(segment_offset)] &
+                                 packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
+                      });
                     if (offsets.index() == 0) {
                       auto input_pair_first =
                         thrust::make_zip_iterator(get_dataframe_buffer_begin(std::get<1>(keys)),
@@ -2881,16 +2873,15 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                 } else {
                   auto flag_first = thrust::make_transform_iterator(
                     get_dataframe_buffer_begin(keys) + key_segment_offsets[3],
-                    cuda::proclaim_return_type<bool>(
-                      [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
-                                                                          segment_bitmap.size()),
-                       major_hypersparse_first =
-                         *(edge_partition.major_hypersparse_first())] __device__(auto key) {
-                        auto segment_offset =
-                          thrust_tuple_get_or_identity<key_t, 0>(key) - major_hypersparse_first;
-                        return ((segment_bitmap[packed_bool_offset(segment_offset)] &
-                                 packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
-                      }));
+                    [segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
+                                                                        segment_bitmap.size()),
+                     major_hypersparse_first =
+                       *(edge_partition.major_hypersparse_first())] __device__(auto key) -> bool {
+                      auto segment_offset =
+                        thrust_tuple_get_or_identity<key_t, 0>(key) - major_hypersparse_first;
+                      return ((segment_bitmap[packed_bool_offset(segment_offset)] &
+                               packed_bool_mask(segment_offset)) != packed_bool_empty_mask());
+                    });
                   if (offsets.index() == 0) {
                     auto input_pair_first =
                       thrust::make_zip_iterator(get_dataframe_buffer_begin(keys),
@@ -3009,15 +3000,16 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
               thrust::make_counting_iterator(size_t{0}),
               thrust::make_counting_iterator(loop_count),
               d_counts.begin(),
-              cuda::proclaim_return_type<size_t>(
                 [d_ptrs    = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
                  d_scalars = raft::device_span<size_t const>(d_scalars.data(), d_scalars.size()),
-                 uint32_key_output_offset] __device__(auto i) {
-                  auto first = d_ptrs[i];
-                  if (first != static_cast<void const*>(nullptr)) {
-                    auto size         = d_scalars[i * 2];
-                    auto start_offset = d_scalars[i * 2 + 1];
-                    if (uint32_key_output_offset) {
+                 uint32_key_output_offset] __device__(auto i) -> size_t {
+              auto first = d_ptrs[i];
+              if (first != static_cast<void const*>(nullptr)) ->size_t
+                {
+                  auto size         = d_scalars[i * 2];
+                  auto start_offset = d_scalars[i * 2 + 1];
+                  if (uint32_key_output_offset) ->size_t
+                    {
                       auto casted_first = static_cast<uint32_t const*>(first);
                       return size - static_cast<size_t>(thrust::distance(
                                       casted_first,
@@ -3025,17 +3017,21 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                                                           casted_first,
                                                           casted_first + size,
                                                           static_cast<uint32_t>(start_offset))));
-                    } else {
-                      auto casted_first = static_cast<size_t const*>(first);
+                    }
+                  else
+                    ->size_t
+                    {
+                      auto casted_first = static_cast<size_t const*>(first;
                       return size -
                              static_cast<size_t>(thrust::distance(
                                casted_first,
                                thrust::lower_bound(
                                  thrust::seq, casted_first, casted_first + size, start_offset)));
                     }
-                  } else {
-                    return size_t{0};
-                  }
+                }
+              else {
+                return size_t{0};
+              }
                 }));
             raft::update_host((*edge_partition_deg1_hypersparse_key_offset_counts).data(),
                               d_counts.data(),
@@ -3205,9 +3201,8 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
           if (keys.index() == 0) {
             auto edge_partition_key_first = thrust::make_transform_iterator(
               std::get<0>(keys).begin(),
-              cuda::proclaim_return_type<vertex_t>(
-                [range_first = local_v_list_range_firsts[partition_idx]] __device__(
-                  uint32_t v_offset) { return range_first + static_cast<vertex_t>(v_offset); }));
+              [range_first = local_v_list_range_firsts[partition_idx]] __device__(uint32_t v_offset)
+                -> vertex_t { return range_first + static_cast<vertex_t>(v_offset); });
             per_v_transform_reduce_e_edge_partition<update_major, GraphViewType>(
               handle,
               edge_partition,
@@ -3534,11 +3529,11 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                 copy_if_nosync(
                   get_dataframe_buffer_begin(output_buffer),
                   get_dataframe_buffer_begin(output_buffer) + edge_partition_allreduce_sizes[j],
-                  thrust::make_transform_iterator(
-                    std::get<0>(selected_ranks).begin(),
-                    cuda::proclaim_return_type<bool>([minor_comm_rank] __device__(auto rank) {
-                      return static_cast<int>(rank) == minor_comm_rank;
-                    })),
+                  thrust::make_transform_iterator(std::get<0>(selected_ranks).begin(),
+                                                  [minor_comm_rank] __device__(auto rank) -> bool {
+                                                    return static_cast<int>(rank) ==
+                                                           minor_comm_rank;
+                                                  }),
                   get_dataframe_buffer_begin(values),
                   raft::device_span<size_t>(counters.data() + j, size_t{1}),
                   loop_stream);
@@ -3546,10 +3541,10 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                 copy_if_nosync(
                   get_dataframe_buffer_begin(output_buffer),
                   get_dataframe_buffer_begin(output_buffer) + edge_partition_allreduce_sizes[j],
-                  thrust::make_transform_iterator(
-                    std::get<1>(selected_ranks).begin(),
-                    cuda::proclaim_return_type<bool>(
-                      [minor_comm_rank] __device__(auto rank) { return rank == minor_comm_rank; })),
+                  thrust::make_transform_iterator(std::get<1>(selected_ranks).begin(),
+                                                  [minor_comm_rank] __device__(auto rank) -> bool {
+                                                    return rank == minor_comm_rank;
+                                                  }),
                   get_dataframe_buffer_begin(values),
                   raft::device_span<size_t>(counters.data() + j, size_t{1}),
                   loop_stream);
@@ -3576,12 +3571,12 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                 get_dataframe_buffer_begin(output_buffer) + input_end_offset,
                 thrust::make_transform_iterator(
                   thrust::make_counting_iterator(size_t{0}),
-                  cuda::proclaim_return_type<bool>(
-                    [keep_flags = raft::device_span<uint32_t const>(
-                       (*keep_flags).data(), (*keep_flags).size())] __device__(size_t offset) {
-                      auto word = keep_flags[packed_bool_offset(offset)];
-                      return ((word & packed_bool_mask(offset)) != packed_bool_empty_mask());
-                    })),
+                  [keep_flags = raft::device_span<uint32_t const>(
+                     (*keep_flags).data(),
+                     (*keep_flags).size())] __device__(size_t offset) -> bool {
+                    auto word = keep_flags[packed_bool_offset(offset)];
+                    return ((word & packed_bool_mask(offset)) != packed_bool_empty_mask());
+                  }),
                 get_dataframe_buffer_begin(values),
                 raft::device_span<size_t>(counters.data() + j, size_t{1}),
                 loop_stream);
@@ -3650,8 +3645,7 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
               }
               auto flag_first = thrust::make_transform_iterator(
                 get_dataframe_buffer_begin(output_buffer) + input_start_offset,
-                cuda::proclaim_return_type<bool>(
-                  [init] __device__(auto val) { return val != init; }));
+                [init] __device__(auto val) -> bool { return val != init; });
 
               if constexpr (filter_input_key) {
                 auto& hypersparse_key_offsets = (*edge_partition_hypersparse_key_offset_vectors)[j];
@@ -3999,12 +3993,11 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                                   get_dataframe_buffer_end(*rx_values),
                                   thrust::make_transform_iterator(
                                     thrust::make_counting_iterator(size_t{0}),
-                                    cuda::proclaim_return_type<bool>(
-                                      [bitmap = raft::device_span<uint32_t const>(
-                                         bitmap.data(), bitmap.size())] __device__(size_t i) {
-                                        return (bitmap[packed_bool_offset(i)] &
-                                                packed_bool_mask(i)) == packed_bool_mask(i);
-                                      })),
+                                    [bitmap = raft::device_span<uint32_t const>(
+                                       bitmap.data(), bitmap.size())] __device__(size_t i) -> bool {
+                                      return (bitmap[packed_bool_offset(i)] &
+                                              packed_bool_mask(i)) == packed_bool_mask(i);
+                                    }),
                                   thrust::identity<bool>{})),
               handle.get_stream());
             // skip shrink_to_fit() to cut execution time
@@ -4054,18 +4047,18 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                   std::get<0>(*rx_offsets),
                   thrust::distance(
                     get_dataframe_buffer_begin(std::get<0>(*rx_offsets)),
-                    thrust::remove_if(handle.get_thrust_policy(),
-                                      get_dataframe_buffer_begin(std::get<0>(*rx_offsets)),
-                                      get_dataframe_buffer_end(std::get<0>(*rx_offsets)),
-                                      thrust::make_transform_iterator(
-                                        thrust::make_counting_iterator(size_t{0}),
-                                        cuda::proclaim_return_type<bool>(
-                                          [bitmap = raft::device_span<uint32_t const>(
-                                             bitmap.data(), bitmap.size())] __device__(size_t i) {
-                                            return (bitmap[packed_bool_offset(i)] &
-                                                    packed_bool_mask(i)) == packed_bool_mask(i);
-                                          })),
-                                      thrust::identity<bool>{})),
+                    thrust::remove_if(
+                      handle.get_thrust_policy(),
+                      get_dataframe_buffer_begin(std::get<0>(*rx_offsets)),
+                      get_dataframe_buffer_end(std::get<0>(*rx_offsets)),
+                      thrust::make_transform_iterator(
+                        thrust::make_counting_iterator(size_t{0}),
+                        [bitmap = raft::device_span<uint32_t const>(
+                           bitmap.data(), bitmap.size())] __device__(size_t i) -> bool {
+                          return (bitmap[packed_bool_offset(i)] & packed_bool_mask(i)) ==
+                                 packed_bool_mask(i);
+                        }),
+                      thrust::identity<bool>{})),
                   handle.get_stream());
                 // skip shrink_to_fit() to cut execution time
               } else {
@@ -4073,18 +4066,18 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                   std::get<1>(*rx_offsets),
                   thrust::distance(
                     get_dataframe_buffer_begin(std::get<1>(*rx_offsets)),
-                    thrust::remove_if(handle.get_thrust_policy(),
-                                      get_dataframe_buffer_begin(std::get<1>(*rx_offsets)),
-                                      get_dataframe_buffer_end(std::get<1>(*rx_offsets)),
-                                      thrust::make_transform_iterator(
-                                        thrust::make_counting_iterator(size_t{0}),
-                                        cuda::proclaim_return_type<bool>(
-                                          [bitmap = raft::device_span<uint32_t const>(
-                                             bitmap.data(), bitmap.size())] __device__(size_t i) {
-                                            return (bitmap[packed_bool_offset(i)] &
-                                                    packed_bool_mask(i)) == packed_bool_mask(i);
-                                          })),
-                                      thrust::identity<bool>{})),
+                    thrust::remove_if(
+                      handle.get_thrust_policy(),
+                      get_dataframe_buffer_begin(std::get<1>(*rx_offsets)),
+                      get_dataframe_buffer_end(std::get<1>(*rx_offsets)),
+                      thrust::make_transform_iterator(
+                        thrust::make_counting_iterator(size_t{0}),
+                        [bitmap = raft::device_span<uint32_t const>(
+                           bitmap.data(), bitmap.size())] __device__(size_t i) -> bool {
+                          return (bitmap[packed_bool_offset(i)] & packed_bool_mask(i)) ==
+                                 packed_bool_mask(i);
+                        }),
+                      thrust::identity<bool>{})),
                   handle.get_stream());
                 // skip shrink_to_fit() to cut execution time
               }
@@ -4323,18 +4316,16 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                      minor_init);
         auto value_first = thrust::make_transform_iterator(
           view.value_first(),
-          cuda::proclaim_return_type<T>(
-            [reduce_op, minor_init] __device__(auto val) { return reduce_op(val, minor_init); }));
+          [reduce_op, minor_init] __device__(auto val) -> T { return reduce_op(val, minor_init); });
         thrust::scatter(handle.get_thrust_policy(),
                         value_first + (*minor_key_offsets)[i],
                         value_first + (*minor_key_offsets)[i + 1],
                         thrust::make_transform_iterator(
                           (*(view.keys())).begin() + (*minor_key_offsets)[i],
-                          cuda::proclaim_return_type<vertex_t>(
-                            [key_first = graph_view.vertex_partition_range_first(
-                               this_segment_vertex_partition_id)] __device__(auto key) {
-                              return key - key_first;
-                            })),
+                          [key_first = graph_view.vertex_partition_range_first(
+                             this_segment_vertex_partition_id)] __device__(auto key) -> vertex_t {
+                            return key - key_first;
+                          }),
                         tx_buffer_first);
         device_reduce(major_comm,
                       tx_buffer_first,

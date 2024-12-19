@@ -488,13 +488,13 @@ void bfs(raft::handle_t const& handle,
             handle.get_thrust_policy(),
             f_vertex_first,
             f_vertex_last,
-            cuda::proclaim_return_type<edge_t>(
-              [out_degrees = raft::device_span<edge_t const>((*aux_info).approx_out_degrees.data(),
-                                                             (*aux_info).approx_out_degrees.size()),
-               v_first = graph_view.local_vertex_partition_range_first()] __device__(vertex_t v) {
-                auto v_offset = v - v_first;
-                return out_degrees[v_offset];
-              }),
+            [out_degrees = raft::device_span<edge_t const>((*aux_info).approx_out_degrees.data(),
+                                                           (*aux_info).approx_out_degrees.size()),
+             v_first =
+               graph_view.local_vertex_partition_range_first()] __device__(vertex_t v) -> edge_t {
+              auto v_offset = v - v_first;
+              return out_degrees[v_offset];
+            },
             edge_t{0},
             thrust::plus<edge_t>{}));
 
@@ -504,19 +504,19 @@ void bfs(raft::handle_t const& handle,
             thrust::make_counting_iterator(segment_offsets
                                              ? (*segment_offsets)[2]
                                              : graph_view.local_vertex_partition_range_size()),
-            cuda::proclaim_return_type<edge_t>(
-              [out_degrees = raft::device_span<edge_t const>((*aux_info).approx_out_degrees.data(),
-                                                             (*aux_info).approx_out_degrees.size()),
-               bitmap      = raft::device_span<uint32_t const>(
-                 (*aux_info).visited_bitmap.data(),
-                 (*aux_info).visited_bitmap.size())] __device__(vertex_t v_offset) {
-                auto word = bitmap[packed_bool_offset(v_offset)];
-                if ((word & packed_bool_mask(v_offset)) != packed_bool_empty_mask()) {  // visited
-                  return edge_t{0};
-                } else {
-                  return out_degrees[v_offset];
+            [out_degrees = raft::device_span<edge_t const>((*aux_info).approx_out_degrees.data(),
+                                                           (*aux_info).approx_out_degrees.size()),
+             bitmap      = raft::device_span<uint32_t const>(
+               (*aux_info).visited_bitmap.data(),
+               (*aux_info).visited_bitmap.size())] __device__(vertex_t v_offset) -> edge_t {
+              auto word = bitmap[packed_bool_offset(v_offset)];
+              if ((word & packed_bool_mask(v_offset)) != packed_bool_empty_mask()) ->edge_t
+                {  // visited
+                  return edge_t->edge_t{0};
                 }
-              }),
+              else
+                ->edge_t { return out_degrees[v_offset]; }
+            },
             edge_t{0},
             thrust::plus<edge_t>{}));
         }

@@ -377,8 +377,7 @@ struct random_walker_t {
 
     // scatter d_src_init_v to coalesced vertex vector:
     //
-    auto dlambda = cuda::proclaim_return_type<index_t>(
-      [stride = max_depth_] __device__(auto indx) { return indx * stride; });
+    auto dlambda = [stride = max_depth_] __device__(auto indx) -> index_t { return indx * stride; };
 
     // use the transform iterator as map:
     //
@@ -539,11 +538,10 @@ struct random_walker_t {
 
     // delta = ptr_d_sizes[indx] - 1
     //
-    auto dlambda = cuda::proclaim_return_type<vertex_t>(
-      [stride, ptr_d_sizes, ptr_d_coalesced] __device__(auto indx) {
-        auto delta = ptr_d_sizes[indx] - 1;
-        return ptr_d_coalesced[indx * stride + delta];
-      });
+    auto dlambda = [stride, ptr_d_sizes, ptr_d_coalesced] __device__(auto indx) -> vertex_t {
+      auto delta = ptr_d_sizes[indx] - 1;
+      return ptr_d_coalesced[indx * stride + delta];
+    };
 
     // use the transform iterator as map:
     //
@@ -588,11 +586,10 @@ struct random_walker_t {
   {
     index_t const* ptr_d_sizes = original::raw_const_ptr(d_sizes);
 
-    auto dlambda =
-      cuda::proclaim_return_type<index_t>([stride, adjust, ptr_d_sizes] __device__(auto indx) {
-        auto delta = ptr_d_sizes[indx] - adjust - 1;
-        return indx * stride + delta;
-      });
+    auto dlambda = [stride, adjust, ptr_d_sizes] __device__(auto indx) -> index_t {
+      auto delta = ptr_d_sizes[indx] - adjust - 1;
+      return indx * stride + delta;
+    };
 
     // use the transform iterator as map:
     //
@@ -906,9 +903,9 @@ struct coo_convertor_t {
 
     index_t total_sz{0};
     RAFT_CUDA_TRY(hipMemcpy(&total_sz,
-                             original::raw_ptr(d_scan) + num_paths_ - 1,
-                             sizeof(index_t),
-                             hipMemcpyDeviceToHost));
+                            original::raw_ptr(d_scan) + num_paths_ - 1,
+                            sizeof(index_t),
+                            hipMemcpyDeviceToHost));
 
     original::device_vec_t<int> d_stencil(total_sz, handle_.get_stream());
 

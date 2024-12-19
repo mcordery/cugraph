@@ -123,10 +123,9 @@ struct degrees_functor : public cugraph::c_api::abstract_functor {
           graph_view.local_vertex_partition_view());
 
         auto vertices_iter = thrust::make_transform_iterator(
-          vertex_ids.begin(),
-          cuda::proclaim_return_type<vertex_t>([vertex_partition] __device__(auto v) {
+          vertex_ids.begin(), [vertex_partition] __device__(auto v) -> vertex_t {
             return vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v);
-          }));
+          });
 
         if (in_degrees && out_degrees) {
           rmm::device_uvector<edge_t> tmp_in_degrees(vertex_ids.size(), handle_.get_stream());

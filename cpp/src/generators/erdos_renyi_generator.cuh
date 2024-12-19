@@ -50,12 +50,12 @@ generate_erdos_renyi_graph_edgelist_gnp(raft::handle_t const& handle,
 
   size_t max_num_edges = static_cast<size_t>(num_vertices) * num_vertices;
 
-  auto generate_random_value = cuda::proclaim_return_type<float>([seed] __device__(size_t index) {
+  auto generate_random_value = [seed] __device__(size_t index) -> float {
     thrust::default_random_engine rng(seed);
     thrust::uniform_real_distribution<float> dist(0.0, 1.0);
     rng.discard(index);
     return dist(rng);
-  });
+  };
 
   size_t count = thrust::count_if(handle.get_thrust_policy(),
                                   thrust::make_counting_iterator<size_t>(0),
@@ -72,11 +72,10 @@ generate_erdos_renyi_graph_edgelist_gnp(raft::handle_t const& handle,
                   thrust::make_counting_iterator<size_t>(max_num_edges),
                   thrust::make_transform_output_iterator(
                     thrust::make_zip_iterator(src_v.begin(), dst_v.begin()),
-                    cuda::proclaim_return_type<thrust::tuple<vertex_t, vertex_t>>(
-                      [num_vertices] __device__(size_t index) {
-                        return thrust::make_tuple(static_cast<vertex_t>(index / num_vertices),
-                                                  static_cast<vertex_t>(index % num_vertices));
-                      })),
+                    [num_vertices] __device__(size_t index) -> thrust::tuple<vertex_t, vertex_t> {
+                      return thrust::make_tuple(static_cast<vertex_t>(index / num_vertices),
+                                                static_cast<vertex_t>(index % num_vertices));
+                    }),
                   [generate_random_value, p] __device__(size_t index) {
                     return generate_random_value(index) < p;
                   });

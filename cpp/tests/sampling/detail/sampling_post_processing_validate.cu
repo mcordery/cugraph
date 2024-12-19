@@ -1260,19 +1260,19 @@ bool check_vertex_renumber_map_invariants(
 
         auto renumbered_merged_vertex_first = thrust::make_transform_iterator(
           merged_vertices.begin(),
-          cuda::proclaim_return_type<vertex_t>(
-            [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
-               this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
-             this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
-               this_type_matching_renumbered_vertices.data(),
-               this_type_matching_renumbered_vertices.size())] __device__(vertex_t major) {
-              auto it = thrust::lower_bound(thrust::seq,
-                                            this_type_sorted_org_vertices.begin(),
-                                            this_type_sorted_org_vertices.end(),
-                                            major);
-              return this_type_matching_renumbered_vertices[thrust::distance(
-                this_type_sorted_org_vertices.begin(), it)];
-            }));
+          [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
+             this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
+           this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
+             this_type_matching_renumbered_vertices.data(),
+             this_type_matching_renumbered_vertices.size())] __device__(vertex_t major)
+            -> vertex_t {
+            auto it = thrust::lower_bound(thrust::seq,
+                                          this_type_sorted_org_vertices.begin(),
+                                          this_type_sorted_org_vertices.end(),
+                                          major);
+            return this_type_matching_renumbered_vertices[thrust::distance(
+              this_type_sorted_org_vertices.begin(), it)];
+          });
 
         thrust::reduce_by_key(handle.get_thrust_policy(),
                               sort_key_first,
@@ -1383,20 +1383,19 @@ bool check_vertex_renumber_map_invariants(
           handle.get_thrust_policy(),
           this_type_unique_majors.begin(),
           this_type_unique_majors.end(),
-          cuda::proclaim_return_type<vertex_t>(
-            [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
-               this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
-             this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
-               this_type_matching_renumbered_vertices.data(),
-               this_type_matching_renumbered_vertices.size())] __device__(vertex_t major)
-              -> vertex_t {
-              auto it = thrust::lower_bound(thrust::seq,
-                                            this_type_sorted_org_vertices.begin(),
-                                            this_type_sorted_org_vertices.end(),
-                                            major);
-              return this_type_matching_renumbered_vertices[thrust::distance(
-                this_type_sorted_org_vertices.begin(), it)];
-            }),
+          [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
+             this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
+           this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
+             this_type_matching_renumbered_vertices.data(),
+             this_type_matching_renumbered_vertices.size())] __device__(vertex_t major) -> vertex_t
+          -> vertex_t {
+            auto it = thrust::lower_bound(thrust::seq,
+                                          this_type_sorted_org_vertices.begin(),
+                                          this_type_sorted_org_vertices.end(),
+                                          major);
+            return this_type_matching_renumbered_vertices[thrust::distance(
+              this_type_sorted_org_vertices.begin(), it)];
+          },
           std::numeric_limits<vertex_t>::lowest(),
           thrust::maximum<vertex_t>{});
 
@@ -1404,20 +1403,19 @@ bool check_vertex_renumber_map_invariants(
           handle.get_thrust_policy(),
           this_type_unique_minors.begin(),
           this_type_unique_minors.end(),
-          cuda::proclaim_return_type<vertex_t>(
-            [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
-               this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
-             this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
-               this_type_matching_renumbered_vertices.data(),
-               this_type_matching_renumbered_vertices.size())] __device__(vertex_t minor)
-              -> vertex_t {
-              auto it = thrust::lower_bound(thrust::seq,
-                                            this_type_sorted_org_vertices.begin(),
-                                            this_type_sorted_org_vertices.end(),
-                                            minor);
-              return this_type_matching_renumbered_vertices[thrust::distance(
-                this_type_sorted_org_vertices.begin(), it)];
-            }),
+          [this_type_sorted_org_vertices = raft::device_span<vertex_t const>(
+             this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
+           this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
+             this_type_matching_renumbered_vertices.data(),
+             this_type_matching_renumbered_vertices.size())] __device__(vertex_t minor) -> vertex_t
+          -> vertex_t {
+            auto it = thrust::lower_bound(thrust::seq,
+                                          this_type_sorted_org_vertices.begin(),
+                                          this_type_sorted_org_vertices.end(),
+                                          minor);
+            return this_type_matching_renumbered_vertices[thrust::distance(
+              this_type_sorted_org_vertices.begin(), it)];
+          },
           std::numeric_limits<vertex_t>::max(),
           thrust::minimum<vertex_t>{});
 
@@ -1665,19 +1663,18 @@ bool check_edge_id_renumber_map_invariants(
 
         auto renumbered_edge_id_first = thrust::make_transform_iterator(
           this_label_unique_key_edge_ids.begin(),
-          cuda::proclaim_return_type<edge_id_t>(
-            [this_type_sorted_org_edge_ids = raft::device_span<edge_id_t const>(
-               this_type_sorted_org_edge_ids.data(), this_type_sorted_org_edge_ids.size()),
-             this_type_matching_renumbered_edge_ids = raft::device_span<edge_id_t const>(
-               this_type_matching_renumbered_edge_ids.data(),
-               this_type_matching_renumbered_edge_ids.size())] __device__(edge_id_t id) {
-              auto it = thrust::lower_bound(thrust::seq,
-                                            this_type_sorted_org_edge_ids.begin(),
-                                            this_type_sorted_org_edge_ids.end(),
-                                            id);
-              return this_type_matching_renumbered_edge_ids[thrust::distance(
-                this_type_sorted_org_edge_ids.begin(), it)];
-            }));
+          [this_type_sorted_org_edge_ids = raft::device_span<edge_id_t const>(
+             this_type_sorted_org_edge_ids.data(), this_type_sorted_org_edge_ids.size()),
+           this_type_matching_renumbered_edge_ids = raft::device_span<edge_id_t const>(
+             this_type_matching_renumbered_edge_ids.data(),
+             this_type_matching_renumbered_edge_ids.size())] __device__(edge_id_t id) -> edge_id_t {
+            auto it = thrust::lower_bound(thrust::seq,
+                                          this_type_sorted_org_edge_ids.begin(),
+                                          this_type_sorted_org_edge_ids.end(),
+                                          id);
+            return this_type_matching_renumbered_edge_ids[thrust::distance(
+              this_type_sorted_org_edge_ids.begin(), it)];
+          });
 
         thrust::reduce_by_key(handle.get_thrust_policy(),
                               sort_key_first + type_start_offset,

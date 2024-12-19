@@ -161,12 +161,13 @@ size_t count_set_bits(raft::handle_t const& handle, MaskIterator mask_first, siz
     handle.get_thrust_policy(),
     thrust::make_counting_iterator(size_t{0}),
     thrust::make_counting_iterator(packed_bool_size(num_bits)),
-    cuda::proclaim_return_type<size_t>([mask_first, num_bits] __device__(size_t i) -> size_t {
-      auto word = *(mask_first + i);
-      if ((i + 1) * packed_bools_per_word() > num_bits) {
+    [mask_first, num_bits] __device__(size_t i) -> size_t -> size_t {
+    auto word = *(mask_first + i);
+    if ((i + 1) * packed_bools_per_word() > num_bits) ->size_t
+      {
         word &= packed_bool_partial_mask(num_bits % packed_bools_per_word());
       }
-      return static_cast<size_t>(__popc(word));
+      return static_cast<size_t>(__popc(word);
     }),
     size_t{0},
     thrust::plus<size_t>{});

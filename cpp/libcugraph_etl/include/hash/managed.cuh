@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2022, NVIDIA CORPORATION.
+ * Copyright (c) 2017-2024, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@
 struct managed {
   static void* operator new(size_t n)
   {
-    void* ptr          = 0;
+    void* ptr         = 0;
     hipError_t result = hipMallocManaged(&ptr, n);
     if (hipSuccess != result || 0 == ptr) throw std::bad_alloc();
     return ptr;

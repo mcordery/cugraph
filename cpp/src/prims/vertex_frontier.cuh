@@ -140,13 +140,12 @@ rmm::device_uvector<uint32_t> compute_vertex_list_bitmap_info(
   rmm::device_uvector<vertex_t> lasts(bitmap.size(), stream_view);
   auto bdry_first = thrust::make_transform_iterator(
     thrust::make_counting_iterator(vertex_t{1}),
-    cuda::proclaim_return_type<vertex_t>(
-      [vertex_range_first,
-       vertex_range_size = vertex_range_last - vertex_range_first] __device__(vertex_t i) {
-        return vertex_range_first +
-               static_cast<vertex_t>(
-                 std::min(packed_bools_per_word() * i, static_cast<size_t>(vertex_range_size)));
-      }));
+    [vertex_range_first, vertex_range_size = vertex_range_last - vertex_range_first] __device__(
+      vertex_t i) -> vertex_t {
+      return vertex_range_first +
+             static_cast<vertex_t>(
+               std::min(packed_bools_per_word() * i, static_cast<size_t>(vertex_range_size)));
+    });
   thrust::lower_bound(rmm::exec_policy_nosync(stream_view),
                       sorted_unique_vertex_first,
                       sorted_unique_vertex_last,
@@ -157,16 +156,15 @@ rmm::device_uvector<uint32_t> compute_vertex_list_bitmap_info(
     rmm::exec_policy_nosync(stream_view),
     bitmap.begin(),
     bitmap.end(),
-    cuda::proclaim_return_type<uint32_t>(
       [sorted_unique_vertex_first,
        vertex_range_first,
-       lasts = raft::device_span<vertex_t const>(lasts.data(), lasts.size())] __device__(size_t i) {
-        auto offset_first = (i != 0) ? lasts[i - 1] : vertex_t{0};
-        auto offset_last  = lasts[i];
-        auto ret          = packed_bool_empty_mask();
+       lasts = raft::device_span<vertex_t const>(lasts.data(), lasts.size())] __device__(size_t i) -> uint32_t {
+    auto offset_first     = (i != 0) ? lasts[i - 1] : vertex_t->uint32_t{0};
+    auto offset_last      = lasts[i];
+        auto ret          = packed_bool_empty_mask(;
         for (auto j = offset_first; j < offset_last; ++j) {
-          auto v_offset = *(sorted_unique_vertex_first + j) - vertex_range_first;
-          ret |= packed_bool_mask(v_offset);
+      auto v_offset = *(sorted_unique_vertex_first + j) - vertex_range_first;
+      ret |= packed_bool_mask(v_offset);
         }
         return ret;
       }));
@@ -202,12 +200,11 @@ void device_bcast_vertex_list(
       thrust::make_counting_iterator(vertex_range_last),
       thrust::make_transform_iterator(
         thrust::make_counting_iterator(vertex_t{0}),
-        cuda::proclaim_return_type<bool>(
-          [bitmap = raft::device_span<uint32_t const>(
-             tmp_bitmap.data(), tmp_bitmap.size())] __device__(vertex_t v_offset) {
-            return ((bitmap[packed_bool_offset(v_offset)] & packed_bool_mask(v_offset)) !=
-                    packed_bool_empty_mask());
-          })),
+        [bitmap = raft::device_span<uint32_t const>(
+           tmp_bitmap.data(), tmp_bitmap.size())] __device__(vertex_t v_offset) -> bool {
+          return ((bitmap[packed_bool_offset(v_offset)] & packed_bool_mask(v_offset)) !=
+                  packed_bool_empty_mask());
+        }),
       output_v_first,
       raft::device_span<size_t>(dummy.data(), size_t{1}),
       stream_view);
@@ -233,10 +230,10 @@ void retrieve_vertex_list_from_bitmap(
                          thrust::make_counting_iterator(vertex_range_last),
                          thrust::make_transform_iterator(
                            thrust::make_counting_iterator(vertex_t{0}),
-                           cuda::proclaim_return_type<bool>([bitmap] __device__(vertex_t v_offset) {
+                           [bitmap] __device__(vertex_t v_offset) -> bool {
                              return ((bitmap[packed_bool_offset(v_offset)] &
                                       packed_bool_mask(v_offset)) != packed_bool_empty_mask());
-                           })),
+                           }),
                          output_v_first,
                          count,
                          stream_view);
