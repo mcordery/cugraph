@@ -96,3 +96,9 @@ Build:
     auto degree_type = reinterpret_cast<cugraph::k_core_degree_type_t>(degree_type_);
     to
     auto degree_type = *reinterpret_cast<cugraph::k_core_degree_type_t *>(&degree_type_);
+
+    Fixed CMakelists.txt to properly use ROCmDS-cmake find modules for dependencies
+
+    During install phase, in cpp/CMakelists.txt, circumvented using rapids to get the install dir and
+    set(DESTDIR ${CMAKE_INSTALL_PREFIX}) otherwise it was trying to install in system level /lib and /include where it had no authority to do so.
+    Then before build set CMAKE_INSTALL_PREFIX=local_directory
