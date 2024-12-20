@@ -649,13 +649,13 @@ endif()
 
 ################################################################################
 # - install targets --install----------------------------------------------------------
-rapids_cmake_install_lib_dir( lib_dir )
+#rapids_cmake_install_lib_dir( lib_dir )
 include(CPack)
 
-install(TARGETS cugraph )
+set(DESTDIR ${CMAKE_INSTALL_PREFIX})
 
 install(TARGETS cugraph
-        DESTINATION ${lib_dir}
+        DESTINATION lib
         EXPORT cugraph-exports)
 
 install(DIRECTORY include/cugraph/
@@ -665,7 +665,7 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/include/cugraph/version_config.hpp
         DESTINATION include/cugraph)
 
 install(TARGETS cugraph_c
-        DESTINATION ${lib_dir}
+        DESTINATION lib
         EXPORT cugraph-exports)
 
 install(DIRECTORY include/cugraph_c/
