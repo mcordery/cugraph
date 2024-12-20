@@ -475,6 +475,12 @@ set(CUGRAPH_SOURCES
  #   src/mtmg/vertex_pairs_result_mg_v64_e64.cu
 )
 
+foreach(SOURCE_FILE ${CUGRAPH_SOURCES})
+    if(${SOURCE_FILE} MATCHES "\\.cu$")
+        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+    endif()
+endforeach()
+
 add_library(cugraph ${CUGRAPH_SOURCES})
 
 set_target_properties(cugraph
