@@ -37,7 +37,6 @@
 #include <raft/random/rng.cuh>
 
 #include <cuda/atomic>
-#include <cuda/functional>
 #include <thrust/adjacent_difference.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>

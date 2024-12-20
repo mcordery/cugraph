@@ -24,7 +24,6 @@
 
 #include <rmm/exec_policy.hpp>
 
-#include <cuda/functional>
 #include <thrust/count.h>
 #include <thrust/distance.h>
 #include <thrust/functional.h>

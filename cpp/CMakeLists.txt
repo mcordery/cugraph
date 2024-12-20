@@ -25,7 +25,7 @@ include(rapids-find)
 
 rapids_hip_init_architectures(CUGRAPH)
 
-project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX)
+project(CUGRAPH VERSION "${RAPIDS_VERSION}" LANGUAGES C CXX HIP)
 
 if(CMAKE_CUDA_COMPILER_ID STREQUAL "NVIDIA" AND
    CMAKE_CUDA_COMPILER_VERSION VERSION_LESS 11.0)
@@ -36,6 +36,14 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND
    CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.3)
     message(FATAL_ERROR "GCC compiler must be at least 9.3")
 endif()
+
+# Determine if CXX Compiler is hip-clang
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  message(STATUS "Using hip-clang to build for amdgpu backend")
+else()
+  message(FATAL_ERROR "'hipcc' compiler required to compile for ROCm platform.")
+endif()
+
 
 # Write the version header
 rapids_cmake_write_version_file(include/cugraph/version_config.hpp)
@@ -82,6 +90,7 @@ rapids_find_package(HIP REQUIRED CONFIG
 
 if (HIP_FOUND)
     message(STATUS "HIP package found")
+    message(STATUS "CMAKE_HIP_COMPILER ${CMAKE_HIP_COMPILER}")
 else()
     message(FATAL_ERROR "HIP package not found.")
 endif()
@@ -99,6 +108,7 @@ endif()
 set(CUGRAPH_C_FLAGS "")
 set(CUGRAPH_CXX_FLAGS "")
 set(CUGRAPH_HIP_FLAGS "")
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
     list(APPEND CUGRAPH_CXX_FLAGS -Werror -Wno-error=deprecated-declarations -Wno-deprecated-declarations -DRAFT_HIDE_DEPRECATION_WARNINGS)
@@ -477,7 +487,7 @@ set(CUGRAPH_SOURCES
 
 foreach(SOURCE_FILE ${CUGRAPH_SOURCES})
     if(${SOURCE_FILE} MATCHES "\\.cu$")
-        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE HIP)
     endif()
 endforeach()
 
@@ -490,6 +500,8 @@ set_target_properties(cugraph
                LINKER_LANGUAGE                     CXX
                CXX_STANDARD                        23
                CXX_STANDARD_REQUIRED               ON
+               HIP_STANDARD                        23
+               HIP_STANDARD_REQUIRED               ON
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON
 )

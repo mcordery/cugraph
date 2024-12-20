@@ -20,7 +20,6 @@
 
 #include <raft/core/handle.hpp>
 
-// #include <cuda/functional>
 #include <thrust/copy.h>
 #include <thrust/functional.h>
 #include <thrust/iterator/counting_iterator.h>

@@ -20,8 +20,6 @@
 #include <cugraph/graph_functions.hpp>
 #include <cugraph/utilities/shuffle_comm.cuh>
 
-#include <cuda/functional>
-
 namespace cugraph {
 namespace detail {
 

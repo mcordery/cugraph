@@ -27,7 +27,6 @@
 #include <cugraph/graph_view.hpp>
 #include <cugraph/utilities/host_scalar_comm.hpp>
 
-#include <cuda/functional>
 #include <thrust/count.h>
 #include <thrust/distance.h>
 #include <thrust/iterator/counting_iterator.h>

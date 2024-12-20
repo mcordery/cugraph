@@ -102,3 +102,5 @@ Build:
     During install phase, in cpp/CMakelists.txt, circumvented using rapids to get the install dir and
     set(DESTDIR ${CMAKE_INSTALL_PREFIX}) otherwise it was trying to install in system level /lib and /include where it had no authority to do so.
     Then before build set CMAKE_INSTALL_PREFIX=local_directory
+
+    added set_source_file_properties loop in to CMakelists to get the .cu files to compile

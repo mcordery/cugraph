@@ -32,7 +32,6 @@
 
 #include <raft/random/rng_device.cuh>
 
-#include <cuda/functional>
 #include <thrust/binary_search.h>
 #include <thrust/distance.h>
 #include <thrust/execution_policy.h>

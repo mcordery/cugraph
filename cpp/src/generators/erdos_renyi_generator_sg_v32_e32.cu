@@ -21,7 +21,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/functional>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/iterator/counting_iterator.h>

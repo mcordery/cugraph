@@ -34,7 +34,6 @@
 
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/functional>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/distance.h>

@@ -28,9 +28,7 @@
 
 #include <raft/random/rng.cuh>
 
-#include <hipcub/hipcub.hpp>
 #include <cuda/atomic>
-#include <cuda/functional>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/iterator/constant_iterator.h>
@@ -41,6 +39,8 @@
 #include <thrust/tabulate.h>
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <optional>
 #include <tuple>

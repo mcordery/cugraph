@@ -22,7 +22,6 @@
 #include <rmm/device_uvector.hpp>
 
 #include <cuda/atomic>
-#include <cuda/functional>
 #include <thrust/binary_search.h>
 #include <thrust/gather.h>
 #include <thrust/iterator/counting_iterator.h>
