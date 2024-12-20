@@ -47,18 +47,11 @@ In cpp/CMakelists.txt
 
 
     Fixed this
-        include(${rapids-cmake-dir}/cpm/init.cmake)
-        include(${rapids-cmake-dir}/cpm/cccl.cmake)
-        include(${rapids-cmake-dir}/cpm/rmm.cmake)
-        rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
-                    INSTALL_EXPORT_SET cugraph-exports)
-        include(${rapids-cmake-dir}/cpm/cuco.cmake)
-        rapids_cpm_cuco(BUILD_EXPORT_SET cugraph-exports INSTALL_EXPORT_SET cugraph-exports)
-        include(cmake/thirdparty/get_raft.cmake)
+        updated rapids_cpm_find and created get_raft.cmake module in cpp/cmake/thirdparty and included that in CMakelists.txt
 
     Added GIT_REPO and GIT_TAG from rocGraph's CMakelist.txt to cugraph's cpp/cmake/thirdparth/get_raft.cmake
 
-    Make sure doxygen is installed (sudo apt install doxygen). Do sudo apt update so you aren't missing any components it relies on.
+    Make sure doxygen is installed (sudo apt install doxygen). Also do 'sudo apt install graphviz' to pick up the 'dot' module.
 
     Remove fatbin file write
 

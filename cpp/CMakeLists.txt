@@ -16,7 +16,7 @@
 
 cmake_minimum_required(VERSION 3.26.4 FATAL_ERROR)
 
-include(../rapids_config.cmake)
+include(../rapids_config.cmake) # this is where ROCmDS-cmake is brought in
 include(rapids-cmake)
 include(rapids-cpm)
 include(rapids-hip)
@@ -75,14 +75,10 @@ rapids_cmake_support_conda_env( conda_env MODIFY_PREFIX_PATH )
 #                    INSTALL_EXPORT_SET cugraph-exports
 #)
 
-find_package(HIP REQUIRED CONFIG PATHS ${HIP_PATH})
-find_package(hipcub REQUIRED CONFIG PATHS ${ROCM_PATH}/hipcub)
-find_package(rocprim REQUIRED CONFIG PATHS ${ROCM_PATH}/rocprim)
-find_package(rocthrust REQUIRED CONFIG PATHS ${ROCM_PATH}/rocthrust)
-find_package(hipblas REQUIRED CONFIG PATHS ${ROCM_PATH}/hipblas)
-find_package(hipsparse REQUIRED CONFIG PATHS ${ROCM_PATH}/hipsparse)
-find_package(hiprand REQUIRED CONFIG PATHS ${ROCM_PATH}/hiprand)
-find_package(hipsolver REQUIRED CONFIG PATHS ${ROCM_PATH}/hipsolver)
+rapids_find_package(HIP REQUIRED CONFIG
+                    BUILD_EXPORT_SET cugraph-exports
+                    INSTALL_EXPORT_SET cugraph-exports)
+
 
 if (HIP_FOUND)
     message(STATUS "HIP package found")
@@ -171,15 +167,29 @@ rapids_cpm_init()
 ##mjcinclude(cmake/thirdparty/get_cccl.cmake)
 ##mjcinclude(${rapids-cmake-dir}/cpm/rmm.cmake)
 include(${rapids-cmake-dir}/cpm/init.cmake)
-include(${rapids-cmake-dir}/cpm/cccl.cmake)
+#include(${rapids-cmake-dir}/cpm/cccl.cmake)
 #include(${rapids-cmake-dir}/cpm/rmm.cmake)
+#include(${rapids-cmake-dir}/cpm/hipco.cmake)
+#include(${rapids-cmake-dir}/cpm/raft.cmake)
+#include(${rapids-cmake-dir}/cpm/libhipcxx.cmake)
+
 #rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
 #               INSTALL_EXPORT_SET cugraph-exports)
-include(${rapids-cmake-dir}/cpm/cuco.cmake)
-rapids_cpm_cuco(BUILD_EXPORT_SET cugraph-exports INSTALL_EXPORT_SET cugraph-exports)
+#include(${rapids-cmake-dir}/cpm/cuco.cmake)
+#apids_cpm_cuco(BUILD_EXPORT_SET cugraph-exports INSTALL_EXPORT_SET cugraph-exports)
+#include(cmake/thirdparty/get_hipco.cmake)
 include(cmake/thirdparty/get_raft.cmake)
-include(cmake/thirdparty/get_rmm.cmake)
-include(cmake/thirdparty/get_libhipcxx.cmake)
+#nclude(cmake/thirdparty/get_rmm.cmake)
+#include(cmake/thirdparty/get_libhipcxx.cmake)
+
+rapids_cpm_rmm(BUILD_EXPORT_SET cugraph-exports
+               INSTALL_EXPORT_SET cugraph-exports)
+
+rapids_cpm_hipco(BUILD_EXPORT_SET cugraph-exports
+               INSTALL_EXPORT_SET cugraph-exports)
+
+rapids_cpm_libhipcxx(BUILD_EXPORT_SET cugraph-exports
+               INSTALL_EXPORT_SET cugraph-exports)
 
 if(BUILD_TESTS)
   include(${rapids-cmake-dir}/cpm/gtest.cmake)
@@ -504,6 +514,8 @@ target_include_directories(cugraph
 
 set(COMPILE_RAFT_LIB OFF)
 set(COMPILE_RMM_LIB OFF)
+set(COMPILE_LIBHIPCXX_LIB OFF)
+set(USE_LIBHIPCXX_STATIC OFF)
 
 set(COMPILED_RAFT_LIB )
 if(CUGRAPH_COMPILE_RAFT_LIB)
@@ -527,7 +539,7 @@ target_link_libraries(cugraph
         raft::raft
 #        $<BUILD_LOCAL_INTERFACE:hip::hip>
     PRIVATE
-        roc::rocprim
+        hip::host
         hip::device
         hipblas
         hipsparse
@@ -636,9 +648,11 @@ if(BUILD_TESTS)
 endif()
 
 ################################################################################
-# - install targets ------------------------------------------------------------
+# - install targets --install----------------------------------------------------------
 rapids_cmake_install_lib_dir( lib_dir )
 include(CPack)
+
+install(TARGETS cugraph )
 
 install(TARGETS cugraph
         DESTINATION ${lib_dir}

@@ -25,7 +25,9 @@ set(CUGRAPH_BRANCH_VERSION_libhipcxx "24.06")
 
 function(find_and_configure_libhipcxx)
 
-    set(oneValueArgs VERSION FORK PINNED_TAG CLONE_ON_PIN USE_LIBHIPCXX_STATIC COMPILE_LIBHIPCXX_LIB)
+    #set(oneValueArgs VERSION FORK PINNED_TAG CLONE_ON_PIN USE_LIBHIPCXX_STATIC COMPILE_LIBHIPCXX_LIB)
+    set(oneValueArgs VERSION FORK PINNED_TAG CLONE_ON_PIN )
+
     cmake_parse_arguments(PKG "" "${oneValueArgs}" "" ${ARGN} )
 
     if(PKG_CLONE_ON_PIN AND NOT PKG_PINNED_TAG STREQUAL "branch-${CUGRAPH_BRANCH_VERSION_libhipcxx}")
@@ -57,15 +59,14 @@ function(find_and_configure_libhipcxx)
             # GIT_TAG f75154aa3be100dafb5c8b570f74198e51bb510a
             UPDATE_COMMAND git stash --all
             PATCH_COMMAND git apply
-                          ${PROJECT_SOURCE_DIR}/deps/patch/libhipcxx_hip_tsc.patch)
-                      SOURCE_SUBDIR  cpp
+                          ${PROJECT_SOURCE_DIR}/deps/patch/libhipcxx_hip_tsc.patch
+            SOURCE_SUBDIR  cpp
             OPTIONS
                 "LIBHIPCXX_COMPILE_LIBRARY ${PKG_COMPILE_LIBHIPCXX_LIB}"
                 "BUILD_TESTS OFF"
                 "BUILD_BENCH OFF"
                 "BUILD_CAGRA_HNSWLIB OFF"
     )
-
     if(libhipcxx_ADDED)
         message(VERBOSE "CUGRAPH: Using LIBHIPCXX located in ${libhipcxx_SOURCE_DIR}")
     else()
