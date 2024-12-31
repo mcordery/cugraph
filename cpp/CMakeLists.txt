@@ -675,7 +675,7 @@ endif()
 #rapids_cmake_install_lib_dir( lib_dir )
 include(CPack)
 
-set(DESTDIR ${CMAKE_INSTALL_PREFIX})
+#set(DESTDIR ${CMAKE_INSTALL_PREFIX})
 
 install(TARGETS cugraph
         DESTINATION lib
