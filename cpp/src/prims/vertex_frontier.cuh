@@ -30,7 +30,6 @@
 #include <rmm/device_scalar.hpp>
 #include <rmm/device_uvector.hpp>
 
-#include <cuda/atomic>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/distance.h>
@@ -42,12 +41,14 @@
 #include <thrust/reduce.h>
 #include <thrust/remove.h>
 #include <thrust/sort.h>
+#include <thrust/tabulate.h>
 #include <thrust/transform.h>
 #include <thrust/tuple.h>
 #include <thrust/unique.h>
 
 #include <cinttypes>
 #include <cstddef>
+#include <hip/atomic>
 #include <optional>
 #include <tuple>
 #include <type_traits>
@@ -151,22 +152,22 @@ rmm::device_uvector<uint32_t> compute_vertex_list_bitmap_info(
                       bdry_first,
                       bdry_first + bitmap.size(),
                       lasts.begin());
-  thrust::tabulate(
-    rmm::exec_policy_nosync(stream_view),
-    bitmap.begin(),
-    bitmap.end(),
-      [sorted_unique_vertex_first,
-       vertex_range_first,
-       lasts = raft::device_span<vertex_t const>(lasts.data(), lasts.size())] __device__(size_t i) -> uint32_t {
-    auto offset_first     = (i != 0) ? lasts[i - 1] : vertex_t->uint32_t{0};
-    auto offset_last      = lasts[i];
-        auto ret          = packed_bool_empty_mask(;
-        for (auto j = offset_first; j < offset_last; ++j) {
-      auto v_offset = *(sorted_unique_vertex_first + j) - vertex_range_first;
-      ret |= packed_bool_mask(v_offset);
-        }
-        return ret;
-      }));
+  thrust::tabulate(rmm::exec_policy_nosync(stream_view),
+                   bitmap.begin(),
+                   bitmap.end(),
+                   [sorted_unique_vertex_first,
+                    vertex_range_first,
+                    lasts = raft::device_span<vertex_t const>(
+                      lasts.data(), lasts.size())] __device__(size_t i) -> uint32_t {
+                     auto offset_first = (i != 0) ? lasts[i - 1] : vertex_t{0};
+                     auto offset_last  = lasts[i];
+                     auto ret          = packed_bool_empty_mask();
+                     for (auto j = offset_first; j < offset_last; ++j) {
+                       auto v_offset = *(sorted_unique_vertex_first + j) - vertex_range_first;
+                       ret |= packed_bool_mask(v_offset);
+                     }
+                     return ret;
+                   });
 
   return bitmap;
 }

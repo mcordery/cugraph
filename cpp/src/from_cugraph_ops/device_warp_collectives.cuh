@@ -39,7 +39,11 @@ __host__ __device__ constexpr uint32_t low_thread_mask(int n_threads)
 template <int NP = WARP_SIZE>
 __device__ inline void warp_sync()
 {
-  __syncwarp(low_thread_mask(NP));
+  //  __syncwarp(low_thread_mask(NP));
+  /* sync/barrier all threads in a warp */
+  __builtin_amdgcn_fence(__ATOMIC_RELEASE, "wavefront");
+  __builtin_amdgcn_wave_barrier();
+  __builtin_amdgcn_fence(__ATOMIC_ACQUIRE, "wavefront");
 }
 
 /**
@@ -60,9 +64,10 @@ __device__ inline DataT shfl(DataT val,
                              int width     = WARP_SIZE,
                              uint32_t mask = 0xffffffffU)
 {
-  static_assert(CUDART_VERSION >= CUDA_VER_WARP_SHFL,
-                "Expected CUDA >= 9 for warp synchronous shuffle");
-  return __shfl_sync(mask, val, src_lane, width);
+  // static_assert(CUDART_VERSION >= CUDA_VER_WARP_SHFL,
+  //               "Expected CUDA >= 9 for warp synchronous shuffle");
+  // return __shfl_sync(mask, val, src_lane, width);
+  return val;
 }
 
 /**

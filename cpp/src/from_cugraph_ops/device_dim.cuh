@@ -15,8 +15,8 @@ namespace cugraph::ops::utils {
 /** get the lane id of the current thread */
 __device__ __forceinline__ int lane_id()
 {
-  int id;
-  asm("mov.s32 %0, %%laneid;" : "=r"(id));
+  int id = __lane_id();
+  // asm("mov.s32 %0, %%laneid;" : "=r"(id));
   return id;
 }
 

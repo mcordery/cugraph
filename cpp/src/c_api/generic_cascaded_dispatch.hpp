@@ -213,8 +213,8 @@ constexpr decltype(auto) edge_dispatcher(cugraph_data_type_id_t edge_type,
       throw std::runtime_error("ERROR: FLOAT64 not supported for a vertex type");
     } break;
     default: {
-      std::stringstream ss;
-      ss << "ERROR: Unknown type enum:" << static_cast<int>(edge_type);
+      // std::stringstream ss;
+      // ss << "ERROR: Unknown type enum:" << static_cast<int>(edge_type);
       throw std::runtime_error(ss.str());
     }
   }
@@ -253,8 +253,8 @@ inline decltype(auto) vertex_dispatcher(cugraph_data_type_id_t vertex_type,
       throw std::runtime_error("ERROR: FLOAT64 not supported for a vertex type");
     } break;
     default: {
-      std::stringstream ss;
-      ss << "ERROR: Unknown type enum:" << static_cast<int>(vertex_type);
+      // std::stringstream ss;
+      // ss << "ERROR: Unknown type enum:" << static_cast<int>(vertex_type);
       throw std::runtime_error(ss.str());
     }
   }

@@ -373,19 +373,16 @@ void per_v_transform_reduce_dst_key_aggregated_outgoing_e(
           major_sparse_range_size + *(edge_partition.dcs_nzd_vertex_count()), handle.get_stream());
         auto major_first = thrust::make_transform_iterator(
           thrust::make_counting_iterator(vertex_t{0}),
-            [major_sparse_range_size,
-             major_range_first = edge_partition.major_range_first(),
-             dcs_nzd_vertices  = *(edge_partition.dcs_nzd_vertices())] __device__(vertex_t i) -> vertex_t {
-          if (i < major_sparse_range_size) ->vertex_t
-            {  // sparse
+          [major_sparse_range_size,
+           major_range_first = edge_partition.major_range_first(),
+           dcs_nzd_vertices =
+             *(edge_partition.dcs_nzd_vertices())] __device__(vertex_t i) -> vertex_t {
+            if (i < major_sparse_range_size) {  // sparse
               return major_range_first + i;
+            } else {  // hypersparse
+              return *(dcs_nzd_vertices + (i - major_sparse_range_size));
             }
-          else
-            ->vertex_t
-            {  // hypersparse
-                return *(dcs_nzd_vertices + (i - major_sparse_range_size);
-            }
-            }));
+          });
         degrees_with_mask =
           edge_partition.compute_local_degrees_with_mask((*edge_partition_e_mask).value_first(),
                                                          major_first,

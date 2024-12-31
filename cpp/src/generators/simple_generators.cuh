@@ -267,27 +267,24 @@ generate_complete_graph_edgelist(
 
     auto transform_iter = thrust::make_transform_iterator(
       thrust::make_counting_iterator<size_t>(0),
-        [base_vertex_id, num_vertices, invalid_vertex] __device__(size_t index) -> thrust::tuple<vertex_t, vertex_t> {
-      size_t graph_index = index / (num_vertices * num_vertices);
-      size_t local_index = index % (num_vertices * num_vertices);
+      [base_vertex_id, num_vertices, invalid_vertex] __device__(
+        size_t index) -> thrust::tuple<vertex_t, vertex_t> {
+        size_t graph_index = index / (num_vertices * num_vertices);
+        size_t local_index = index % (num_vertices * num_vertices);
 
-      vertex_t src = base_vertex_id + static_cast<vertex_t>(local_index / num_vertices);
-      vertex_t dst = base_vertex_id + static_cast<vertex_t>(local_index % num_vertices);
+        vertex_t src = base_vertex_id + static_cast<vertex_t>(local_index / num_vertices);
+        vertex_t dst = base_vertex_id + static_cast<vertex_t>(local_index % num_vertices);
 
-      if (src == dst) ->thrust::tuple<vertex_t, vertex_t>
-        {
+        if (src == dst) {
           src = invalid_vertex;
           dst = invalid_vertex;
-        }
-      else
-        ->thrust::tuple<vertex_t, vertex_t>
-        {
-            src += (graph_index * num_vertices;
-            dst += (graph_index * num_vertices);
+        } else {
+          src += (graph_index * num_vertices);
+          dst += (graph_index * num_vertices);
         }
 
-      return thrust::make_tuple(src, dst);
-        }));
+        return thrust::make_tuple(src, dst);
+      });
 
     output_iterator = thrust::copy_if(handle.get_thrust_policy(),
                                       transform_iter,

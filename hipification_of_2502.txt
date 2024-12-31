@@ -79,6 +79,8 @@ In cpp/CMakelists.txt
 
 Build:
 
+   Put DHIP_ENABLE_WARP_SYNC_BUILTINS=1 and DNO_CUGRAPH_OPS in CMakelists
+
     Diable building multigpu (_mg_) files
 
     Can use C++23 to get rid of std::stringstream issues
@@ -102,5 +104,167 @@ Build:
     During install phase, in cpp/CMakelists.txt, circumvented using rapids to get the install dir and
     set(DESTDIR ${CMAKE_INSTALL_PREFIX}) otherwise it was trying to install in system level /lib and /include where it had no authority to do so.
     Then before build set CMAKE_INSTALL_PREFIX=local_directory
+    Setting export INSTALL_DIR solves this problem?
 
     added set_source_file_properties loop in to CMakelists to get the .cu files to compile
+
+    At least one file with hipcub calls in it needed a specific include file because it couldn't resolve hipcub::
+
+    Replace cuda::std::byte function argument with std::byte in hash_func.compute_hash() call in
+    cpp/src/structure/remove_multi_edges_impl.cuh
+
+    Fix src/structure/legacy/graph.cu
+        change atomic_ref, etc from cuda:: to hip::
+        #include <hip/atomic>
+
+    In src/converters/legacy/COOtoCSR.cuh convert #include <cub... .cuh> to
+    #include <hipcub/device/device_radix_sort.hpp>
+    #include <hipcub/device/device_run_length_encode.hpp>
+
+    In src/prims/vertex_frontier.cuh change to
+    #include <hip/atomic> from cuda
+    Insert
+    #include <thrust/tabulate.h>
+
+    In src/prims/detail/src/converters/legacy/COOtoCSR.cuh, change __sync_warp() to hip_extensions::hip_warp_primitives::__syncwarp();
+    and add #include "hip_extensions/hip_warp_primitives/amd_warp_primitives.cuh"
+
+    Add __syncwarp function to src/prims/detail/extract_transoform_v_frontier.cuh as per 6.3 update
+
+    In src/community/k_truss_sg_v64_e64.cu, hit the following problem, looks like bad deduction?
+    /home/mcordery/Projects/cugraph/cpp/src/prims/extract_transform_e.cuh:91:1: note: candidate template ignored: substitution failure [with GraphViewType = graph_view_t<long, long, false, false>, EdgeSrcValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeDstValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeValueInputWrapper = edge_dummy_property_view_t, EdgeOp = exclude_self_loop_t<long>]: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::(anonymous namespace)::exclude_self_loop_t<long>>'
+   84 |          typename detail::edge_op_result_type<typename GraphViewType::vertex_type,
+      |                           ~~~~~~~~~~~~~~~~~~~
+   85 |                                               typename GraphViewType::vertex_type,
+   86 |                                               typename EdgeSrcValueInputWrapper::value_type,
+   87 |                                               typename EdgeDstValueInputWrapper::value_type,
+   88 |                                               typename EdgeValueInputWrapper::value_type,
+   89 |                                               EdgeOp>::type::value_type>(size_t{0},
+   90 |                                                                          rmm::cuda_stream_view{}))
+   91 | extract_transform_e(raft::handle_t const& handle,
+
+    In /home/mcordery/Projects/cugraph/cpp/src/lookup/lookup_src_dst_impl.cuh:413:77, it looks like it just doesn't understand the syntax??? Disalbling lookup
+            error: expected '(' for function-style cast or type construction
+  413 |       [key_func = cugraph::detail::compute_gpu_id_from_ext_edge_id_t<edge_t>->
+
+
+    In src/sampling/rw_traversals.hpp, make the change to thrust::optional that we did in rocGraph
+      Several instances of the following in the file
+      auto p = thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx]);
+      return thrust::optional<decltype(p)>{p};
+
+      //return thrust::optional{
+       // thrust::make_tuple(col_indices_[prev_col_indx], values_[prev_col_indx])};
+
+    Static assert faile in src/prims/per_v_random_select_transform_outgoing_e.cuh
+        error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, thrust::nullopt_t, thrust::nullopt_t, double, cugraph::detail::sample_edges_op_t<long, double>>'
+        267 |                 typename detail::edge_op_result_type<key_t,
+    disabled for now, put in warning, looks like above in ktruss
+
+    In src/prims/detail/sample_and_compute_local_nbr_indices.cuh:915:7
+            opt/rocm-6.3.0/lib/llvm/bin/../../../include/hipcub/backend/rocprim/device/device_segmented_sort.hpp:45:47: note: candidate template ignored: deduced conflicting types for parameter 'OffsetIteratorT' ('transform_iterator<cugraph::detail::multiplier_t<unsigned long>, [...]>' vs. 'transform_iterator<(lambda at /home/mcordery/Projects/cugraph/cpp/src/prims/detail/sample_and_compute_local_nbr_indices.cuh:928:11), [...]>')
+            45 |     HIPCUB_RUNTIME_FUNCTION static hipError_t SortPairs(void*           d_temp_storage,
+        Has a several problems here with number of arguments, probably due to conflicting types as it tries to resolve
+
+        Also static assert problem at
+
+        /home/mcordery/Projects/cugraph/cpp/src/prims/detail/sample_and_compute_local_nbr_indices.cuh:1693:27: error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, float, thrust::nullopt_t, float, cugraph::detail::biased_random_walk_e_bias_op_t<long, float>>'
+        1693 |   using bias_t = typename edge_op_result_type<key_t,
+
+        disabling random_walks_sg.... to get around for now
+
+
+        In In file included from /home/mcordery/Projects/cugraph/cpp/src/sampling/detail/check_edge_bias_values_sg_v64_e64.cu:17:
+            problem with not finding the right version of the function
+            /home/mcordery/Projects/cugraph/cpp/src/prims/detail/prim_functors.cuh:83:12: error: no matching function for call to object of type 'const cugraph::cast_edge_op_bool_to_integer<cugraph::graph_view_t<int64_t, int64_t, false, false, void>, long, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::edge_property_view_t<long, const float *>, (lambda at /home/mcordery/Projects/cugraph/cpp/src/sampling/detail/check_edge_bias_values.cuh:51:16), long>'
+            83 |     return e_op(key_or_src,
+            disabling build
+
+    In src/prims/detail/partition_v_frontier, cuh, added thrust/sequence and changed cuda/atomic to hip/atomic
+
+    Issues with packed_bools_per_word and raft::warp_size. Set packed_bools_per_word to 64 by force
+
+    Compiling src/sampling/sampling_post_processing_sg_v64_e64 hit the following, ignoring this file and sister for now
+    /home/mcordery/Projects/cugraph/cpp/src/sampling/sampling_post_processing_impl.cuh:1393:66: error: no matching function for call to 'get'
+    1393 |                 thrust::seq, offsets.begin() + 1, offsets.end(), thrust::get<0>(lhs)));
+
+    Compiling src/cores/core_number_sg_v64_e64.cu, hit
+    /home/mcordery/Projects/cugraph/cpp/src/prims/detail/extract_transform_v_frontier_e.cuh:670:34: error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, thrust::nullopt_t, long, thrust::nullopt_t, cugraph::detail::transform_reduce_v_frontier_call_e_op_t<long, long, long, thrust::nullopt_t, long, thrust::nullopt_t, cugraph::(anonymous namespace)::e_op_t<long, long>>>'
+  670 |   using e_op_result_t = typename edge_op_result_type<key_t,
+    Ignoring this and sister for now
+      |                                  ^
+
+    In src/generators/scramble.cuh, add #include #include <hip/hip_runtime.h>
+
+    In src/structure/renumber_edgelist_impl.cuh, added the variable hash_seed to a few lambda capture lists as there was no default action and the compiler couldn't figure it out
+
+    In compiling src/structure/relabel_sg_v64_e64.cu, there's  a conflict within hipco . Ignoring relabel files
+        In file included from /home/mcordery/Projects/cugraph/cpp/src/structure/relabel_sg_v64_e64.cu:17:
+        In file included from /home/mcordery/Projects/cugraph/cpp/src/structure/relabel_impl.cuh:19:
+        In file included from /home/mcordery/Projects/cugraph/cpp/src/prims/kv_store.cuh:41:
+        In file included from /home/mcordery/Projects/cugraph/build/build/_deps/hipco-src/include/cuco/static_map.cuh:44:
+        In file included from /home/mcordery/Projects/cugraph/build/build/_deps/hipco-src/include/cuco/static_map_ref.cuh:36:
+        /home/mcordery/Projects/cugraph/build/build/_deps/hipco-src/include/cuco/detail/open_addressing/open_addressing_ref_impl.cuh:204:18: error: reference to __device__ function 'extract_payload<cuco::pair<long, long>, void>' in __host__ __device__ function
+        204 |     return this->extract_payload(this->empty_slot_sentinel());
+
+
+    In compiling induced_subgraph_sg, it gets to where it can't resolve the use of edge_op_result_type given the template parameters. seen this before
+        <pre>/home/mcordery/Projects/cugraph/cpp/src/prims/extract_transform_v_frontier_outgoing_e.cuh:80:1: note: candidate template ignored: substitution failure [with GraphViewType = graph_view_t&lt;long, long, false, false&gt;, KeyBucketType = key_bucket_t&lt;long, unsigned long, false, false&gt;, EdgeSrcValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeDstValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeValueInputWrapper = cugraph::edge_property_view_t&lt;long, const float *&gt;, EdgeOp = detail::induced_subgraph_weighted_edge_op&lt;long, float, thrust::nullopt_t&gt;]: implicit instantiation of undefined template &apos;cugraph::detail::edge_op_result_type&lt;thrust::tuple&lt;long, unsigned long&gt;, long, thrust::nullopt_t, thrust::nullopt_t, float, cugraph::detail::induced_subgraph_weighted_edge_op&lt;long, float, thrust::nullopt_t&gt;&gt;&apos;
+        73 |          typename detail::edge_op_result_type&lt;typename KeyBucketType::key_type,
+            |                           ~~~~~~~~~~~~~~~~~~~
+        74 |                                               typename GraphViewType::vertex_type,
+        75 |                                               typename EdgeSrcValueInputWrapper::value_type,
+        76 |                                               typename EdgeDstValueInputWrapper::value_type,
+        77 |                                               typename EdgeValueInputWrapper::value_type,
+        78 |                                               EdgeOp&gt;::type::value_type&gt;(size_t{0},
+        79 |                                                                          rmm::cuda_stream_view{}))
+        80 | extract_transform_v_frontier_outgoing_e(raft::handle_t const&amp; handle,
+      | ^
+
+    In src/traversal/sssp_impl.cuh, failed lambda captures fixed
+    in src/prims/key_store.cuh, added template in front of a couple of references to ref_type
+          using cuco_store_device_ref_type = typename ViewType::cuco_set_type::template ref_type<cuco::contains_tag>;
+
+    Hit this again in sssp_sg, od_shortest distances
+        /home/mcordery/Projects/cugraph/cpp/src/prims/detail/prim_functors.cuh:83:12: error: no matching function for call to object of type 'const cugraph::cast_edge_op_bool_to_integer<cugraph::graph_view_t<int64_t, int64_t, false, false, void>, long, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::detail::edge_endpoint_dummy_property_view_t, cugraph::edge_property_view_t<long, const float *>, (lambda at /home/mcordery/Projects/cugraph/cpp/src/traversal/sssp_impl.cuh:115:18), long>'
+        83 |     return e_op(key_or_src,
+
+    Changed include files in src/from_cugraph_ops/device_atomics.cuh to be <hip/hip_fp16> <hip/hip_bf16>
+    Changed warp_sync code in src/from_cugraph_ops/device_warp_collectives to be that as defined in 6.3 merge
+        Commented out static_assert on CUDART_VERSION, also commented out return value because it was having issues with data types
+        Changed lane_id function in device_dim.cuh to use HIP __lane_id() instead of assembly
+
+    In src/components/weakly_connected_components_impl.cuh, had issues with
+        /home/mcordery/Projects/cugraph/cpp/src/prims/detail/extract_transform_v_frontier_e.cuh:670:34: error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<thrust::tuple<long, long>, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::detail::transform_reduce_v_frontier_call_e_op_t<thrust::tuple<long, long>, void, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::(anonymous namespace)::e_op_t<long, thrust::zip_iterator<thrust::tuple<long *, long *>>>>>'
+    670 |   using e_op_result_t = typename edge_op_result_type<key_t,
+        Commented out build
+
+    In compilation of triange_count_sg, ran in to
+            /home/mcordery/Projects/cugraph/cpp/src/community/triangle_count_impl.cuh:434:25: error: no matching function for call to 'extract_transform_e'
+            434 |     auto [srcs, dsts] = extract_transform_e(handle,
+                |                         ^~~~~~~~~~~~~~~~~~~
+            /home/mcordery/Projects/cugraph/cpp/src/community/triangle_count_sg_v64_e64.cu:21:15: note: in instantiation of function template specialization 'cugraph::triangle_count<long, long, false>' requested here
+            21 | template void triangle_count(raft::handle_t const& handle,
+                |               ^
+            /home/mcordery/Projects/cugraph/cpp/src/prims/extract_transform_e.cuh:91:1: note: candidate template ignored: substitution failure [with GraphViewType = graph_view_t<long, long, false, false>, EdgeSrcValueInputWrapper = edge_major_property_view_t<long, const_value_iterator, long>, EdgeDstValueInputWrapper = edge_minor_property_view_t<long, const_iterator, long>, EdgeValueInputWrapper = edge_dummy_property_view_t, EdgeOp = extract_low_to_high_degree_edges_t<long, long>]: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, long, long, thrust::nullopt_t, cugraph::(anonymous namespace)::extract_low_to_high_degree_edges_t<long, long>>'
+            84 |          typename detail::edge_op_result_type<typename GraphViewType::vertex_type,
+                |                           ~~~~~~~~~~~~~~~~~~~
+            85 |                                               typename GraphViewType::vertex_type,
+            86 |                                               typename EdgeSrcValueInputWrapper::value_type,
+            87 |                                               typename EdgeDstValueInputWrapper::value_type,
+            88 |                                               typename EdgeValueInputWrapper::value_type,
+            89 |                                               EdgeOp>::type::value_type>(size_t{0},
+            90 |                                                                          rmm::cuda_stream_view{}))
+        Disabling compilation of triangle count                                ^
+
+    In compliation of khop_nbrs_sg, ran in to
+        In file included from /home/mcordery/Projects/cugraph/cpp/src/prims/transform_reduce_v_frontier_outgoing_e_by_dst.cuh:19:
+        /home/mcordery/Projects/cugraph/cpp/src/prims/detail/extract_transform_v_frontier_e.cuh:670:34: error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<thrust::tuple<long, unsigned long>, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::detail::transform_reduce_v_frontier_call_e_op_t<thrust::tuple<long, unsigned long>, void, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::(anonymous namespace)::e_op_t<long>>>'
+        670 |   using e_op_result_t = typename edge_op_result_type<key_t,
+        Disabling
+
+
+C_API
+..............................................................
+
+    Disabled stringstreams in generic_cascaded_dispatch.hpp

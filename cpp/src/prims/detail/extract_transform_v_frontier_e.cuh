@@ -65,6 +65,14 @@ namespace cugraph {
 
 namespace detail {
 
+__device__ inline void __syncwarp()
+{
+  /* sync/barrier all threads in a warp */
+  __builtin_amdgcn_fence(__ATOMIC_RELEASE, "wavefront");
+  __builtin_amdgcn_wave_barrier();
+  __builtin_amdgcn_fence(__ATOMIC_ACQUIRE, "wavefront");
+};
+
 int32_t constexpr extract_transform_v_frontier_e_kernel_block_size = 512;
 
 template <typename BufferKeyOutputIterator,

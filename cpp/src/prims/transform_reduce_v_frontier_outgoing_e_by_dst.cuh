@@ -398,47 +398,46 @@ sort_and_reduce_buffer_elements(
         });
       resize_dataframe_buffer(
         output_key_buffer,
-        thrust::distance(
-          get_dataframe_buffer_begin(output_key_buffer),
-          thrust::copy_if(handle.get_thrust_policy(),
-                          input_key_first,
-                          input_key_first + size_dataframe_buffer(key_buffer),
-                          thrust::make_counting_iterator(size_t{0}),
-                          get_dataframe_buffer_begin(output_key_buffer),
-                            [key_first   = get_dataframe_buffer_begin(key_buffer),
-                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
-        auto key = *(key_first + i);
-        if (invalid_key && (key == *invalid_key)) ->bool
-          {
-            return false;
-          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
-          return false;
-                              } else {
-          return true;
-                              }
-                            }))),
+        thrust::distance(get_dataframe_buffer_begin(output_key_buffer),
+                         thrust::copy_if(handle.get_thrust_policy(),
+                                         input_key_first,
+                                         input_key_first + size_dataframe_buffer(key_buffer),
+                                         thrust::make_counting_iterator(size_t{0}),
+                                         get_dataframe_buffer_begin(output_key_buffer),
+                                         [key_first   = get_dataframe_buffer_begin(key_buffer),
+                                          invalid_key = to_thrust_optional(
+                                            invalid_key)] __device__(size_t i) -> bool {
+                                           auto key = *(key_first + i);
+                                           if (invalid_key && (key == *invalid_key)) {
+                                             return false;
+                                           } else if ((i != 0 && (key == *(key_first + (i - 1))))) {
+                                             return false;
+                                           } else {
+                                             return true;
+                                           }
+                                         })),
         handle.get_stream());
     } else {
       resize_dataframe_buffer(
         key_buffer,
         thrust::distance(
           get_dataframe_buffer_begin(key_buffer),
-          thrust::remove_if(handle.get_thrust_policy(),
-                            get_dataframe_buffer_begin(key_buffer),
-                            get_dataframe_buffer_end(key_buffer),
-                            thrust::make_counting_iterator(size_t{0}),
-                              [key_first   = get_dataframe_buffer_begin(key_buffer),
-                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
-        auto key = *(key_first + i);
-        if (invalid_key && (key == *invalid_key)) ->bool
-          {
-            return true;
-          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
-          return true;
-                                } else {
-          return false;
-                                }
-                              }))),
+          thrust::remove_if(
+            handle.get_thrust_policy(),
+            get_dataframe_buffer_begin(key_buffer),
+            get_dataframe_buffer_end(key_buffer),
+            thrust::make_counting_iterator(size_t{0}),
+            [key_first   = get_dataframe_buffer_begin(key_buffer),
+             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+              auto key = *(key_first + i);
+              if (invalid_key && (key == *invalid_key)) {
+                return true;
+              } else if ((i != 0 && (key == *(key_first + (i - 1))))) {
+                return true;
+              } else {
+                return false;
+              }
+            })),
         handle.get_stream());
       output_key_buffer = std::move(key_buffer);
     }
@@ -461,25 +460,24 @@ sort_and_reduce_buffer_elements(
                                   get_dataframe_buffer_begin(tmp_payload_buffer));
       resize_dataframe_buffer(
         output_key_buffer,
-        thrust::distance(
-          output_pair_first,
-          thrust::copy_if(handle.get_thrust_policy(),
-                          input_pair_first,
-                          input_pair_first + size_dataframe_buffer(key_buffer),
-                          thrust::make_counting_iterator(size_t{0}),
-                          output_pair_first,
-                            [key_first   = get_dataframe_buffer_begin(key_buffer),
-                             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
-        auto key = *(key_first + i);
-        if (invalid_key && (key == *invalid_key)) ->bool
-          {
-            return false;
-          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
-          return false;
-                              } else {
-          return true;
-                              }
-                            }))),
+        thrust::distance(output_pair_first,
+                         thrust::copy_if(handle.get_thrust_policy(),
+                                         input_pair_first,
+                                         input_pair_first + size_dataframe_buffer(key_buffer),
+                                         thrust::make_counting_iterator(size_t{0}),
+                                         output_pair_first,
+                                         [key_first   = get_dataframe_buffer_begin(key_buffer),
+                                          invalid_key = to_thrust_optional(
+                                            invalid_key)] __device__(size_t i) -> bool {
+                                           auto key = *(key_first + i);
+                                           if (invalid_key && (key == *invalid_key)) {
+                                             return false;
+                                           } else if ((i != 0 && (key == *(key_first + (i - 1))))) {
+                                             return false;
+                                           } else {
+                                             return true;
+                                           }
+                                         })),
         handle.get_stream());
       resize_dataframe_buffer(
         tmp_payload_buffer, size_dataframe_buffer(output_key_buffer), handle.get_stream());
@@ -491,22 +489,22 @@ sort_and_reduce_buffer_elements(
         key_buffer,
         thrust::distance(
           pair_first,
-          thrust::remove_if(handle.get_thrust_policy(),
-                            pair_first,
-                            pair_first + size_dataframe_buffer(key_buffer),
-                            thrust::make_counting_iterator(size_t{0}),
-                              [key_first   = get_dataframe_buffer_begin(key_buffer),
-                               invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
-        auto key = *(key_first + i);
-        if (invalid_key && (key == *invalid_key)) ->bool
-          {
-            return true;
-          } else if ((i != 0 && (key == *(key_first + (i - 1)))) -> bool {
-          return true;
-                                } else {
-          return false;
-                                }
-                              }))),
+          thrust::remove_if(
+            handle.get_thrust_policy(),
+            pair_first,
+            pair_first + size_dataframe_buffer(key_buffer),
+            thrust::make_counting_iterator(size_t{0}),
+            [key_first   = get_dataframe_buffer_begin(key_buffer),
+             invalid_key = to_thrust_optional(invalid_key)] __device__(size_t i) -> bool {
+              auto key = *(key_first + i);
+              if (invalid_key && (key == *invalid_key)) {
+                return true;
+              } else if ((i != 0 && (key == *(key_first + (i - 1))))) {
+                return true;
+              } else {
+                return false;
+              }
+            })),
         handle.get_stream());
       resize_dataframe_buffer(
         payload_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
@@ -528,8 +526,8 @@ sort_and_reduce_buffer_elements(
                             [invalid_key = *invalid_key] __device__(auto kv) -> bool {
                               auto key = thrust::get<0>(kv);
                               return key == invalid_key;
-                            })),
-        handle.get_stream());
+                            }),
+          handle.get_stream()));
       resize_dataframe_buffer(
         payload_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
     }

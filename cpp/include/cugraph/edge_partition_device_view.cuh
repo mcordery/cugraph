@@ -34,6 +34,9 @@
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
 
+#include <hipcub/device/device_reduce.hpp>
+// #include "hipcub/iterator/constant_input_iterator.hpp"
+
 #include <cassert>
 #include <optional>
 #include <type_traits>
@@ -275,18 +278,18 @@ class edge_partition_device_view_t<vertex_t, edge_t, multi_gpu, std::enable_if_t
                                   true>{
           this->offsets_, major_range_first_, *dcs_nzd_vertices_, *major_hypersparse_first_});
       hipcub::DeviceReduce::Sum(static_cast<void*>(nullptr),
-                             tmp_storage_bytes,
-                             local_degree_first,
-                             count.data(),
-                             thrust::distance(major_first, major_last),
-                             stream);
+                                tmp_storage_bytes,
+                                local_degree_first,
+                                count.data(),
+                                thrust::distance(major_first, major_last),
+                                stream);
       d_tmp_storage.resize(tmp_storage_bytes, stream);
       hipcub::DeviceReduce::Sum(d_tmp_storage.data(),
-                             tmp_storage_bytes,
-                             local_degree_first,
-                             count.data(),
-                             thrust::distance(major_first, major_last),
-                             stream);
+                                tmp_storage_bytes,
+                                local_degree_first,
+                                count.data(),
+                                thrust::distance(major_first, major_last),
+                                stream);
     } else {
       auto local_degree_first = thrust::make_transform_iterator(
         major_first,
@@ -297,18 +300,18 @@ class edge_partition_device_view_t<vertex_t, edge_t, multi_gpu, std::enable_if_t
                                   false>{
           this->offsets_, major_range_first_, std::byte{0} /* dummy */, std::byte{0} /* dummy */});
       hipcub::DeviceReduce::Sum(static_cast<void*>(nullptr),
-                             tmp_storage_bytes,
-                             local_degree_first,
-                             count.data(),
-                             thrust::distance(major_first, major_last),
-                             stream);
+                                tmp_storage_bytes,
+                                local_degree_first,
+                                count.data(),
+                                thrust::distance(major_first, major_last),
+                                stream);
       d_tmp_storage.resize(tmp_storage_bytes, stream);
       hipcub::DeviceReduce::Sum(d_tmp_storage.data(),
-                             tmp_storage_bytes,
-                             local_degree_first,
-                             count.data(),
-                             thrust::distance(major_first, major_last),
-                             stream);
+                                tmp_storage_bytes,
+                                local_degree_first,
+                                count.data(),
+                                thrust::distance(major_first, major_last),
+                                stream);
     }
   }
 
@@ -674,18 +677,18 @@ class edge_partition_device_view_t<vertex_t, edge_t, multi_gpu, std::enable_if_t
                                        std::byte{0} /* dummy */,
                                        std::byte{0} /* dummy */});
     hipcub::DeviceReduce::Sum(static_cast<void*>(nullptr),
-                           tmp_storage_bytes,
-                           local_degree_first,
-                           count.data(),
-                           thrust::distance(major_first, major_last),
-                           stream);
+                              tmp_storage_bytes,
+                              local_degree_first,
+                              count.data(),
+                              thrust::distance(major_first, major_last),
+                              stream);
     d_tmp_storage.resize(tmp_storage_bytes, stream);
     hipcub::DeviceReduce::Sum(d_tmp_storage.data(),
-                           tmp_storage_bytes,
-                           local_degree_first,
-                           count.data(),
-                           thrust::distance(major_first, major_last),
-                           stream);
+                              tmp_storage_bytes,
+                              local_degree_first,
+                              count.data(),
+                              thrust::distance(major_first, major_last),
+                              stream);
   }
 
   __host__ rmm::device_uvector<edge_t> compute_local_degrees(rmm::cuda_stream_view stream) const

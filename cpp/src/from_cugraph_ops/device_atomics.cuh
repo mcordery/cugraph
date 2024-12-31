@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <cuda_bf16.h>
+#include <hip/hip_bf16.h>
 #include <hip/hip_fp16.h>
 
 #include <cstdint>

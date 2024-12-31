@@ -2364,45 +2364,43 @@ heterogeneous_renumber_sampled_edgelist(
         pair_first,
         pair_first + (*edgelist_edge_ids).size(),
         (*edgelist_edge_ids).begin(),
-          [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
-           edge_types             = edgelist_edge_types
-                                      ? thrust::make_optional<raft::device_span<edge_type_t const>>(
-                              (*edgelist_edge_types).data(), (*edgelist_edge_types).size())
-                                      : thrust::nullopt,
-           renumber_map =
-             raft::device_span<edge_id_t const>(segment_sorted_edge_id_renumber_map.data(),
-                                                segment_sorted_edge_id_renumber_map.size()),
-           new_edge_ids = raft::device_span<edge_id_t const>(segment_sorted_new_edge_ids.data(),
-                                                             segment_sorted_new_edge_ids.size()),
-           renumber_map_label_type_offsets =
-             raft::device_span<size_t const>((*edge_id_renumber_map_label_type_offsets).data(),
-                                             (*edge_id_renumber_map_label_type_offsets).size()),
-           num_edge_types] __device__(auto pair) -> edge_id_t {
-        auto old_edge_id = thrust::get<0>(pair);
-        auto edge_idx    = thrust::get<1>(pair);
-        size_t label_idx->edge_id_t{0};
-            if (edgelist_label_offsets -> edge_id_t {
-          label_idx = static_cast<size_t>(
-            thrust::distance((*edgelist_label_offsets).begin() + 1,
-                             thrust::upper_bound(thrust::seq,
-                                                 (*edgelist_label_offsets).begin() + 1,
-                                                 (*edgelist_label_offsets).end(),
-                                                 edge_idx)));
-            }
-            edge_type_t edge_type{0};
-            if (edge_types) {
-          edge_type = (*edge_types)[edge_idx]; }
-            auto renumber_map_start_offset =
-              renumber_map_label_type_offsets[label_idx * num_edge_types + edge_type];
-            auto renumber_map_end_offset =
-              renumber_map_label_type_offsets[label_idx * num_edge_types + edge_type + 1];
-            auto it = thrust::lower_bound(thrust::seq,
-                                          renumber_map.begin() + renumber_map_start_offset,
-                                          renumber_map.begin() + renumber_map_end_offset,
-                                          old_edge_id);
-            assert(*it == old_edge_id);
-            return *(new_edge_ids.begin() + thrust::distance(renumber_map.begin(), it));
-          }));
+        [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
+         edge_types             = edgelist_edge_types
+                                    ? thrust::make_optional<raft::device_span<edge_type_t const>>(
+                            (*edgelist_edge_types).data(), (*edgelist_edge_types).size())
+                                    : thrust::nullopt,
+         renumber_map           = raft::device_span<edge_id_t const>(
+           segment_sorted_edge_id_renumber_map.data(), segment_sorted_edge_id_renumber_map.size()),
+         new_edge_ids = raft::device_span<edge_id_t const>(segment_sorted_new_edge_ids.data(),
+                                                           segment_sorted_new_edge_ids.size()),
+         renumber_map_label_type_offsets =
+           raft::device_span<size_t const>((*edge_id_renumber_map_label_type_offsets).data(),
+                                           (*edge_id_renumber_map_label_type_offsets).size()),
+         num_edge_types] __device__(auto pair) -> edge_id_t {
+          auto old_edge_id = thrust::get<0>(pair);
+          auto edge_idx    = thrust::get<1>(pair);
+          size_t label_idx{0};
+          if (edgelist_label_offsets) {
+            label_idx = static_cast<size_t>(
+              thrust::distance((*edgelist_label_offsets).begin() + 1,
+                               thrust::upper_bound(thrust::seq,
+                                                   (*edgelist_label_offsets).begin() + 1,
+                                                   (*edgelist_label_offsets).end(),
+                                                   edge_idx)));
+          }
+          edge_type_t edge_type{0};
+          if (edge_types) { edge_type = (*edge_types)[edge_idx]; }
+          auto renumber_map_start_offset =
+            renumber_map_label_type_offsets[label_idx * num_edge_types + edge_type];
+          auto renumber_map_end_offset =
+            renumber_map_label_type_offsets[label_idx * num_edge_types + edge_type + 1];
+          auto it = thrust::lower_bound(thrust::seq,
+                                        renumber_map.begin() + renumber_map_start_offset,
+                                        renumber_map.begin() + renumber_map_end_offset,
+                                        old_edge_id);
+          assert(*it == old_edge_id);
+          return *(new_edge_ids.begin() + thrust::distance(renumber_map.begin(), it));
+        });
     } else {
       thrust::transform(
         handle.get_thrust_policy(),
@@ -3302,37 +3300,37 @@ renumber_and_sort_sampled_edgelist(
       thrust::make_counting_iterator(size_t{0}),
       thrust::make_counting_iterator(num_labels * num_hops),
       (*edgelist_label_hop_offsets).begin(),
-        [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
-         edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
-                                           (*edgelist_hops).data(), (*edgelist_hops).size())
-                                       : thrust::nullopt,
-         num_hops,
-         num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
-      size_t start_offset->size_t{0};
-      auto end_offset = num_edges;
+      [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
+       edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
+                                         (*edgelist_hops).data(), (*edgelist_hops).size())
+                                     : thrust::nullopt,
+       num_hops,
+       num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
+        size_t start_offset{0};
+        auto end_offset = num_edges;
 
-          if (edgelist_label_offsets -> size_t {
-        auto l_idx   = static_cast<label_index_t>(i / num_hops);
-        start_offset = (*edgelist_label_offsets)[l_idx];
-        end_offset   = (*edgelist_label_offsets)[l_idx + 1];
-          }
+        if (edgelist_label_offsets) {
+          auto l_idx   = static_cast<label_index_t>(i / num_hops);
+          start_offset = (*edgelist_label_offsets)[l_idx];
+          end_offset   = (*edgelist_label_offsets)[l_idx + 1];
+        }
 
-          if (edgelist_hops) {
-        auto h        = static_cast<int32_t>(i % num_hops);
-        auto lower_it = thrust::lower_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        auto upper_it = thrust::upper_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
-        end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
-          }
+        if (edgelist_hops) {
+          auto h        = static_cast<int32_t>(i % num_hops);
+          auto lower_it = thrust::lower_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          auto upper_it = thrust::upper_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
+          end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
+        }
 
-          return end_offset - start_offset;
-        }));
+        return end_offset - start_offset;
+      });
     thrust::exclusive_scan(handle.get_thrust_policy(),
                            (*edgelist_label_hop_offsets).begin(),
                            (*edgelist_label_hop_offsets).end(),
@@ -3489,58 +3487,58 @@ heterogeneous_renumber_and_sort_sampled_edgelist(
       thrust::make_counting_iterator(size_t{0}),
       thrust::make_counting_iterator(num_labels * num_edge_types * num_hops),
       (*edgelist_label_type_hop_offsets).begin(),
-        [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
-         edgelist_edge_types    = edgelist_edge_types
-                                    ? thrust::make_optional<raft::device_span<edge_type_t const>>(
-                                     (*edgelist_edge_types).data(), (*edgelist_edge_types).size())
-                                    : thrust::nullopt,
-         edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
-                                           (*edgelist_hops).data(), (*edgelist_hops).size())
-                                       : thrust::nullopt,
-         num_edge_types,
-         num_hops,
-         num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
-      size_t start_offset->size_t{0};
-      auto end_offset = num_edges;
+      [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
+       edgelist_edge_types    = edgelist_edge_types
+                                  ? thrust::make_optional<raft::device_span<edge_type_t const>>(
+                                   (*edgelist_edge_types).data(), (*edgelist_edge_types).size())
+                                  : thrust::nullopt,
+       edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
+                                         (*edgelist_hops).data(), (*edgelist_hops).size())
+                                     : thrust::nullopt,
+       num_edge_types,
+       num_hops,
+       num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
+        size_t start_offset{0};
+        auto end_offset = num_edges;
 
-          if (edgelist_label_offsets -> size_t {
-        auto l_idx   = static_cast<label_index_t>(i / (num_edge_types * num_hops));
-        start_offset = (*edgelist_label_offsets)[l_idx];
-        end_offset   = (*edgelist_label_offsets)[l_idx + 1];
-          }
+        if (edgelist_label_offsets) {
+          auto l_idx   = static_cast<label_index_t>(i / (num_edge_types * num_hops));
+          start_offset = (*edgelist_label_offsets)[l_idx];
+          end_offset   = (*edgelist_label_offsets)[l_idx + 1];
+        }
 
-          if (edgelist_edge_types) {
-        auto t        = static_cast<edge_type_t>((i % (num_edge_types * num_hops)) / num_hops);
-        auto lower_it = thrust::lower_bound(thrust::seq,
-                                            (*edgelist_edge_types).begin() + start_offset,
-                                            (*edgelist_edge_types).begin() + end_offset,
-                                            t);
-        auto upper_it = thrust::upper_bound(thrust::seq,
-                                            (*edgelist_edge_types).begin() + start_offset,
-                                            (*edgelist_edge_types).begin() + end_offset,
-                                            t);
-        start_offset =
-          static_cast<size_t>(thrust::distance((*edgelist_edge_types).begin(), lower_it));
-        end_offset =
-          static_cast<size_t>(thrust::distance((*edgelist_edge_types).begin(), upper_it));
-          }
+        if (edgelist_edge_types) {
+          auto t        = static_cast<edge_type_t>((i % (num_edge_types * num_hops)) / num_hops);
+          auto lower_it = thrust::lower_bound(thrust::seq,
+                                              (*edgelist_edge_types).begin() + start_offset,
+                                              (*edgelist_edge_types).begin() + end_offset,
+                                              t);
+          auto upper_it = thrust::upper_bound(thrust::seq,
+                                              (*edgelist_edge_types).begin() + start_offset,
+                                              (*edgelist_edge_types).begin() + end_offset,
+                                              t);
+          start_offset =
+            static_cast<size_t>(thrust::distance((*edgelist_edge_types).begin(), lower_it));
+          end_offset =
+            static_cast<size_t>(thrust::distance((*edgelist_edge_types).begin(), upper_it));
+        }
 
-          if (edgelist_hops) {
-        auto h        = static_cast<int32_t>(i % num_hops);
-        auto lower_it = thrust::lower_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        auto upper_it = thrust::upper_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
-        end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
-          }
+        if (edgelist_hops) {
+          auto h        = static_cast<int32_t>(i % num_hops);
+          auto lower_it = thrust::lower_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          auto upper_it = thrust::upper_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
+          end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
+        }
 
-          return end_offset - start_offset;
-        }));
+        return end_offset - start_offset;
+      });
     thrust::exclusive_scan(handle.get_thrust_policy(),
                            (*edgelist_label_type_hop_offsets).begin(),
                            (*edgelist_label_type_hop_offsets).end(),
@@ -3641,37 +3639,37 @@ sort_sampled_edgelist(raft::handle_t const& handle,
       thrust::make_counting_iterator(size_t{0}),
       thrust::make_counting_iterator(num_labels * num_hops),
       (*edgelist_label_hop_offsets).begin(),
-        [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
-         edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
-                                           (*edgelist_hops).data(), (*edgelist_hops).size())
-                                       : thrust::nullopt,
-         num_hops,
-         num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
-      size_t start_offset->size_t{0};
-      auto end_offset = num_edges;
+      [edgelist_label_offsets = detail::to_thrust_optional(edgelist_label_offsets),
+       edgelist_hops = edgelist_hops ? thrust::make_optional<raft::device_span<int32_t const>>(
+                                         (*edgelist_hops).data(), (*edgelist_hops).size())
+                                     : thrust::nullopt,
+       num_hops,
+       num_edges = edgelist_majors.size()] __device__(size_t i) -> size_t {
+        size_t start_offset{0};
+        auto end_offset = num_edges;
 
-          if (edgelist_label_offsets -> size_t {
-        auto l_idx   = static_cast<label_index_t>(i / num_hops);
-        start_offset = (*edgelist_label_offsets)[l_idx];
-        end_offset   = (*edgelist_label_offsets)[l_idx + 1];
-          }
+        if (edgelist_label_offsets) {
+          auto l_idx   = static_cast<label_index_t>(i / num_hops);
+          start_offset = (*edgelist_label_offsets)[l_idx];
+          end_offset   = (*edgelist_label_offsets)[l_idx + 1];
+        }
 
-          if (edgelist_hops) {
-        auto h        = static_cast<int32_t>(i % num_hops);
-        auto lower_it = thrust::lower_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        auto upper_it = thrust::upper_bound(thrust::seq,
-                                            (*edgelist_hops).begin() + start_offset,
-                                            (*edgelist_hops).begin() + end_offset,
-                                            h);
-        start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
-        end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
-          }
+        if (edgelist_hops) {
+          auto h        = static_cast<int32_t>(i % num_hops);
+          auto lower_it = thrust::lower_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          auto upper_it = thrust::upper_bound(thrust::seq,
+                                              (*edgelist_hops).begin() + start_offset,
+                                              (*edgelist_hops).begin() + end_offset,
+                                              h);
+          start_offset  = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), lower_it));
+          end_offset    = static_cast<size_t>(thrust::distance((*edgelist_hops).begin(), upper_it));
+        }
 
-          return end_offset - start_offset;
-        }));
+        return end_offset - start_offset;
+      });
     thrust::exclusive_scan(handle.get_thrust_policy(),
                            (*edgelist_label_hop_offsets).begin(),
                            (*edgelist_label_hop_offsets).end(),

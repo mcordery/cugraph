@@ -123,7 +123,10 @@ message("-- Building for GPU_ARCHS = ${CMAKE_CUDA_ARCHITECTURES}")
 #list(APPEND CUGRAPH_CUDA_FLAGS -Xfatbin=-compress-all)
 
 list(APPEND CUGRAPH_CXX_FLAGS -DUSE_HIP)
-list(APPEND CUGRAPH_CXX_FLAGS -Wno-c++11-narrowing)
+list(APPEND CUGRAPH_CXX_FLAGS -DHIP_ENABLE_WARP_SYNC_BUILTINS=1)
+list(APPEND CUGRAPH_CXX_FLAGS -DNO_CUGRAPH_OPS)
+
+list(APPEND CUGRAPH_CXX_FLAGS -Wno-c++11-narrowing -Wno-unknown-pragmas)
 list(APPEND CUGRAPH_CXX_FLAGS -Wno-unused-result)
 list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS})
 list(APPEND CUGRAPH_CXX_FLAGS -I${HIP_INCLUDE_DIRS}/rocprim)
@@ -235,18 +238,18 @@ set(CUGRAPH_SOURCES
 #    src/sampling/random_walks_mg_v32_e32.cu
 #    src/community/detail/common_methods_mg_v64_e64.cu
 #    src/community/detail/common_methods_mg_v32_e32.cu
-    src/community/detail/common_methods_sg_v64_e64.cu
-    src/community/detail/common_methods_sg_v32_e32.cu
-    src/community/detail/refine_sg_v64_e64.cu
-    src/community/detail/refine_sg_v32_e32.cu
+ #raft span   src/community/detail/common_methods_sg_v64_e64.cu
+ #raft span   src/community/detail/common_methods_sg_v32_e32.cu
+ #raft span   src/community/detail/refine_sg_v64_e64.cu
+ #raft span   src/community/detail/refine_sg_v32_e32.cu
 #    src/community/detail/refine_mg_v64_e64.cu
 #    src/community/detail/refine_mg_v32_e32.cu
     src/community/edge_triangle_count_sg_v64_e64.cu
     src/community/edge_triangle_count_sg_v32_e32.cu
 #    src/community/edge_triangle_count_mg_v64_e64.cu
 #    src/community/edge_triangle_count_mg_v32_e32.cu
-    src/community/detail/maximal_independent_moves_sg_v64_e64.cu
-    src/community/detail/maximal_independent_moves_sg_v32_e32.cu
+#mjc span    src/community/detail/maximal_independent_moves_sg_v64_e64.cu
+#mjc span    src/community/detail/maximal_independent_moves_sg_v32_e32.cu
 #    src/community/detail/maximal_independent_moves_mg_v64_e64.cu
 #    src/community/detail/maximal_independent_moves_mg_v32_e32.cu
     src/detail/utility_wrappers_32.cu
@@ -261,14 +264,14 @@ set(CUGRAPH_SOURCES
     src/utilities/path_retrieval_sg_v64_e64.cu
     src/structure/legacy/graph.cu
     src/linear_assignment/legacy/hungarian.cu
-    src/link_prediction/jaccard_sg_v64_e64.cu
-    src/link_prediction/jaccard_sg_v32_e32.cu
-    src/link_prediction/sorensen_sg_v64_e64.cu
-    src/link_prediction/sorensen_sg_v32_e32.cu
-    src/link_prediction/overlap_sg_v64_e64.cu
-    src/link_prediction/overlap_sg_v32_e32.cu
-    src/link_prediction/cosine_sg_v64_e64.cu
-    src/link_prediction/cosine_sg_v32_e32.cu
+#span    src/link_prediction/jaccard_sg_v64_e64.cu
+#span    src/link_prediction/jaccard_sg_v32_e32.cu
+#span    src/link_prediction/sorensen_sg_v64_e64.cu
+#span    src/link_prediction/sorensen_sg_v32_e32.cu
+#span    src/link_prediction/overlap_sg_v64_e64.cu
+#span     src/link_prediction/overlap_sg_v32_e32.cu
+#span    src/link_prediction/cosine_sg_v64_e64.cu
+#span    src/link_prediction/cosine_sg_v32_e32.cu
 #    src/link_prediction/jaccard_mg_v64_e64.cu
 #    src/link_prediction/jaccard_mg_v32_e32.cu
 #    src/link_prediction/sorensen_mg_v64_e64.cu
@@ -279,7 +282,7 @@ set(CUGRAPH_SOURCES
 #    src/link_prediction/cosine_mg_v32_e32.cu
     src/layout/legacy/force_atlas2.cu
     src/converters/legacy/COOtoCSR.cu
-    src/community/legacy/spectral_clustering.cu
+#cvta_generic_to_shared    src/community/legacy/spectral_clustering.cu
     src/community/louvain_sg_v64_e64.cu
     src/community/louvain_sg_v32_e32.cu
 #    src/community/louvain_mg_v64_e64.cu
@@ -296,18 +299,18 @@ set(CUGRAPH_SOURCES
     src/community/egonet_sg_v32_e32.cu
 #    src/community/egonet_mg_v64_e64.cu
 #    src/community/egonet_mg_v32_e32.cu
-    src/community/k_truss_sg_v64_e64.cu
-    src/community/k_truss_sg_v32_e32.cu
+#see notes    src/community/k_truss_sg_v64_e64.cu
+#see notes    src/community/k_truss_sg_v32_e32.cu
 #    src/community/k_truss_mg_v64_e64.cu
 #    src/community/k_truss_mg_v32_e32.cu
 #    src/lookup/lookup_src_dst_mg_v32_e32.cu
 #    src/lookup/lookup_src_dst_mg_v64_e64.cu
-    src/lookup/lookup_src_dst_sg_v32_e32.cu
-    src/lookup/lookup_src_dst_sg_v64_e64.cu
+#see notes    src/lookup/lookup_src_dst_sg_v32_e32.cu
+#see notes    src/lookup/lookup_src_dst_sg_v64_e64.cu
     src/sampling/random_walks_old_sg_v32_e32.cu
     src/sampling/random_walks_old_sg_v64_e64.cu
-    src/sampling/random_walks_sg_v64_e64.cu
-    src/sampling/random_walks_sg_v32_e32.cu
+#see notes    src/sampling/random_walks_sg_v64_e64.cu
+#see notes    src/sampling/random_walks_sg_v32_e32.cu
     src/sampling/detail/prepare_next_frontier_sg_v64_e64.cu
     src/sampling/detail/prepare_next_frontier_sg_v32_e32.cu
 #    src/sampling/detail/prepare_next_frontier_mg_v64_e64.cu
@@ -318,8 +321,8 @@ set(CUGRAPH_SOURCES
 #    src/sampling/detail/gather_one_hop_edgelist_mg_v32_e32.cu
     src/sampling/detail/remove_visited_vertices_from_frontier_sg_v32_e32.cu
     src/sampling/detail/remove_visited_vertices_from_frontier_sg_v64_e64.cu
-    src/sampling/detail/check_edge_bias_values_sg_v64_e64.cu
-    src/sampling/detail/check_edge_bias_values_sg_v32_e32.cu
+#see notes    src/sampling/detail/check_edge_bias_values_sg_v64_e64.cu
+#see notes    src/sampling/detail/check_edge_bias_values_sg_v32_e32.cu
 #    src/sampling/detail/check_edge_bias_values_mg_v64_e64.cu
 #    src/sampling/detail/check_edge_bias_values_mg_v32_e32.cu
     src/sampling/detail/sample_edges_sg_v64_e64.cu
@@ -336,10 +339,10 @@ set(CUGRAPH_SOURCES
     src/sampling/negative_sampling_sg_v64_e64.cu
 #    src/sampling/negative_sampling_mg_v32_e32.cu
 #    src/sampling/negative_sampling_mg_v64_e64.cu
-    src/sampling/sampling_post_processing_sg_v64_e64.cu
-    src/sampling/sampling_post_processing_sg_v32_e32.cu
-    src/cores/core_number_sg_v64_e64.cu
-    src/cores/core_number_sg_v32_e32.cu
+#see notes    src/sampling/sampling_post_processing_sg_v64_e64.cu
+#see notes    src/sampling/sampling_post_processing_sg_v32_e32.cu
+#see notes    src/cores/core_number_sg_v64_e64.cu
+#see notes    src/cores/core_number_sg_v32_e32.cu
 #    src/cores/core_number_mg_v64_e64.cu
 #    src/cores/core_number_mg_v32_e32.cu
     src/cores/k_core_sg_v64_e64.cu
@@ -361,10 +364,10 @@ set(CUGRAPH_SOURCES
     src/structure/graph_sg_v32_e32.cu
 #    src/structure/graph_mg_v64_e64.cu
 #    src/structure/graph_mg_v32_e32.cu
-    src/structure/graph_view_sg_v64_e64.cu
-    src/structure/graph_view_sg_v32_e32.cu
-    src/structure/decompress_to_edgelist_sg_v64_e64.cu
-    src/structure/decompress_to_edgelist_sg_v32_e32.cu
+#span    src/structure/graph_view_sg_v64_e64.cu
+#span    src/structure/graph_view_sg_v32_e32.cu
+#span    src/structure/decompress_to_edgelist_sg_v64_e64.cu
+#span    src/structure/decompress_to_edgelist_sg_v32_e32.cu
 #    src/structure/decompress_to_edgelist_mg_v64_e64.cu
 #    src/structure/decompress_to_edgelist_mg_v32_e32.cu
     src/structure/symmetrize_graph_sg_v64_e64.cu
@@ -385,8 +388,8 @@ set(CUGRAPH_SOURCES
 #    src/structure/coarsen_graph_mg_v32_e32.cu
 #    src/structure/graph_weight_utils_mg_v64_e64.cu
 #    src/structure/graph_weight_utils_mg_v32_e32.cu
-    src/structure/graph_weight_utils_sg_v64_e64.cu
-    src/structure/graph_weight_utils_sg_v32_e32.cu
+#span    src/structure/graph_weight_utils_sg_v64_e64.cu
+#span    src/structure/graph_weight_utils_sg_v32_e32.cu
     src/structure/renumber_edgelist_sg_v64_e64.cu
     src/structure/renumber_edgelist_sg_v32_e32.cu
 #    src/structure/renumber_edgelist_mg_v64_e64.cu
@@ -395,12 +398,12 @@ set(CUGRAPH_SOURCES
     src/structure/renumber_utils_sg_v32_e32.cu
 #    src/structure/renumber_utils_mg_v64_e64.cu
 #    src/structure/renumber_utils_mg_v32_e32.cu
-    src/structure/relabel_sg_v64_e64.cu
-    src/structure/relabel_sg_v32_e32.cu
+#see notes    src/structure/relabel_sg_v64_e64.cu
+#see notes    src/structure/relabel_sg_v32_e32.cu
 #    src/structure/relabel_mg_v64_e64.cu
 #    src/structure/relabel_mg_v32_e32.cu
-    src/structure/induced_subgraph_sg_v64_e64.cu
-    src/structure/induced_subgraph_sg_v32_e32.cu
+#see notes    src/structure/induced_subgraph_sg_v64_e64.cu
+#see notes    src/structure/induced_subgraph_sg_v32_e32.cu
 #    src/structure/induced_subgraph_mg_v64_e64.cu
 #    src/structure/induced_subgraph_mg_v32_e32.cu
     src/structure/select_random_vertices_sg_v64_e64.cu
@@ -411,44 +414,44 @@ set(CUGRAPH_SOURCES
     src/traversal/extract_bfs_paths_sg_v32_e32.cu
 #    src/traversal/extract_bfs_paths_mg_v64_e64.cu
 #    src/traversal/extract_bfs_paths_mg_v32_e32.cu
-    src/traversal/bfs_sg_v64_e64.cu
-    src/traversal/bfs_sg_v32_e32.cu
+#span    src/traversal/bfs_sg_v64_e64.cu
+#span    src/traversal/bfs_sg_v32_e32.cu
 #    src/traversal/bfs_mg_v64_e64.cu
 #    src/traversal/bfs_mg_v32_e32.cu
-    src/traversal/sssp_sg_v64_e64.cu
-    src/traversal/sssp_sg_v32_e32.cu
-    src/traversal/od_shortest_distances_sg_v64_e64.cu
-    src/traversal/od_shortest_distances_sg_v32_e32.cu
+#see notes    src/traversal/sssp_sg_v64_e64.cu
+#see notes    src/traversal/sssp_sg_v32_e32.cu
+#see notes    src/traversal/od_shortest_distances_sg_v64_e64.cu
+#see notes    src/traversal/od_shortest_distances_sg_v32_e32.cu
 #    src/traversal/sssp_mg_v64_e64.cu
 #   src/traversal/sssp_mg_v32_e32.cu
-    src/link_analysis/hits_sg_v64_e64.cu
-    src/link_analysis/hits_sg_v32_e32.cu
+#span    src/link_analysis/hits_sg_v64_e64.cu
+#span    src/link_analysis/hits_sg_v32_e32.cu
 #    src/link_analysis/hits_mg_v64_e64.cu
 #    src/link_analysis/hits_mg_v32_e32.cu
-    src/link_analysis/pagerank_sg_v64_e64.cu
-    src/link_analysis/pagerank_sg_v32_e32.cu
+#span    src/link_analysis/pagerank_sg_v64_e64.cu
+#span    src/link_analysis/pagerank_sg_v32_e32.cu
 #    src/link_analysis/pagerank_mg_v64_e64.cu
 #    src/link_analysis/pagerank_mg_v32_e32.cu
-    src/centrality/katz_centrality_sg_v64_e64.cu
-    src/centrality/katz_centrality_sg_v32_e32.cu
+#span    src/centrality/katz_centrality_sg_v64_e64.cu
+#span    src/centrality/katz_centrality_sg_v32_e32.cu
 #    src/centrality/katz_centrality_mg_v64_e64.cu
 #    src/centrality/katz_centrality_mg_v32_e32.cu
-    src/centrality/eigenvector_centrality_sg_v64_e64.cu
-    src/centrality/eigenvector_centrality_sg_v32_e32.cu
+#span    src/centrality/eigenvector_centrality_sg_v64_e64.cu
+#span    src/centrality/eigenvector_centrality_sg_v32_e32.cu
 #    src/centrality/eigenvector_centrality_mg_v64_e64.cu
 #    src/centrality/eigenvector_centrality_mg_v32_e32.cu
-    src/centrality/betweenness_centrality_sg_v64_e64.cu
-    src/centrality/betweenness_centrality_sg_v32_e32.cu
+#span    src/centrality/betweenness_centrality_sg_v64_e64.cu
+#span    src/centrality/betweenness_centrality_sg_v32_e32.cu
 #    src/centrality/betweenness_centrality_mg_v64_e64.cu
 #    src/centrality/betweenness_centrality_mg_v32_e32.cu
     src/tree/legacy/mst.cu
     src/from_cugraph_ops/sampling_index.cu
-    src/components/weakly_connected_components_sg_v64_e64.cu
-    src/components/weakly_connected_components_sg_v32_e32.cu
+ #see notes   src/components/weakly_connected_components_sg_v64_e64.cu
+ #see notes   src/components/weakly_connected_components_sg_v32_e32.cu
  #   src/components/weakly_connected_components_mg_v64_e64.cu
  #   src/components/weakly_connected_components_mg_v32_e32.cu
-    src/components/mis_sg_v64_e64.cu
-    src/components/mis_sg_v32_e32.cu
+ #span   src/components/mis_sg_v64_e64.cu
+ #span   src/components/mis_sg_v32_e32.cu
  #   src/components/mis_mg_v64_e64.cu
  #   src/components/mis_mg_v32_e32.cu
     src/components/vertex_coloring_sg_v64_e64.cu
@@ -463,16 +466,16 @@ set(CUGRAPH_SOURCES
     src/structure/symmetrize_edgelist_sg_v32_e32.cu
 #    src/structure/symmetrize_edgelist_mg_v64_e64.cu
 #    src/structure/symmetrize_edgelist_mg_v32_e32.cu
-    src/community/triangle_count_sg_v64_e64.cu
-    src/community/triangle_count_sg_v32_e32.cu
+#see notes    src/community/triangle_count_sg_v64_e64.cu
+#see notes    src/community/triangle_count_sg_v32_e32.cu
 #    src/community/triangle_count_mg_v64_e64.cu
 #    src/community/triangle_count_mg_v32_e32.cu
     src/community/approx_weighted_matching_sg_v64_e64.cu
     src/community/approx_weighted_matching_sg_v32_e32.cu
  #   src/community/approx_weighted_matching_mg_v64_e64.cu
  #   src/community/approx_weighted_matching_mg_v32_e32.cu
-    src/traversal/k_hop_nbrs_sg_v64_e64.cu
-    src/traversal/k_hop_nbrs_sg_v32_e32.cu
+ #see notes   src/traversal/k_hop_nbrs_sg_v64_e64.cu
+ #see notes   src/traversal/k_hop_nbrs_sg_v32_e32.cu
  #   src/traversal/k_hop_nbrs_mg_v64_e64.cu
  #   src/traversal/k_hop_nbrs_mg_v32_e32.cu
     src/mtmg/vertex_result_sg_v32_e32.cu
@@ -487,7 +490,7 @@ set(CUGRAPH_SOURCES
 
 foreach(SOURCE_FILE ${CUGRAPH_SOURCES})
     if(${SOURCE_FILE} MATCHES "\\.cu$")
-        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE HIP)
+        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
     endif()
 endforeach()
 
@@ -498,9 +501,9 @@ set_target_properties(cugraph
                INSTALL_RPATH                       "\$ORIGIN"
                # set target compile options
                LINKER_LANGUAGE                     CXX
-               CXX_STANDARD                        23
+               CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
-               HIP_STANDARD                        23
+               HIP_STANDARD                        17
                HIP_STANDARD_REQUIRED               ON
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON
@@ -509,7 +512,7 @@ set_target_properties(cugraph
 target_compile_options(cugraph
             PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
                     "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
-                    -Wno-unused-command-line-argument -Wall
+                    -Wno-unused-command-line-argument -Wall -Wno-unknown-pragmas -Wno-unused-result
 )
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
@@ -576,7 +579,7 @@ add_library(cugraph_c
         src/c_api/degrees_result.cpp
         src/c_api/error.cpp
         src/c_api/graph_sg.cpp
-        src/c_api/graph_mg.cpp
+ #       src/c_api/graph_mg.cpp
         src/c_api/graph_functions.cpp
         src/c_api/pagerank.cpp
         src/c_api/katz.cpp
@@ -594,7 +597,7 @@ add_library(cugraph_c
         src/c_api/capi_helper.cu
         src/c_api/legacy_spectral.cpp
         src/c_api/graph_helper_sg.cu
-        src/c_api/graph_helper_mg.cu
+ #       src/c_api/graph_helper_mg.cu
         src/c_api/graph_generators.cpp
         src/c_api/induced_subgraph_result.cpp
         src/c_api/hits.cpp
@@ -625,8 +628,10 @@ set_target_properties(cugraph_c
     PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                INSTALL_RPATH                       "\$ORIGIN"
                # set target compile options
-               CXX_STANDARD                        23
+               CXX_STANDARD                        17
                CXX_STANDARD_REQUIRED               ON
+               HIP_STANDARD                        17
+               HIP_STANDARD_REQUIRED               ON
                LINKER_LANGUAGE                     CXX
                POSITION_INDEPENDENT_CODE           ON
                INTERFACE_POSITION_INDEPENDENT_CODE ON
@@ -634,7 +639,7 @@ set_target_properties(cugraph_c
 
 target_compile_options(cugraph_c
              PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                     "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+                     "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_HIP_FLAGS}>"
 )
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html

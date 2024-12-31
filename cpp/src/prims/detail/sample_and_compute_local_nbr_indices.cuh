@@ -36,7 +36,6 @@
 
 #include <raft/random/rng.cuh>
 
-#include <cuda/atomic>
 #include <thrust/adjacent_difference.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
@@ -51,6 +50,7 @@
 
 #include <hipcub/hipcub.hpp>
 
+#include <hip/atomic>
 #include <optional>
 #include <tuple>
 
@@ -911,43 +911,46 @@ rmm::device_uvector<edge_t> compute_uniform_sampling_index_without_replacement(
       }
 
       // sort the segment-sorted (sample index, sample neighbor index) pairs (key: sample index)
+#warning matt hipcub can't resolve this due to conflicting types
+      /*
+            hipcub::DeviceSegmentedSort::SortPairs(
+              static_cast<void*>(nullptr),
+              tmp_storage_bytes,
+              segment_sorted_tmp_sample_indices.data(),
+              tmp_sample_indices.data(),
+              segment_sorted_tmp_nbr_indices.data(),
+              tmp_nbr_indices.data(),
+              num_segments * high_partition_oversampling_K,
+              num_segments,
+              thrust::make_transform_iterator(thrust::make_counting_iterator(size_t{0}),
+                                              multiplier_t<size_t>{high_partition_oversampling_K}),
+              thrust::make_transform_iterator(
+                thrust::make_counting_iterator(size_t{0}),
+                [high_partition_oversampling_K, unique_counts = unique_counts.data()] __device__(
+                  size_t i) -> size_t { return i * high_partition_oversampling_K + unique_counts[i];
+         }), handle.get_stream());
 
-      hipcub::DeviceSegmentedSort::SortPairs(
-        static_cast<void*>(nullptr),
-        tmp_storage_bytes,
-        segment_sorted_tmp_sample_indices.data(),
-        tmp_sample_indices.data(),
-        segment_sorted_tmp_nbr_indices.data(),
-        tmp_nbr_indices.data(),
-        num_segments * high_partition_oversampling_K,
-        num_segments,
-        thrust::make_transform_iterator(thrust::make_counting_iterator(size_t{0}),
-                                        multiplier_t<size_t>{high_partition_oversampling_K}),
-        thrust::make_transform_iterator(
-          thrust::make_counting_iterator(size_t{0}),
-          [high_partition_oversampling_K, unique_counts = unique_counts.data()] __device__(
-            size_t i) -> size_t { return i * high_partition_oversampling_K + unique_counts[i]; }),
-        handle.get_stream());
-      if (tmp_storage_bytes > d_tmp_storage.size()) {
-        d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes, handle.get_stream());
-      }
-      hipcub::DeviceSegmentedSort::SortPairs(
-        d_tmp_storage.data(),
-        tmp_storage_bytes,
-        segment_sorted_tmp_sample_indices.data(),
-        tmp_sample_indices.data(),
-        segment_sorted_tmp_nbr_indices.data(),
-        tmp_nbr_indices.data(),
-        num_segments * high_partition_oversampling_K,
-        num_segments,
-        thrust::make_transform_iterator(thrust::make_counting_iterator(size_t{0}),
-                                        multiplier_t<size_t>{high_partition_oversampling_K}),
-        thrust::make_transform_iterator(
-          thrust::make_counting_iterator(size_t{0}),
-          [high_partition_oversampling_K, unique_counts = unique_counts.data()] __device__(
-            size_t i) -> size_t { return i * high_partition_oversampling_K + unique_counts[i]; }),
-        handle.get_stream());
-
+            if (tmp_storage_bytes > d_tmp_storage.size()) {
+              d_tmp_storage = rmm::device_uvector<std::byte>(tmp_storage_bytes,
+         handle.get_stream());
+            }
+            hipcub::DeviceSegmentedSort::SortPairs(
+              d_tmp_storage.data(),
+              tmp_storage_bytes,
+              segment_sorted_tmp_sample_indices.data(),
+              tmp_sample_indices.data(),
+              segment_sorted_tmp_nbr_indices.data(),
+              tmp_nbr_indices.data(),
+              num_segments * high_partition_oversampling_K,
+              num_segments,
+              thrust::make_transform_iterator(thrust::make_counting_iterator(size_t{0}),
+                                              multiplier_t<size_t>{high_partition_oversampling_K}),
+              thrust::make_transform_iterator(
+                thrust::make_counting_iterator(size_t{0}),
+                [high_partition_oversampling_K, unique_counts = unique_counts.data()] __device__(
+                  size_t i) -> size_t { return i * high_partition_oversampling_K + unique_counts[i];
+         }), handle.get_stream());
+      */
       // copy the neighbor indices back to nbr_indices
 
       thrust::for_each(
@@ -1687,7 +1690,7 @@ biased_sample_and_compute_local_nbr_indices(
   using vertex_t = typename GraphViewType::vertex_type;
   using edge_t   = typename GraphViewType::edge_type;
   using key_t    = typename thrust::iterator_traits<KeyIterator>::value_type;
-
+#warning matt unable to resolve this
   using bias_t = typename edge_op_result_type<key_t,
                                               vertex_t,
                                               typename EdgeSrcValueInputWrapper::value_type,

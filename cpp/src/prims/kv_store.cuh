@@ -34,6 +34,7 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/iterator/zip_iterator.h>
 #include <thrust/remove.h>
+#include <thrust/sequence.h>
 #include <thrust/sort.h>
 #include <thrust/unique.h>
 
@@ -191,9 +192,10 @@ struct kv_binary_search_store_device_view_t {
 
 template <typename ViewType>
 struct kv_cuco_store_find_device_view_t {
-  using key_type                   = typename ViewType::key_type;
-  using value_type                 = typename ViewType::value_type;
-  using cuco_store_device_ref_type = typename ViewType::cuco_map_type::ref_type<cuco::find_tag>;
+  using key_type   = typename ViewType::key_type;
+  using value_type = typename ViewType::value_type;
+  using cuco_store_device_ref_type =
+    typename ViewType::cuco_map_type::template ref_type<cuco::find_tag>;
 
   static_assert(!ViewType::binary_search);
 

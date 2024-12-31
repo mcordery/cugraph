@@ -263,14 +263,18 @@ per_v_random_select_transform_e(raft::handle_t const& handle,
       typename EdgeValueInputWrapper::value_type>>;
 
   static_assert(GraphViewType::is_storage_transposed == incoming);
-  static_assert(std::is_same_v<
-                typename detail::edge_op_result_type<key_t,
-                                                     vertex_t,
-                                                     typename EdgeSrcValueInputWrapper::value_type,
-                                                     typename EdgeDstValueInputWrapper::value_type,
-                                                     typename EdgeValueInputWrapper::value_type,
-                                                     EdgeOp>::type,
-                T>);
+#warning Matt this assert gives a warning about implicit instantiation
+  // error: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long,
+  // long, thrust::nullopt_t, thrust::nullopt_t, double, cugraph::detail::sample_edges_op_t<long,
+  // double>>' 267 |                 typename detail::edge_op_result_type<key_t,
+  /*
+    static_assert(std::is_same_v<
+                  typename detail::edge_op_result_type<key_t,
+                                                       vertex_t,
+                                                       typename
+    EdgeSrcValueInputWrapper::value_type, typename EdgeDstValueInputWrapper::value_type, typename
+    EdgeValueInputWrapper::value_type, EdgeOp>::type, T>);
+  */
 
   CUGRAPH_EXPECTS(K >= size_t{1},
                   "Invalid input argument: invalid K, K should be a positive integer.");

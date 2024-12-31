@@ -27,6 +27,8 @@
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/sequence.h>
 
+#include <hip/atomic>
+
 namespace {
 
 template <typename vertex_t, typename edge_t>
@@ -89,16 +91,16 @@ void GraphCompressedSparseBaseView<VT, ET, WT>::get_source_indices(VT* src_indic
   if (indices_span.size() > 0) {
     thrust::fill(rmm::exec_policy(stream_view), indices_span.begin(), indices_span.end(), VT{0});
 
-    thrust::for_each(rmm::exec_policy(stream_view),
-                     offsets + 1,
-                     offsets + GraphViewBase<VT, ET, WT>::number_of_vertices,
-                     [indices_span] __device__(ET offset) {
-                       if (offset < static_cast<ET>(indices_span.size())) {
-                         cuda::atomic_ref<VT, cuda::thread_scope_device> atomic_counter(
-                           indices_span.data()[offset]);
-                         atomic_counter.fetch_add(VT{1}, cuda::std::memory_order_relaxed);
-                       }
-                     });
+    thrust::for_each(
+      rmm::exec_policy(stream_view),
+      offsets + 1,
+      offsets + GraphViewBase<VT, ET, WT>::number_of_vertices,
+      [indices_span] __device__(ET offset) {
+        if (offset < static_cast<ET>(indices_span.size())) {
+          hip::atomic_ref<VT, hip::thread_scope_device> atomic_counter(indices_span.data()[offset]);
+          atomic_counter.fetch_add(VT{1}, hip::std::memory_order_relaxed);
+        }
+      });
     thrust::inclusive_scan(rmm::exec_policy(stream_view),
                            indices_span.begin(),
                            indices_span.end(),

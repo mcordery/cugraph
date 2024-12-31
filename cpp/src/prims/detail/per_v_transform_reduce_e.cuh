@@ -2379,18 +2379,17 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                     auto const& rx_bitmap  = (*edge_partition_bitmap_buffers)[j];
                     auto input_count_first = thrust::make_transform_iterator(
                       thrust::make_counting_iterator(packed_bool_offset(range_offset_first)),
-                        [range_bitmap =
-                           raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
-                         range_offset_first] __device__(size_t i) -> vertex_t {
-                      auto word = range_bitmap[i];
-                      if (i == packed_bool_offset(range_offset_first)) ->vertex_t
-                        {
+                      [range_bitmap =
+                         raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
+                       range_offset_first] __device__(size_t i) -> vertex_t {
+                        auto word = range_bitmap[i];
+                        if (i == packed_bool_offset(range_offset_first)) {
                           word &= ~packed_bool_partial_mask(
                             range_offset_first %
                             packed_bools_per_word());  // clear the bits in the sparse region
                         }
-                          return static_cast<vertex_t>(__popc(word);
-                        }));
+                        return static_cast<vertex_t>(__popc(word));
+                      });
                     input_count_offsets.resize(
                       (rx_bitmap.size() - packed_bool_offset(range_offset_first)) + 1, loop_stream);
                     input_count_offsets.set_element_to_zero_async(0, loop_stream);
@@ -2433,57 +2432,57 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
                       rmm::exec_policy_nosync(loop_stream),
                       filtered_bitmap.begin(),
                       filtered_bitmap.end(),
-                        [range_bitmap =
-                           raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
-                         segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
-                                                                            segment_bitmap.size()),
-                         range_first    = local_v_list_range_firsts[partition_idx],
-                         range_offset_first,
-                         range_offset_last,
-                         major_hypersparse_first =
-                           *(edge_partition.major_hypersparse_first())] __device__(size_t i) -> uint32_t {
-                      auto this_word_range_offset_first = cuda::std::max(
-                        static_cast<vertex_t>((packed_bool_offset(range_offset_first) + i) *
-                                              packed_bools_per_word()),
-                        range_offset_first);
-                      auto this_word_range_offset_last = cuda::std::min(
-                        static_cast<vertex_t>((packed_bool_offset(range_offset_first) + (i + 1)) *
-                                              packed_bools_per_word()),
-                        range_offset_last);
-                      auto range_lead_bits =
-                        static_cast<size_t>(this_word_range_offset_first % packed_bools_per_word());
-                      auto range_bitmap_word =
-                        range_bitmap[packed_bool_offset(range_offset_first) + i];
-                      if (i == 0) ->uint32_t
-                        {  // clear the bits in the sparse region
+                      [range_bitmap =
+                         raft::device_span<uint32_t const>(rx_bitmap.data(), rx_bitmap.size()),
+                       segment_bitmap = raft::device_span<uint32_t const>(segment_bitmap.data(),
+                                                                          segment_bitmap.size()),
+                       range_first    = local_v_list_range_firsts[partition_idx],
+                       range_offset_first,
+                       range_offset_last,
+                       major_hypersparse_first =
+                         *(edge_partition.major_hypersparse_first())] __device__(size_t i)
+                        -> uint32_t {
+                        auto this_word_range_offset_first = cuda::std::max(
+                          static_cast<vertex_t>((packed_bool_offset(range_offset_first) + i) *
+                                                packed_bools_per_word()),
+                          range_offset_first);
+                        auto this_word_range_offset_last = cuda::std::min(
+                          static_cast<vertex_t>((packed_bool_offset(range_offset_first) + (i + 1)) *
+                                                packed_bools_per_word()),
+                          range_offset_last);
+                        auto range_lead_bits = static_cast<size_t>(this_word_range_offset_first %
+                                                                   packed_bools_per_word());
+                        auto range_bitmap_word =
+                          range_bitmap[packed_bool_offset(range_offset_first) + i];
+                        if (i == 0) {  // clear the bits in the sparse region
                           range_bitmap_word &=
                             ~packed_bool_partial_mask(range_offset_first % packed_bools_per_word());
                         }
-                          auto this_word_hypersparse_offset_first =
-                            (range_first + this_word_range_offset_first - major_hypersparse_first;
-                          auto num_bits = static_cast<size_t>(this_word_range_offset_last -
-                                                              this_word_range_offset_first);
-                          auto hypersparse_lead_bits =
-                            static_cast<size_t>(this_word_hypersparse_offset_first) %
-                            packed_bools_per_word();
-                          auto segment_bitmap_word = ((segment_bitmap[packed_bool_offset(
-                                                         this_word_hypersparse_offset_first)] >>
-                                                       hypersparse_lead_bits))
-                                                     << range_lead_bits;
-                          auto remaining_bits =
-                            (num_bits > (packed_bools_per_word() - hypersparse_lead_bits))
-                              ? (num_bits - (packed_bools_per_word() - hypersparse_lead_bits))
-                              : size_t{0};
-                          if (remaining_bits > 0) {
-                        segment_bitmap_word |=
-                          ((segment_bitmap[packed_bool_offset(this_word_hypersparse_offset_first) +
-                                           1] &
-                            packed_bool_partial_mask(remaining_bits))
-                           << ((packed_bools_per_word() - hypersparse_lead_bits) +
-                               range_lead_bits));
-                          }
-                          return range_bitmap_word & segment_bitmap_word;
-                        }));
+                        auto this_word_hypersparse_offset_first =
+                          (range_first + this_word_range_offset_first) - major_hypersparse_first;
+                        auto num_bits = static_cast<size_t>(this_word_range_offset_last -
+                                                            this_word_range_offset_first);
+                        auto hypersparse_lead_bits =
+                          static_cast<size_t>(this_word_hypersparse_offset_first) %
+                          packed_bools_per_word();
+                        auto segment_bitmap_word = ((segment_bitmap[packed_bool_offset(
+                                                       this_word_hypersparse_offset_first)] >>
+                                                     hypersparse_lead_bits))
+                                                   << range_lead_bits;
+                        auto remaining_bits =
+                          (num_bits > (packed_bools_per_word() - hypersparse_lead_bits))
+                            ? (num_bits - (packed_bools_per_word() - hypersparse_lead_bits))
+                            : size_t{0};
+                        if (remaining_bits > 0) {
+                          segment_bitmap_word |=
+                            ((segment_bitmap
+                                [packed_bool_offset(this_word_hypersparse_offset_first) + 1] &
+                              packed_bool_partial_mask(remaining_bits))
+                             << ((packed_bools_per_word() - hypersparse_lead_bits) +
+                                 range_lead_bits));
+                        }
+                        return range_bitmap_word & segment_bitmap_word;
+                      });
                     auto output_count_first = thrust::make_transform_iterator(
                       filtered_bitmap.begin(), [] __device__(uint32_t word) -> vertex_t {
                         return static_cast<vertex_t>(__popc(word));
@@ -2999,39 +2998,33 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
               thrust::make_counting_iterator(size_t{0}),
               thrust::make_counting_iterator(loop_count),
               d_counts.begin(),
-                [d_ptrs    = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
-                 d_scalars = raft::device_span<size_t const>(d_scalars.data(), d_scalars.size()),
-                 uint32_key_output_offset] __device__(auto i) -> size_t {
-              auto first = d_ptrs[i];
-              if (first != static_cast<void const*>(nullptr)) ->size_t
-                {
+              [d_ptrs    = raft::device_span<void const* const>(d_ptrs.data(), d_ptrs.size()),
+               d_scalars = raft::device_span<size_t const>(d_scalars.data(), d_scalars.size()),
+               uint32_key_output_offset] __device__(auto i) -> size_t {
+                auto first = d_ptrs[i];
+                if (first != static_cast<void const*>(nullptr)) {
                   auto size         = d_scalars[i * 2];
                   auto start_offset = d_scalars[i * 2 + 1];
-                  if (uint32_key_output_offset) ->size_t
-                    {
-                      auto casted_first = static_cast<uint32_t const*>(first);
-                      return size - static_cast<size_t>(thrust::distance(
-                                      casted_first,
-                                      thrust::lower_bound(thrust::seq,
-                                                          casted_first,
-                                                          casted_first + size,
-                                                          static_cast<uint32_t>(start_offset))));
-                    }
-                  else
-                    ->size_t
-                    {
-                      auto casted_first = static_cast<size_t const*>(first;
-                      return size -
-                             static_cast<size_t>(thrust::distance(
-                               casted_first,
-                               thrust::lower_bound(
-                                 thrust::seq, casted_first, casted_first + size, start_offset)));
-                    }
+                  if (uint32_key_output_offset) {
+                    auto casted_first = static_cast<uint32_t const*>(first);
+                    return size - static_cast<size_t>(thrust::distance(
+                                    casted_first,
+                                    thrust::lower_bound(thrust::seq,
+                                                        casted_first,
+                                                        casted_first + size,
+                                                        static_cast<uint32_t>(start_offset))));
+                  } else {
+                    auto casted_first = static_cast<size_t const*>(first);
+                    return size -
+                           static_cast<size_t>(thrust::distance(
+                             casted_first,
+                             thrust::lower_bound(
+                               thrust::seq, casted_first, casted_first + size, start_offset)));
+                  }
+                } else {
+                  return size_t{0};
                 }
-              else {
-                return size_t{0};
-              }
-                }));
+              });
             raft::update_host((*edge_partition_deg1_hypersparse_key_offset_counts).data(),
                               d_counts.data(),
                               d_counts.size(),
