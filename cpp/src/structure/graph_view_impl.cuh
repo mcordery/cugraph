@@ -364,7 +364,7 @@ edge_t count_edge_partition_multi_edges(
         execution_policy,
         thrust::make_counting_iterator(edge_partition.major_range_first()) + (*segment_offsets)[2],
         thrust::make_counting_iterator(edge_partition.major_range_first()) + (*segment_offsets)[3],
-        [edge_partition] __device__(auto major) -> edge_t -> edge_t {
+        [edge_partition] __device__(auto major) -> edge_t {
         auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
         vertex_t const * indices->edge_t{nullptr};
         [[maybe_unused]] edge_t edge_offset->edge_t{};
@@ -386,7 +386,7 @@ edge_t count_edge_partition_multi_edges(
         thrust::make_counting_iterator(vertex_t{0}),
         thrust::make_counting_iterator(*(edge_partition.dcs_nzd_vertex_count())),
           [edge_partition,
-           major_start_offset = (*segment_offsets)[3]] __device__(auto idx) -> edge_t -> edge_t {
+           major_start_offset = (*segment_offsets)[3]] __device__(auto idx) -> edge_t {
         auto major_idx =
           major_start_offset + idx;  // major_offset != major_idx in the hypersparse region
         vertex_t const * indices->edge_t{nullptr};
@@ -410,7 +410,7 @@ edge_t count_edge_partition_multi_edges(
       thrust::make_counting_iterator(edge_partition.major_range_first()),
       thrust::make_counting_iterator(edge_partition.major_range_first()) +
         edge_partition.major_range_size(),
-      [edge_partition] __device__(auto major) -> edge_t -> edge_t {
+      [edge_partition] __device__(auto major) -> edge_t {
       auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
       vertex_t const * indices->edge_t{nullptr};
       [[maybe_unused]] edge_t edge_offset->edge_t{};
