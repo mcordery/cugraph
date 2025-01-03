@@ -131,6 +131,9 @@ Build:
 
     Add __syncwarp function to src/prims/detail/extract_transoform_v_frontier.cuh as per 6.3 update
 
+    In per_v_transform_reduce_e, add include<thrust/sequence.h>
+        Also this appears to be the source of the span errors. See commmented out mjc if branch
+
     In src/community/k_truss_sg_v64_e64.cu, hit the following problem, looks like bad deduction?
     /home/mcordery/Projects/cugraph/cpp/src/prims/extract_transform_e.cuh:91:1: note: candidate template ignored: substitution failure [with GraphViewType = graph_view_t<long, long, false, false>, EdgeSrcValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeDstValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeValueInputWrapper = edge_dummy_property_view_t, EdgeOp = exclude_self_loop_t<long>]: implicit instantiation of undefined template 'cugraph::detail::edge_op_result_type<long, long, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t, cugraph::(anonymous namespace)::exclude_self_loop_t<long>>'
    84 |          typename detail::edge_op_result_type<typename GraphViewType::vertex_type,
@@ -206,6 +209,9 @@ Build:
         In file included from /home/mcordery/Projects/cugraph/build/build/_deps/hipco-src/include/cuco/static_map_ref.cuh:36:
         /home/mcordery/Projects/cugraph/build/build/_deps/hipco-src/include/cuco/detail/open_addressing/open_addressing_ref_impl.cuh:204:18: error: reference to __device__ function 'extract_payload<cuco::pair<long, long>, void>' in __host__ __device__ function
         204 |     return this->extract_payload(this->empty_slot_sentinel());
+
+                extract_payload is a device function in hipco, src/include/cuco/detail/open_addressing/open_addressing_ref_impl.cuh
+                extract_payload used in hipco funcs like empty_value_sentinel and native_value but called from host functions in cpp/src/prims/kv_store.cuh
 
 
     In compiling induced_subgraph_sg, it gets to where it can't resolve the use of edge_op_result_type given the template parameters. seen this before

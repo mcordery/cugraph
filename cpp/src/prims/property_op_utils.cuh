@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@
 #include <raft/core/comms.hpp>
 #include <raft/core/device_span.hpp>
 
-#include <hipcub/hipcub.hpp>
 #include <thrust/detail/type_traits/iterator/is_discard_iterator.h>
 #include <thrust/functional.h>
 #include <thrust/iterator/detail/any_assign.h>
@@ -29,6 +28,8 @@
 #include <thrust/iterator/iterator_traits.h>
 #include <thrust/memory.h>
 #include <thrust/tuple.h>
+
+#include <hipcub/hipcub.hpp>
 
 #include <array>
 #include <type_traits>

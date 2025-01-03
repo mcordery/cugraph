@@ -1,6 +1,6 @@
 #include "hip/hip_runtime.h"
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@
 #include <thrust/iterator/transform_iterator.h>
 #include <thrust/optional.h>
 #include <thrust/scatter.h>
+#include <thrust/sequence.h>
 #include <thrust/set_operations.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/tuple.h>
@@ -3345,22 +3346,23 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
           if constexpr (filter_input_key) {
             if (edge_partition_hypersparse_key_offset_vectors) {
               auto const& offsets = (*edge_partition_hypersparse_key_offset_vectors)[j];
-
-              if (offsets.index() == 0) {
-                hypersparse_non_deg1_key_offsets = raft::device_span<uint32_t const>(
-                  std::get<0>(offsets).data(),
-                  std::get<0>(offsets).size() -
-                    (edge_partition_deg1_hypersparse_key_offset_counts
-                       ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
-                       : size_t{0}));
-              } else {
-                hypersparse_non_deg1_key_offsets = raft::device_span<size_t const>(
-                  std::get<1>(offsets).data(),
-                  std::get<1>(offsets).size() -
-                    (edge_partition_deg1_hypersparse_key_offset_counts
-                       ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
-                       : size_t{0}));
-              }
+              /*mjc
+                            if (offsets.index() == 0) {
+                              hypersparse_non_deg1_key_offsets = raft::device_span<uint32_t const>(
+                                std::get<0>(offsets).data(),
+                                std::get<0>(offsets).size() -
+                                  (edge_partition_deg1_hypersparse_key_offset_counts
+                                     ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
+                                     : size_t{0}));
+                            } else {
+                              hypersparse_non_deg1_key_offsets = raft::device_span<size_t const>(
+                                std::get<1>(offsets).data(),
+                                std::get<1>(offsets).size() -
+                                  (edge_partition_deg1_hypersparse_key_offset_counts
+                                     ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
+                                     : size_t{0}));
+                            }
+                */
               (*edge_partition_hypersparse_non_deg1_key_offset_spans)[j] =
                 *hypersparse_non_deg1_key_offsets;
             }

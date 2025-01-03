@@ -1,5 +1,5 @@
 #=============================================================================
-# Copyright (c) 2018-2024, NVIDIA CORPORATION.
+# Copyright (c) 2018-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -239,17 +239,17 @@ set(CUGRAPH_SOURCES
 #    src/community/detail/common_methods_mg_v64_e64.cu
 #    src/community/detail/common_methods_mg_v32_e32.cu
      src/community/detail/common_methods_sg_v64_e64.cu
- #raft span + previous line   src/community/detail/common_methods_sg_v32_e32.cu
- #raft span   src/community/detail/refine_sg_v64_e64.cu
- #raft span   src/community/detail/refine_sg_v32_e32.cu
+ #span   src/community/detail/common_methods_sg_v32_e32.cu
+ # span   src/community/detail/refine_sg_v64_e64.cu
+ # span   src/community/detail/refine_sg_v32_e32.cu
 #    src/community/detail/refine_mg_v64_e64.cu
 #    src/community/detail/refine_mg_v32_e32.cu
     src/community/edge_triangle_count_sg_v64_e64.cu
     src/community/edge_triangle_count_sg_v32_e32.cu
 #    src/community/edge_triangle_count_mg_v64_e64.cu
 #    src/community/edge_triangle_count_mg_v32_e32.cu
-#mjc span    src/community/detail/maximal_independent_moves_sg_v64_e64.cu
-#mjc span    src/community/detail/maximal_independent_moves_sg_v32_e32.cu
+   src/community/detail/maximal_independent_moves_sg_v64_e64.cu
+    src/community/detail/maximal_independent_moves_sg_v32_e32.cu
 #    src/community/detail/maximal_independent_moves_mg_v64_e64.cu
 #    src/community/detail/maximal_independent_moves_mg_v32_e32.cu
     src/detail/utility_wrappers_32.cu
@@ -264,14 +264,14 @@ set(CUGRAPH_SOURCES
     src/utilities/path_retrieval_sg_v64_e64.cu
     src/structure/legacy/graph.cu
     src/linear_assignment/legacy/hungarian.cu
-#span    src/link_prediction/jaccard_sg_v64_e64.cu
-#span    src/link_prediction/jaccard_sg_v32_e32.cu
-#span    src/link_prediction/sorensen_sg_v64_e64.cu
-#span    src/link_prediction/sorensen_sg_v32_e32.cu
-#span    src/link_prediction/overlap_sg_v64_e64.cu
-#span     src/link_prediction/overlap_sg_v32_e32.cu
-#span    src/link_prediction/cosine_sg_v64_e64.cu
-#span    src/link_prediction/cosine_sg_v32_e32.cu
+#span+e_op    src/link_prediction/jaccard_sg_v64_e64.cu
+#span+e_op    src/link_prediction/jaccard_sg_v32_e32.cu
+#span+e_op    src/link_prediction/sorensen_sg_v64_e64.cu
+#span+e_op    src/link_prediction/sorensen_sg_v32_e32.cu
+#span+e_op    src/link_prediction/overlap_sg_v64_e64.cu
+#span+e_op     src/link_prediction/overlap_sg_v32_e32.cu
+#span+e_op    src/link_prediction/cosine_sg_v64_e64.cu
+#span+e_op    src/link_prediction/cosine_sg_v32_e32.cu
 #    src/link_prediction/jaccard_mg_v64_e64.cu
 #    src/link_prediction/jaccard_mg_v32_e32.cu
 #    src/link_prediction/sorensen_mg_v64_e64.cu
@@ -364,10 +364,10 @@ set(CUGRAPH_SOURCES
     src/structure/graph_sg_v32_e32.cu
 #    src/structure/graph_mg_v64_e64.cu
 #    src/structure/graph_mg_v32_e32.cu
-#span    src/structure/graph_view_sg_v64_e64.cu
-#span    src/structure/graph_view_sg_v32_e32.cu
-#span    src/structure/decompress_to_edgelist_sg_v64_e64.cu
-#span    src/structure/decompress_to_edgelist_sg_v32_e32.cu
+#span+e_op    src/structure/graph_view_sg_v64_e64.cu
+#span+e_op    src/structure/graph_view_sg_v32_e32.cu
+    src/structure/decompress_to_edgelist_sg_v64_e64.cu
+    src/structure/decompress_to_edgelist_sg_v32_e32.cu
 #    src/structure/decompress_to_edgelist_mg_v64_e64.cu
 #    src/structure/decompress_to_edgelist_mg_v32_e32.cu
     src/structure/symmetrize_graph_sg_v64_e64.cu
@@ -388,8 +388,8 @@ set(CUGRAPH_SOURCES
 #    src/structure/coarsen_graph_mg_v32_e32.cu
 #    src/structure/graph_weight_utils_mg_v64_e64.cu
 #    src/structure/graph_weight_utils_mg_v32_e32.cu
-#span    src/structure/graph_weight_utils_sg_v64_e64.cu
-#span    src/structure/graph_weight_utils_sg_v32_e32.cu
+    src/structure/graph_weight_utils_sg_v64_e64.cu
+    src/structure/graph_weight_utils_sg_v32_e32.cu
     src/structure/renumber_edgelist_sg_v64_e64.cu
     src/structure/renumber_edgelist_sg_v32_e32.cu
 #    src/structure/renumber_edgelist_mg_v64_e64.cu
@@ -410,12 +410,12 @@ set(CUGRAPH_SOURCES
     src/structure/select_random_vertices_sg_v32_e32.cu
 #    src/structure/select_random_vertices_mg_v64_e64.cu
 #   src/structure/select_random_vertices_mg_v32_e32.cu
-    src/traversal/extract_bfs_paths_sg_v64_e64.cu
-    src/traversal/extract_bfs_paths_sg_v32_e32.cu
+#span+e_op_result_type    src/traversal/extract_bfs_paths_sg_v64_e64.cu
+#span+e_op_result_type    src/traversal/extract_bfs_paths_sg_v32_e32.cu
 #    src/traversal/extract_bfs_paths_mg_v64_e64.cu
 #    src/traversal/extract_bfs_paths_mg_v32_e32.cu
-#span    src/traversal/bfs_sg_v64_e64.cu
-#span    src/traversal/bfs_sg_v32_e32.cu
+    src/traversal/bfs_sg_v64_e64.cu
+    src/traversal/bfs_sg_v32_e32.cu
 #    src/traversal/bfs_mg_v64_e64.cu
 #    src/traversal/bfs_mg_v32_e32.cu
 #see notes    src/traversal/sssp_sg_v64_e64.cu
@@ -424,24 +424,24 @@ set(CUGRAPH_SOURCES
 #see notes    src/traversal/od_shortest_distances_sg_v32_e32.cu
 #    src/traversal/sssp_mg_v64_e64.cu
 #   src/traversal/sssp_mg_v32_e32.cu
-#span    src/link_analysis/hits_sg_v64_e64.cu
-#span    src/link_analysis/hits_sg_v32_e32.cu
+#span+e_op_result_t    src/link_analysis/hits_sg_v64_e64.cu
+#span+e_op_rersult    src/link_analysis/hits_sg_v32_e32.cu
 #    src/link_analysis/hits_mg_v64_e64.cu
 #    src/link_analysis/hits_mg_v32_e32.cu
-#span    src/link_analysis/pagerank_sg_v64_e64.cu
-#span    src/link_analysis/pagerank_sg_v32_e32.cu
+#span+e_op    src/link_analysis/pagerank_sg_v64_e64.cu
+#span+e_op    src/link_analysis/pagerank_sg_v32_e32.cu
 #    src/link_analysis/pagerank_mg_v64_e64.cu
 #    src/link_analysis/pagerank_mg_v32_e32.cu
-#span    src/centrality/katz_centrality_sg_v64_e64.cu
-#span    src/centrality/katz_centrality_sg_v32_e32.cu
+#span+e_op_result_t    src/centrality/katz_centrality_sg_v64_e64.cu
+#span+e_op_rsult_t    src/centrality/katz_centrality_sg_v32_e32.cu
 #    src/centrality/katz_centrality_mg_v64_e64.cu
 #    src/centrality/katz_centrality_mg_v32_e32.cu
-#span    src/centrality/eigenvector_centrality_sg_v64_e64.cu
-#span    src/centrality/eigenvector_centrality_sg_v32_e32.cu
+#span+e_op    src/centrality/eigenvector_centrality_sg_v64_e64.cu
+#span+e_op    src/centrality/eigenvector_centrality_sg_v32_e32.cu
 #    src/centrality/eigenvector_centrality_mg_v64_e64.cu
 #    src/centrality/eigenvector_centrality_mg_v32_e32.cu
-#span    src/centrality/betweenness_centrality_sg_v64_e64.cu
-#span    src/centrality/betweenness_centrality_sg_v32_e32.cu
+#span+e_op_result    src/centrality/betweenness_centrality_sg_v64_e64.cu
+#span+e_op_result    src/centrality/betweenness_centrality_sg_v32_e32.cu
 #    src/centrality/betweenness_centrality_mg_v64_e64.cu
 #    src/centrality/betweenness_centrality_mg_v32_e32.cu
     src/tree/legacy/mst.cu
@@ -450,8 +450,8 @@ set(CUGRAPH_SOURCES
  #see notes   src/components/weakly_connected_components_sg_v32_e32.cu
  #   src/components/weakly_connected_components_mg_v64_e64.cu
  #   src/components/weakly_connected_components_mg_v32_e32.cu
- #span   src/components/mis_sg_v64_e64.cu
- #span   src/components/mis_sg_v32_e32.cu
+ #span+e_op_result   src/components/mis_sg_v64_e64.cu
+ #span+e_op_result   src/components/mis_sg_v32_e32.cu
  #   src/components/mis_mg_v64_e64.cu
  #   src/components/mis_mg_v32_e32.cu
     src/components/vertex_coloring_sg_v64_e64.cu

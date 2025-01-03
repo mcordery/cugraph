@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -510,12 +510,11 @@ void bfs(raft::handle_t const& handle,
                (*aux_info).visited_bitmap.data(),
                (*aux_info).visited_bitmap.size())] __device__(vertex_t v_offset) -> edge_t {
               auto word = bitmap[packed_bool_offset(v_offset)];
-              if ((word & packed_bool_mask(v_offset)) != packed_bool_empty_mask()) ->edge_t
-                {  // visited
-                  return edge_t->edge_t{0};
-                }
-              else
-                ->edge_t { return out_degrees[v_offset]; }
+              if ((word & packed_bool_mask(v_offset)) != packed_bool_empty_mask()) {  // visited
+                return edge_t{0};
+              } else {
+                return out_degrees[v_offset];
+              }
             },
             edge_t{0},
             thrust::plus<edge_t>{}));

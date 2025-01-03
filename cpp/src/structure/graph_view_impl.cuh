@@ -1,6 +1,6 @@
 #include "hip/hip_runtime.h"
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,11 +145,10 @@ rmm::device_uvector<edge_t> compute_major_degrees(
                       local_degrees.begin(),
                       [offsets, masks] __device__(auto i) -> edge_t {
                         auto local_degree = offsets[i + 1] - offsets[i];
-                        if (masks) ->edge_t
-                          {
-                            local_degree = static_cast<edge_t>(
-                              detail::count_set_bits((*masks).begin(), offsets[i], local_degree));
-                          }
+                        if (masks) {
+                          local_degree = static_cast<edge_t>(
+                            detail::count_set_bits((*masks).begin(), offsets[i], local_degree));
+                        }
                         return local_degree;
                       });
     if (use_dcs) {
@@ -365,18 +364,18 @@ edge_t count_edge_partition_multi_edges(
         thrust::make_counting_iterator(edge_partition.major_range_first()) + (*segment_offsets)[2],
         thrust::make_counting_iterator(edge_partition.major_range_first()) + (*segment_offsets)[3],
         [edge_partition] __device__(auto major) -> edge_t {
-        auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
-        vertex_t const * indices->edge_t{nullptr};
-        [[maybe_unused]] edge_t edge_offset->edge_t{};
-        edge_t local_degree->edge_t{};
-          thrust::tie(indices, edge_offset, local_degree =
-            edge_partition.local_edges(major_offset);
+          auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
+          vertex_t const* indices{nullptr};
+          [[maybe_unused]] edge_t edge_offset{};
+          edge_t local_degree{};
+          thrust::tie(
+            indices, edge_offset, local_degree = edge_partition.local_edges(major_offset));
           edge_t count{0};
           for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
-          if (indices[i - 1] == indices[i]) { ++count; }
+            if (indices[i - 1] == indices[i]) { ++count; }
           }
           return count;
-        }),
+        },
         edge_t{0},
         thrust::plus<edge_t>{});
     }
@@ -385,20 +384,20 @@ edge_t count_edge_partition_multi_edges(
         execution_policy,
         thrust::make_counting_iterator(vertex_t{0}),
         thrust::make_counting_iterator(*(edge_partition.dcs_nzd_vertex_count())),
-          [edge_partition,
-           major_start_offset = (*segment_offsets)[3]] __device__(auto idx) -> edge_t {
-        auto major_idx =
-          major_start_offset + idx;  // major_offset != major_idx in the hypersparse region
-        vertex_t const * indices->edge_t{nullptr};
-        [[maybe_unused]] edge_t edge_offset->edge_t{};
-        edge_t local_degree->edge_t{};
-            thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_idx);
-            edge_t count{0};
-            for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
-          if (indices[i - 1] == indices[i]) { ++count; }
-            }
-            return count;
-          }),
+        [edge_partition,
+         major_start_offset = (*segment_offsets)[3]] __device__(auto idx) -> edge_t {
+          auto major_idx =
+            major_start_offset + idx;  // major_offset != major_idx in the hypersparse region
+          vertex_t const* indices{nullptr};
+          [[maybe_unused]] edge_t edge_offset{};
+          edge_t local_degree{};
+          thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_idx));
+          edge_t count{0};
+          for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
+            if (indices[i - 1] == indices[i]) { ++count; }
+          }
+          return count;
+        },
         edge_t{0},
         thrust::plus<edge_t>{});
     }
@@ -411,17 +410,17 @@ edge_t count_edge_partition_multi_edges(
       thrust::make_counting_iterator(edge_partition.major_range_first()) +
         edge_partition.major_range_size(),
       [edge_partition] __device__(auto major) -> edge_t {
-      auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
-      vertex_t const * indices->edge_t{nullptr};
-      [[maybe_unused]] edge_t edge_offset->edge_t{};
-      edge_t local_degree->edge_t{};
-        thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_offset);
+        auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
+        vertex_t const* indices{nullptr};
+        [[maybe_unused]] edge_t edge_offset{};
+        edge_t local_degree{};
+        thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_offset));
         edge_t count{0};
         for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
-        if (indices[i - 1] == indices[i]) { ++count; }
+          if (indices[i - 1] == indices[i]) { ++count; }
         }
         return count;
-      }),
+      },
       edge_t{0},
       thrust::plus<edge_t>{});
   }
