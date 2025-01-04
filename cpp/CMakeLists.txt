@@ -427,8 +427,8 @@ set(CUGRAPH_SOURCES
 #    src/traversal/bfs_mg_v32_e32.cu
     src/traversal/sssp_sg_v64_e64.cu
     src/traversal/sssp_sg_v32_e32.cu
-#see notes    src/traversal/od_shortest_distances_sg_v64_e64.cu
-#see notes    src/traversal/od_shortest_distances_sg_v32_e32.cu
+    src/traversal/od_shortest_distances_sg_v64_e64.cu
+    src/traversal/od_shortest_distances_sg_v32_e32.cu
 #    src/traversal/sssp_mg_v64_e64.cu
 #   src/traversal/sssp_mg_v32_e32.cu
     src/link_analysis/hits_sg_v64_e64.cu

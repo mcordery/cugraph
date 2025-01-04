@@ -1,6 +1,6 @@
 #include "hip/hip_runtime.h"
 /*
- * Copyright (c) 2024, NVIDIA CORPORATION.
+ * Copyright (c) 2024-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -453,13 +453,13 @@ rmm::device_uvector<weight_t> od_shortest_distances(
                   "represented using a 32 bit value.");
 
   if (do_expensive_check) {
-    auto num_negative_edge_weights =
-      count_if_e(handle,
-                 graph_view,
-                 edge_src_dummy_property_t{}.view(),
-                 edge_dst_dummy_property_t{}.view(),
-                 edge_weight_view,
-                 [] __device__(vertex_t, vertex_t, auto, auto, weight_t w) { return w < 0.0; });
+    auto num_negative_edge_weights = count_if_e(
+      handle,
+      graph_view,
+      edge_src_dummy_property_t{}.view(),
+      edge_dst_dummy_property_t{}.view(),
+      edge_weight_view,
+      [] __host__ __device__(vertex_t, vertex_t, auto, auto, weight_t w) { return w < 0.0; });
     CUGRAPH_EXPECTS(num_negative_edge_weights == 0,
                     "Invalid input argument: input edge weights should have non-negative values.");
 
@@ -467,12 +467,12 @@ rmm::device_uvector<weight_t> od_shortest_distances(
       handle.get_thrust_policy(),
       origins.begin(),
       origins.end(),
-      [num_vertices] __device__(auto v) { return !is_valid_vertex(num_vertices, v); });
+      [num_vertices] __host__ __device__(auto v) { return !is_valid_vertex(num_vertices, v); });
     auto num_invalid_destinations = thrust::count_if(
       handle.get_thrust_policy(),
       destinations.begin(),
       destinations.end(),
-      [num_vertices] __device__(auto v) { return !is_valid_vertex(num_vertices, v); });
+      [num_vertices] __host__ __device__(auto v) { return !is_valid_vertex(num_vertices, v); });
     CUGRAPH_EXPECTS(num_invalid_origins == 0,
                     "Invalid input arguments: origins contains invalid vertex IDs.");
     CUGRAPH_EXPECTS(num_invalid_destinations == 0,
