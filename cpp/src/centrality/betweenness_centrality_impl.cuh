@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ struct brandes_e_op_t {
   const vertex_t invalid_distance_{std::numeric_limits<vertex_t>::max()};
 
   template <typename value_t, typename ignore_t>
-  __device__ thrust::optional<value_t> operator()(
+  __host__ __device__ thrust::optional<value_t> operator()(
     vertex_t, vertex_t, value_t src_sigma, vertex_t dst_distance, ignore_t) const
   {
     return (dst_distance == invalid_distance_) ? thrust::make_optional(src_sigma) : thrust::nullopt;
@@ -64,7 +64,7 @@ struct extract_edge_e_op_t {
   vertex_t d{};
 
   template <typename edge_t, typename weight_t>
-  __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
+  __host__ __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
     vertex_t src,
     vertex_t dst,
     thrust::tuple<vertex_t, edge_t, weight_t> src_props,
@@ -143,19 +143,19 @@ std::tuple<rmm::device_uvector<vertex_t>, rmm::device_uvector<edge_t>> brandes_b
       brandes_e_op_t<vertex_t>{},
       reduce_op::plus<vertex_t>());
 
-    update_v_frontier(handle,
-                      graph_view,
-                      std::move(new_frontier),
-                      std::move(new_sigma),
-                      vertex_frontier,
-                      std::vector<size_t>{bucket_idx_next},
-                      thrust::make_zip_iterator(distances.begin(), sigmas.begin()),
-                      thrust::make_zip_iterator(distances.begin(), sigmas.begin()),
-                      [hop] __device__(auto v, auto old_values, auto v_sigma) {
-                        return thrust::make_tuple(
-                          thrust::make_optional(bucket_idx_next),
-                          thrust::make_optional(thrust::make_tuple(hop + 1, v_sigma)));
-                      });
+    update_v_frontier(
+      handle,
+      graph_view,
+      std::move(new_frontier),
+      std::move(new_sigma),
+      vertex_frontier,
+      std::vector<size_t>{bucket_idx_next},
+      thrust::make_zip_iterator(distances.begin(), sigmas.begin()),
+      thrust::make_zip_iterator(distances.begin(), sigmas.begin()),
+      [hop, bucket_idx_next] __host__ __device__(auto v, auto old_values, auto v_sigma) {
+        return thrust::make_tuple(thrust::make_optional(bucket_idx_next),
+                                  thrust::make_optional(thrust::make_tuple(hop + 1, v_sigma)));
+      });
 
     vertex_frontier.bucket(bucket_idx_cur).clear();
     vertex_frontier.bucket(bucket_idx_cur).shrink_to_fit();

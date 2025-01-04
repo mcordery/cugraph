@@ -447,18 +447,18 @@ set(CUGRAPH_SOURCES
 #span+e_op    src/centrality/eigenvector_centrality_sg_v32_e32.cu
 #    src/centrality/eigenvector_centrality_mg_v64_e64.cu
 #    src/centrality/eigenvector_centrality_mg_v32_e32.cu
-#span+e_op_result    src/centrality/betweenness_centrality_sg_v64_e64.cu
-#span+e_op_result    src/centrality/betweenness_centrality_sg_v32_e32.cu
+    src/centrality/betweenness_centrality_sg_v64_e64.cu
+   src/centrality/betweenness_centrality_sg_v32_e32.cu
 #    src/centrality/betweenness_centrality_mg_v64_e64.cu
 #    src/centrality/betweenness_centrality_mg_v32_e32.cu
     src/tree/legacy/mst.cu
     src/from_cugraph_ops/sampling_index.cu
- #see notes   src/components/weakly_connected_components_sg_v64_e64.cu
- #see notes   src/components/weakly_connected_components_sg_v32_e32.cu
+    src/components/weakly_connected_components_sg_v64_e64.cu
+   src/components/weakly_connected_components_sg_v32_e32.cu
  #   src/components/weakly_connected_components_mg_v64_e64.cu
  #   src/components/weakly_connected_components_mg_v32_e32.cu
- #span+e_op_result   src/components/mis_sg_v64_e64.cu
- #span+e_op_result   src/components/mis_sg_v32_e32.cu
+   src/components/mis_sg_v64_e64.cu
+  src/components/mis_sg_v32_e32.cu
  #   src/components/mis_mg_v64_e64.cu
  #   src/components/mis_mg_v32_e32.cu
     src/components/vertex_coloring_sg_v64_e64.cu
@@ -473,16 +473,16 @@ set(CUGRAPH_SOURCES
     src/structure/symmetrize_edgelist_sg_v32_e32.cu
 #    src/structure/symmetrize_edgelist_mg_v64_e64.cu
 #    src/structure/symmetrize_edgelist_mg_v32_e32.cu
-#see notes    src/community/triangle_count_sg_v64_e64.cu
-#see notes    src/community/triangle_count_sg_v32_e32.cu
+   src/community/triangle_count_sg_v64_e64.cu
+    src/community/triangle_count_sg_v32_e32.cu
 #    src/community/triangle_count_mg_v64_e64.cu
 #    src/community/triangle_count_mg_v32_e32.cu
     src/community/approx_weighted_matching_sg_v64_e64.cu
     src/community/approx_weighted_matching_sg_v32_e32.cu
  #   src/community/approx_weighted_matching_mg_v64_e64.cu
  #   src/community/approx_weighted_matching_mg_v32_e32.cu
- #see notes   src/traversal/k_hop_nbrs_sg_v64_e64.cu
- #see notes   src/traversal/k_hop_nbrs_sg_v32_e32.cu
+   src/traversal/k_hop_nbrs_sg_v64_e64.cu
+  src/traversal/k_hop_nbrs_sg_v32_e32.cu
  #   src/traversal/k_hop_nbrs_mg_v64_e64.cu
  #   src/traversal/k_hop_nbrs_mg_v32_e32.cu
     src/mtmg/vertex_result_sg_v32_e32.cu

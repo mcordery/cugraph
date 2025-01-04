@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ struct invalid_or_outside_local_vertex_partition_range_t {
   vertex_t local_vertex_partition_range_first{};
   vertex_t local_vertex_partition_range_last{};
 
-  __device__ bool operator()(vertex_t v) const
+  __host__ __device__ bool operator()(vertex_t v) const
   {
     return !is_valid_vertex(num_vertices, v) || (v < local_vertex_partition_range_first) ||
            (v >= local_vertex_partition_range_last);
@@ -59,16 +59,17 @@ struct invalid_or_outside_local_vertex_partition_range_t {
 
 template <typename edge_t>
 struct is_two_or_greater_t {
-  __device__ bool operator()(edge_t core_number) const { return core_number >= edge_t{2}; }
+  __host__ __device__ bool operator()(edge_t core_number) const { return core_number >= edge_t{2}; }
 };
 
 template <typename vertex_t, typename edge_t>
 struct extract_low_to_high_degree_edges_t {
-  __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(vertex_t src,
-                                                                            vertex_t dst,
-                                                                            edge_t src_out_degree,
-                                                                            edge_t dst_out_degree,
-                                                                            thrust::nullopt_t) const
+  __host__ __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
+    vertex_t src,
+    vertex_t dst,
+    edge_t src_out_degree,
+    edge_t dst_out_degree,
+    thrust::nullopt_t) const
   {
     return (src_out_degree < dst_out_degree)
              ? thrust::optional<thrust::tuple<vertex_t, vertex_t>>{thrust::make_tuple(src, dst)}
@@ -82,7 +83,7 @@ struct extract_low_to_high_degree_edges_t {
 
 template <typename vertex_t, typename edge_t>
 struct intersection_op_t {
-  __device__ thrust::tuple<edge_t, edge_t, edge_t> operator()(
+  __host__ __device__ thrust::tuple<edge_t, edge_t, edge_t> operator()(
     vertex_t,
     vertex_t,
     thrust::nullopt_t,
@@ -100,7 +101,7 @@ struct vertex_to_count_t {
   raft::device_span<vertex_t const> sorted_local_vertices{};
   raft::device_span<edge_t const> local_counts{};
 
-  __device__ edge_t operator()(vertex_t v) const
+  __host__ __device__ edge_t operator()(vertex_t v) const
   {
     auto it = thrust::lower_bound(
       thrust::seq, sorted_local_vertices.begin(), sorted_local_vertices.end(), v);
@@ -117,7 +118,7 @@ template <typename vertex_t>
 struct vertex_offset_from_vertex_t {
   vertex_t local_vertex_partition_range_first{};
 
-  __device__ vertex_t operator()(vertex_t v) const
+  __host__ __device__ vertex_t operator()(vertex_t v) const
   {
     return v - local_vertex_partition_range_first;
   }
@@ -280,42 +281,45 @@ void triangle_count(raft::handle_t const& handle,
 
     thrust::fill(
       handle.get_thrust_policy(), within_two_hop_flags.begin(), within_two_hop_flags.end(), false);
-    thrust::for_each(handle.get_thrust_policy(),
-                     unique_vertices.begin(),
-                     unique_vertices.end(),
-                     [within_two_hop_flags = raft::device_span<bool>(within_two_hop_flags.data(),
-                                                                     within_two_hop_flags.size()),
-                      local_vertex_partition_range_first =
-                        cur_graph_view.local_vertex_partition_range_first()] __device__(auto v) {
-                       auto v_offset                  = v - local_vertex_partition_range_first;
-                       within_two_hop_flags[v_offset] = true;
-                     });
+    thrust::for_each(
+      handle.get_thrust_policy(),
+      unique_vertices.begin(),
+      unique_vertices.end(),
+      [within_two_hop_flags =
+         raft::device_span<bool>(within_two_hop_flags.data(), within_two_hop_flags.size()),
+       local_vertex_partition_range_first =
+         cur_graph_view.local_vertex_partition_range_first()] __host__ __device__(auto v) {
+        auto v_offset                  = v - local_vertex_partition_range_first;
+        within_two_hop_flags[v_offset] = true;
+      });
     unique_vertices.resize(0, handle.get_stream());
     unique_vertices.shrink_to_fit(handle.get_stream());
 
-    thrust::for_each(handle.get_thrust_policy(),
-                     unique_one_hop_nbrs.begin(),
-                     unique_one_hop_nbrs.end(),
-                     [within_two_hop_flags = raft::device_span<bool>(within_two_hop_flags.data(),
-                                                                     within_two_hop_flags.size()),
-                      local_vertex_partition_range_first =
-                        cur_graph_view.local_vertex_partition_range_first()] __device__(auto v) {
-                       auto v_offset                  = v - local_vertex_partition_range_first;
-                       within_two_hop_flags[v_offset] = true;
-                     });
+    thrust::for_each(
+      handle.get_thrust_policy(),
+      unique_one_hop_nbrs.begin(),
+      unique_one_hop_nbrs.end(),
+      [within_two_hop_flags =
+         raft::device_span<bool>(within_two_hop_flags.data(), within_two_hop_flags.size()),
+       local_vertex_partition_range_first =
+         cur_graph_view.local_vertex_partition_range_first()] __host__ __device__(auto v) {
+        auto v_offset                  = v - local_vertex_partition_range_first;
+        within_two_hop_flags[v_offset] = true;
+      });
     unique_one_hop_nbrs.resize(0, handle.get_stream());
     unique_one_hop_nbrs.shrink_to_fit(handle.get_stream());
 
-    thrust::for_each(handle.get_thrust_policy(),
-                     unique_two_hop_nbrs.begin(),
-                     unique_two_hop_nbrs.end(),
-                     [within_two_hop_flags = raft::device_span<bool>(within_two_hop_flags.data(),
-                                                                     within_two_hop_flags.size()),
-                      local_vertex_partition_range_first =
-                        cur_graph_view.local_vertex_partition_range_first()] __device__(auto v) {
-                       auto v_offset                  = v - local_vertex_partition_range_first;
-                       within_two_hop_flags[v_offset] = true;
-                     });
+    thrust::for_each(
+      handle.get_thrust_policy(),
+      unique_two_hop_nbrs.begin(),
+      unique_two_hop_nbrs.end(),
+      [within_two_hop_flags =
+         raft::device_span<bool>(within_two_hop_flags.data(), within_two_hop_flags.size()),
+       local_vertex_partition_range_first =
+         cur_graph_view.local_vertex_partition_range_first()] __host__ __device__(auto v) {
+        auto v_offset                  = v - local_vertex_partition_range_first;
+        within_two_hop_flags[v_offset] = true;
+      });
     unique_two_hop_nbrs.resize(0, handle.get_stream());
     unique_two_hop_nbrs.shrink_to_fit(handle.get_stream());
 
@@ -338,7 +342,7 @@ void triangle_count(raft::handle_t const& handle,
       edge_src_within_two_hop_flags.view(),
       edge_dst_within_two_hop_flags.view(),
       edge_dummy_property_t{}.view(),
-      [] __device__(auto, auto, auto src_within_two_hop, auto dst_within_two_hop, auto) {
+      [] __host__ __device__(auto, auto, auto src_within_two_hop, auto dst_within_two_hop, auto) {
         return src_within_two_hop && dst_within_two_hop;
       },
       within_two_hop_edge_mask.mutable_view());
@@ -362,7 +366,7 @@ void triangle_count(raft::handle_t const& handle,
       edge_src_dummy_property_t{}.view(),
       edge_dst_dummy_property_t{}.view(),
       edge_dummy_property_t{}.view(),
-      [] __device__(auto src, auto dst, auto, auto, auto) { return src != dst; },
+      [] __host__ __device__(auto src, auto dst, auto, auto, auto) { return src != dst; },
       self_loop_edge_mask.mutable_view());
 
     edge_mask = std::move(self_loop_edge_mask);
@@ -405,7 +409,7 @@ void triangle_count(raft::handle_t const& handle,
       edge_src_in_two_cores.view(),
       edge_dst_in_two_cores.view(),
       edge_dummy_property_t{}.view(),
-      [] __device__(auto, auto, auto src_in_two_core, auto dst_in_two_core, auto) {
+      [] __host__ __device__(auto, auto, auto src_in_two_core, auto dst_in_two_core, auto) {
         return src_in_two_core && dst_in_two_core;
       },
       in_two_core_edge_mask.mutable_view());
