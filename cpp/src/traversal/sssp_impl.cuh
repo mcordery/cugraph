@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ struct e_op_t {
   weight_t const* distances{};
   weight_t cutoff{};
 
-  __device__ thrust::optional<thrust::tuple<weight_t, vertex_t>> operator()(
+  __host__ __device__ thrust::optional<thrust::tuple<weight_t, vertex_t>> operator()(
     vertex_t src, vertex_t dst, weight_t src_val, thrust::nullopt_t, weight_t w) const
   {
     auto push         = true;
@@ -106,13 +106,13 @@ void sssp(raft::handle_t const& handle,
                   "Invalid input argument: source vertex out-of-range.");
 
   if (do_expensive_check) {
-    auto num_negative_edge_weights =
-      count_if_e(handle,
-                 push_graph_view,
-                 edge_src_dummy_property_t{}.view(),
-                 edge_dst_dummy_property_t{}.view(),
-                 edge_weight_view,
-                 [] __device__(vertex_t, vertex_t, auto, auto, weight_t w) { return w < 0.0; });
+    auto num_negative_edge_weights = count_if_e(
+      handle,
+      push_graph_view,
+      edge_src_dummy_property_t{}.view(),
+      edge_dst_dummy_property_t{}.view(),
+      edge_weight_view,
+      [] __host__ __device__(vertex_t, vertex_t, auto, auto, weight_t w) { return w < 0.0; });
     CUGRAPH_EXPECTS(num_negative_edge_weights == 0,
                     "Invalid input argument: input edge weights should have non-negative values.");
   }
@@ -219,7 +219,8 @@ void sssp(raft::handle_t const& handle,
       std::vector<size_t>{bucket_idx_next_near, bucket_idx_far},
       distances,
       thrust::make_zip_iterator(thrust::make_tuple(distances, predecessor_first)),
-      [near_far_threshold] __device__(auto v, auto v_val, auto pushed_val) {
+      [near_far_threshold, bucket_idx_next_near, bucket_idx_far] __device__(
+        auto v, auto v_val, auto pushed_val) {
         auto new_dist = thrust::get<0>(pushed_val);
         auto update   = (new_dist < v_val);
         return thrust::make_tuple(
@@ -245,8 +246,12 @@ void sssp(raft::handle_t const& handle,
         vertex_frontier.split_bucket(
           bucket_idx_far,
           std::vector<size_t>{bucket_idx_cur_near},
-          [vertex_partition, distances, old_near_far_threshold, near_far_threshold] __device__(
-            auto v) {
+          [vertex_partition,
+           distances,
+           old_near_far_threshold,
+           near_far_threshold,
+           bucket_idx_cur_near,
+           bucket_idx_far] __device__(auto v) {
             auto dist =
               *(distances + vertex_partition.local_vertex_partition_offset_from_vertex_nocheck(v));
             return dist >= old_near_far_threshold

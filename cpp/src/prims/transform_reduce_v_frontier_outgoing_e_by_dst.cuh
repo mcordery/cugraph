@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ template <typename key_t,
 struct transform_reduce_v_frontier_call_e_op_t {
   EdgeOp e_op{};
 
-  __device__ thrust::optional<
+  __host__ __device__ thrust::optional<
     std::conditional_t<!std::is_same_v<key_t, void> && !std::is_same_v<payload_t, void>,
                        thrust::tuple<key_t, payload_t>,
                        std::conditional_t<!std::is_same_v<key_t, void>, key_t, payload_t>>>
@@ -526,8 +526,8 @@ sort_and_reduce_buffer_elements(
                             [invalid_key = *invalid_key] __device__(auto kv) -> bool {
                               auto key = thrust::get<0>(kv);
                               return key == invalid_key;
-                            }),
-          handle.get_stream()));
+                            })),
+        handle.get_stream());
       resize_dataframe_buffer(
         payload_buffer, size_dataframe_buffer(key_buffer), handle.get_stream());
     }

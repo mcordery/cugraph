@@ -78,7 +78,7 @@ struct topdown_e_op_t {
   detail::edge_partition_endpoint_property_device_view_t<vertex_t, uint32_t*, bool> visited_flags{};
   vertex_t dst_first{};
 
-  __device__ thrust::optional<vertex_t> operator()(
+  __host__ __device__ thrust::optional<vertex_t> operator()(
     vertex_t src, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t) const
   {
     auto dst_offset = dst - dst_first;
@@ -90,7 +90,7 @@ struct topdown_e_op_t {
 
 template <typename vertex_t>
 struct bottomup_e_op_t {
-  __device__ vertex_t operator()(
+  __host__ __device__ vertex_t operator()(
     vertex_t src, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t) const
   {
     return dst;
@@ -103,7 +103,7 @@ struct bottomup_pred_op_t {
     prev_visited_flags{};  // visited in the previous iterations
   vertex_t dst_first{};
 
-  __device__ bool operator()(
+  __host__ __device__ bool operator()(
     vertex_t src, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t) const
   {
     return prev_visited_flags.get(dst - dst_first);

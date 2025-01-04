@@ -124,7 +124,14 @@ message("-- Building for GPU_ARCHS = ${CMAKE_CUDA_ARCHITECTURES}")
 
 list(APPEND CUGRAPH_CXX_FLAGS -DUSE_HIP)
 list(APPEND CUGRAPH_CXX_FLAGS -DHIP_ENABLE_WARP_SYNC_BUILTINS=1)
-list(APPEND CUGRAPH_CXX_FLAGS -DNO_CUGRAPH_OPS)
+list(APPEND CUGRAPH_CXX_FLAGS   -DLIBCUDACXX_ENABLE_EXPERIMENTAL_MEMORY_RESOURCE)
+list(APPEND CUGRAPH_CXX_FLAGS    -DRAFT_SYSTEM_LITTLE_ENDIAN=1)
+list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP)
+list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_DISABLE_ABI_NAMESPACE)
+list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP)
+list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR )
+
+
 
 list(APPEND CUGRAPH_CXX_FLAGS -Wno-c++11-narrowing -Wno-unknown-pragmas)
 list(APPEND CUGRAPH_CXX_FLAGS -Wno-unused-result)
@@ -402,24 +409,24 @@ set(CUGRAPH_SOURCES
 #see notes    src/structure/relabel_sg_v32_e32.cu
 #    src/structure/relabel_mg_v64_e64.cu
 #    src/structure/relabel_mg_v32_e32.cu
-#see notes    src/structure/induced_subgraph_sg_v64_e64.cu
-#see notes    src/structure/induced_subgraph_sg_v32_e32.cu
+    src/structure/induced_subgraph_sg_v64_e64.cu
+    src/structure/induced_subgraph_sg_v32_e32.cu
 #    src/structure/induced_subgraph_mg_v64_e64.cu
 #    src/structure/induced_subgraph_mg_v32_e32.cu
     src/structure/select_random_vertices_sg_v64_e64.cu
     src/structure/select_random_vertices_sg_v32_e32.cu
 #    src/structure/select_random_vertices_mg_v64_e64.cu
 #   src/structure/select_random_vertices_mg_v32_e32.cu
-#span+e_op_result_type    src/traversal/extract_bfs_paths_sg_v64_e64.cu
-#span+e_op_result_type    src/traversal/extract_bfs_paths_sg_v32_e32.cu
+   src/traversal/extract_bfs_paths_sg_v64_e64.cu
+   src/traversal/extract_bfs_paths_sg_v32_e32.cu
 #    src/traversal/extract_bfs_paths_mg_v64_e64.cu
 #    src/traversal/extract_bfs_paths_mg_v32_e32.cu
     src/traversal/bfs_sg_v64_e64.cu
     src/traversal/bfs_sg_v32_e32.cu
 #    src/traversal/bfs_mg_v64_e64.cu
 #    src/traversal/bfs_mg_v32_e32.cu
-#see notes    src/traversal/sssp_sg_v64_e64.cu
-#see notes    src/traversal/sssp_sg_v32_e32.cu
+    src/traversal/sssp_sg_v64_e64.cu
+    src/traversal/sssp_sg_v32_e32.cu
 #see notes    src/traversal/od_shortest_distances_sg_v64_e64.cu
 #see notes    src/traversal/od_shortest_distances_sg_v32_e32.cu
 #    src/traversal/sssp_mg_v64_e64.cu
