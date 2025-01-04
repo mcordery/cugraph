@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2023-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1386,7 +1386,7 @@ compute_vertex_renumber_map(
           handle.get_thrust_policy(),
           renumber_map.begin(),
           renumber_map.end(),
-          [offsets = *vertex_type_offsets] __device__(auto lhs, auto rhs) {
+          [offsets = *vertex_type_offsets] __device__(auto lhs, auto rhs) -> bool {
             auto lhs_v_type = thrust::distance(
               offsets.begin() + 1,
               thrust::upper_bound(

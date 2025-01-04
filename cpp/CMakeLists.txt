@@ -316,8 +316,8 @@ set(CUGRAPH_SOURCES
 #see notes    src/lookup/lookup_src_dst_sg_v64_e64.cu
     src/sampling/random_walks_old_sg_v32_e32.cu
     src/sampling/random_walks_old_sg_v64_e64.cu
-#see notes    src/sampling/random_walks_sg_v64_e64.cu
-#see notes    src/sampling/random_walks_sg_v32_e32.cu
+    src/sampling/random_walks_sg_v64_e64.cu
+    src/sampling/random_walks_sg_v32_e32.cu
     src/sampling/detail/prepare_next_frontier_sg_v64_e64.cu
     src/sampling/detail/prepare_next_frontier_sg_v32_e32.cu
 #    src/sampling/detail/prepare_next_frontier_mg_v64_e64.cu
@@ -328,8 +328,8 @@ set(CUGRAPH_SOURCES
 #    src/sampling/detail/gather_one_hop_edgelist_mg_v32_e32.cu
     src/sampling/detail/remove_visited_vertices_from_frontier_sg_v32_e32.cu
     src/sampling/detail/remove_visited_vertices_from_frontier_sg_v64_e64.cu
-#see notes    src/sampling/detail/check_edge_bias_values_sg_v64_e64.cu
-#see notes    src/sampling/detail/check_edge_bias_values_sg_v32_e32.cu
+    src/sampling/detail/check_edge_bias_values_sg_v64_e64.cu
+    src/sampling/detail/check_edge_bias_values_sg_v32_e32.cu
 #    src/sampling/detail/check_edge_bias_values_mg_v64_e64.cu
 #    src/sampling/detail/check_edge_bias_values_mg_v32_e32.cu
     src/sampling/detail/sample_edges_sg_v64_e64.cu
@@ -346,10 +346,10 @@ set(CUGRAPH_SOURCES
     src/sampling/negative_sampling_sg_v64_e64.cu
 #    src/sampling/negative_sampling_mg_v32_e32.cu
 #    src/sampling/negative_sampling_mg_v64_e64.cu
-#see notes    src/sampling/sampling_post_processing_sg_v64_e64.cu
-#see notes    src/sampling/sampling_post_processing_sg_v32_e32.cu
-#see notes    src/cores/core_number_sg_v64_e64.cu
-#see notes    src/cores/core_number_sg_v32_e32.cu
+#mjc    src/sampling/sampling_post_processing_sg_v64_e64.cu
+#mjc    src/sampling/sampling_post_processing_sg_v32_e32.cu
+    src/cores/core_number_sg_v64_e64.cu
+    src/cores/core_number_sg_v32_e32.cu
 #    src/cores/core_number_mg_v64_e64.cu
 #    src/cores/core_number_mg_v32_e32.cu
     src/cores/k_core_sg_v64_e64.cu

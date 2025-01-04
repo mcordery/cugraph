@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,15 +53,15 @@ namespace detail {
 template <typename vertex_t, typename weight_t>
 struct sample_edges_op_t {
   template <typename W = weight_t>
-  __device__ std::enable_if_t<std::is_same_v<W, void>, vertex_t> operator()(
+  __host__ __device__ std::enable_if_t<std::is_same_v<W, void>, vertex_t> operator()(
     vertex_t, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t) const
   {
     return dst;
   }
 
   template <typename W = weight_t>
-  __device__ std::enable_if_t<!std::is_same_v<W, void>, thrust::tuple<vertex_t, W>> operator()(
-    vertex_t, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, W w) const
+  __host__ __device__ std::enable_if_t<!std::is_same_v<W, void>, thrust::tuple<vertex_t, W>>
+  operator()(vertex_t, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, W w) const
   {
     return thrust::make_tuple(dst, w);
   }
@@ -69,7 +69,7 @@ struct sample_edges_op_t {
 
 template <typename vertex_t, typename bias_t>
 struct biased_random_walk_e_bias_op_t {
-  __device__ bias_t
+  __host__ __device__ bias_t
   operator()(vertex_t, vertex_t, bias_t src_out_weight_sum, thrust::nullopt_t, bias_t weight) const
   {
     return weight / src_out_weight_sum;
@@ -78,7 +78,7 @@ struct biased_random_walk_e_bias_op_t {
 
 template <typename vertex_t, typename weight_t>
 struct biased_sample_edges_op_t {
-  __device__ thrust::tuple<vertex_t, weight_t> operator()(
+  __host__ __device__ thrust::tuple<vertex_t, weight_t> operator()(
     vertex_t, vertex_t dst, weight_t, thrust::nullopt_t, weight_t weight) const
   {
     return thrust::make_tuple(dst, weight);
@@ -96,7 +96,7 @@ struct node2vec_random_walk_e_bias_op_t {
 
   // Unweighted Bias Operator
   template <typename W = weight_t>
-  __device__ std::enable_if_t<std::is_same_v<W, void>, bias_t> operator()(
+  __host__ __device__ std::enable_if_t<std::is_same_v<W, void>, bias_t> operator()(
     thrust::tuple<vertex_t, vertex_t> tagged_src,
     vertex_t dst,
     thrust::nullopt_t,
@@ -123,7 +123,7 @@ struct node2vec_random_walk_e_bias_op_t {
 
   //  Weighted Bias Operator
   template <typename W = weight_t>
-  __device__ std::enable_if_t<!std::is_same_v<W, void>, bias_t> operator()(
+  __host__ __device__ std::enable_if_t<!std::is_same_v<W, void>, bias_t> operator()(
     thrust::tuple<vertex_t, vertex_t> tagged_src,
     vertex_t dst,
     thrust::nullopt_t,
@@ -152,7 +152,7 @@ struct node2vec_random_walk_e_bias_op_t {
 template <typename vertex_t, typename weight_t>
 struct node2vec_sample_edges_op_t {
   template <typename W = weight_t>
-  __device__ std::enable_if_t<std::is_same_v<W, void>, vertex_t> operator()(
+  __host__ __device__ std::enable_if_t<std::is_same_v<W, void>, vertex_t> operator()(
     thrust::tuple<vertex_t, vertex_t> tagged_src,
     vertex_t dst,
     thrust::nullopt_t,
@@ -163,12 +163,12 @@ struct node2vec_sample_edges_op_t {
   }
 
   template <typename W = weight_t>
-  __device__ std::enable_if_t<!std::is_same_v<W, void>, thrust::tuple<vertex_t, W>> operator()(
-    thrust::tuple<vertex_t, vertex_t> tagged_src,
-    vertex_t dst,
-    thrust::nullopt_t,
-    thrust::nullopt_t,
-    W w) const
+  __host__ __device__ std::enable_if_t<!std::is_same_v<W, void>, thrust::tuple<vertex_t, W>>
+  operator()(thrust::tuple<vertex_t, vertex_t> tagged_src,
+             vertex_t dst,
+             thrust::nullopt_t,
+             thrust::nullopt_t,
+             W w) const
   {
     return thrust::make_tuple(dst, w);
   }
@@ -591,13 +591,14 @@ random_walk_impl(raft::handle_t const& handle,
       handle, current_gpu.data(), current_gpu.size(), handle.get_comms().get_rank());
   }
 
-  thrust::for_each(
-    handle.get_thrust_policy(),
-    thrust::make_counting_iterator<size_t>(0),
-    thrust::make_counting_iterator<size_t>(current_vertices.size()),
-    [current_verts = current_vertices.data(),
-     result_verts  = result_vertices.data(),
-     max_length] __device__(size_t i) { result_verts[i * (max_length + 1)] = current_verts[i]; });
+  thrust::for_each(handle.get_thrust_policy(),
+                   thrust::make_counting_iterator<size_t>(0),
+                   thrust::make_counting_iterator<size_t>(current_vertices.size()),
+                   [current_verts = current_vertices.data(),
+                    result_verts  = result_vertices.data(),
+                    max_length] __host__ __device__(size_t i) {
+                     result_verts[i * (max_length + 1)] = current_verts[i];
+                   });
 
   rmm::device_uvector<vertex_t> vertex_partition_range_lasts(
     graph_view.vertex_partition_range_lasts().size(), handle.get_stream());
@@ -631,7 +632,9 @@ random_walk_impl(raft::handle_t const& handle,
                cugraph::detail::compute_gpu_id_from_int_vertex_t<vertex_t>{
                  {vertex_partition_range_lasts.begin(), vertex_partition_range_lasts.size()},
                  major_comm_size,
-                 minor_comm_size}] __device__(auto val) { return key_func(thrust::get<0>(val)); },
+                 minor_comm_size}] __host__ __device__(auto val) {
+              return key_func(thrust::get<0>(val));
+            },
             handle.get_stream());
       } else {
         // Shuffle vertices to correct GPU to compute random indices
@@ -647,7 +650,9 @@ random_walk_impl(raft::handle_t const& handle,
                cugraph::detail::compute_gpu_id_from_int_vertex_t<vertex_t>{
                  {vertex_partition_range_lasts.begin(), vertex_partition_range_lasts.size()},
                  major_comm_size,
-                 minor_comm_size}] __device__(auto val) { return key_func(thrust::get<0>(val)); },
+                 minor_comm_size}] __host__ __device__(auto val) {
+              return key_func(thrust::get<0>(val));
+            },
             handle.get_stream());
       }
     }
@@ -703,7 +708,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         } else {
@@ -718,7 +723,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         }
@@ -735,7 +740,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         } else {
@@ -748,7 +753,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         }
@@ -767,7 +772,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         } else {
@@ -780,7 +785,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         }
@@ -795,7 +800,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         } else {
@@ -808,7 +813,7 @@ random_walk_impl(raft::handle_t const& handle,
                               input_iter,
                               input_iter + current_vertices.size(),
                               current_vertices.begin(),
-                              [] __device__(auto dst) {
+                              [] __host__ __device__(auto dst) {
                                 return (dst == cugraph::invalid_vertex_id<vertex_t>::value);
                               }));
         }
@@ -849,7 +854,7 @@ random_walk_impl(raft::handle_t const& handle,
               handle.get_comms(),
               current_iter,
               current_iter + current_vertices.size(),
-              [] __device__(auto val) { return thrust::get<2>(val); },
+              [] __host__ __device__(auto val) { return thrust::get<2>(val); },
               handle.get_stream());
         } else {
           auto current_iter = thrust::make_zip_iterator(current_vertices.begin(),
@@ -864,7 +869,7 @@ random_walk_impl(raft::handle_t const& handle,
               handle.get_comms(),
               current_iter,
               current_iter + current_vertices.size(),
-              [] __device__(auto val) { return thrust::get<1>(val); },
+              [] __host__ __device__(auto val) { return thrust::get<1>(val); },
               handle.get_stream());
         }
       } else {
@@ -880,7 +885,7 @@ random_walk_impl(raft::handle_t const& handle,
               handle.get_comms(),
               current_iter,
               current_iter + current_vertices.size(),
-              [] __device__(auto val) { return thrust::get<2>(val); },
+              [] __host__ __device__(auto val) { return thrust::get<2>(val); },
               handle.get_stream());
         } else {
           auto current_iter = thrust::make_zip_iterator(
@@ -892,7 +897,7 @@ random_walk_impl(raft::handle_t const& handle,
               handle.get_comms(),
               current_iter,
               current_iter + current_vertices.size(),
-              [] __device__(auto val) { return thrust::get<1>(val); },
+              [] __host__ __device__(auto val) { return thrust::get<1>(val); },
               handle.get_stream());
         }
       }
@@ -907,7 +912,7 @@ random_walk_impl(raft::handle_t const& handle,
                        [result_verts = result_vertices.data(),
                         result_wgts  = result_weights->data(),
                         level,
-                        max_length] __device__(auto tuple) {
+                        max_length] __host__ __device__(auto tuple) {
                          vertex_t v                                       = thrust::get<0>(tuple);
                          weight_t w                                       = thrust::get<1>(tuple);
                          size_t pos                                       = thrust::get<2>(tuple);
@@ -919,7 +924,7 @@ random_walk_impl(raft::handle_t const& handle,
         handle.get_thrust_policy(),
         thrust::make_zip_iterator(current_vertices.begin(), current_position.begin()),
         thrust::make_zip_iterator(current_vertices.end(), current_position.end()),
-        [result_verts = result_vertices.data(), level, max_length] __device__(auto tuple) {
+        [result_verts = result_vertices.data(), level, max_length] __host__ __device__(auto tuple) {
           vertex_t v                                       = thrust::get<0>(tuple);
           size_t pos                                       = thrust::get<1>(tuple);
           result_verts[pos * (max_length + 1) + level + 1] = v;

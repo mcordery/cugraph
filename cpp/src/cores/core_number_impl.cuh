@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -241,7 +241,8 @@ void core_number(raft::handle_t const& handle,
             std::vector<size_t>{bucket_idx_next},
             core_numbers,
             core_numbers,
-            [k_first,
+            [bucket_idx_next,
+             k_first,
              k,
              delta,
              v_first =
