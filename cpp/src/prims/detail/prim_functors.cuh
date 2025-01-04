@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, NVIDIA CORPORATION.
+ * Copyright (c) 2024-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,12 @@ template <typename key_t,
           typename e_value_t,
           bool store_transposed>
 struct const_true_e_op_t {
-  __device__ auto operator()(std::conditional_t<store_transposed, vertex_t, key_t> key_or_src,
-                             std::conditional_t<store_transposed, key_t, vertex_t> key_or_dst,
-                             src_value_t,
-                             dst_value_t,
-                             e_value_t) const
+  __host__ __device__ auto operator()(
+    std::conditional_t<store_transposed, vertex_t, key_t> key_or_src,
+    std::conditional_t<store_transposed, key_t, vertex_t> key_or_dst,
+    src_value_t,
+    dst_value_t,
+    e_value_t) const
   {
     return true;
   }
@@ -58,7 +59,7 @@ struct call_e_op_t {
     nullptr};  // indices = edge_partition.incies() + edge_offset
   typename GraphViewType::edge_type edge_offset{};
 
-  __device__ auto operator()(
+  __host__ __device__ auto operator()(
     typename GraphViewType::edge_type i /* index in key's neighbor list */) const
   {
     auto minor        = indices[i];
@@ -90,7 +91,7 @@ struct call_e_op_t {
 
 template <typename edge_t>
 struct call_const_true_e_op_t {
-  __device__ auto operator()(edge_t i) const { return true; }
+  __host__ __device__ auto operator()(edge_t i) const { return true; }
 };
 
 template <typename GraphViewType,
@@ -108,7 +109,7 @@ struct call_e_op_with_key_t {
   EdgePartitionEdgeValueInputWrapper const& edge_partition_e_value_input{};
   EdgeOp const& e_op{};
 
-  __device__ auto operator()(
+  __host__ __device__ auto operator()(
     key_t key, typename GraphViewType::edge_type i /* index in edge_partition's edge list */) const
   {
     auto major        = thrust_tuple_get_or_identity<key_t, 0>(key);

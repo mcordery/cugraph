@@ -70,7 +70,7 @@ struct out_of_range_t {
   vertex_t min{};
   vertex_t max{};
 
-  __device__ bool operator()(vertex_t v) const { return (v < min) || (v >= max); }
+  __host__ __device__ bool operator()(vertex_t v) const { return (v < min) || (v >= max); }
 };
 
 // compute out-degrees (if we are internally storing edges in the sparse 2D matrix using sources as
@@ -166,7 +166,7 @@ rmm::device_uvector<edge_t> compute_major_degrees(
          masks,
          major_range_first,
          major_hypersparse_first,
-         local_degrees = local_degrees.data()] __device__(auto i) {
+         local_degrees = local_degrees.data()] __device__(auto i) -> edge_t {
           auto major_idx    = (major_hypersparse_first - major_range_first) + i;
           auto local_degree = offsets[major_idx + 1] - offsets[major_idx];
           if (masks) {
@@ -202,7 +202,8 @@ rmm::device_uvector<edge_t> compute_major_degrees(
     handle.get_thrust_policy(),
     degrees.begin(),
     degrees.end(),
-    [offsets, masks = masks ? thrust::make_optional(*masks) : thrust::nullopt] __device__(auto i) {
+    [offsets,
+     masks = masks ? thrust::make_optional(*masks) : thrust::nullopt] __device__(auto i) -> edge_t {
       auto local_degree = offsets[i + 1] - offsets[i];
       if (masks) {
         local_degree =
@@ -227,7 +228,7 @@ rmm::device_uvector<edge_t> compute_minor_degrees(
       edge_src_dummy_property_t{}.view(),
       edge_dst_dummy_property_t{}.view(),
       edge_dummy_property_t{}.view(),
-      [] __device__(vertex_t, vertex_t, auto, auto, auto) { return edge_t{1}; },
+      [] __device__(vertex_t, vertex_t, auto, auto, auto) -> edge_t { return edge_t{1}; },
       edge_t{0},
       reduce_op::plus<edge_t>{},
       minor_degrees.data());
@@ -238,7 +239,7 @@ rmm::device_uvector<edge_t> compute_minor_degrees(
       edge_src_dummy_property_t{}.view(),
       edge_dst_dummy_property_t{}.view(),
       edge_dummy_property_t{}.view(),
-      [] __device__(vertex_t, vertex_t, auto, auto, auto) { return edge_t{1}; },
+      [] __device__(vertex_t, vertex_t, auto, auto, auto) -> edge_t { return edge_t{1}; },
       edge_t{0},
       reduce_op::plus<edge_t>{},
       minor_degrees.data());
@@ -368,8 +369,8 @@ edge_t count_edge_partition_multi_edges(
           vertex_t const* indices{nullptr};
           [[maybe_unused]] edge_t edge_offset{};
           edge_t local_degree{};
-          thrust::tie(
-            indices, edge_offset, local_degree = edge_partition.local_edges(major_offset));
+          thrust::tie(indices, edge_offset, local_degree) =
+            edge_partition.local_edges(major_offset);
           edge_t count{0};
           for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
             if (indices[i - 1] == indices[i]) { ++count; }
@@ -391,7 +392,7 @@ edge_t count_edge_partition_multi_edges(
           vertex_t const* indices{nullptr};
           [[maybe_unused]] edge_t edge_offset{};
           edge_t local_degree{};
-          thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_idx));
+          thrust::tie(indices, edge_offset, local_degree) = edge_partition.local_edges(major_idx);
           edge_t count{0};
           for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
             if (indices[i - 1] == indices[i]) { ++count; }
@@ -414,7 +415,7 @@ edge_t count_edge_partition_multi_edges(
         vertex_t const* indices{nullptr};
         [[maybe_unused]] edge_t edge_offset{};
         edge_t local_degree{};
-        thrust::tie(indices, edge_offset, local_degree = edge_partition.local_edges(major_offset));
+        thrust::tie(indices, edge_offset, local_degree) = edge_partition.local_edges(major_offset);
         edge_t count{0};
         for (edge_t i = 1; i < local_degree; ++i) {  // assumes neighbors are sorted
           if (indices[i - 1] == indices[i]) { ++count; }
@@ -755,20 +756,21 @@ edge_t graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_i
     edge_src_dummy_property_t{}.view(),
     edge_dst_dummy_property_t{}.view(),
     edge_dummy_property_t{}.view(),
-    [] __device__(vertex_t src, vertex_t dst, auto, auto, auto) { return src == dst; });
+    [] __device__(vertex_t src, vertex_t dst, auto, auto, auto) -> bool { return src == dst; });
 }
 
 template <typename vertex_t, typename edge_t, bool store_transposed, bool multi_gpu>
 edge_t graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<!multi_gpu>>::
   count_self_loops(raft::handle_t const& handle) const
 {
-  return count_if_e(
-    handle,
-    *this,
-    edge_src_dummy_property_t{}.view(),
-    edge_dst_dummy_property_t{}.view(),
-    edge_dummy_property_t{}.view(),
-    [] __device__(vertex_t src, vertex_t dst, auto, auto, auto) { return src == dst; });
+  return count_if_e(handle,
+                    *this,
+                    edge_src_dummy_property_t{}.view(),
+                    edge_dst_dummy_property_t{}.view(),
+                    edge_dummy_property_t{}.view(),
+                    [] __host__ __device__(vertex_t src, vertex_t dst, auto, auto, auto) -> bool {
+                      return src == dst;
+                    });
 }
 
 template <typename vertex_t, typename edge_t, bool store_transposed, bool multi_gpu>
@@ -850,7 +852,7 @@ graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<mul
                       sorted_edge_first + edge_partition_offsets[i + 1],
                       thrust::make_permutation_iterator(
                         ret.begin(), edge_indices.begin() + edge_partition_offsets[i]),
-                      [edge_partition, edge_partition_e_mask] __device__(auto e) {
+                      [edge_partition, edge_partition_e_mask] __device__(auto e) -> bool {
                         auto major     = thrust::get<0>(e);
                         auto minor     = thrust::get<1>(e);
                         auto major_idx = edge_partition.major_idx_from_major_nocheck(major);
@@ -921,7 +923,7 @@ graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<!mu
     edge_first,
     edge_first + edge_srcs.size(),
     ret.begin(),
-    [edge_partition, edge_partition_e_mask] __device__(auto e) {
+    [edge_partition, edge_partition_e_mask] __device__(auto e) -> bool {
       auto major        = thrust::get<0>(e);
       auto minor        = thrust::get<1>(e);
       auto major_offset = edge_partition.major_offset_from_major_nocheck(major);
@@ -996,7 +998,7 @@ graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<mul
       sorted_edge_first + edge_partition_offsets[i + 1],
       thrust::make_permutation_iterator(ret.begin(),
                                         edge_indices.begin() + edge_partition_offsets[i]),
-      [edge_partition, edge_partition_e_mask] __device__(auto e) {
+      [edge_partition, edge_partition_e_mask] __device__(auto e) -> edge_t {
         auto major     = thrust::get<0>(e);
         auto minor     = thrust::get<1>(e);
         auto major_idx = edge_partition.major_idx_from_major_nocheck(major);
@@ -1066,7 +1068,7 @@ graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu, std::enable_if_t<!mu
     edge_first,
     edge_first + edge_srcs.size(),
     ret.begin(),
-    [edge_partition, edge_partition_e_mask] __device__(auto e) {
+    [edge_partition, edge_partition_e_mask] __device__(auto e) -> edge_t {
       auto major        = thrust::get<0>(e);
       auto minor        = thrust::get<1>(e);
       auto major_offset = edge_partition.major_offset_from_major_nocheck(major);

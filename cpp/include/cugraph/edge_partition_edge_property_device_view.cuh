@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ class edge_partition_edge_property_device_view_t {
 
   __host__ __device__ ValueIterator value_first() const { return value_first_; }
 
-  __device__ value_t get(edge_t offset) const
+  __host__ __device__ value_t get(edge_t offset) const
   {
     if constexpr (has_packed_bool_element) {
       static_assert(is_packed_bool, "unimplemented for thrust::tuple types.");
@@ -68,7 +68,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>>,
     void>
   set(edge_t offset, value_t val) const
@@ -87,7 +87,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>>,
     value_t>
   atomic_and(edge_t offset, value_t val) const
@@ -104,7 +104,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>>,
     value_t>
   atomic_or(edge_t offset, value_t val) const
@@ -121,7 +121,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator, typename T = value_t>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
       !cugraph::has_packed_bool_element<Iter, T>() /* add undefined for (packed-)bool */,
     value_t>
@@ -131,7 +131,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>>,
     value_t>
   elementwise_atomic_cas(edge_t offset, value_t compare, value_t val) const
@@ -148,7 +148,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator, typename T = value_t>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
       !cugraph::has_packed_bool_element<Iter, T>() /* min undefined for (packed-)bool */,
     value_t>
@@ -158,7 +158,7 @@ class edge_partition_edge_property_device_view_t {
   }
 
   template <typename Iter = ValueIterator, typename T = value_t>
-  __device__ std::enable_if_t<
+  __host__ __device__ std::enable_if_t<
     !std::is_const_v<std::remove_reference_t<typename std::iterator_traits<Iter>::reference>> &&
       !cugraph::has_packed_bool_element<Iter, T>() /* max undefined for (packed-)bool */,
     value_t>
@@ -187,7 +187,7 @@ class edge_partition_edge_dummy_property_device_view_t {
   {
   }
 
-  __device__ auto get(edge_t offset) const { return thrust::nullopt; }
+  __host__ __device__ auto get(edge_t offset) const { return thrust::nullopt; }
 };
 
 }  // namespace detail

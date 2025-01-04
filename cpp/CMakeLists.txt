@@ -371,8 +371,8 @@ set(CUGRAPH_SOURCES
     src/structure/graph_sg_v32_e32.cu
 #    src/structure/graph_mg_v64_e64.cu
 #    src/structure/graph_mg_v32_e32.cu
-#span+e_op    src/structure/graph_view_sg_v64_e64.cu
-#span+e_op    src/structure/graph_view_sg_v32_e32.cu
+   src/structure/graph_view_sg_v64_e64.cu
+    src/structure/graph_view_sg_v32_e32.cu
     src/structure/decompress_to_edgelist_sg_v64_e64.cu
     src/structure/decompress_to_edgelist_sg_v32_e32.cu
 #    src/structure/decompress_to_edgelist_mg_v64_e64.cu
@@ -405,8 +405,8 @@ set(CUGRAPH_SOURCES
     src/structure/renumber_utils_sg_v32_e32.cu
 #    src/structure/renumber_utils_mg_v64_e64.cu
 #    src/structure/renumber_utils_mg_v32_e32.cu
-#see notes    src/structure/relabel_sg_v64_e64.cu
-#see notes    src/structure/relabel_sg_v32_e32.cu
+    src/structure/relabel_sg_v64_e64.cu
+    src/structure/relabel_sg_v32_e32.cu
 #    src/structure/relabel_mg_v64_e64.cu
 #    src/structure/relabel_mg_v32_e32.cu
     src/structure/induced_subgraph_sg_v64_e64.cu
