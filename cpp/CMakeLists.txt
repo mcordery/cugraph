@@ -431,12 +431,12 @@ set(CUGRAPH_SOURCES
 #see notes    src/traversal/od_shortest_distances_sg_v32_e32.cu
 #    src/traversal/sssp_mg_v64_e64.cu
 #   src/traversal/sssp_mg_v32_e32.cu
-#span+e_op_result_t    src/link_analysis/hits_sg_v64_e64.cu
-#span+e_op_rersult    src/link_analysis/hits_sg_v32_e32.cu
+    src/link_analysis/hits_sg_v64_e64.cu
+   src/link_analysis/hits_sg_v32_e32.cu
 #    src/link_analysis/hits_mg_v64_e64.cu
 #    src/link_analysis/hits_mg_v32_e32.cu
-#span+e_op    src/link_analysis/pagerank_sg_v64_e64.cu
-#span+e_op    src/link_analysis/pagerank_sg_v32_e32.cu
+   src/link_analysis/pagerank_sg_v64_e64.cu
+   src/link_analysis/pagerank_sg_v32_e32.cu
 #    src/link_analysis/pagerank_mg_v64_e64.cu
 #    src/link_analysis/pagerank_mg_v32_e32.cu
    src/centrality/katz_centrality_sg_v64_e64.cu
