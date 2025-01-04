@@ -439,12 +439,12 @@ set(CUGRAPH_SOURCES
 #span+e_op    src/link_analysis/pagerank_sg_v32_e32.cu
 #    src/link_analysis/pagerank_mg_v64_e64.cu
 #    src/link_analysis/pagerank_mg_v32_e32.cu
-#span+e_op_result_t    src/centrality/katz_centrality_sg_v64_e64.cu
-#span+e_op_rsult_t    src/centrality/katz_centrality_sg_v32_e32.cu
+   src/centrality/katz_centrality_sg_v64_e64.cu
+   src/centrality/katz_centrality_sg_v32_e32.cu
 #    src/centrality/katz_centrality_mg_v64_e64.cu
 #    src/centrality/katz_centrality_mg_v32_e32.cu
-#span+e_op    src/centrality/eigenvector_centrality_sg_v64_e64.cu
-#span+e_op    src/centrality/eigenvector_centrality_sg_v32_e32.cu
+    src/centrality/eigenvector_centrality_sg_v64_e64.cu
+    src/centrality/eigenvector_centrality_sg_v32_e32.cu
 #    src/centrality/eigenvector_centrality_mg_v64_e64.cu
 #    src/centrality/eigenvector_centrality_mg_v32_e32.cu
     src/centrality/betweenness_centrality_sg_v64_e64.cu
