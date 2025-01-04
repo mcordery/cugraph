@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2023-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,16 +214,16 @@ refine_clustering(
                                 : detail::edge_minor_property_view_t<vertex_t, vertex_t const*>(
                                     louvain_assignment_of_vertices.data(), vertex_t{0}),
     *edge_weight_view,
-      [] __device__(auto src, auto dst, auto src_cluster, auto dst_cluster, auto wt) -> weight_t {
-    weight_t weighted_cut_contribution->weight_t{0};
+    [] __device__(auto src, auto dst, auto src_cluster, auto dst_cluster, auto wt) -> weight_t {
+      weight_t weighted_cut_contribution{0};
 
-        if (src == dst  // self loop
-          weighted_cut_contribution = 0;
-        else if (src_cluster == dst_cluster)
-          weighted_cut_contribution = wt;
+      if (src == dst)  // self loop
+        weighted_cut_contribution = 0;
+      else if (src_cluster == dst_cluster)
+        weighted_cut_contribution = wt;
 
-        return weighted_cut_contribution;
-      }),
+      return weighted_cut_contribution;
+    },
     weight_t{0},
     cugraph::reduce_op::plus<weight_t>{},
     weighted_cut_of_vertices_to_louvain.begin());
@@ -566,7 +566,7 @@ refine_clustering(
     vertex_t nr_valid_tuples = thrust::count_if(handle.get_thrust_policy(),
                                                 gain_and_dst_first,
                                                 gain_and_dst_last,
-                                                [] __device__(auto gain_dst_pair) {
+                                                [POSITIVE_GAIN] __device__(auto gain_dst_pair) {
                                                   vertex_t dst  = thrust::get<1>(gain_dst_pair);
                                                   weight_t gain = thrust::get<0>(gain_dst_pair);
                                                   return (gain > POSITIVE_GAIN) && (dst >= 0);
@@ -602,17 +602,18 @@ refine_clustering(
                          thrust::get<1>(gain_and_dst_last.get_iterator_tuple()),
                          thrust::get<0>(gain_and_dst_last.get_iterator_tuple())));
 
-    thrust::copy_if(handle.get_thrust_policy(),
-                    edge_begin,
-                    edge_end,
-                    d_src_dst_gain_iterator,
-                    [] __device__(thrust::tuple<vertex_t, vertex_t, weight_t> src_dst_gain) {
-                      vertex_t src  = thrust::get<0>(src_dst_gain);
-                      vertex_t dst  = thrust::get<1>(src_dst_gain);
-                      weight_t gain = thrust::get<2>(src_dst_gain);
+    thrust::copy_if(
+      handle.get_thrust_policy(),
+      edge_begin,
+      edge_end,
+      d_src_dst_gain_iterator,
+      [POSITIVE_GAIN] __device__(thrust::tuple<vertex_t, vertex_t, weight_t> src_dst_gain) {
+        vertex_t src  = thrust::get<0>(src_dst_gain);
+        vertex_t dst  = thrust::get<1>(src_dst_gain);
+        weight_t gain = thrust::get<2>(src_dst_gain);
 
-                      return (gain > POSITIVE_GAIN) && (dst >= 0);
-                    });
+        return (gain > POSITIVE_GAIN) && (dst >= 0);
+      });
 
     //
     // Create decision graph from edgelist

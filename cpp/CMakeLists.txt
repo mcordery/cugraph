@@ -246,9 +246,9 @@ set(CUGRAPH_SOURCES
 #    src/community/detail/common_methods_mg_v64_e64.cu
 #    src/community/detail/common_methods_mg_v32_e32.cu
      src/community/detail/common_methods_sg_v64_e64.cu
- #span   src/community/detail/common_methods_sg_v32_e32.cu
- # span   src/community/detail/refine_sg_v64_e64.cu
- # span   src/community/detail/refine_sg_v32_e32.cu
+  src/community/detail/common_methods_sg_v32_e32.cu
+   src/community/detail/refine_sg_v64_e64.cu
+   src/community/detail/refine_sg_v32_e32.cu
 #    src/community/detail/refine_mg_v64_e64.cu
 #    src/community/detail/refine_mg_v32_e32.cu
     src/community/edge_triangle_count_sg_v64_e64.cu
@@ -271,14 +271,14 @@ set(CUGRAPH_SOURCES
     src/utilities/path_retrieval_sg_v64_e64.cu
     src/structure/legacy/graph.cu
     src/linear_assignment/legacy/hungarian.cu
-#span+e_op    src/link_prediction/jaccard_sg_v64_e64.cu
-#span+e_op    src/link_prediction/jaccard_sg_v32_e32.cu
-#span+e_op    src/link_prediction/sorensen_sg_v64_e64.cu
-#span+e_op    src/link_prediction/sorensen_sg_v32_e32.cu
-#span+e_op    src/link_prediction/overlap_sg_v64_e64.cu
-#span+e_op     src/link_prediction/overlap_sg_v32_e32.cu
-#span+e_op    src/link_prediction/cosine_sg_v64_e64.cu
-#span+e_op    src/link_prediction/cosine_sg_v32_e32.cu
+    src/link_prediction/jaccard_sg_v64_e64.cu
+   src/link_prediction/jaccard_sg_v32_e32.cu
+    src/link_prediction/sorensen_sg_v64_e64.cu
+    src/link_prediction/sorensen_sg_v32_e32.cu
+    src/link_prediction/overlap_sg_v64_e64.cu
+     src/link_prediction/overlap_sg_v32_e32.cu
+    src/link_prediction/cosine_sg_v64_e64.cu
+    src/link_prediction/cosine_sg_v32_e32.cu
 #    src/link_prediction/jaccard_mg_v64_e64.cu
 #    src/link_prediction/jaccard_mg_v32_e32.cu
 #    src/link_prediction/sorensen_mg_v64_e64.cu
