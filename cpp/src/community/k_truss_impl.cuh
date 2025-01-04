@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, NVIDIA CORPORATION.
+ * Copyright (c) 2024-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace {
 
 template <typename vertex_t>
 struct exclude_self_loop_t {
-  __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
+  __host__ __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
     vertex_t src, vertex_t dst, thrust::nullopt_t, thrust::nullopt_t, thrust::nullopt_t) const
   {
     return src != dst
@@ -58,7 +58,7 @@ struct exclude_self_loop_t {
 
 template <typename vertex_t, typename weight_t, typename edge_t>
 struct extract_low_to_high_degree_weighted_edges_t {
-  __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t, weight_t>> operator()(
+  __host__ __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t, weight_t>> operator()(
     vertex_t src, vertex_t dst, edge_t src_out_degree, edge_t dst_out_degree, weight_t wgt) const
   {
     return (src_out_degree < dst_out_degree)
@@ -75,11 +75,12 @@ struct extract_low_to_high_degree_weighted_edges_t {
 
 template <typename vertex_t, typename edge_t>
 struct extract_low_to_high_degree_edges_t {
-  __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(vertex_t src,
-                                                                            vertex_t dst,
-                                                                            edge_t src_out_degree,
-                                                                            edge_t dst_out_degree,
-                                                                            thrust::nullopt_t) const
+  __host__ __device__ thrust::optional<thrust::tuple<vertex_t, vertex_t>> operator()(
+    vertex_t src,
+    vertex_t dst,
+    edge_t src_out_degree,
+    edge_t dst_out_degree,
+    thrust::nullopt_t) const
   {
     return (src_out_degree < dst_out_degree)
              ? thrust::optional<thrust::tuple<vertex_t, vertex_t>>{thrust::make_tuple(src, dst)}
@@ -318,7 +319,8 @@ k_truss(raft::handle_t const& handle,
         cugraph::edge_src_dummy_property_t{}.view(),
         cugraph::edge_dst_dummy_property_t{}.view(),
         edge_triangle_counts.view(),
-        [k] __device__(auto src, auto dst, thrust::nullopt_t, thrust::nullopt_t, auto count) {
+        [k] __host__ __device__(
+          auto src, auto dst, thrust::nullopt_t, thrust::nullopt_t, auto count) {
           return count >= k - 2;
         },
         edge_mask.mutable_view(),
