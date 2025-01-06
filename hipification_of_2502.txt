@@ -213,6 +213,12 @@ Build:
                 extract_payload is a device function in hipco, src/include/cuco/detail/open_addressing/open_addressing_ref_impl.cuh
                 extract_payload used in hipco funcs like empty_value_sentinel and native_value but called from host functions in cpp/src/prims/kv_store.cuh
 
+                Forcing extract_payload to be __host__ __device__ fixes the problem (it used to be declared host/device in 23.10 but now it's not in 24.06....issue submitted)
+
+                End up getting to the edge_op_result_t template being undefined problem
+                    appears to be a problem with the type variable in the edge_op_result_type struct not satisfying the is_invocable and invoke_result tests, possibly due to the previous failure
+                    we observed of is_invocable not working with solely device functions
+
 
     In compiling induced_subgraph_sg, it gets to where it can't resolve the use of edge_op_result_type given the template parameters. seen this before
         <pre>/home/mcordery/Projects/cugraph/cpp/src/prims/extract_transform_v_frontier_outgoing_e.cuh:80:1: note: candidate template ignored: substitution failure [with GraphViewType = graph_view_t&lt;long, long, false, false&gt;, KeyBucketType = key_bucket_t&lt;long, unsigned long, false, false&gt;, EdgeSrcValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeDstValueInputWrapper = detail::edge_endpoint_dummy_property_view_t, EdgeValueInputWrapper = cugraph::edge_property_view_t&lt;long, const float *&gt;, EdgeOp = detail::induced_subgraph_weighted_edge_op&lt;long, float, thrust::nullopt_t&gt;]: implicit instantiation of undefined template &apos;cugraph::detail::edge_op_result_type&lt;thrust::tuple&lt;long, unsigned long&gt;, long, thrust::nullopt_t, thrust::nullopt_t, float, cugraph::detail::induced_subgraph_weighted_edge_op&lt;long, float, thrust::nullopt_t&gt;&gt;&apos;

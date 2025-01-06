@@ -44,6 +44,7 @@
 #include <hipcub/hipcub.hpp>
 
 #include <optional>
+#include <type_traits>
 
 namespace cugraph {
 
@@ -539,6 +540,8 @@ compute_min_hop_for_unique_label_vertex_pairs(
   std::optional<raft::device_span<size_t const>> seed_vertex_label_offsets,
   std::optional<raft::device_span<size_t const>> edgelist_label_offsets)
 {
+  static_assert(std::is_same_v<vertex_t, int32_t> == true);
+
   auto approx_items_to_sort_per_iteration =
     static_cast<size_t>(handle.get_device_properties().multiProcessorCount) *
     (1 << 18) /* tuning parameter */;  // for segmented sort
@@ -1386,7 +1389,7 @@ compute_vertex_renumber_map(
           handle.get_thrust_policy(),
           renumber_map.begin(),
           renumber_map.end(),
-          [offsets = *vertex_type_offsets] __device__(auto lhs, auto rhs) -> bool {
+          [offsets = *vertex_type_offsets] __device__(auto lhs, auto rhs) {
             auto lhs_v_type = thrust::distance(
               offsets.begin() + 1,
               thrust::upper_bound(

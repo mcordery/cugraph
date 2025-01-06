@@ -289,7 +289,7 @@ set(CUGRAPH_SOURCES
 #    src/link_prediction/cosine_mg_v32_e32.cu
     src/layout/legacy/force_atlas2.cu
     src/converters/legacy/COOtoCSR.cu
-#cvta_generic_to_shared    src/community/legacy/spectral_clustering.cu
+ #raft cvta shared memory assembly   src/community/legacy/spectral_clustering.cu
     src/community/louvain_sg_v64_e64.cu
     src/community/louvain_sg_v32_e32.cu
 #    src/community/louvain_mg_v64_e64.cu
@@ -346,7 +346,7 @@ set(CUGRAPH_SOURCES
     src/sampling/negative_sampling_sg_v64_e64.cu
 #    src/sampling/negative_sampling_mg_v32_e32.cu
 #    src/sampling/negative_sampling_mg_v64_e64.cu
-#mjc    src/sampling/sampling_post_processing_sg_v64_e64.cu
+#mjc these two have a weird problem with thrust::get<>   src/sampling/sampling_post_processing_sg_v64_e64.cu
 #mjc    src/sampling/sampling_post_processing_sg_v32_e32.cu
     src/cores/core_number_sg_v64_e64.cu
     src/cores/core_number_sg_v32_e32.cu
