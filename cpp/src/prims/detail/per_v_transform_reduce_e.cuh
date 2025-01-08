@@ -3343,31 +3343,34 @@ void per_v_transform_reduce_e(raft::handle_t const& handle,
           std::optional<
             std::variant<raft::device_span<uint32_t const>, raft::device_span<size_t const>>>
             hypersparse_non_deg1_key_offsets{std::nullopt};
-          if constexpr (filter_input_key) {
-            if (edge_partition_hypersparse_key_offset_vectors) {
-              auto const& offsets = (*edge_partition_hypersparse_key_offset_vectors)[j];
-              /*mjc
-                            if (offsets.index() == 0) {
-                              hypersparse_non_deg1_key_offsets = raft::device_span<uint32_t const>(
-                                std::get<0>(offsets).data(),
-                                std::get<0>(offsets).size() -
-                                  (edge_partition_deg1_hypersparse_key_offset_counts
-                                     ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
-                                     : size_t{0}));
-                            } else {
-                              hypersparse_non_deg1_key_offsets = raft::device_span<size_t const>(
-                                std::get<1>(offsets).data(),
-                                std::get<1>(offsets).size() -
-                                  (edge_partition_deg1_hypersparse_key_offset_counts
-                                     ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
-                                     : size_t{0}));
-                            }
-                */
-              (*edge_partition_hypersparse_non_deg1_key_offset_spans)[j] =
-                *hypersparse_non_deg1_key_offsets;
-            }
-          }
+#warning this won't work
+          /*
+                    if constexpr (filter_input_key) {
+                      if (edge_partition_hypersparse_key_offset_vectors) {
+                        auto const& offsets = (*edge_partition_hypersparse_key_offset_vectors)[j];
+                        if (offsets.index() == 0) {
+                          hypersparse_non_deg1_key_offsets  = raft::device_span<uint32_t const>(
+                            std::get<0>(offsets).data(),
+                            std::get<0>(offsets).size() -
+                              (edge_partition_deg1_hypersparse_key_offset_counts
+                                  ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
+                                  : size_t{0}));
+                        } else {
 
+                          hypersparse_non_deg1_key_offsets = raft::device_span<size_t const>(
+                            std::get<1>(offsets).data(),
+                            std::get<1>(offsets).size() -
+                              (edge_partition_deg1_hypersparse_key_offset_counts
+                                  ? (*edge_partition_deg1_hypersparse_key_offset_counts)[j]
+                                  : size_t{0}));
+
+                        }
+
+                        (*edge_partition_hypersparse_non_deg1_key_offset_spans)[j] =
+                          *hypersparse_non_deg1_key_offsets;
+                      }
+                    }
+          */
           auto const& output_buffer = edge_partition_major_output_buffers[j];
 
           if (minor_comm_size <= std::numeric_limits<uint8_t>::max()) {  // priority == uint8_t

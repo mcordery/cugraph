@@ -245,7 +245,7 @@ set(CUGRAPH_SOURCES
 #    src/sampling/random_walks_mg_v32_e32.cu
 #    src/community/detail/common_methods_mg_v64_e64.cu
 #    src/community/detail/common_methods_mg_v32_e32.cu
-     src/community/detail/common_methods_sg_v64_e64.cu
+#     src/community/detail/common_methods_sg_v64_e64.cu
   src/community/detail/common_methods_sg_v32_e32.cu
    src/community/detail/refine_sg_v64_e64.cu
    src/community/detail/refine_sg_v32_e32.cu
