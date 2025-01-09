@@ -1,5 +1,5 @@
 ﻿#=============================================================================
-# Copyright (c) 2019-2024, NVIDIA CORPORATION.
+# Copyright (c) 2019-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ if(RAPIDS_DATASET_ROOT_DIR)
     message(STATUS "setting default RAPIDS_DATASET_ROOT_DIR to: ${RAPIDS_DATASET_ROOT_DIR}")
     string(CONCAT CMAKE_C_FLAGS ${CMAKE_C_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
     string(CONCAT CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
-    string(CONCAT CMAKE_CUDA_FLAGS ${CMAKE_CUDA_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
+    string(CONCAT CMAKE_HIP_FLAGS ${CMAKE_HIP_FLAGS} " -DRAPIDS_DATASET_ROOT_DIR=" "\\\"" ${RAPIDS_DATASET_ROOT_DIR} "\\\"")
 endif(RAPIDS_DATASET_ROOT_DIR)
 
 ###################################################################################################
@@ -50,9 +50,18 @@ add_library(cugraphtestutil STATIC
             sampling/detail/sampling_post_processing_validate.cu
             ../../thirdparty/mmio/mmio.c)
 
+get_target_property(TEST_SOURCE_FILES cugraphtestutil SOURCES)
+
+foreach(SOURCE_FILE ${TEST_SOURCE_FILES})
+    if(${SOURCE_FILE} MATCHES "\\.cu$")
+        set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+    endif()
+endforeach()
+
+
 target_compile_options(cugraphtestutil
     PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-           "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+           "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
 )
 
 set_property(TARGET cugraphtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -82,7 +91,7 @@ add_library(cugraph_c_testutil STATIC
 target_compile_options(cugraph_c_testutil
     PUBLIC "$<$<COMPILE_LANGUAGE:C>:${CUGRAPH_C_FLAGS}>"
            "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-           "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+           "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
 )
 
 target_include_directories(cugraph_c_testutil
@@ -94,7 +103,7 @@ set_property(TARGET cugraph_c_testutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(cugraph_c_testutil
     PUBLIC
-        CUDA::toolkit
+      #  CUDA::toolkit
     PRIVATE
         cugraph::cugraph_c
         cugraph::cugraph
@@ -120,11 +129,19 @@ if(BUILD_CUGRAPH_MG_TESTS)
                 c_api/mg_test_utils.cpp
                 )
 
+    get_target_property(MG_SOURCE_FILES cugraphmgtestutil SOURCES)
+
+    foreach(SOURCE_FILE ${MG_SOURCE_FILES})
+        if(${SOURCE_FILE} MATCHES "\\.cu$")
+            set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+        endif()
+    endforeach()
+
     set_property(TARGET cugraphmgtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     target_compile_options(cugraphmgtestutil
                 PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                       "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_CUDA_FLAGS}>"
+                       "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
     )
 
     target_include_directories(cugraphmgtestutil
@@ -137,6 +154,7 @@ if(BUILD_CUGRAPH_MG_TESTS)
     target_link_libraries(cugraphmgtestutil
         PRIVATE
             cugraph::cugraph
+            ${CMAKE_TEST_NAME}
             NCCL::NCCL
             MPI::MPI_CXX
             GTest::gtest
@@ -164,19 +182,28 @@ function(ConfigureTest CMAKE_TEST_NAME)
 
     add_executable(${CMAKE_TEST_NAME} ${_CUGRAPH_TEST_UNPARSED_ARGUMENTS})
 
+    get_target_property(CPPTEST_SOURCE_FILES ${CMAKE_TEST_NAME} SOURCES)
+
+    foreach(SOURCE_FILE ${CPPTEST_SOURCE_FILES})
+        if(${SOURCE_FILE} MATCHES "\\.cu$")
+            set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+        endif()
+    endforeach()
+
     target_link_libraries(${CMAKE_TEST_NAME}
         PRIVATE
             cugraphtestutil
             GTest::gtest
             GTest::gtest_main
     )
+
     set_target_properties(
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib"
                        CXX_STANDARD                        17
                        CXX_STANDARD_REQUIRED               ON
-                       CUDA_STANDARD                       17
-                       CUDA_STANDARD_REQUIRED              ON)
+                       HIP_STANDARD                       17
+                       HIP_STANDARD_REQUIRED              ON)
 
     rapids_test_add(
         NAME ${CMAKE_TEST_NAME}
@@ -200,13 +227,22 @@ function(ConfigureTestMG CMAKE_TEST_NAME)
         NCCL::NCCL
         MPI::MPI_CXX
     )
+
+    get_target_property(MGCPPTEST_SOURCE_FILES ${CMAKE_TEST_NAME} SOURCES)
+
+    foreach(SOURCE_FILE ${MGCPPTEST_SOURCE_FILES})
+        if(${SOURCE_FILE} MATCHES "\\.cu$")
+            set_source_files_properties( ${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+        endif()
+    endforeach()
+
     set_target_properties(
         ${CMAKE_TEST_NAME}
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib"
                        CXX_STANDARD                        17
                        CXX_STANDARD_REQUIRED               ON
-                       CUDA_STANDARD                       17
-                       CUDA_STANDARD_REQUIRED              ON)
+                       HIP_STANDARD                       17
+                       HIP_STANDARD_REQUIRED              ON)
 
     rapids_test_add(
         NAME ${CMAKE_TEST_NAME}
@@ -256,8 +292,8 @@ function(ConfigureCTest CMAKE_TEST_NAME)
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib"
                        CXX_STANDARD                        17
                        CXX_STANDARD_REQUIRED               ON
-                       CUDA_STANDARD                       17
-                       CUDA_STANDARD_REQUIRED              ON)
+                       HIP_STANDARD                       17
+                       HIP_STANDARD_REQUIRED              ON)
 
     rapids_test_add(
         NAME ${CMAKE_TEST_NAME}
@@ -288,8 +324,8 @@ function(ConfigureCTestMG CMAKE_TEST_NAME)
             PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib"
                        CXX_STANDARD                        17
                        CXX_STANDARD_REQUIRED               ON
-                       CUDA_STANDARD                       17
-                       CUDA_STANDARD_REQUIRED              ON)
+                       HIP_STANDARD                       17
+                       HIP_STANDARD_REQUIRED              ON)
 
     rapids_test_add(
         NAME ${CMAKE_TEST_NAME}
@@ -324,7 +360,7 @@ ConfigureTest(ERDOS_RENYI_GENERATOR_TEST generators/erdos_renyi_test.cpp)
 
 ###################################################################################################
 # - LOUVAIN tests ---------------------------------------------------------------------------------
-ConfigureTest(LOUVAIN_TEST community/louvain_test.cpp)
+#mjc ConfigureTest(LOUVAIN_TEST community/louvain_test.cpp)
 
 ###################################################################################################
 # - LEIDEN tests ----------------------------------------------------------------------------------

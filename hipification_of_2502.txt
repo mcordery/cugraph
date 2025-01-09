@@ -280,3 +280,18 @@ C_API
 ..............................................................
 
     Disabled stringstreams in generic_cascaded_dispatch.hpp
+
+
+TESTS
+................................................................
+
+In cpp/tests
+    Changed CUDA to HIP where necessary
+    Added logic to lists of functions specified in add_library calls so that .cu files are recognized by the compiler. Did this for both libcugraphtestutil and libcugraphmgtestutil
+        Also add to ConfigureTest() and ConfigureMGTest()
+
+    In /home/mcordery/Projects/cugraph/cpp/tests/utilities/csv_file_utilities.cu, changed
+      std::vector<char> buffer(length + 1);
+    to
+      std::vector<char> buffer((int)length + 1);
+    because length is returned from file.tellg() and is declared auto so it turns in to pos_type and there's no proper overload for '+' in clang for pos_type + int

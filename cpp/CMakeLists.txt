@@ -1,4 +1,4 @@
-#=============================================================================
+#==========================================csv_file_utilities===================================
 # Copyright (c) 2018-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -646,7 +646,7 @@ set_target_properties(cugraph_c
 
 target_compile_options(cugraph_c
              PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                     "$<$<COMPILE_LANGUAGE:CUDA>:${CUGRAPH_HIP_FLAGS}>"
+                     "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
 )
 
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ read_edgelist_from_csv_file(raft::handle_t const& handle,
   auto length = file.tellg();
   file.seekg(0, file.beg);
 
-  std::vector<char> buffer(length + 1);
+  std::vector<char> buffer((int)length + 1);
 
   file.read(buffer.data(), length);
   CUGRAPH_EXPECTS(file, "File read failure.");

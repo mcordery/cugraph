@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1386,8 +1386,8 @@ bool check_vertex_renumber_map_invariants(
              this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
            this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
              this_type_matching_renumbered_vertices.data(),
-             this_type_matching_renumbered_vertices.size())] __device__(vertex_t major) -> vertex_t
-          -> vertex_t {
+             this_type_matching_renumbered_vertices.size())] __device__(vertex_t major)
+            -> vertex_t {
             auto it = thrust::lower_bound(thrust::seq,
                                           this_type_sorted_org_vertices.begin(),
                                           this_type_sorted_org_vertices.end(),
@@ -1406,8 +1406,8 @@ bool check_vertex_renumber_map_invariants(
              this_type_sorted_org_vertices.data(), this_type_sorted_org_vertices.size()),
            this_type_matching_renumbered_vertices = raft::device_span<vertex_t const>(
              this_type_matching_renumbered_vertices.data(),
-             this_type_matching_renumbered_vertices.size())] __device__(vertex_t minor) -> vertex_t
-          -> vertex_t {
+             this_type_matching_renumbered_vertices.size())] __device__(vertex_t minor)
+            -> vertex_t {
             auto it = thrust::lower_bound(thrust::seq,
                                           this_type_sorted_org_vertices.begin(),
                                           this_type_sorted_org_vertices.end(),
