@@ -171,7 +171,8 @@ rapids_cpm_init()
 ###
 # Linking to the `raft::raft` target implicitly links cugraph targets to the
 # following public header-only  raft dependencies:
-# * CCCL
+# * CCCL        static_assert(multi_gpu==false,"cgfe 1");
+
 # * RMM
 # * GTest/GMock
 #

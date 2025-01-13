@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -412,7 +412,7 @@ read_graph_from_matrix_market_file(raft::handle_t const& handle,
   auto [d_edgelist_srcs, d_edgelist_dsts, d_edgelist_weights, d_vertices, is_symmetric] =
     read_edgelist_from_matrix_market_file<vertex_t, weight_t>(
       handle, graph_file_full_path, test_weighted, store_transposed, multi_gpu);
-
+  static_assert(multi_gpu == false);
   graph_t<vertex_t, edge_t, store_transposed, multi_gpu> graph(handle);
   std::optional<
     cugraph::edge_property_t<graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu>, weight_t>>
@@ -486,6 +486,7 @@ read_edgelist_from_matrix_market_file<int32_t, float>(raft::handle_t const& hand
                                                       bool test_weighted,
                                                       bool store_transposed,
                                                       bool multi_gpu);
+#warning mjc explicit instantiations diabled due to multi_gpu=true
 
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, false, false>,
@@ -497,6 +498,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, float, false, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, false, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int32_t, int32_t, false, true>, float>>,
@@ -506,6 +508,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, float, false, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, true, false>,
@@ -517,6 +520,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, float, true, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, true, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int32_t, int32_t, true, true>, float>>,
@@ -526,6 +530,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, float, true, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, false, false>,
@@ -537,6 +542,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, double, false, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, false, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int32_t, int32_t, false, true>, double>>,
@@ -546,6 +552,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, double, false, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, true, false>,
@@ -557,6 +564,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, double, true, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int32_t, int32_t, true, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int32_t, int32_t, true, true>, double>>,
@@ -566,6 +574,7 @@ read_graph_from_matrix_market_file<int32_t, int32_t, double, true, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, false, false>,
@@ -577,6 +586,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, float, false, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, false, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int64_t, int64_t, false, true>, float>>,
@@ -586,6 +596,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, float, false, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, true, false>,
@@ -597,6 +608,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, float, true, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, true, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int64_t, int64_t, true, true>, float>>,
@@ -606,6 +618,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, float, true, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, false, false>,
@@ -617,6 +630,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, double, false, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, false, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int64_t, int64_t, false, true>, double>>,
@@ -626,6 +640,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, double, false, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, true, false>,
@@ -637,6 +652,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, double, true, false>(
   bool test_weighted,
   bool renumber);
 
+#ifdef MULTIGPU
 template std::tuple<
   cugraph::graph_t<int64_t, int64_t, true, true>,
   std::optional<cugraph::edge_property_t<graph_view_t<int64_t, int64_t, true, true>, double>>,
@@ -646,6 +662,7 @@ read_graph_from_matrix_market_file<int64_t, int64_t, double, true, true>(
   std::string const& graph_file_full_path,
   bool test_weighted,
   bool renumber);
+#endif
 
 }  // namespace test
 }  // namespace cugraph

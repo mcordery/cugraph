@@ -19,6 +19,8 @@ enable_testing()
 include(rapids-test)
 rapids_test_init()
 
+set(BUILD_CUGRAPH_MG_TESTS OFF)
+
 ###################################################################################################
 # - set rapids dataset path ----------------------------------------------------------------------
 if(RAPIDS_DATASET_ROOT_DIR)
@@ -58,12 +60,6 @@ foreach(SOURCE_FILE ${TEST_SOURCE_FILES})
     endif()
 endforeach()
 
-
-target_compile_options(cugraphtestutil
-    PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-           "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
-)
-
 set_property(TARGET cugraphtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(cugraphtestutil
@@ -89,9 +85,10 @@ add_library(cugraph_c_testutil STATIC
             c_api/test_utils.cpp)
 
 target_compile_options(cugraph_c_testutil
-    PUBLIC "$<$<COMPILE_LANGUAGE:C>:${CUGRAPH_C_FLAGS}>"
-           "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-           "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
+    PUBLIC
+        "$<$<COMPILE_LANGUAGE:C>:${CUGRAPH_C_FLAGS}>"
+        "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
+        "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
 )
 
 target_include_directories(cugraph_c_testutil
@@ -107,6 +104,7 @@ target_link_libraries(cugraph_c_testutil
     PRIVATE
         cugraph::cugraph_c
         cugraph::cugraph
+
 )
 
 if(BUILD_CUGRAPH_MG_TESTS)
@@ -138,11 +136,6 @@ if(BUILD_CUGRAPH_MG_TESTS)
     endforeach()
 
     set_property(TARGET cugraphmgtestutil PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-    target_compile_options(cugraphmgtestutil
-                PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:${CUGRAPH_CXX_FLAGS}>"
-                       "$<$<COMPILE_LANGUAGE:HIP>:${CUGRAPH_HIP_FLAGS}>"
-    )
 
     target_include_directories(cugraphmgtestutil
         PRIVATE
@@ -180,6 +173,9 @@ function(ConfigureTest CMAKE_TEST_NAME)
         set(_CUGRAPH_TEST_PERCENT 100)
     endif()
 
+    set(CMAKE_HIP_COMPILER ${CMAKE_CXX_COMPILER})
+    set(CMAKE_LINKER ${CMAKE_CXX_COMPILER})
+
     add_executable(${CMAKE_TEST_NAME} ${_CUGRAPH_TEST_UNPARSED_ARGUMENTS})
 
     get_target_property(CPPTEST_SOURCE_FILES ${CMAKE_TEST_NAME} SOURCES)
@@ -192,18 +188,23 @@ function(ConfigureTest CMAKE_TEST_NAME)
 
     target_link_libraries(${CMAKE_TEST_NAME}
         PRIVATE
+            cugraph::cugraph
             cugraphtestutil
             GTest::gtest
             GTest::gtest_main
     )
 
+
+
     set_target_properties(
         ${CMAKE_TEST_NAME}
-            PROPERTIES INSTALL_RPATH "\$ORIGIN/../../../lib"
+            PROPERTIES
+                       INSTALL_RPATH "\$ORIGIN/../../../lib"
                        CXX_STANDARD                        17
                        CXX_STANDARD_REQUIRED               ON
                        HIP_STANDARD                       17
-                       HIP_STANDARD_REQUIRED              ON)
+                       HIP_STANDARD_REQUIRED              ON
+                       )
 
     rapids_test_add(
         NAME ${CMAKE_TEST_NAME}
@@ -212,6 +213,7 @@ function(ConfigureTest CMAKE_TEST_NAME)
         PERCENT ${_CUGRAPH_TEST_PERCENT}
         INSTALL_COMPONENT_SET testing
     )
+
     set_tests_properties(${CMAKE_TEST_NAME} PROPERTIES LABELS "CUGRAPH")
 endfunction()
 
@@ -360,11 +362,11 @@ ConfigureTest(ERDOS_RENYI_GENERATOR_TEST generators/erdos_renyi_test.cpp)
 
 ###################################################################################################
 # - LOUVAIN tests ---------------------------------------------------------------------------------
-#mjc ConfigureTest(LOUVAIN_TEST community/louvain_test.cpp)
+ ConfigureTest(LOUVAIN_TEST community/louvain_test.cpp)
 
 ###################################################################################################
 # - LEIDEN tests ----------------------------------------------------------------------------------
-ConfigureTest(LEIDEN_TEST community/leiden_test.cpp)
+ ConfigureTest(LEIDEN_TEST community/leiden_test.cpp)
 
 ###################################################################################################
 # - WEIGHTED MATCHING tests -----------------------------------------------------------------------

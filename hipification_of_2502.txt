@@ -295,3 +295,7 @@ In cpp/tests
     to
       std::vector<char> buffer((int)length + 1);
     because length is returned from file.tellg() and is declared auto so it turns in to pos_type and there's no proper overload for '+' in clang for pos_type + int
+
+Disabled (with #ifdef BUILD_MULTIGPU) explicit instantiations of multigpu code in
+    matrix_market_file_utilities.cu
+    csv_file_utilities.cu

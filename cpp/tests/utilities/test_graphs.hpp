@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2021-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -330,6 +330,8 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
             handle, std::move(tmp_src_v), std::move(tmp_dst_v), std::move(tmp_weights_v));
       }
 
+#warning disabled due to multigpu
+#if 0
       if (multi_gpu && shuffle) {
         std::tie(store_transposed ? tmp_dst_v : tmp_src_v,
                  store_transposed ? tmp_src_v : tmp_dst_v,
@@ -348,7 +350,7 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
                      std::nullopt,
                      std::nullopt);
       }
-
+#endif
       edge_src_chunks.push_back(std::move(tmp_src_v));
       edge_dst_chunks.push_back(std::move(tmp_dst_v));
       if (edge_weight_chunks) { (*edge_weight_chunks).push_back(std::move(*tmp_weights_v)); }
@@ -375,11 +377,13 @@ class Rmat_Usecase : public detail::TranslateGraph_Usecase {
 
     translate(handle, vertex_v);
 
+#warning disabled due to multigpu
+#if 0
     if (multi_gpu && shuffle) {
       vertex_v = cugraph::detail::shuffle_ext_vertices_to_local_gpu_by_vertex_partitioning(
         handle, std::move(vertex_v));
     }
-
+#endif
     return std::make_tuple(std::move(edge_src_chunks),
                            std::move(edge_dst_chunks),
                            std::move(edge_weight_chunks),
@@ -666,6 +670,7 @@ construct_graph(raft::handle_t const& handle,
                 bool drop_self_loops  = false,
                 bool drop_multi_edges = false)
 {
+  static_assert(multi_gpu == false, "multi gpu is not false");
   auto [edge_src_chunks, edge_dst_chunks, edge_weight_chunks, d_vertices_v, is_symmetric] =
     input_usecase.template construct_edgelist<vertex_t, weight_t>(
       handle, test_weighted, store_transposed, multi_gpu);

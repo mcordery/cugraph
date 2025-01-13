@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, NVIDIA CORPORATION.
+ * Copyright (c) 2023-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -92,6 +92,7 @@ void create_graph_from_edgelist(
   std::optional<cugraph::mtmg::renumber_map_t<vertex_t>>& renumber_map,
   bool do_expensive_check = false)
 {
+  static_assert(multi_gpu == false);
   if (handle.get_thread_rank() > 0) return;
 
   CUGRAPH_EXPECTS(renumber_map.has_value() == renumber,
