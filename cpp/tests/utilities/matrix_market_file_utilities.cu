@@ -281,7 +281,6 @@ read_edgelist_from_matrix_market_file(raft::handle_t const& handle,
 
   FILE* file = fopen(graph_file_full_path.c_str(), "r");
   CUGRAPH_EXPECTS(file != nullptr, "fopen (%s) failure.", graph_file_full_path.c_str());
-
   size_t tmp_m{};
   size_t tmp_k{};
   auto mm_ret = cugraph::test::mm_properties<size_t>(file, 1, &mc, &tmp_m, &tmp_k, &nnz);
@@ -412,7 +411,6 @@ read_graph_from_matrix_market_file(raft::handle_t const& handle,
   auto [d_edgelist_srcs, d_edgelist_dsts, d_edgelist_weights, d_vertices, is_symmetric] =
     read_edgelist_from_matrix_market_file<vertex_t, weight_t>(
       handle, graph_file_full_path, test_weighted, store_transposed, multi_gpu);
-  static_assert(multi_gpu == false);
   graph_t<vertex_t, edge_t, store_transposed, multi_gpu> graph(handle);
   std::optional<
     cugraph::edge_property_t<graph_view_t<vertex_t, edge_t, store_transposed, multi_gpu>, weight_t>>

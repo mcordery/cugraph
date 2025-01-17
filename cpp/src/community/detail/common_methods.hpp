@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2022-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ void timer_display_and_clear(raft::handle_t const& handle,
                              HighResTimer const& hr_timer,
                              std::ostream& os)
 {
-  if (multi_gpu) {
+  if constexpr (multi_gpu) {
     if (handle.get_comms().get_rank() == 0) hr_timer.display_and_clear(os);
   } else {
     hr_timer.display_and_clear(os);

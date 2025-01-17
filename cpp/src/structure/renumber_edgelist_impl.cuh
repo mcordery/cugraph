@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -637,7 +637,7 @@ compute_renumber_map(raft::handle_t const& handle,
   size_t mid_degree_threshold{detail::mid_degree_threshold};
   size_t low_degree_threshold{detail::low_degree_threshold};
   size_t hypersparse_degree_threshold{1};
-  if (multi_gpu) {
+  if constexpr (multi_gpu) {
     auto& minor_comm           = handle.get_subcomm(cugraph::partition_manager::minor_comm_name());
     auto const minor_comm_size = minor_comm.get_size();
     mid_degree_threshold *= minor_comm_size;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -423,7 +423,7 @@ rmm::device_uvector<vertex_t> update_clustering_by_delta_modularity(
       thrust::make_tuple(next_clusters_v.end(), cugraph::get_dataframe_buffer_end(output_buffer))),
     detail::count_updown_moves_op_t<vertex_t, weight_t>{up_down});
 
-  if (multi_gpu) {
+  if constexpr (multi_gpu) {
     nr_moves = host_scalar_allreduce(
       handle.get_comms(), nr_moves, raft::comms::op_t::SUM, handle.get_stream());
   }

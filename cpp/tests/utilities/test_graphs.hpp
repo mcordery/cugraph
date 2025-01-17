@@ -145,6 +145,8 @@ class File_Usecase : public detail::TranslateGraph_Usecase {
   {
     if ((graph_file_path.length() > 0) && (graph_file_path[0] != '/')) {
       graph_file_full_path_ = cugraph::test::get_rapids_dataset_root_dir() + "/" + graph_file_path;
+      std::cout << "root dir = " << cugraph::test::get_rapids_dataset_root_dir() << std::endl;
+      std::cout << "graph file = " << graph_file_path << std::endl;
     } else {
       graph_file_full_path_ = graph_file_path;
     }

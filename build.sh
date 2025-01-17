@@ -89,7 +89,7 @@ BUILD_DIRS="${LIBCUGRAPH_BUILD_DIR}
 # Set defaults for vars modified by flags to this script
 VERBOSE_FLAG=""
 CMAKE_VERBOSE_OPTION=""
-BUILD_TYPE=Release
+BUILD_TYPE=Debug
 INSTALL_TARGET="--target install"
 BUILD_CPP_TESTS=ON
 BUILD_CPP_MG_TESTS=OFF

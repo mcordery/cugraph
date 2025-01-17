@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2023-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2023-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ rmm::device_uvector<vertex_t> maximal_independent_set(
     // Select a random set of candidate vertices
 
     vertex_t nr_remaining_vertices_to_check = remaining_vertices.size();
-    if (multi_gpu) {
+    if constexpr (multi_gpu) {
       nr_remaining_vertices_to_check = host_scalar_allreduce(handle.get_comms(),
                                                              nr_remaining_vertices_to_check,
                                                              raft::comms::op_t::SUM,
@@ -287,7 +287,7 @@ rmm::device_uvector<vertex_t> maximal_independent_set(
                   remaining_vertices.begin());
 
     nr_remaining_vertices_to_check = remaining_vertices.size();
-    if (multi_gpu) {
+    if constexpr (multi_gpu) {
       nr_remaining_vertices_to_check = host_scalar_allreduce(handle.get_comms(),
                                                              nr_remaining_vertices_to_check,
                                                              raft::comms::op_t::SUM,

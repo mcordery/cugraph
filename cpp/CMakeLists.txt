@@ -87,6 +87,8 @@ rapids_find_package(HIP REQUIRED CONFIG
                     BUILD_EXPORT_SET cugraph-exports
                     INSTALL_EXPORT_SET cugraph-exports)
 
+#find_package(BLAS REQUIRED)
+
 
 if (HIP_FOUND)
     message(STATUS "HIP package found")
@@ -130,6 +132,13 @@ list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_HIP
 list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_DISABLE_ABI_NAMESPACE)
 list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_HOST_SYSTEM=THRUST_HOST_SYSTEM_CPP)
 list(APPEND CUGRAPH_CXX_FLAGS    -DTHRUST_IGNORE_ABI_NAMESPACE_ERROR )
+list(APPEND CUGRAPH_CXX_FLAGS    -D__HIP_PLATFORM_AMD__)
+list(APPEND CUGRAPH_CXX_FLAGS    -U__HIP_PLATFORM_NVIDIA__)
+
+list(APPEND CMAKE_CXX_FLAGS    -D__HIP_PLATFORM_AMD__)
+#list(APPEND CMAKE_CXX_FLAGS    -U__HIP_PLATFORM_NVIDIA__)
+
+
 
 
 
@@ -504,6 +513,7 @@ endforeach()
 
 add_library(cugraph ${CUGRAPH_SOURCES})
 
+
 set_target_properties(cugraph
     PROPERTIES BUILD_RPATH                         "\$ORIGIN"
                INSTALL_RPATH                       "\$ORIGIN"
@@ -526,6 +536,11 @@ target_compile_options(cugraph
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(cugraph PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
+target_compile_definitions(cugraph PUBLIC __HIP_PLATFORM_AMD__)
+
+
+
+
 
 add_library(cugraph::cugraph ALIAS cugraph)
 
@@ -653,6 +668,7 @@ target_compile_options(cugraph_c
 # Per-thread default stream option see https://docs.nvidia.com/cuda/cuda-runtime-api/stream-sync-behavior.html
 # The per-thread default stream does not synchronize with other streams
 target_compile_definitions(cugraph_c PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
+target_compile_definitions(cugraph_c PUBLIC __HIP_PLATFORM_AMD__)
 
 #target_link_options(cugraph_c PRIVATE "${CUGRAPH_BINARY_DIR}/fatbin.ld")
 

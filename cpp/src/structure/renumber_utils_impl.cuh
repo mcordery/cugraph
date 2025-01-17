@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -558,7 +558,7 @@ void unrenumber_int_vertices(raft::handle_t const& handle,
       "+ num_vertices).");
   }
 
-  if (multi_gpu) {
+  if constexpr (multi_gpu) {
     auto& comm                 = handle.get_comms();
     auto const comm_size       = comm.get_size();
     auto const comm_rank       = comm.get_rank();

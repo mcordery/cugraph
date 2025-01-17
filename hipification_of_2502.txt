@@ -7,6 +7,7 @@ Hipify with hipconvertinplace-perl.sh
 Modify VERSION to point at 24.06
 Modify root level rapids_cmake.config to point at rocm directory for rapids-cmake based on VERSION number
 apt-get install ninja-build
+sudo apt-get install libblas-dev liblapack-dev
 
 Building only libcugraph
 Setting CMAKE_CXX_COMPILER and CMAKE_C_COMPILER  in build.sh  otherwise gtest fails to build
@@ -197,7 +198,7 @@ Build:
     Ignoring this and sister for now
       |                                  ^
 
-    In src/generators/scramble.cuh, add #include #include <hip/hip_runtime.h>
+    In src/generators/scramble.cuh, add  #include <hip/hip_runtime.h>
 
     In src/structure/renumber_edgelist_impl.cuh, added the variable hash_seed to a few lambda capture lists as there was no default action and the compiler couldn't figure it out
 
@@ -214,6 +215,8 @@ Build:
                 extract_payload used in hipco funcs like empty_value_sentinel and native_value but called from host functions in cpp/src/prims/kv_store.cuh
 
                 Forcing extract_payload to be __host__ __device__ fixes the problem (it used to be declared host/device in 23.10 but now it's not in 24.06....issue submitted)
+                    Note that hipco devs say that having this be declared only __device__ is following CUDA but that one of their flags that we don't have an equivalent for may let them get around it.
+                    So we can patch this and move on but we'll also have to patch the static assert in the same file that fails
 
                 End up getting to the edge_op_result_t template being undefined problem
                     appears to be a problem with the type variable in the edge_op_result_type struct not satisfying the is_invocable and invoke_result tests, possibly due to the previous failure
@@ -299,3 +302,16 @@ In cpp/tests
 Disabled (with #ifdef BUILD_MULTIGPU) explicit instantiations of multigpu code in
     matrix_market_file_utilities.cu
     csv_file_utilities.cu
+
+Disabled #mjc ConfigureTest(BALANCED_TEST community/balanced_edge_test.cpp)
+    because of it's reliance on routines in spectral_clustering.cu
+Disabled SAMPLING_POST_PROCESSING_TEST, SAMPLING_POST_PROCESSING_TEST
+    because it requires a fix to a file that has a bug in it. I could comment out that bug and just let it compile without compiling and running the test if necessary
+
+  In cpp/src/structure/renumber_utils_impl.cuh, line 561, changed
+    if (multi_gpu)
+    to
+    if constpexpr (multi_gpu)
+    in unrenumber_int_vertices() where multi_gpu is a template parameter
+
+  In tests/c_api/sssp_test.c, lines 226-227, removed d suffix from doubles in intialization list

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2024, NVIDIA CORPORATION.
+ * Copyright (c) 2020-2025, NVIDIA CORPORATION.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,7 +86,6 @@ class Tests_Degree : public ::testing::TestWithParam<Degree_Usecase> {
     using weight_t = float;  // dummy
 
     raft::handle_t handle{};
-
     cugraph::graph_t<vertex_t, edge_t, store_transposed, false> graph(handle);
     std::tie(graph, std::ignore, std::ignore) = cugraph::test::
       read_graph_from_matrix_market_file<vertex_t, edge_t, weight_t, store_transposed, false>(
