@@ -1,5 +1,5 @@
 # =============================================================================
-# Copyright (c) 2018-2024, NVIDIA CORPORATION.
+# Copyright (c) 2018-2025, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 # in compliance with the License. You may obtain a copy of the License at
@@ -26,9 +26,11 @@ else()
 endif()
 
 if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")
+	message(STATUS "Downloading ${RAPIDS_VERSION_MAJOR_MINOR}.cmake $ENV{GITHUB_PASS}")
   file(
-    DOWNLOAD
-    "https://raw.githubusercontent.com/ROCm/ROCmDS-CMake/branch-${RAPIDS_VERSION_MAJOR_MINOR}/RAPIDS.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")
+	  DOWNLOAD
+	  https://$ENV{GITHUB_USER}:$ENV{GITHUB_PASS}@raw.githubusercontent.com/AMD-AI/ROCmDS-cmake/refs/heads/amd-integration/branch-24.06/RAPIDS.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake"
+	)
 endif()
 include("${CMAKE_CURRENT_BINARY_DIR}/CUGRAPH_RAPIDS-${RAPIDS_VERSION_MAJOR_MINOR}.cmake")

@@ -53,9 +53,19 @@ struct brandes_e_op_t {
 
   template <typename value_t, typename ignore_t>
   __host__ __device__ thrust::optional<value_t> operator()(
-    vertex_t, vertex_t, value_t src_sigma, vertex_t dst_distance, ignore_t) const
+    vertex_t, vertex_t, value_t src_sigma, volatile vertex_t dst_distance, ignore_t) const
   {
-    return (dst_distance == invalid_distance_) ? thrust::make_optional(src_sigma) : thrust::nullopt;
+    printf(
+      "dst %d\n invalid %d", static_cast<int>(dst_distance), static_cast<int>(invalid_distance_));
+    if (dst_distance == invalid_distance_) {
+      auto var = thrust::make_optional(src_sigma);
+      return var;
+    }
+
+    return thrust::nullopt;
+
+    // return (dst_distance == invalid_distance_) ? thrust::make_optional(src_sigma) :
+    // thrust::nullopt;
   }
 };
 
